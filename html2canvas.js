@@ -1,6 +1,6 @@
 // html2canvas
 // Distributed under the MIT License
-// For original source and documentation visit:
+// For source and documentation visit:
 // http://www.github.com/cburgmer/html2canvas
 /*global window*/
 
@@ -14,9 +14,25 @@ var HTML2Canvas = (function () {
         return (new window.XMLSerializer()).serializeToString(doc.documentElement);
     };
 
+    var supportsBlobBuilding = function () {
+        if (window.BlobBuilder || window.MozBlobBuilder || window.WebKitBlobBuilder) {
+            return true;
+        } else {
+            if (window.Blob) {
+                try {
+                    new window.Blob('<b></b>', { "type" : "text\/xml" });
+                    return true;
+                } catch (err) {
+                    return false;
+                }
+            }
+        }
+        return false;
+    };
+
     var getBlob = function (data) {
        var imageType = "image/svg+xml;charset=utf-8",
-           BLOBBUILDER = (window.BlobBuilder || window.MozBlobBuilder || window.WebKitBlobBuilder),
+           BLOBBUILDER = window.BlobBuilder || window.MozBlobBuilder || window.WebKitBlobBuilder,
            svg;
        if (BLOBBUILDER) {
            svg = new BLOBBUILDER();
@@ -25,6 +41,22 @@ var HTML2Canvas = (function () {
        } else {
            return new window.Blob(data, {"type": imageType});
        }
+    };
+
+    var buildImageUrl = function (svg) {
+        var DOMURL = window.URL || window.webkitURL || window;
+        if (supportsBlobBuilding()) {
+            return DOMURL.createObjectURL(getBlob(svg));
+        } else {
+            return "data:image/svg+xml;charset=utf-8," + svg;
+        }
+    };
+
+    var cleanUpUrl = function (url) {
+        var DOMURL = window.URL || window.webkitURL || window;
+        if (supportsBlobBuilding()) {
+            DOMURL.revokeObjectURL(url);
+        }
     };
 
     module.getSvgForDocument = function (doc) {
@@ -44,13 +76,12 @@ var HTML2Canvas = (function () {
 
         context = canvas.getContext("2d");
 
-        DOMURL = window.URL || window.webkitURL || window;
-        url = DOMURL.createObjectURL(getBlob(svg));
+        url = buildImageUrl(svg);
 
         image = new window.Image();
         image.onload = function() {
             context.drawImage(image, 0, 0);
-            DOMURL.revokeObjectURL(url);
+            cleanUpUrl(url);
 
             if (typeof finishHandler !== "undefined") {
                 finishHandler(canvas);

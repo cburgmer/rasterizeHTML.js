@@ -59,8 +59,13 @@ describe("Rendering the Canvas", function () {
         }, "drawSvgToCanvas should have finished by now", 2000);
 
         runs(function () {
-            expect(getRGBAForPixel(canvas, 0, 0)).toEqual([255, 119, 0, 255]);
-            expect(getRGBAForPixel(canvas, 99, 99)).toEqual([16, 0, 255, 255]);
+            // This fails in Chrome & Safari, possibly a bug with same origin policy stuff
+            try {
+                expect(getRGBAForPixel(canvas, 0, 0)).toEqual([255, 119, 0, 255]);
+                expect(getRGBAForPixel(canvas, 99, 99)).toEqual([16, 0, 255, 255]);
+            } catch (err) {
+                expect(err.message).toBeNull();
+            }
         });
     });
 });
