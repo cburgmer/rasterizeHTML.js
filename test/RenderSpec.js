@@ -1,6 +1,4 @@
 describe("Rendering the Canvas", function () {
-    var doc;
-
     var getRGBAForPixel = function (canvas, x, y) {
         var context = canvas.getContext("2d"),
             imageData = context.getImageData(0, 0, 100, 100),
@@ -10,15 +8,12 @@ describe("Rendering the Canvas", function () {
         return [pixelList[offset], pixelList[offset+1], pixelList[offset+2], pixelList[offset+3]];
     };
 
-    beforeEach(function () {
-        doc = document.implementation.createHTMLDocument("");
-        doc.innerHTML = "Test content";
-
-        setFixtures('<canvas id="canvas"></canvas>');
-    });
-
     it("should return a SVG with embeded HTML", function () {
+        var doc = document.implementation.createHTMLDocument("");
+        doc.body.innerHTML = "Test content";
+
         var svgCode = HTML2Canvas.getSvgForDocument(doc);
+
         expect(svgCode).toEqual(
             '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">' +
                 '<foreignObject width="100%" height="100%">' +
@@ -28,6 +23,7 @@ describe("Rendering the Canvas", function () {
                             '</title>' +
                         '</head>' +
                         '<body>' +
+                            "Test content" +
                         '</body>' +
                     '</html>' +
                 '</foreignObject>' +
@@ -53,6 +49,7 @@ describe("Rendering the Canvas", function () {
                 '</svg>'
             );
 
+        setFixtures('<canvas id="canvas"></canvas>');
         var canvas = document.getElementById("canvas");
 
         HTML2Canvas.drawSvgToCanvas(twoColorSvg, canvas, function () { renderFinished = true; });
