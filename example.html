@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>html2canvas example</title>
+    <script type="text/javascript" src="html2canvas.js"></script>
+</head>
+<body>
+    <canvas id="canvas" style="border:2px solid black;" width="100" height="100"></canvas>
+    <div>
+        <input id="input" size="60" value="You can type HTML into this &lt;span style='color: green'&gt;canvas&lt;span&gt;."/>
+    </div>
+    <script type="text/javascript">
+        var input = document.getElementById("input");
+
+        function drawCanvas(text) {
+            var doc, svg, canvas;
+
+            doc = document.implementation.createHTMLDocument("");
+            doc.body.innerHTML = '<span style="font-size: 18px;">' + text + '</span>';
+
+            canvas = document.getElementById("canvas");
+
+            svg = HTML2Canvas.getSvgForDocument(doc);
+            HTML2Canvas.drawSvgToCanvas(svg, canvas);
+        }
+
+        input.onkeyup = function () {
+            var canvas = document.getElementById("canvas");
+
+            canvas.getContext("2d").clearRect(0, 0, 100, 100);
+
+            drawCanvas(this.value);
+        };
+
+        drawCanvas(input.value);
+    </script>
+</body>
+</html>
