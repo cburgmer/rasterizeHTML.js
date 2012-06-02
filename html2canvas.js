@@ -9,6 +9,52 @@ var HTML2Canvas = (function () {
 
     var module = {};
 
+    /* Inlining */
+
+    var getDataURIForImage = function (image) {
+        var canvas = window.document.createElement("canvas"),
+            context = canvas.getContext("2d");
+
+        canvas.width = image.width;
+        canvas.height = image.height;
+
+        context.drawImage(image, 0, 0);
+
+        return canvas.toDataURL("image/png");
+    };
+
+    var encodeImageAsDataURI = function (image, finishHandler) {
+        var img = new window.Image(),
+            url;
+
+        img.onload = function () {
+            image.src = getDataURIForImage(img);
+
+            finishHandler();
+        };
+        img.src = image.attributes.src.nodeValue; // Chrome 19 sets image.src to ""
+    };
+
+    module.loadAndInlineImages = function (doc, finishHandler) {
+        var images = doc.getElementsByTagName("img"),
+            imagesToFinalize = images.length,
+            i;
+
+        var finishWorker = function () {
+            imagesToFinalize--;
+
+            if (finishHandler && imagesToFinalize === 0) {
+                finishHandler();
+            }
+        };
+
+        for(i = 0; i < images.length; i++) {
+            encodeImageAsDataURI(images[i], finishWorker);
+        }
+    };
+
+    /* Rendering */
+
     var serializeToXML = function (doc) {
         doc.documentElement.setAttribute("xmlns", doc.documentElement.namespaceURI);
         return (new window.XMLSerializer()).serializeToString(doc.documentElement);

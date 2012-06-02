@@ -56,7 +56,7 @@ describe("Rendering the Canvas", function () {
 
         waitsFor(function () {
             return renderFinished;
-        }, "drawSvgToCanvas should have finished by now", 2000);
+        }, "HTML2Canvas.drawSvgToCanvas", 2000);
 
         runs(function () {
             // This fails in Chrome & Safari, possibly a bug with same origin policy stuff
