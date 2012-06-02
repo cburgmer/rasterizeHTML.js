@@ -9,7 +9,7 @@ var HTML2Canvas = (function () {
 
     var module = {};
 
-    /* Inlining */
+    /* Img Inlining */
 
     var getDataURIForImage = function (image) {
         var canvas = window.document.createElement("canvas"),
@@ -47,8 +47,73 @@ var HTML2Canvas = (function () {
             }
         };
 
+        if (images.length === 0) {
+            finishHandler();
+            return;
+        }
+
         for(i = 0; i < images.length; i++) {
             encodeImageAsDataURI(images[i], finishWorker);
+        }
+    };
+
+    /* CSS inlining */
+
+    var addInlineCSSToDocument = function (doc, styleContent) {
+        var styleNode = doc.createElement("style");
+
+        styleNode.type = "text/css";
+        styleNode.appendChild(doc.createTextNode(styleContent));
+
+        doc.head.appendChild(styleNode);
+    };
+
+    var loadLinkedCSSAndRemoveNode = function (link, finishHandler) {
+        var href = link.attributes.href.nodeValue; // Chrome 19 sets link.href to ""
+
+        window.jQuery.ajax({
+            dataType: 'text',
+            url: href,
+            success: function(data) {
+                link.parentNode.removeChild(link);
+                finishHandler(data);
+            }
+        });
+    };
+
+    module.loadAndInlineCSS = function (doc, finishHandler) {
+        var links = doc.getElementsByTagName("link"),
+            linksToFinalize = links.length,
+            aggregatedStyleContent = "",
+            i;
+
+        var addLoadedStyleAndFinalize = function (styleContent) {
+            aggregatedStyleContent += styleContent + "\n";
+            linksToFinalize--;
+
+            if (linksToFinalize === 0) {
+                if (aggregatedStyleContent.trim()) {
+                    addInlineCSSToDocument(doc, aggregatedStyleContent.trim());
+                }
+
+                if (finishHandler) {
+                    finishHandler();
+                }
+            }
+        };
+
+        if (links.length === 0) {
+            finishHandler();
+            return;
+        }
+
+        for(i = 0; i < links.length; i++) {
+            if (links[i].rel === "stylesheet" && links[i].type === "text/css") {
+                loadLinkedCSSAndRemoveNode(links[i], addLoadedStyleAndFinalize);
+            } else {
+                // We need to properly deal with non-stylesheet in this concurrent context
+                addLoadedStyleAndFinalize('');
+            }
         }
     };
 

@@ -10,7 +10,7 @@ For security reasons rendering HTML into a canvas is severly limited. Firefox of
 
 As described in http://robert.ocallahan.org/2011/11/drawing-dom-content-to-canvas.html and https://developer.mozilla.org/en/HTML/Canvas/Drawing_DOM_objects_into_a_canvas however it is possible by embedding the HTML into an SVG image as a &lt;foreignObject&gt; and then drawing the resulting image via ctx.drawImage().
 
-To cope with the existing limitations, html2canvas will load external images and store them inline via data: URIs.
+To cope with the existing limitations, html2canvas will load external images and stylesheets and store them inline via data: URIs or inline style elements respectively.
 
 Limitations
 -----------

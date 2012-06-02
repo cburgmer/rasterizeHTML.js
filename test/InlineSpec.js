@@ -82,5 +82,128 @@ describe("Inline external resources", function () {
                 expect(localImg2).toImageDiffEqual(window.document.getElementById("referenceImage2"));
             });
         });
+
+        it("should finish if no images found", function () {
+            var inlineFinished = false;
+
+            HTML2Canvas.loadAndInlineImages(doc, function () { inlineFinished = true; });
+
+            waitsFor(function () {
+                return inlineFinished;
+            }, "HTML2Canvas.loadAndInlineCSS", 2000);
+        });
+
+    });
+
+    describe("CSS inline", function () {
+        var cssLink, anotherCssLink, emptyCssLink, faviconLink;
+
+        beforeEach(function () {
+            cssLink = window.document.createElement("link");
+            cssLink.href = "fixtures/some.css";
+            cssLink.rel = "stylesheet";
+            cssLink.type = "text/css";
+
+            anotherCssLink = window.document.createElement("link");
+            anotherCssLink.href = "fixtures/another.css";
+            anotherCssLink.rel = "stylesheet";
+            anotherCssLink.type = "text/css";
+
+            emptyCssLink = window.document.createElement("link");
+            emptyCssLink.href = "fixtures/empty.css";
+            emptyCssLink.rel = "stylesheet";
+            emptyCssLink.type = "text/css";
+
+            faviconLink = window.document.createElement("link");
+            faviconLink.href = "favicon.ico";
+            faviconLink.type = "image/x-icon";
+
+        });
+
+        it("should do nothing if no linked CSS is found", function () {
+            var inlineFinished = false;
+
+            HTML2Canvas.loadAndInlineCSS(doc, function () { inlineFinished = true; });
+
+            waitsFor(function () {
+                return inlineFinished;
+            }, "HTML2Canvas.loadAndInlineCSS", 2000);
+
+            runs(function () {
+                expect(doc.head.getElementsByTagName("style").length).toEqual(0);
+            });
+        });
+
+        it("should not touch non-CSS links", function () {
+            var inlineFinished = false;
+
+            doc.head.appendChild(faviconLink);
+
+            HTML2Canvas.loadAndInlineCSS(doc, function () { inlineFinished = true; });
+
+            waitsFor(function () {
+                return inlineFinished;
+            }, "HTML2Canvas.loadAndInlineCSS", 2000);
+
+            runs(function () {
+                expect(doc.head.getElementsByTagName("style").length).toEqual(0);
+                expect(doc.head.getElementsByTagName("link").length).toEqual(1);
+            });
+        });
+
+        it("should inline linked CSS", function () {
+            var inlineFinished = false;
+
+            doc.head.appendChild(cssLink);
+
+            HTML2Canvas.loadAndInlineCSS(doc, function () { inlineFinished = true; });
+
+            waitsFor(function () {
+                return inlineFinished;
+            }, "HTML2Canvas.loadAndInlineCSS", 2000);
+
+            runs(function () {
+                expect(doc.head.getElementsByTagName("style").length).toEqual(1);
+                expect(doc.head.getElementsByTagName("style")[0].textContent).toEqual("p { font-size: 14px; }");
+                expect(doc.head.getElementsByTagName("link").length).toEqual(0);
+            });
+        });
+
+        it("should inline multiple linked CSS", function () {
+            var inlineFinished = false;
+
+            doc.head.appendChild(cssLink);
+            doc.head.appendChild(anotherCssLink);
+
+            HTML2Canvas.loadAndInlineCSS(doc, function () { inlineFinished = true; });
+
+            waitsFor(function () {
+                return inlineFinished;
+            }, "HTML2Canvas.loadAndInlineCSS", 2000);
+
+            runs(function () {
+                expect(doc.head.getElementsByTagName("style").length).toEqual(1);
+                expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/(^|\n)p \{ font-size: 14px; \}($|\n)/);
+                expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/(^|\n)a \{ text-decoration: none; \}($|\n)/);
+                expect(doc.head.getElementsByTagName("link").length).toEqual(0);
+            });
+        });
+
+        it("should not add inline CSS if no content given", function () {
+            var inlineFinished = false;
+
+            doc.head.appendChild(emptyCssLink);
+
+            HTML2Canvas.loadAndInlineCSS(doc, function () { inlineFinished = true; });
+
+            waitsFor(function () {
+                return inlineFinished;
+            }, "HTML2Canvas.loadAndInlineCSS", 2000);
+
+            runs(function () {
+                expect(doc.head.getElementsByTagName("style").length).toEqual(0);
+                expect(doc.head.getElementsByTagName("link").length).toEqual(0);
+            });
+        });
     });
 });
