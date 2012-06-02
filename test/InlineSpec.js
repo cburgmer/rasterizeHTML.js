@@ -1,15 +1,6 @@
 describe("Inline external resources", function () {
     var doc;
 
-    var getLocalDocumentImage = function (image, finishHandler) {
-        var img = new window.Image();
-
-        img.onload = function () {
-            finishHandler(img);
-        };
-        img.src = image.attributes.src.nodeValue; // Chrome 19 sets image.src to ""
-    };
-
     beforeEach(function () {
         doc = document.implementation.createHTMLDocument("");
 
@@ -21,7 +12,16 @@ describe("Inline external resources", function () {
         );
     });
 
-    describe("Loader", function () {
+    describe("img inline", function () {
+        var getLocalDocumentImage = function (image, finishHandler) {
+            var img = new window.Image();
+
+            img.onload = function () {
+                finishHandler(img);
+            };
+            img.src = image.attributes.src.nodeValue; // Chrome 19 sets image.src to ""
+        };
+
         it("should load external images", function () {
             var inlineFinished = false,
                 localImg = null;

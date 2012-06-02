@@ -118,7 +118,7 @@ var HTML2Canvas = (function () {
         }
     };
 
-    var workaroundWebkitBugForInlinedImages = function (svg) {
+    var workAroundWebkitBugForInlinedImages = function (svg) {
         // Chrome & Safari will not show the inlined image until the svg is connected to the DOM it seems.
         var doNotGarbageCollect = window.document.createElement("div");
         doNotGarbageCollect.innerHTML = svg;
@@ -154,7 +154,7 @@ var HTML2Canvas = (function () {
         };
         image.src = url;
 
-        workaroundWebkitBugForInlinedImages();
+        workAroundWebkitBugForInlinedImages();
     };
 
     return module;
