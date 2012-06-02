@@ -24,8 +24,7 @@ var HTML2Canvas = (function () {
     };
 
     var encodeImageAsDataURI = function (image, finishHandler) {
-        var img = new window.Image(),
-            url;
+        var img = new window.Image();
 
         img.onload = function () {
             image.src = getDataURIForImage(img);
