@@ -54,16 +54,30 @@ var HTML2Canvas = (function () {
 
     /* Rendering */
 
+    var needsXMLParserWorkaround = function() {
+        // See https://bugs.webkit.org/show_bug.cgi?id=47768
+        return window.navigator.userAgent.indexOf("WebKit") >= 0;
+    };
+
     var serializeToXML = function (doc) {
+        var xml;
+
         doc.documentElement.setAttribute("xmlns", doc.documentElement.namespaceURI);
-        return (new window.XMLSerializer()).serializeToString(doc.documentElement);
+        xml = (new window.XMLSerializer()).serializeToString(doc.documentElement);
+        if (needsXMLParserWorkaround() && window.HTMLtoXML) {
+            return window.HTMLtoXML(xml);
+        } else {
+            return xml;
+        }
     };
 
     var supportsBlobBuilding = function () {
         if (window.BlobBuilder || window.MozBlobBuilder || window.WebKitBlobBuilder) {
+            // Deprecated interface
             return true;
         } else {
             if (window.Blob) {
+                // Available as constructor only in newer builds for all Browsers
                 try {
                     new window.Blob('<b></b>', { "type" : "text\/xml" });
                     return true;
@@ -104,6 +118,12 @@ var HTML2Canvas = (function () {
         }
     };
 
+    var workaroundWebkitBugForInlinedImages = function (svg) {
+        // Chrome & Safari will not show the inlined image until the svg is connected to the DOM it seems.
+        var doNotGarbageCollect = window.document.createElement("div");
+        doNotGarbageCollect.innerHTML = svg;
+    };
+
     module.getSvgForDocument = function (doc) {
         var html = serializeToXML(doc);
 
@@ -133,6 +153,8 @@ var HTML2Canvas = (function () {
             }
         };
         image.src = url;
+
+        workaroundWebkitBugForInlinedImages();
     };
 
     return module;
