@@ -1,10 +1,10 @@
-// html2canvas
+// rasterizeHTML.js
 // Distributed under the MIT License
 // For source and documentation visit:
-// http://www.github.com/cburgmer/html2canvas
+// http://www.github.com/cburgmer/rasterizeHTML.js
 /*global window, CSSParser*/
 
-var HTML2Canvas = (function () {
+var rasterizeHTML = (function () {
     "use strict";
 
     var module = {};

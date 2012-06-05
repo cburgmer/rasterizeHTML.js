@@ -28,11 +28,11 @@ describe("Inline external resources", function () {
 
             doc.body.innerHTML = '<img id="image" src="fixtures/rednblue.png" alt="test image"/>';
 
-            HTML2Canvas.loadAndInlineImages(doc, function () { inlineFinished = true; });
+            rasterizeHTML.loadAndInlineImages(doc, function () { inlineFinished = true; });
 
             waitsFor(function () {
                 return inlineFinished;
-            }, "HTML2Canvas.loadAndInlineImages", 2000);
+            }, "rasterizeHTML.loadAndInlineImages", 2000);
 
             // Gecko & Webkit won't allow direct comparison of images, need to get local first
             runs(function () {
@@ -59,11 +59,11 @@ describe("Inline external resources", function () {
                     '<img id="image2" src="fixtures/green.png" alt="test image"/>'
                 );
 
-            HTML2Canvas.loadAndInlineImages(doc, function () { inlineFinished = true; });
+            rasterizeHTML.loadAndInlineImages(doc, function () { inlineFinished = true; });
 
             waitsFor(function () {
                 return inlineFinished;
-            }, "HTML2Canvas.loadAndInlineImages", 2000);
+            }, "rasterizeHTML.loadAndInlineImages", 2000);
 
             // Gecko & Webkit won't allow direct comparison of images, need to get local first
             runs(function () {
@@ -86,11 +86,11 @@ describe("Inline external resources", function () {
         it("should finish if no images found", function () {
             var inlineFinished = false;
 
-            HTML2Canvas.loadAndInlineImages(doc, function () { inlineFinished = true; });
+            rasterizeHTML.loadAndInlineImages(doc, function () { inlineFinished = true; });
 
             waitsFor(function () {
                 return inlineFinished;
-            }, "HTML2Canvas.loadAndInlineCSS", 2000);
+            }, "rasterizeHTML.loadAndInlineCSS", 2000);
         });
 
         it("should not touch an already inlined image", function () {
@@ -98,11 +98,11 @@ describe("Inline external resources", function () {
 
             doc.body.innerHTML = '<img id="image" src="data:image/png;base64,soMEfAkebASE64=" alt="test image"/>';
 
-            HTML2Canvas.loadAndInlineImages(doc, function () { inlineFinished = true; });
+            rasterizeHTML.loadAndInlineImages(doc, function () { inlineFinished = true; });
 
             waitsFor(function () {
                 return inlineFinished;
-            }, "HTML2Canvas.loadAndInlineCSS", 2000);
+            }, "rasterizeHTML.loadAndInlineCSS", 2000);
 
             runs(function () {
                 expect(doc.getElementById("image").src).toEqual('data:image/png;base64,soMEfAkebASE64=');
@@ -139,11 +139,11 @@ describe("Inline external resources", function () {
         it("should do nothing if no linked CSS is found", function () {
             var inlineFinished = false;
 
-            HTML2Canvas.loadAndInlineCSS(doc, function () { inlineFinished = true; });
+            rasterizeHTML.loadAndInlineCSS(doc, function () { inlineFinished = true; });
 
             waitsFor(function () {
                 return inlineFinished;
-            }, "HTML2Canvas.loadAndInlineCSS", 2000);
+            }, "rasterizeHTML.loadAndInlineCSS", 2000);
 
             runs(function () {
                 expect(doc.head.getElementsByTagName("style").length).toEqual(0);
@@ -155,11 +155,11 @@ describe("Inline external resources", function () {
 
             doc.head.appendChild(faviconLink);
 
-            HTML2Canvas.loadAndInlineCSS(doc, function () { inlineFinished = true; });
+            rasterizeHTML.loadAndInlineCSS(doc, function () { inlineFinished = true; });
 
             waitsFor(function () {
                 return inlineFinished;
-            }, "HTML2Canvas.loadAndInlineCSS", 2000);
+            }, "rasterizeHTML.loadAndInlineCSS", 2000);
 
             runs(function () {
                 expect(doc.head.getElementsByTagName("style").length).toEqual(0);
@@ -172,11 +172,11 @@ describe("Inline external resources", function () {
 
             doc.head.appendChild(cssLink);
 
-            HTML2Canvas.loadAndInlineCSS(doc, function () { inlineFinished = true; });
+            rasterizeHTML.loadAndInlineCSS(doc, function () { inlineFinished = true; });
 
             waitsFor(function () {
                 return inlineFinished;
-            }, "HTML2Canvas.loadAndInlineCSS", 2000);
+            }, "rasterizeHTML.loadAndInlineCSS", 2000);
 
             runs(function () {
                 expect(doc.head.getElementsByTagName("style").length).toEqual(1);
@@ -191,11 +191,11 @@ describe("Inline external resources", function () {
             doc.head.appendChild(cssLink);
             doc.head.appendChild(anotherCssLink);
 
-            HTML2Canvas.loadAndInlineCSS(doc, function () { inlineFinished = true; });
+            rasterizeHTML.loadAndInlineCSS(doc, function () { inlineFinished = true; });
 
             waitsFor(function () {
                 return inlineFinished;
-            }, "HTML2Canvas.loadAndInlineCSS", 2000);
+            }, "rasterizeHTML.loadAndInlineCSS", 2000);
 
             runs(function () {
                 expect(doc.head.getElementsByTagName("style").length).toEqual(1);
@@ -210,11 +210,11 @@ describe("Inline external resources", function () {
 
             doc.head.appendChild(emptyCssLink);
 
-            HTML2Canvas.loadAndInlineCSS(doc, function () { inlineFinished = true; });
+            rasterizeHTML.loadAndInlineCSS(doc, function () { inlineFinished = true; });
 
             waitsFor(function () {
                 return inlineFinished;
-            }, "HTML2Canvas.loadAndInlineCSS", 2000);
+            }, "rasterizeHTML.loadAndInlineCSS", 2000);
 
             runs(function () {
                 expect(doc.head.getElementsByTagName("style").length).toEqual(0);
@@ -245,11 +245,11 @@ describe("Inline external resources", function () {
         it("should do nothing if no CSS is found", function () {
             var inlineFinished = false;
 
-            HTML2Canvas.loadAndInlineCSSReferences(doc, function () { inlineFinished = true; });
+            rasterizeHTML.loadAndInlineCSSReferences(doc, function () { inlineFinished = true; });
 
             waitsFor(function () {
                 return inlineFinished;
-            }, "HTML2Canvas.loadAndInlineCSSReferences", 2000);
+            }, "rasterizeHTML.loadAndInlineCSSReferences", 2000);
 
             runs(function () {
                 expect(doc.head.getElementsByTagName("style").length).toEqual(0);
@@ -261,11 +261,11 @@ describe("Inline external resources", function () {
 
             addStyleToDocument(doc, "span { padding-left: 0; }");
 
-            HTML2Canvas.loadAndInlineCSSReferences(doc, function () { inlineFinished = true; });
+            rasterizeHTML.loadAndInlineCSSReferences(doc, function () { inlineFinished = true; });
 
             waitsFor(function () {
                 return inlineFinished;
-            }, "HTML2Canvas.loadAndInlineCSSReferences", 2000);
+            }, "rasterizeHTML.loadAndInlineCSSReferences", 2000);
 
             runs(function () {
                 expect(doc.head.getElementsByTagName("style").length).toEqual(1);
@@ -278,11 +278,11 @@ describe("Inline external resources", function () {
 
             addStyleToDocument(doc, 'span { background-image: url("data:image/png;base64,soMEfAkebASE64="); }');
 
-            HTML2Canvas.loadAndInlineCSSReferences(doc, function () { inlineFinished = true; });
+            rasterizeHTML.loadAndInlineCSSReferences(doc, function () { inlineFinished = true; });
 
             waitsFor(function () {
                 return inlineFinished;
-            }, "HTML2Canvas.loadAndInlineCSSReferences", 2000);
+            }, "rasterizeHTML.loadAndInlineCSSReferences", 2000);
 
             runs(function () {
                 expect(doc.head.getElementsByTagName("style").length).toEqual(1);
@@ -295,11 +295,11 @@ describe("Inline external resources", function () {
 
             addStyleToDocument(doc, 'span { background-image: "invalid url"; }');
 
-            HTML2Canvas.loadAndInlineCSSReferences(doc, function () { inlineFinished = true; });
+            rasterizeHTML.loadAndInlineCSSReferences(doc, function () { inlineFinished = true; });
 
             waitsFor(function () {
                 return inlineFinished;
-            }, "HTML2Canvas.loadAndInlineCSSReferences", 2000);
+            }, "rasterizeHTML.loadAndInlineCSSReferences", 2000);
 
             runs(function () {
                 expect(doc.head.getElementsByTagName("style").length).toEqual(1);
@@ -315,11 +315,11 @@ describe("Inline external resources", function () {
 
             addStyleToDocument(doc, 'span { background-image: url("fixtures/rednblue.png"); }');
 
-            HTML2Canvas.loadAndInlineCSSReferences(doc, function () { inlineFinished = true; });
+            rasterizeHTML.loadAndInlineCSSReferences(doc, function () { inlineFinished = true; });
 
             waitsFor(function () {
                 return inlineFinished;
-            }, "HTML2Canvas.loadAndInlineCSSReferences", 2000);
+            }, "rasterizeHTML.loadAndInlineCSSReferences", 2000);
 
             runs(function () {
                 expect(doc.head.getElementsByTagName("style").length).toEqual(1);

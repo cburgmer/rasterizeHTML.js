@@ -4,7 +4,7 @@ describe("Rendering the Canvas", function () {
             var doc = document.implementation.createHTMLDocument("");
             doc.body.innerHTML = "Test content";
 
-            var svgCode = HTML2Canvas.getSvgForDocument(doc);
+            var svgCode = rasterizeHTML.getSvgForDocument(doc);
 
             expect(svgCode).toEqual(
                 '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">' +
@@ -28,7 +28,7 @@ describe("Rendering the Canvas", function () {
                 canonicalXML;
             doc.body.innerHTML = '<img src="data:image/png;base64,sOmeFAKeBasE64="/>';
 
-            var svgCode = HTML2Canvas.getSvgForDocument(doc);
+            var svgCode = rasterizeHTML.getSvgForDocument(doc);
 
             expect(svgCode).not.toBeNull();
             canonicalXML = svgCode.replace(/ +\/>/, '/>');
@@ -81,11 +81,11 @@ describe("Rendering the Canvas", function () {
             setFixtures('<canvas id="canvas"></canvas>');
             var canvas = document.getElementById("canvas");
 
-            HTML2Canvas.drawSvgToCanvas(twoColorSvg, canvas, function () { renderFinished = true; });
+            rasterizeHTML.drawSvgToCanvas(twoColorSvg, canvas, function () { renderFinished = true; });
 
             waitsFor(function () {
                 return renderFinished;
-            }, "HTML2Canvas.drawSvgToCanvas", 2000);
+            }, "rasterizeHTML.drawSvgToCanvas", 2000);
 
             runs(function () {
                 // This fails in Chrome & Safari, possibly due to a bug with same origin policy stuff
@@ -118,11 +118,11 @@ describe("Rendering the Canvas", function () {
             setFixtures('<canvas id="canvas"></canvas>');
             var canvas = document.getElementById("canvas");
 
-            HTML2Canvas.drawSvgToCanvas(twoColorSvg, canvas, function () { renderFinished = true; });
+            rasterizeHTML.drawSvgToCanvas(twoColorSvg, canvas, function () { renderFinished = true; });
 
             waitsFor(function () {
                 return renderFinished;
-            }, "HTML2Canvas.drawSvgToCanvas", 2000);
+            }, "rasterizeHTML.drawSvgToCanvas", 2000);
 
             runs(function () {
                 // This fails in Chrome & Safari, possibly due to a bug with same origin policy stuff
