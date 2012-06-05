@@ -93,6 +93,22 @@ describe("Inline external resources", function () {
             }, "HTML2Canvas.loadAndInlineCSS", 2000);
         });
 
+        it("should not touch an already inlined image", function () {
+            var inlineFinished = false;
+
+            doc.body.innerHTML = '<img id="image" src="data:image/png;base64,soMEfAkebASE64=" alt="test image"/>';
+
+            HTML2Canvas.loadAndInlineImages(doc, function () { inlineFinished = true; });
+
+            waitsFor(function () {
+                return inlineFinished;
+            }, "HTML2Canvas.loadAndInlineCSS", 2000);
+
+            runs(function () {
+                expect(doc.getElementById("image").src).toEqual('data:image/png;base64,soMEfAkebASE64=');
+            });
+        });
+
     });
 
     describe("CSS inline", function () {
@@ -205,5 +221,125 @@ describe("Inline external resources", function () {
                 expect(doc.head.getElementsByTagName("link").length).toEqual(0);
             });
         });
+    });
+
+    describe("CSS background-image inline", function () {
+        var addStyleToDocument = function (doc, styleContent) {
+            var styleNode = doc.createElement("style");
+
+            styleNode.type = "text/css";
+            styleNode.appendChild(doc.createTextNode(styleContent));
+
+            doc.head.appendChild(styleNode);
+        };
+
+        var getImageForURL = function (url, finishHandler) {
+            var img = new window.Image();
+
+            img.onload = function () {
+                finishHandler(img);
+            };
+            img.src = url;
+        };
+
+        it("should do nothing if no CSS is found", function () {
+            var inlineFinished = false;
+
+            HTML2Canvas.loadAndInlineCSSReferences(doc, function () { inlineFinished = true; });
+
+            waitsFor(function () {
+                return inlineFinished;
+            }, "HTML2Canvas.loadAndInlineCSSReferences", 2000);
+
+            runs(function () {
+                expect(doc.head.getElementsByTagName("style").length).toEqual(0);
+            });
+        });
+
+        it("should not touch unrelated CSS", function () {
+            var inlineFinished = false;
+
+            addStyleToDocument(doc, "span { padding-left: 0; }");
+
+            HTML2Canvas.loadAndInlineCSSReferences(doc, function () { inlineFinished = true; });
+
+            waitsFor(function () {
+                return inlineFinished;
+            }, "HTML2Canvas.loadAndInlineCSSReferences", 2000);
+
+            runs(function () {
+                expect(doc.head.getElementsByTagName("style").length).toEqual(1);
+                expect(doc.head.getElementsByTagName("style")[0].textContent).toEqual("span { padding-left: 0; }");
+            });
+        });
+
+        it("should not touch an already inlined image", function () {
+            var inlineFinished = false;
+
+            addStyleToDocument(doc, 'span { background-image: url("data:image/png;base64,soMEfAkebASE64="); }');
+
+            HTML2Canvas.loadAndInlineCSSReferences(doc, function () { inlineFinished = true; });
+
+            waitsFor(function () {
+                return inlineFinished;
+            }, "HTML2Canvas.loadAndInlineCSSReferences", 2000);
+
+            runs(function () {
+                expect(doc.head.getElementsByTagName("style").length).toEqual(1);
+                expect(doc.head.getElementsByTagName("style")[0].textContent).toEqual('span { background-image: url("data:image/png;base64,soMEfAkebASE64="); }');
+            });
+        });
+
+        it("should ignore invalid values", function () {
+            var inlineFinished = false;
+
+            addStyleToDocument(doc, 'span { background-image: "invalid url"; }');
+
+            HTML2Canvas.loadAndInlineCSSReferences(doc, function () { inlineFinished = true; });
+
+            waitsFor(function () {
+                return inlineFinished;
+            }, "HTML2Canvas.loadAndInlineCSSReferences", 2000);
+
+            runs(function () {
+                expect(doc.head.getElementsByTagName("style").length).toEqual(1);
+                expect(doc.head.getElementsByTagName("style")[0].textContent).toEqual('span { background-image: "invalid url"; }');
+            });
+        });
+
+        it("should inline a background-image", function () {
+            var backgroundImageRegex = /^span\s*\{\s*background-image: url\("([^\)]+)"\);\s*\}\s*$/,
+                inlineFinished = false,
+                resultImage = null,
+                url;
+
+            addStyleToDocument(doc, 'span { background-image: url("fixtures/rednblue.png"); }');
+
+            HTML2Canvas.loadAndInlineCSSReferences(doc, function () { inlineFinished = true; });
+
+            waitsFor(function () {
+                return inlineFinished;
+            }, "HTML2Canvas.loadAndInlineCSSReferences", 2000);
+
+            runs(function () {
+                expect(doc.head.getElementsByTagName("style").length).toEqual(1);
+                expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(backgroundImageRegex);
+                url = backgroundImageRegex.exec(doc.head.getElementsByTagName("style")[0].textContent)[1];
+                expect(url).toMatch(/^data:image\/png;base64,/);
+            });
+
+            runs(function () {
+                getImageForURL(url, function (img) { resultImage = img; });
+            });
+
+            waitsFor(function () {
+                return resultImage !== null;
+            }, "getting result image", 2000);
+
+            runs(function () {
+                expect(resultImage).toImageDiffEqual(window.document.getElementById("referenceImage1"));
+            });
+        });
+
     });
 });

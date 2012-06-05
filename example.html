@@ -4,12 +4,20 @@
     <meta charset="utf-8" />
     <title>html2canvas example</title>
     <script type="text/javascript" src="lib/htmlparser.js"></script> <!-- Only needed for Chrome & Safari -->
+    <script type="text/javascript" src="lib/cssParser.js"></script>
     <script type="text/javascript" src="html2canvas.js"></script>
 </head>
 <body>
     <canvas id="canvas" style="border:2px solid black;" width="100" height="100"></canvas>
     <div>
-        <textarea id="input" cols="60">You can type HTML into this &lt;span style='color: green'&gt;canvas&lt;/span&gt;. &lt;img src='ghostscript_tiger.png' alt='Tiger'/&gt;</textarea>
+        <textarea id="input" cols="80" rows="8">&lt;div class="tigerbg"&gt;You can type HTML into this &lt;span style='color: green'&gt;canvas&lt;/span&gt;.
+&lt;img src='ghostscript_tiger.png' alt='Tiger'/&gt;&lt;/div&gt;
+&lt;style type="text/css"&gt;
+.tigerbg {
+    background: url(ghostscript_tiger.png) no-repeat top right;
+}
+&lt;/style&gt;
+</textarea>
     </div>
     <script type="text/javascript">
         var input = document.getElementById("input");
@@ -18,13 +26,15 @@
             var doc, svg, canvas;
 
             doc = document.implementation.createHTMLDocument("");
-            doc.body.innerHTML = '<span style="font-size: 16px;">' + text + '</span>';
+            doc.body.innerHTML = '<div style="font-size: 16px;">' + text + '</div>';
 
             HTML2Canvas.loadAndInlineImages(doc, function () {
-                canvas = document.getElementById("canvas");
+                HTML2Canvas.loadAndInlineCSSReferences(doc, function () {
+                    canvas = document.getElementById("canvas");
 
-                svg = HTML2Canvas.getSvgForDocument(doc);
-                HTML2Canvas.drawSvgToCanvas(svg, canvas);
+                    svg = HTML2Canvas.getSvgForDocument(doc);
+                    HTML2Canvas.drawSvgToCanvas(svg, canvas);
+                });
             });
         }
 

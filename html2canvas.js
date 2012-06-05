@@ -2,14 +2,18 @@
 // Distributed under the MIT License
 // For source and documentation visit:
 // http://www.github.com/cburgmer/html2canvas
-/*global window*/
+/*global window, CSSParser*/
 
 var HTML2Canvas = (function () {
     "use strict";
 
     var module = {};
 
-    /* Img Inlining */
+    /* Inlining */
+
+    var isDataUrl = function (url) {
+        return (/^data:/).test(url);
+    };
 
     var getDataURIForImage = function (image) {
         var canvas = window.document.createElement("canvas"),
@@ -23,15 +27,31 @@ var HTML2Canvas = (function () {
         return canvas.toDataURL("image/png");
     };
 
-    var encodeImageAsDataURI = function (image, finishHandler) {
-        var img = new window.Image();
+    var getDataURIForImageURL = function (url, finishHandler) {
+        var img = new window.Image(),
+            dataURI;
 
         img.onload = function () {
-            image.src = getDataURIForImage(img);
+            dataURI = getDataURIForImage(img);
 
-            finishHandler();
+            finishHandler(dataURI);
         };
-        img.src = image.attributes.src.nodeValue; // Chrome 19 sets image.src to ""
+        img.src = url;
+    };
+
+    /* Img Inlining */
+
+    var encodeImageAsDataURI = function (image, finishHandler) {
+        var url = image.attributes.src.nodeValue; // Chrome 19 sets image.src to "";
+
+        if (isDataUrl(url)) {
+            finishHandler();
+        }
+
+        getDataURIForImageURL(url, function (dataURI) {
+            image.src = dataURI;
+            finishHandler();
+        });
     };
 
     module.loadAndInlineImages = function (doc, finishHandler) {
@@ -113,6 +133,139 @@ var HTML2Canvas = (function () {
             } else {
                 // We need to properly deal with non-stylesheet in this concurrent context
                 addLoadedStyleAndFinalize('');
+            }
+        }
+    };
+
+    /* CSS linked resource inlining */
+
+    var unquoteUrl = function (quotedUrl) {
+        var doubleQuoteRegex = /^"(.+)*"$/,
+            singleQuoteRegex = /^'(.+)*'$/;
+
+        if (doubleQuoteRegex.test(quotedUrl)) {
+            return quotedUrl.replace(doubleQuoteRegex, "$1");
+        } else {
+            if (singleQuoteRegex.test(quotedUrl)) {
+                return quotedUrl.replace(singleQuoteRegex, "$1");
+            } else {
+                return quotedUrl;
+            }
+        }
+    };
+
+    var extractCssUrl = function (cssUrl) {
+        var urlRegex = /^url\(([^\)]+)\)/,
+            quotedUrl;
+
+        if (!urlRegex.test(cssUrl)) {
+            throw "Invalid url";
+        }
+
+        quotedUrl = urlRegex.exec(cssUrl)[1];
+        return unquoteUrl(quotedUrl);
+    };
+
+    var findBackgroundImageDeclarations = function (parsedCSS) {
+        var declarationsToInline = [],
+            i, j, rule;
+
+        for (i = 0; i < parsedCSS.cssRules.length; i++) {
+            rule = parsedCSS.cssRules[i];
+            if (rule.type === window.kJscsspSTYLE_RULE) {
+                for (j = 0; j < rule.declarations.length; j++) {
+                    if (rule.declarations[j].property === "background-image") {
+                        declarationsToInline.push(rule.declarations[j]);
+                    }
+                }
+            }
+        }
+
+        return declarationsToInline;
+    };
+
+    var loadAndInlineBackgroundImage = function (cssDeclaration, finishHandler) {
+        var url;
+        try {
+            url = extractCssUrl(cssDeclaration.values[0].cssText());
+        } catch (e) {
+            finishHandler(false);
+            return;
+        }
+
+        if (isDataUrl(url)) {
+            finishHandler(false);
+            return;
+        }
+
+        getDataURIForImageURL(url, function (dataURI) {
+            cssDeclaration.values[0].setCssText('url("' + dataURI + '")');
+
+            finishHandler(true);
+        });
+    };
+
+    var iterateOverRulesAndInline = function (parsedCSS, finishHandler) {
+        var declarationsToInline = findBackgroundImageDeclarations(parsedCSS),
+            declarationsToFinalize = declarationsToInline.length,
+            cssHasChanges = false,
+            i, j, rule;
+
+        var finishWorker = function (hasChanges) {
+            declarationsToFinalize--;
+
+            cssHasChanges = cssHasChanges || hasChanges;
+
+            if (finishHandler && declarationsToFinalize === 0) {
+                finishHandler(cssHasChanges);
+            }
+        };
+
+        if (declarationsToInline.length === 0) {
+            finishHandler(false);
+        }
+
+        for (i = 0; i < declarationsToInline.length; i++) {
+            loadAndInlineBackgroundImage(declarationsToInline[i], finishWorker);
+        }
+    };
+
+    var loadAndInlineCSSResources = function (style, finishHandler) {
+        var parser = new CSSParser(),
+            parsedCSS = parser.parse(style.textContent, false, true);
+
+        iterateOverRulesAndInline(parsedCSS, function (hasChanges) {
+            if (hasChanges) {
+                style.childNodes[0].nodeValue = parsedCSS.cssText();
+            }
+            finishHandler();
+        });
+    };
+
+    module.loadAndInlineCSSReferences = function (doc, finishHandler) {
+        var styles = doc.getElementsByTagName("style"),
+            stylesToFinalize = styles.length,
+            i;
+
+        var finishWorker = function () {
+            stylesToFinalize--;
+
+            if (finishHandler && stylesToFinalize === 0) {
+                finishHandler();
+            }
+        };
+
+        if (styles.length === 0) {
+            finishHandler();
+            return;
+        }
+
+        for(i = 0; i < styles.length; i++) {
+            if (styles[i].type === "text/css") {
+                loadAndInlineCSSResources(styles[i], finishWorker);
+            } else {
+                // We need to properly deal with non-css in this concurrent context
+                finishWorker();
             }
         }
     };
@@ -219,7 +372,7 @@ var HTML2Canvas = (function () {
         };
         image.src = url;
 
-        workAroundWebkitBugForInlinedImages();
+        workAroundWebkitBugForInlinedImages(svg);
     };
 
     return module;
