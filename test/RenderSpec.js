@@ -60,7 +60,7 @@ describe("Rendering the Canvas", function () {
             return [pixelList[offset], pixelList[offset+1], pixelList[offset+2], pixelList[offset+3]];
         };
 
-        it("should render the SVG into the canvas", function () {
+        ifNotInWebkitIt("should render the SVG into the canvas", function () {
             var renderFinished = false,
                 twoColorSvg = (
                     '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">' +
@@ -98,7 +98,7 @@ describe("Rendering the Canvas", function () {
             });
         });
 
-        it("should render an SVG with inline image into the canvas", function () {
+        ifNotInWebkitIt("should render an SVG with inline image into the canvas", function () {
             var renderFinished = false,
                 twoColorSvg = (
                     '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">' +

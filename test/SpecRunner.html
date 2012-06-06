@@ -18,6 +18,26 @@
     <script type="text/javascript" src="../lib/cssParser.js"></script>
     <script type="text/javascript" src="../rasterizeHTML.js"></script>
 
+    <script type="text/javascript">
+        var isWebkit = navigator.userAgent.indexOf("WebKit") >= 0,
+            ifNotInWebkitIt = function(text, functionHandle) {
+                if (! isWebkit) {
+                    return it(text, functionHandle);
+                } else {
+                    safeLog(
+                        "***************************************************************************\n" +
+                        'Warning: "' + text + '" is disabled on this platform\n' +
+                        "***************************************************************************\n"
+                        )
+                }
+            },
+            safeLog = function (msg) {
+                if (window.console && console.log) {
+                    console.log(msg);
+                }
+            };
+    </script>
+
     <!-- include spec files here... -->
     <script type="text/javascript" src="UtilSpec.js"></script>
     <script type="text/javascript" src="RenderSpec.js"></script>
