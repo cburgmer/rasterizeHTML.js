@@ -9,6 +9,45 @@ var rasterizeHTML = (function () {
 
     var module = {};
 
+    /* Utilities */
+
+    module.util = {};
+
+    module.util.cloneArray = function (nodeList) {
+        return Array.prototype.slice.apply(nodeList, [0]);
+    };
+
+    module.util.map = function (list, func, callback) {
+        var completedCount = 0,
+            // Operating inline on array-like structures like document.getElementByTagName() (e.g. deleting a node),
+            // will change the original list
+            clonedList = module.util.cloneArray(list),
+            results = [],
+            i;
+
+        if (clonedList.length === 0) {
+            callback(results);
+        }
+
+        var callForItem = function (idx) {
+            function funcFinishCallback(result) {
+                completedCount += 1;
+
+                results[idx] = result;
+
+                if (completedCount === clonedList.length) {
+                    callback(results);
+                }
+            }
+
+            func(clonedList[idx], funcFinishCallback);
+        };
+
+        for(i = 0; i < clonedList.length; i++) {
+            callForItem(i);
+        }
+    };
+
     /* Inlining */
 
     var isDataUrl = function (url) {
@@ -27,54 +66,41 @@ var rasterizeHTML = (function () {
         return canvas.toDataURL("image/png");
     };
 
-    var getDataURIForImageURL = function (url, finishHandler) {
+    var getDataURIForImageURL = function (url, callback) {
         var img = new window.Image(),
             dataURI;
 
         img.onload = function () {
             dataURI = getDataURIForImage(img);
 
-            finishHandler(dataURI);
+            callback(dataURI);
         };
         img.src = url;
     };
 
     /* Img Inlining */
 
-    var encodeImageAsDataURI = function (image, finishHandler) {
+    var encodeImageAsDataURI = function (image, callback) {
         var url = image.attributes.src.nodeValue; // Chrome 19 sets image.src to "";
 
         if (isDataUrl(url)) {
-            finishHandler();
+            callback();
         }
 
         getDataURIForImageURL(url, function (dataURI) {
             image.src = dataURI;
-            finishHandler();
+            callback();
         });
     };
 
-    module.loadAndInlineImages = function (doc, finishHandler) {
-        var images = doc.getElementsByTagName("img"),
-            imagesToFinalize = images.length,
-            i;
+    module.loadAndInlineImages = function (doc, callback) {
+        var images = doc.getElementsByTagName("img");
 
-        var finishWorker = function () {
-            imagesToFinalize--;
-
-            if (finishHandler && imagesToFinalize === 0) {
-                finishHandler();
-            }
-        };
-
-        if (images.length === 0) {
-            finishHandler();
-            return;
-        }
-
-        for(i = 0; i < images.length; i++) {
-            encodeImageAsDataURI(images[i], finishWorker);
-        }
+        module.util.map(images, function (image, finish) {
+            encodeImageAsDataURI(image, finish);
+        }, function () {
+            callback();
+        });
     };
 
     /* CSS inlining */
@@ -88,7 +114,7 @@ var rasterizeHTML = (function () {
         doc.head.appendChild(styleNode);
     };
 
-    var loadLinkedCSSAndRemoveNode = function (link, finishHandler) {
+    var loadLinkedCSSAndRemoveNode = function (link, callback) {
         var href = link.attributes.href.nodeValue; // Chrome 19 sets link.href to ""
 
         window.jQuery.ajax({
@@ -96,45 +122,41 @@ var rasterizeHTML = (function () {
             url: href,
             success: function(data) {
                 link.parentNode.removeChild(link);
-                finishHandler(data);
+                callback(data);
             }
         });
     };
 
-    module.loadAndInlineCSS = function (doc, finishHandler) {
-        var links = doc.getElementsByTagName("link"),
-            linksToFinalize = links.length,
-            aggregatedStyleContent = "",
-            i;
-
-        var addLoadedStyleAndFinalize = function (styleContent) {
-            aggregatedStyleContent += styleContent + "\n";
-            linksToFinalize--;
-
-            if (linksToFinalize === 0) {
-                if (aggregatedStyleContent.trim()) {
-                    addInlineCSSToDocument(doc, aggregatedStyleContent.trim());
-                }
-
-                if (finishHandler) {
-                    finishHandler();
-                }
-            }
-        };
-
-        if (links.length === 0) {
-            finishHandler();
-            return;
+    var mergeAndAddInlineStyle = function (doc, styles) {
+        var aggregatedStyleContent = styles.join("").trim();
+        if (aggregatedStyleContent) {
+            addInlineCSSToDocument(doc, aggregatedStyleContent);
         }
+    };
 
-        for(i = 0; i < links.length; i++) {
-            if (links[i].rel === "stylesheet" && links[i].type === "text/css") {
-                loadLinkedCSSAndRemoveNode(links[i], addLoadedStyleAndFinalize);
+    module.loadAndInlineCSS = function (doc, callback) {
+        var links = doc.getElementsByTagName("link");
+
+        module.util.map(links, function (link, finish) {
+            if (link.rel === "stylesheet" && link.type === "text/css") {
+                loadLinkedCSSAndRemoveNode(link, function(css) {
+                    if (css.trim()) {
+                        finish(css + "\n");
+                    } else {
+                        finish('');
+                    }
+                });
             } else {
                 // We need to properly deal with non-stylesheet in this concurrent context
-                addLoadedStyleAndFinalize('');
+                finish('');
             }
-        }
+        }, function (styles) {
+            mergeAndAddInlineStyle(doc, styles);
+
+            if (callback) {
+                callback();
+            }
+        });
     };
 
     /* CSS linked resource inlining */
@@ -184,90 +206,68 @@ var rasterizeHTML = (function () {
         return declarationsToInline;
     };
 
-    var loadAndInlineBackgroundImage = function (cssDeclaration, finishHandler) {
+    var loadAndInlineBackgroundImage = function (cssDeclaration, callback) {
         var url;
         try {
             url = extractCssUrl(cssDeclaration.values[0].cssText());
         } catch (e) {
-            finishHandler(false);
+            callback(false);
             return;
         }
 
         if (isDataUrl(url)) {
-            finishHandler(false);
+            callback(false);
             return;
         }
 
         getDataURIForImageURL(url, function (dataURI) {
             cssDeclaration.values[0].setCssText('url("' + dataURI + '")');
 
-            finishHandler(true);
+            callback(true);
         });
     };
 
-    var iterateOverRulesAndInline = function (parsedCSS, finishHandler) {
+    var iterateOverRulesAndInlineBackgroundImage = function (parsedCSS, callback) {
         var declarationsToInline = findBackgroundImageDeclarations(parsedCSS),
-            declarationsToFinalize = declarationsToInline.length,
-            cssHasChanges = false,
-            i, j, rule;
+            cssHasChanges;
 
-        var finishWorker = function (hasChanges) {
-            declarationsToFinalize--;
-
-            cssHasChanges = cssHasChanges || hasChanges;
-
-            if (finishHandler && declarationsToFinalize === 0) {
-                finishHandler(cssHasChanges);
-            }
-        };
-
-        if (declarationsToInline.length === 0) {
-            finishHandler(false);
-        }
-
-        for (i = 0; i < declarationsToInline.length; i++) {
-            loadAndInlineBackgroundImage(declarationsToInline[i], finishWorker);
-        }
+        rasterizeHTML.util.map(declarationsToInline, function (declaration, callback) {
+            loadAndInlineBackgroundImage(declaration, callback);
+        }, function (changedStates) {
+            cssHasChanges = changedStates.indexOf(true) >= 0;
+            callback(cssHasChanges);
+        });
     };
 
-    var loadAndInlineCSSResources = function (style, finishHandler) {
+    var loadAndInlineCSSResources = function (style, callback) {
         var parser = new CSSParser(),
             parsedCSS = parser.parse(style.textContent, false, true);
 
-        iterateOverRulesAndInline(parsedCSS, function (hasChanges) {
+        iterateOverRulesAndInlineBackgroundImage(parsedCSS, function (hasChanges) {
             if (hasChanges) {
                 style.childNodes[0].nodeValue = parsedCSS.cssText();
             }
-            finishHandler();
+            callback();
         });
     };
 
-    module.loadAndInlineCSSReferences = function (doc, finishHandler) {
+    module.loadAndInlineCSSReferences = function (doc, callback) {
         var styles = doc.getElementsByTagName("style"),
             stylesToFinalize = styles.length,
             i;
 
-        var finishWorker = function () {
-            stylesToFinalize--;
-
-            if (finishHandler && stylesToFinalize === 0) {
-                finishHandler();
-            }
-        };
-
-        if (styles.length === 0) {
-            finishHandler();
-            return;
-        }
-
-        for(i = 0; i < styles.length; i++) {
-            if (styles[i].type === "text/css") {
-                loadAndInlineCSSResources(styles[i], finishWorker);
+        module.util.map(styles, function (style, finish) {
+            if (style.type === "text/css") {
+                loadAndInlineCSSResources(style, finish);
             } else {
                 // We need to properly deal with non-css in this concurrent context
-                finishWorker();
+                finish();
             }
-        }
+        }, function () {
+            if (callback) {
+                callback();
+            }
+        });
     };
 
     /* Rendering */
@@ -336,8 +336,8 @@ var rasterizeHTML = (function () {
         }
     };
 
-    var workAroundWebkitBugForInlinedImages = function (svg) {
-        // Chrome & Safari will not show the inlined image until the svg is connected to the DOM it seems.
+    var workAroundFirefoxBugForInlinedImages = function (svg) {
+        // Firefox will not show an inlined background-image until the svg is connected to the DOM it seems.
         var doNotGarbageCollect = window.document.createElement("div");
         doNotGarbageCollect.innerHTML = svg;
     };
@@ -354,7 +354,7 @@ var rasterizeHTML = (function () {
         );
     };
 
-    module.drawSvgToCanvas = function (svg, canvas, finishHandler) {
+    module.drawSvgToCanvas = function (svg, canvas, callback) {
         var context, DOMURL, url, image;
 
         context = canvas.getContext("2d");
@@ -366,13 +366,13 @@ var rasterizeHTML = (function () {
             context.drawImage(image, 0, 0);
             cleanUpUrl(url);
 
-            if (typeof finishHandler !== "undefined") {
-                finishHandler(canvas);
+            if (typeof callback !== "undefined") {
+                callback(canvas);
             }
         };
         image.src = url;
 
-        workAroundWebkitBugForInlinedImages(svg);
+        workAroundFirefoxBugForInlinedImages(svg);
     };
 
     return module;
