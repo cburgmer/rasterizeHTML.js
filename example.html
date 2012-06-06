@@ -8,13 +8,17 @@
     <script type="text/javascript" src="rasterizeHTML.js"></script>
 </head>
 <body>
-    <canvas id="canvas" style="border:2px solid black;" width="100" height="100"></canvas>
+    <canvas id="canvas" style="border:2px solid black;" width="550" height="200"></canvas>
     <div>
-        <textarea id="input" cols="80" rows="8">&lt;div class="tigerbg"&gt;You can type HTML into this &lt;span style='color: green'&gt;canvas&lt;/span&gt;.
-&lt;img src='ghostscript_tiger.png' alt='Tiger'/&gt;&lt;/div&gt;
+        <textarea id="input" cols="80" rows="10" style="width: 550px;">&lt;div class="tigerbg"&gt;
+    You can type HTML into this &lt;span style='color: green'&gt;canvas&lt;/span&gt;.
+&lt;/div&gt;
+&lt;img src='ghostscript_tiger.png' alt='Tiger'/&gt;
 &lt;style type="text/css"&gt;
 .tigerbg {
-    background: url(ghostscript_tiger.png) no-repeat top right;
+    background: url(ghostscript_tiger.png) no-repeat top right #eef;
+    font-size: 16px;
+    height: 50px;
 }
 &lt;/style&gt;
 </textarea>
@@ -26,13 +30,13 @@
             var doc, svg, canvas;
 
             doc = document.implementation.createHTMLDocument("");
-            doc.body.innerHTML = '<div style="font-size: 16px;">' + text + '</div>';
+            doc.body.innerHTML = text;
 
             rasterizeHTML.loadAndInlineImages(doc, function () {
                 rasterizeHTML.loadAndInlineCSSReferences(doc, function () {
                     canvas = document.getElementById("canvas");
 
-                    svg = rasterizeHTML.getSvgForDocument(doc);
+                    svg = rasterizeHTML.getSvgForDocument(doc, canvas.width, canvas.height);
                     rasterizeHTML.drawSvgToCanvas(svg, canvas);
                 });
             });
@@ -41,7 +45,7 @@
         input.onkeyup = function () {
             var canvas = document.getElementById("canvas");
 
-            canvas.getContext("2d").clearRect(0, 0, 100, 100);
+            canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 
             drawCanvas(this.value);
         };

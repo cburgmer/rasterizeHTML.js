@@ -48,6 +48,30 @@ describe("Rendering the Canvas", function () {
                 '</svg>'
             );
         });
+
+        it("should return a SVG with the given size", function () {
+            var doc = document.implementation.createHTMLDocument("");
+            doc.body.innerHTML = "content";
+
+            var svgCode = rasterizeHTML.getSvgForDocument(doc, 123, 987);
+
+            expect(svgCode).toEqual(
+                '<svg xmlns="http://www.w3.org/2000/svg" width="123" height="987">' +
+                    '<foreignObject width="100%" height="100%">' +
+                        '<html xmlns="http://www.w3.org/1999/xhtml">' +
+                            '<head>' +
+                                '<title>' +
+                                '</title>' +
+                            '</head>' +
+                            '<body>' +
+                                "content" +
+                            '</body>' +
+                        '</html>' +
+                    '</foreignObject>' +
+                '</svg>'
+            );
+        });
+
     });
 
     describe("SVG rendering", function () {
