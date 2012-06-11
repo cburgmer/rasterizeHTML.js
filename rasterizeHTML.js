@@ -115,16 +115,17 @@ var rasterizeHTML = (function () {
     };
 
     var loadLinkedCSSAndRemoveNode = function (link, callback) {
-        var href = link.attributes.href.nodeValue; // Chrome 19 sets link.href to ""
+        var href = link.attributes.href.nodeValue, // Chrome 19 sets link.href to ""
+            ajaxRequest = new window.XMLHttpRequest();
 
-        window.jQuery.ajax({
-            dataType: 'text',
-            url: href,
-            success: function(data) {
+        ajaxRequest.onreadystatechange = function () {
+            if (ajaxRequest.readyState == 4) {
                 link.parentNode.removeChild(link);
-                callback(data);
+                callback(ajaxRequest.responseText);
             }
-        });
+        };
+        ajaxRequest.open('GET', href, true);
+        ajaxRequest.send(null);
     };
 
     var mergeAndAddInlineStyle = function (doc, styles) {
