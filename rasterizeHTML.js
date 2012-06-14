@@ -364,7 +364,7 @@ var rasterizeHTML = (function () {
             doNotGarbageCollect.style.visibility = "hidden";
             doNotGarbageCollect.style.width = "0px";
             doNotGarbageCollect.style.height = "0px";
-            doNotGarbageCollect.id = "rasterizeHTML_js_FirefoxWorkaround";
+            doNotGarbageCollect.id = workaroundId;
             doc.getElementsByTagName("body")[0].appendChild(doNotGarbageCollect);
         }
     };
