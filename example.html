@@ -10,14 +10,17 @@
 <body>
     <canvas id="canvas" style="border:2px solid black;" width="550" height="200"></canvas>
     <div>
-        <textarea id="input" cols="80" rows="10" style="width: 550px;">&lt;div class="tigerbg"&gt;
-    You can type HTML into this &lt;span style='color: green'&gt;canvas&lt;/span&gt;.
+        <textarea id="input" cols="80" rows="10" style="width: 550px;">You can type HTML into this &lt;span style='color: green'&gt;canvas&lt;/span&gt;.
+&lt;div class="tigerbg"&gt;
+A div with background-image
 &lt;/div&gt;
-&lt;img src='ghostscript_tiger.png' alt='Tiger'/&gt;
+An img: &lt;img src='ghostscript_tiger.png' alt='Tiger'/&gt;
 &lt;style type="text/css"&gt;
+body {
+    font-size: 16px;
+}
 .tigerbg {
     background: url(ghostscript_tiger.png) no-repeat top right #eef;
-    font-size: 16px;
     height: 50px;
 }
 &lt;/style&gt;

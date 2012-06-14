@@ -17,6 +17,12 @@ var rasterizeHTML = (function () {
         return Array.prototype.slice.apply(nodeList, [0]);
     };
 
+    module.util.log = function (msg) {
+        if (window.console && window.console.log) {
+            window.console.log(msg);
+        }
+    };
+
     module.util.map = function (list, func, callback) {
         var completedCount = 0,
             // Operating inline on array-like structures like document.getElementByTagName() (e.g. deleting a node),
@@ -88,7 +94,7 @@ var rasterizeHTML = (function () {
         }
 
         getDataURIForImageURL(url, function (dataURI) {
-            image.src = dataURI;
+            image.attributes.src.nodeValue = dataURI;
             callback();
         });
     };
@@ -106,12 +112,13 @@ var rasterizeHTML = (function () {
     /* CSS inlining */
 
     var addInlineCSSToDocument = function (doc, styleContent) {
-        var styleNode = doc.createElement("style");
+        var styleNode = doc.createElement("style"),
+            head = doc.getElementsByTagName("head")[0];
 
         styleNode.type = "text/css";
         styleNode.appendChild(doc.createTextNode(styleContent));
 
-        doc.head.appendChild(styleNode);
+        head.appendChild(styleNode);
     };
 
     var loadLinkedCSSAndRemoveNode = function (link, callback) {
@@ -139,7 +146,8 @@ var rasterizeHTML = (function () {
         var links = doc.getElementsByTagName("link");
 
         module.util.map(links, function (link, finish) {
-            if (link.rel === "stylesheet" && link.type === "text/css") {
+            if (link.attributes.rel && link.attributes.rel.nodeValue === "stylesheet" &&
+                link.attributes.type && link.attributes.type.nodeValue === "text/css") {
                 loadLinkedCSSAndRemoveNode(link, function(css) {
                     if (css.trim()) {
                         finish(css + "\n");
@@ -253,9 +261,7 @@ var rasterizeHTML = (function () {
     };
 
     module.loadAndInlineCSSReferences = function (doc, callback) {
-        var styles = doc.getElementsByTagName("style"),
-            stylesToFinalize = styles.length,
-            i;
+        var styles = doc.getElementsByTagName("style");
 
         module.util.map(styles, function (style, finish) {
             if (style.type === "text/css") {
@@ -283,8 +289,14 @@ var rasterizeHTML = (function () {
 
         doc.documentElement.setAttribute("xmlns", doc.documentElement.namespaceURI);
         xml = (new window.XMLSerializer()).serializeToString(doc.documentElement);
-        if (needsXMLParserWorkaround() && window.HTMLtoXML) {
-            return window.HTMLtoXML(xml);
+        if (needsXMLParserWorkaround()) {
+            if (window.HTMLtoXML) {
+                return window.HTMLtoXML(xml);
+            } else {
+                module.util.log("Looks like your browser needs htmlparser.js as workaround for writing XML. " +
+                    "Please include it.");
+                return xml;
+            }
         } else {
             return xml;
         }
@@ -337,10 +349,18 @@ var rasterizeHTML = (function () {
         }
     };
 
-    var workAroundFirefoxBugForInlinedImages = function (svg) {
+    var workAroundFirefoxBugForInlinedImages = function (doc, svg) {
         // Firefox will not show an inlined background-image until the svg is connected to the DOM it seems.
-        var doNotGarbageCollect = window.document.createElement("div");
-        doNotGarbageCollect.innerHTML = svg;
+        var doNotGarbageCollect;
+
+        if (window.navigator.userAgent.indexOf("Firefox") >= 0) {
+            doNotGarbageCollect = doc.createElement("div");
+            doNotGarbageCollect.innerHTML = svg;
+            doNotGarbageCollect.style.visibility = "hidden";
+            doNotGarbageCollect.style.width = "0px";
+            doNotGarbageCollect.style.height = "0px";
+            doc.getElementsByTagName("body")[0].appendChild(doNotGarbageCollect);
+        }
     };
 
     module.getSvgForDocument = function (doc, width, height) {
@@ -375,7 +395,7 @@ var rasterizeHTML = (function () {
         };
         image.src = url;
 
-        workAroundFirefoxBugForInlinedImages(svg);
+        workAroundFirefoxBugForInlinedImages(canvas.ownerDocument, svg);
     };
 
     return module;
