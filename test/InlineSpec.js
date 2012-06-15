@@ -112,7 +112,7 @@ describe("Inline external resources", function () {
     });
 
     describe("CSS inline", function () {
-        var cssLink, anotherCssLink, emptyCssLink, faviconLink;
+        var cssLink, anotherCssLink, emptyCssLink, faviconLink, cssWithRelativeResource;
 
         beforeEach(function () {
             cssLink = window.document.createElement("link");
@@ -134,6 +134,10 @@ describe("Inline external resources", function () {
             faviconLink.href = "favicon.ico";
             faviconLink.type = "image/x-icon";
 
+            cssWithRelativeResource = window.document.createElement("link");
+            cssWithRelativeResource.href = "fixtures/backgroundImage.css";
+            cssWithRelativeResource.rel = "stylesheet";
+            cssWithRelativeResource.type = "text/css";
         });
 
         it("should do nothing if no linked CSS is found", function () {
@@ -219,6 +223,26 @@ describe("Inline external resources", function () {
             runs(function () {
                 expect(doc.head.getElementsByTagName("style").length).toEqual(0);
                 expect(doc.head.getElementsByTagName("link").length).toEqual(0);
+            });
+        });
+
+        it("should map resource paths relative to the stylesheet", function () {
+            var inlineFinished = false,
+                joinUrlSpy = spyOn(rasterizeHTML.util, "joinUrl").andReturn("fixtures/green.png");
+
+            doc.head.appendChild(cssWithRelativeResource);
+
+            rasterizeHTML.loadAndInlineCSS(doc, function () { inlineFinished = true; });
+
+            waitsFor(function () {
+                return inlineFinished;
+            }, "rasterizeHTML.loadAndInlineCSS", 2000);
+
+            runs(function () {
+                expect(joinUrlSpy).toHaveBeenCalledWith(cssWithRelativeResource.href, "green.png");
+
+                expect(doc.head.getElementsByTagName("style").length).toEqual(1);
+                expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/url\(\"fixtures\/green\.png\"\)/);
             });
         });
     });

@@ -2,7 +2,7 @@
 // Distributed under the MIT License
 // For source and documentation visit:
 // http://www.github.com/cburgmer/rasterizeHTML.js
-/*global window, CSSParser*/
+/*global window, CSSParser, URI*/
 
 var rasterizeHTML = (function () {
     "use strict";
@@ -21,6 +21,14 @@ var rasterizeHTML = (function () {
         if (window.console && window.console.log) {
             window.console.log(msg);
         }
+    };
+
+    module.util.joinUrl = function (baseUrl, url) {
+        var theUrl = new URI(url);
+        if (theUrl.is("relative")) {
+            theUrl = theUrl.absoluteTo(baseUrl);
+        }
+        return theUrl.toString();
     };
 
     module.util.map = function (list, func, callback) {
@@ -52,6 +60,33 @@ var rasterizeHTML = (function () {
         for(i = 0; i < clonedList.length; i++) {
             callForItem(i);
         }
+    };
+
+    var unquoteUrl = function (quotedUrl) {
+        var doubleQuoteRegex = /^"(.+)*"$/,
+            singleQuoteRegex = /^'(.+)*'$/;
+
+        if (doubleQuoteRegex.test(quotedUrl)) {
+            return quotedUrl.replace(doubleQuoteRegex, "$1");
+        } else {
+            if (singleQuoteRegex.test(quotedUrl)) {
+                return quotedUrl.replace(singleQuoteRegex, "$1");
+            } else {
+                return quotedUrl;
+            }
+        }
+    };
+
+    module.util.extractCssUrl = function (cssUrl) {
+        var urlRegex = /^url\(([^\)]+)\)/,
+            quotedUrl;
+
+        if (!urlRegex.test(cssUrl)) {
+            throw "Invalid url";
+        }
+
+        quotedUrl = urlRegex.exec(cssUrl)[1];
+        return unquoteUrl(quotedUrl);
     };
 
     /* Inlining */
@@ -111,6 +146,43 @@ var rasterizeHTML = (function () {
 
     /* CSS inlining */
 
+    var adjustPathOfDeclarationAndReportChange = function (baseUrl, cssDeclaration) {
+        var url;
+        try {
+            url = module.util.extractCssUrl(cssDeclaration.values[0].cssText());
+        } catch (e) {
+            return false;
+        }
+
+        if (isDataUrl(url)) {
+            return false;
+        }
+
+        url = module.util.joinUrl(baseUrl, url);
+        cssDeclaration.values[0].setCssText('url("' + url + '")');
+
+        return true;
+    };
+
+
+    var adjustPathsOfCssResources = function (baseUrl, styleContent) {
+        var parser = new CSSParser(),
+            parsedCSS = parser.parse(styleContent, false, true),
+            declarationsToInline = findBackgroundImageDeclarations(parsedCSS),
+            change = false,
+            i;
+
+        for(i = 0; i < declarationsToInline.length; i++) {
+            change = adjustPathOfDeclarationAndReportChange(baseUrl, declarationsToInline[i]) || change;
+        }
+
+        if (change) {
+            return parsedCSS.cssText();
+        } else {
+            return styleContent;
+        }
+    };
+
     var addInlineCSSToDocument = function (doc, styleContent) {
         var styleNode = doc.createElement("style"),
             head = doc.getElementsByTagName("head")[0];
@@ -123,12 +195,15 @@ var rasterizeHTML = (function () {
 
     var loadLinkedCSSAndRemoveNode = function (link, callback) {
         var href = link.attributes.href.nodeValue, // Chrome 19 sets link.href to ""
-            ajaxRequest = new window.XMLHttpRequest();
+            ajaxRequest = new window.XMLHttpRequest(),
+            cssContent;
 
         ajaxRequest.onreadystatechange = function () {
             if (ajaxRequest.readyState == 4) {
+                cssContent = adjustPathsOfCssResources(href, ajaxRequest.responseText);
+
                 link.parentNode.removeChild(link);
-                callback(ajaxRequest.responseText);
+                callback(cssContent);
             }
         };
         ajaxRequest.open('GET', href, true);
@@ -170,33 +245,6 @@ var rasterizeHTML = (function () {
 
     /* CSS linked resource inlining */
 
-    var unquoteUrl = function (quotedUrl) {
-        var doubleQuoteRegex = /^"(.+)*"$/,
-            singleQuoteRegex = /^'(.+)*'$/;
-
-        if (doubleQuoteRegex.test(quotedUrl)) {
-            return quotedUrl.replace(doubleQuoteRegex, "$1");
-        } else {
-            if (singleQuoteRegex.test(quotedUrl)) {
-                return quotedUrl.replace(singleQuoteRegex, "$1");
-            } else {
-                return quotedUrl;
-            }
-        }
-    };
-
-    var extractCssUrl = function (cssUrl) {
-        var urlRegex = /^url\(([^\)]+)\)/,
-            quotedUrl;
-
-        if (!urlRegex.test(cssUrl)) {
-            throw "Invalid url";
-        }
-
-        quotedUrl = urlRegex.exec(cssUrl)[1];
-        return unquoteUrl(quotedUrl);
-    };
-
     var findBackgroundImageDeclarations = function (parsedCSS) {
         var declarationsToInline = [],
             i, j, rule;
@@ -218,7 +266,7 @@ var rasterizeHTML = (function () {
     var loadAndInlineBackgroundImage = function (cssDeclaration, callback) {
         var url;
         try {
-            url = extractCssUrl(cssDeclaration.values[0].cssText());
+            url = module.util.extractCssUrl(cssDeclaration.values[0].cssText());
         } catch (e) {
             callback(false);
             return;

@@ -10,6 +10,39 @@ describe("Utilities", function () {
             expect(input).not.toBe(output);
         });
     });
+
+    describe("Join URL", function () {
+        it("should append the url to a directory-only base", function () {
+            var url = rasterizeHTML.util.joinUrl("rel/path/", "the_relative_url");
+            expect(url).toEqual("rel/path/the_relative_url")
+        });
+
+        it("should append the url to a file base", function () {
+            var url = rasterizeHTML.util.joinUrl("rel/path/something", "the_relative_url");
+            expect(url).toEqual("rel/path/the_relative_url")
+        });
+
+        it("should merge ../ with a directory-only base", function () {
+            var url = rasterizeHTML.util.joinUrl("rel/path/", "../the_relative_url");
+            expect(url).toEqual("rel/the_relative_url")
+        });
+
+        it("should just return the url if absolute", function () {
+            var url = rasterizeHTML.util.joinUrl("rel/path/", "/the_relative_url");
+            expect(url).toEqual("/the_relative_url")
+        });
+
+        it("should combine a url starting with '/' with the host of the base", function () {
+            var url = rasterizeHTML.util.joinUrl("http://example.com/rel/path/", "/the_relative_url");
+            expect(url).toEqual("http://example.com/the_relative_url")
+        });
+
+        it("should ignore base with an absolute url", function () {
+            var url = rasterizeHTML.util.joinUrl("http://example.com/rel/path/", "http://github.com//the_relative_url");
+            expect(url).toEqual("http://github.com//the_relative_url")
+        });
+    });
+
     describe("Mapping", function () {
         it("should map each value to one function call and then call complete function", function () {
             var completedValues = [],
