@@ -31,6 +31,10 @@ var rasterizeHTML = (function () {
         return theUrl.toString();
     };
 
+    module.util.isDataUri = function (url) {
+        return (/^data:/).test(url);
+    };
+
     module.util.map = function (list, func, callback) {
         var completedCount = 0,
             // Operating inline on array-like structures like document.getElementByTagName() (e.g. deleting a node),
@@ -91,10 +95,6 @@ var rasterizeHTML = (function () {
 
     /* Inlining */
 
-    var isDataUrl = function (url) {
-        return (/^data:/).test(url);
-    };
-
     var getDataURIForImage = function (image) {
         var canvas = window.document.createElement("canvas"),
             context = canvas.getContext("2d");
@@ -119,12 +119,37 @@ var rasterizeHTML = (function () {
         img.src = url;
     };
 
+    var parseCss = function (styleContent) {
+        var parser = new CSSParser(),
+            parsedCSS = parser.parse(styleContent, false, true);
+
+        return parsedCSS;
+    };
+
+    var findBackgroundImageDeclarations = function (parsedCSS) {
+        var declarationsToInline = [],
+            i, j, rule;
+
+        for (i = 0; i < parsedCSS.cssRules.length; i++) {
+            rule = parsedCSS.cssRules[i];
+            if (rule.type === window.kJscsspSTYLE_RULE) {
+                for (j = 0; j < rule.declarations.length; j++) {
+                    if (rule.declarations[j].property === "background-image") {
+                        declarationsToInline.push(rule.declarations[j]);
+                    }
+                }
+            }
+        }
+
+        return declarationsToInline;
+    };
+
     /* Img Inlining */
 
     var encodeImageAsDataURI = function (image, callback) {
         var url = image.attributes.src.nodeValue; // Chrome 19 sets image.src to "";
 
-        if (isDataUrl(url)) {
+        if (module.util.isDataUri(url)) {
             callback();
         }
 
@@ -154,7 +179,7 @@ var rasterizeHTML = (function () {
             return false;
         }
 
-        if (isDataUrl(url)) {
+        if (module.util.isDataUri(url)) {
             return false;
         }
 
@@ -164,11 +189,9 @@ var rasterizeHTML = (function () {
         return true;
     };
 
-
     var adjustPathsOfCssResources = function (baseUrl, styleContent) {
-        var parser = new CSSParser(),
-            parsedCSS = parser.parse(styleContent, false, true),
-            declarationsToInline = findBackgroundImageDeclarations(parsedCSS),
+        var parsedCss = parseCss(styleContent),
+            declarationsToInline = findBackgroundImageDeclarations(parsedCss),
             change = false,
             i;
 
@@ -177,7 +200,7 @@ var rasterizeHTML = (function () {
         }
 
         if (change) {
-            return parsedCSS.cssText();
+            return parsedCss.cssText();
         } else {
             return styleContent;
         }
@@ -245,24 +268,6 @@ var rasterizeHTML = (function () {
 
     /* CSS linked resource inlining */
 
-    var findBackgroundImageDeclarations = function (parsedCSS) {
-        var declarationsToInline = [],
-            i, j, rule;
-
-        for (i = 0; i < parsedCSS.cssRules.length; i++) {
-            rule = parsedCSS.cssRules[i];
-            if (rule.type === window.kJscsspSTYLE_RULE) {
-                for (j = 0; j < rule.declarations.length; j++) {
-                    if (rule.declarations[j].property === "background-image") {
-                        declarationsToInline.push(rule.declarations[j]);
-                    }
-                }
-            }
-        }
-
-        return declarationsToInline;
-    };
-
     var loadAndInlineBackgroundImage = function (cssDeclaration, callback) {
         var url;
         try {
@@ -272,7 +277,7 @@ var rasterizeHTML = (function () {
             return;
         }
 
-        if (isDataUrl(url)) {
+        if (module.util.isDataUri(url)) {
             callback(false);
             return;
         }
@@ -297,12 +302,11 @@ var rasterizeHTML = (function () {
     };
 
     var loadAndInlineCSSResources = function (style, callback) {
-        var parser = new CSSParser(),
-            parsedCSS = parser.parse(style.textContent, false, true);
+        var parsedCss = parseCss(style.textContent);
 
-        iterateOverRulesAndInlineBackgroundImage(parsedCSS, function (hasChanges) {
+        iterateOverRulesAndInlineBackgroundImage(parsedCss, function (hasChanges) {
             if (hasChanges) {
-                style.childNodes[0].nodeValue = parsedCSS.cssText();
+                style.childNodes[0].nodeValue = parsedCss.cssText();
             }
             callback();
         });

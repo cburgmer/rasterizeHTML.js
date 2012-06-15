@@ -43,6 +43,16 @@ describe("Utilities", function () {
         });
     });
 
+    describe("Data URI handling", function () {
+        it("should report data URI", function () {
+            expect(rasterizeHTML.util.isDataUri('data:image/png;base64,soMEfAkebASE64=')).toBeTruthy();
+        });
+
+        it("should handle single quotes", function () {
+            expect(rasterizeHTML.util.isDataUri('path/file.png')).toBeFalsy();
+        });
+    });
+
     describe("Mapping", function () {
         it("should map each value to one function call and then call complete function", function () {
             var completedValues = [],
