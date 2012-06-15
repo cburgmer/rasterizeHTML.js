@@ -90,7 +90,7 @@ describe("Inline external resources", function () {
 
             waitsFor(function () {
                 return inlineFinished;
-            }, "rasterizeHTML.loadAndInlineCSS", 2000);
+            }, "rasterizeHTML.loadAndInlineImages", 2000);
         });
 
         it("should not touch an already inlined image", function () {
@@ -102,7 +102,7 @@ describe("Inline external resources", function () {
 
             waitsFor(function () {
                 return inlineFinished;
-            }, "rasterizeHTML.loadAndInlineCSS", 2000);
+            }, "rasterizeHTML.loadAndInlineImages", 2000);
 
             runs(function () {
                 expect(doc.getElementById("image").src).toEqual('data:image/png;base64,soMEfAkebASE64=');
@@ -112,9 +112,13 @@ describe("Inline external resources", function () {
     });
 
     describe("CSS inline", function () {
-        var cssLink, anotherCssLink, emptyCssLink, faviconLink, cssWithRelativeResource;
+        var cssLink, anotherCssLink, emptyCssLink, faviconLink, cssWithRelativeResource,
+            extractCssUrlSpy, joinUrlSpy;
 
         beforeEach(function () {
+            extractCssUrlSpy = spyOn(rasterizeHTML.util, "extractCssUrl");
+            joinUrlSpy = spyOn(rasterizeHTML.util, "joinUrl");
+
             cssLink = window.document.createElement("link");
             cssLink.href = "fixtures/some.css";
             cssLink.rel = "stylesheet";
@@ -227,8 +231,10 @@ describe("Inline external resources", function () {
         });
 
         it("should map resource paths relative to the stylesheet", function () {
-            var inlineFinished = false,
-                joinUrlSpy = spyOn(rasterizeHTML.util, "joinUrl").andReturn("fixtures/green.png");
+            var inlineFinished = false;
+
+            extractCssUrlSpy.andReturn("green.png");
+            joinUrlSpy.andReturn("fixtures/green.png");
 
             doc.head.appendChild(cssWithRelativeResource);
 
@@ -248,7 +254,8 @@ describe("Inline external resources", function () {
     });
 
     describe("CSS background-image inline", function () {
-        var addStyleToDocument = function (doc, styleContent) {
+        var extractCssUrlSpy = null,
+            addStyleToDocument = function (doc, styleContent) {
             var styleNode = doc.createElement("style");
 
             styleNode.type = "text/css";
@@ -256,6 +263,10 @@ describe("Inline external resources", function () {
 
             doc.head.appendChild(styleNode);
         };
+
+        beforeEach(function () {
+            extractCssUrlSpy = spyOn(rasterizeHTML.util, "extractCssUrl");
+        });
 
         var getImageForURL = function (url, finishHandler) {
             var img = new window.Image();
@@ -300,6 +311,8 @@ describe("Inline external resources", function () {
         it("should not touch an already inlined image", function () {
             var inlineFinished = false;
 
+            extractCssUrlSpy.andReturn("data:image/png;base64,soMEfAkebASE64=");
+
             addStyleToDocument(doc, 'span { background-image: url("data:image/png;base64,soMEfAkebASE64="); }');
 
             rasterizeHTML.loadAndInlineCSSReferences(doc, function () { inlineFinished = true; });
@@ -316,6 +329,8 @@ describe("Inline external resources", function () {
 
         it("should ignore invalid values", function () {
             var inlineFinished = false;
+
+            extractCssUrlSpy.andThrow("Invalid url");
 
             addStyleToDocument(doc, 'span { background-image: "invalid url"; }');
 
@@ -336,6 +351,8 @@ describe("Inline external resources", function () {
                 inlineFinished = false,
                 resultImage = null,
                 url;
+
+            extractCssUrlSpy.andReturn("fixtures/rednblue.png");
 
             addStyleToDocument(doc, 'span { background-image: url("fixtures/rednblue.png"); }');
 

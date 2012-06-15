@@ -148,4 +148,32 @@ describe("Utilities", function () {
         });
 
     });
+
+    describe("CSS URL extraction", function () {
+        it("should extract a CSS URL", function () {
+            var url = rasterizeHTML.util.extractCssUrl('url(path/file.png)');
+            expect(url).toEqual("path/file.png");
+        });
+
+        it("should handle double quotes", function () {
+            var url = rasterizeHTML.util.extractCssUrl('url("path/file.png")');
+            expect(url).toEqual("path/file.png");
+        });
+
+        it("should handle single quotes", function () {
+            var url = rasterizeHTML.util.extractCssUrl("url('path/file.png')");
+            expect(url).toEqual("path/file.png");
+        });
+
+        it("should extract a data URI", function () {
+            var url = rasterizeHTML.util.extractCssUrl('url("data:image/png;base64,soMEfAkebASE64=")');
+            expect(url).toEqual("data:image/png;base64,soMEfAkebASE64=");
+        });
+
+        it("should throw an exception on invalid CSS URL", function () {
+            expect(function () {
+                rasterizeHTML.util.extractCssUrl('invalid_stuff')
+            }).toThrow(new Error("Invalid url"));
+        });
+    });
 });

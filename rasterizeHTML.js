@@ -82,7 +82,7 @@ var rasterizeHTML = (function () {
             quotedUrl;
 
         if (!urlRegex.test(cssUrl)) {
-            throw "Invalid url";
+            throw new Error("Invalid url");
         }
 
         quotedUrl = urlRegex.exec(cssUrl)[1];
