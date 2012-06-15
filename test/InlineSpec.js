@@ -245,7 +245,8 @@ describe("Inline external resources", function () {
             }, "rasterizeHTML.loadAndInlineCSS", 2000);
 
             runs(function () {
-                expect(joinUrlSpy).toHaveBeenCalledWith(cssWithRelativeResource.href, "green.png");
+                // Chrome 19 sets cssWithRelativeResource.href to ""
+                expect(joinUrlSpy).toHaveBeenCalledWith(cssWithRelativeResource.attributes.href.nodeValue, "green.png");
 
                 expect(doc.head.getElementsByTagName("style").length).toEqual(1);
                 expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/url\(\"fixtures\/green\.png\"\)/);
