@@ -31,8 +31,9 @@ describe("Inline external resources", function () {
     });
 
     describe("img inline", function () {
-        var joinUrlSpy = null,
-            getLocalDocumentImage = function (image, finishHandler) {
+        var joinUrlSpy = null;
+
+        var getLocalDocumentImage = function (image, finishHandler) {
             var img = new window.Image();
 
             img.onload = function () {
@@ -41,13 +42,30 @@ describe("Inline external resources", function () {
             img.src = image.attributes.src.nodeValue; // Chrome 19 sets image.src to ""
         };
 
+        var compareImageToReference = function (image, referenceImageId) {
+            var localImg = null;
+
+            // Gecko & Webkit won't allow direct comparison of images, need to get local first
+            runs(function () {
+                getLocalDocumentImage(image, function (img) { localImg = img; });
+            });
+
+            waitsFor(function () {
+                return localImg !== null;
+            }, "Move of image to local", 200);
+
+            runs(function () {
+                expect(localImg).toImageDiffEqual(window.document.getElementById(referenceImageId));
+            });
+        };
+
         beforeEach(function () {
             joinUrlSpy = spyOn(rasterizeHTML.util, "joinUrl");
         });
 
         it("should load external images", function () {
             var inlineFinished = false,
-                localImg = null;
+                image;
 
             doc.body.innerHTML = '<img id="image" src="fixtures/rednblue.png" alt="test image"/>';
 
@@ -59,23 +77,15 @@ describe("Inline external resources", function () {
 
             // Gecko & Webkit won't allow direct comparison of images, need to get local first
             runs(function () {
-                getLocalDocumentImage(doc.getElementById("image"), function (img) { localImg = img; });
-            });
-
-            waitsFor(function () {
-                return localImg !== null;
-            }, "Move of image to local", 200);
-
-            runs(function () {
-                expect(doc.getElementById("image").src).toMatch(/^data:image\/png;base64,/);
-                expect(localImg).toImageDiffEqual(window.document.getElementById("referenceImage1"));
+                image = doc.getElementById("image");
+                expect(image.src).toMatch(/^data:image\/png;base64,/);
+                compareImageToReference(image, "referenceImage1");
             });
         });
 
         it("should load multiple external images", function () {
             var inlineFinished = false,
-                localImg1 = null,
-                localImg2 = null;
+                image1, image2;
 
             doc.body.innerHTML = (
                     '<img id="image1" src="fixtures/rednblue.png" alt="test image"/>' +
@@ -88,21 +98,13 @@ describe("Inline external resources", function () {
                 return inlineFinished;
             }, "rasterizeHTML.loadAndInlineImages", 2000);
 
-            // Gecko & Webkit won't allow direct comparison of images, need to get local first
             runs(function () {
-                getLocalDocumentImage(doc.getElementById("image1"), function (img) { localImg1 = img; });
-                getLocalDocumentImage(doc.getElementById("image2"), function (img) { localImg2 = img; });
-            });
-
-            waitsFor(function () {
-                return localImg1 !== null && localImg2 !== null;
-            }, "Move of image to local", 200);
-
-            runs(function () {
-                expect(doc.getElementById("image1").src).toMatch(/^data:image\/png;base64,/);
-                expect(localImg1).toImageDiffEqual(window.document.getElementById("referenceImage1"));
-                expect(doc.getElementById("image2").src).toMatch(/^data:image\/png;base64,/);
-                expect(localImg2).toImageDiffEqual(window.document.getElementById("referenceImage2"));
+                image1 = doc.getElementById("image1");
+                image2 = doc.getElementById("image2");
+                expect(image1.src).toMatch(/^data:image\/png;base64,/);
+                compareImageToReference(image1, "referenceImage1");
+                expect(image2.src).toMatch(/^data:image\/png;base64,/);
+                compareImageToReference(image2, "referenceImage2");
             });
         });
 
@@ -134,7 +136,7 @@ describe("Inline external resources", function () {
 
         it("should respect the document's baseURI when loading the image", function () {
             var inlineFinished = false,
-                localImg = null;
+                image;
 
             doc = readDocumentFixture("image.html");
             joinUrlSpy.andCallThrough();
@@ -147,17 +149,10 @@ describe("Inline external resources", function () {
 
             runs(function () {
                 expect(joinUrlSpy).toHaveBeenCalledWith(doc.baseURI, "rednblue.png");
-                // Gecko & Webkit won't allow direct comparison of images, need to get local first
-                getLocalDocumentImage(doc.getElementsByTagName("img")[0], function (img) { localImg = img; });
-            });
 
-            waitsFor(function () {
-                return localImg !== null;
-            }, "Move of image to local", 200);
-
-            runs(function () {
-                expect(doc.getElementsByTagName("img")[0].attributes.src.nodeValue).toMatch(/^data:image\/png;base64,/);
-                expect(localImg).toImageDiffEqual(window.document.getElementById("referenceImage1"));
+                image = doc.getElementsByTagName("img")[0];
+                expect(image.attributes.src.nodeValue).toMatch(/^data:image\/png;base64,/);
+                compareImageToReference(image, "referenceImage1");
             });
         });
     });
@@ -348,6 +343,20 @@ describe("Inline external resources", function () {
             img.src = url;
         };
 
+        var compareDataUriToReferenceImage = function (uri, referenceImageId) {
+            var resultImage = null;
+
+            getImageForURL(uri, function (img) { resultImage = img; });
+
+            waitsFor(function () {
+                return resultImage !== null;
+            }, "getting result image", 2000);
+
+            runs(function () {
+                expect(resultImage).toImageDiffEqual(window.document.getElementById(referenceImageId));
+            });
+        };
+
         beforeEach(function () {
             extractCssUrlSpy = spyOn(rasterizeHTML.util, "extractCssUrl");
             joinUrlSpy = spyOn(rasterizeHTML.util, "joinUrl");
@@ -425,7 +434,6 @@ describe("Inline external resources", function () {
         it("should inline a background-image", function () {
             var backgroundImageRegex = /^span\s*\{\s*background-image: url\("([^\)]+)"\);\s*\}\s*$/,
                 inlineFinished = false,
-                resultImage = null,
                 url, styleContent;
 
             extractCssUrlSpy.andReturn("fixtures/rednblue.png");
@@ -449,22 +457,13 @@ describe("Inline external resources", function () {
             });
 
             runs(function () {
-                getImageForURL(url, function (img) { resultImage = img; });
-            });
-
-            waitsFor(function () {
-                return resultImage !== null;
-            }, "getting result image", 2000);
-
-            runs(function () {
-                expect(resultImage).toImageDiffEqual(window.document.getElementById("referenceImage1"));
+                compareDataUriToReferenceImage(url, "referenceImage1");
             });
         });
 
         it("should respect the document's baseURI when loading the background-image", function () {
             var backgroundImageRegex = /background-image:\s*url\("([^\)]+)"\);/,
                 inlineFinished = false,
-                resultImage = null,
                 url, styleContent;
 
             extractCssUrlSpy.andReturn("rednblue.png");
@@ -491,15 +490,7 @@ describe("Inline external resources", function () {
             });
 
             runs(function () {
-                getImageForURL(url, function (img) { resultImage = img; });
-            });
-
-            waitsFor(function () {
-                return resultImage !== null;
-            }, "getting result image", 2000);
-
-            runs(function () {
-                expect(resultImage).toImageDiffEqual(window.document.getElementById("referenceImage1"));
+                compareDataUriToReferenceImage(url, "referenceImage1");
             });
         });
 
