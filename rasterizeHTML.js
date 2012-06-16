@@ -330,7 +330,7 @@ var rasterizeHTML = (function () {
         var styles = doc.getElementsByTagName("style");
 
         module.util.map(styles, function (style, finish) {
-            if (style.attributes.type.nodeValue === "text/css") {
+            if (style.attributes.type && style.attributes.type.nodeValue === "text/css") {
                 loadAndInlineCSSResources(style, finish);
             } else {
                 // We need to properly deal with non-css in this concurrent context
@@ -468,6 +468,23 @@ var rasterizeHTML = (function () {
         image.src = url;
 
         workAroundFirefoxBugForInlinedImages(canvas.ownerDocument, svg);
+    };
+
+    /* "Public" API */
+
+    module.drawDocument = function (doc, canvas, callback) {
+        var svg;
+
+        module.loadAndInlineImages(doc, function () {
+            module.loadAndInlineCSS(doc, function () {
+                module.loadAndInlineCSSReferences(doc, function () {
+                    svg = module.getSvgForDocument(doc, canvas.width, canvas.height);
+
+                    module.drawSvgToCanvas(svg, canvas, callback);
+                });
+            });
+        });
+
     };
 
     return module;

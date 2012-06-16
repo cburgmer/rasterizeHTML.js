@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test page with full resource includes</title>
+    <script type="text/javascript" src="../lib/cssParser.js"></script>
+    <script type="text/javascript" src="../lib/URI.js"></script>
+    <script type="text/javascript" src="../rasterizeHTML.js"></script>
+    <script type="text/javascript" src="../lib/htmlparser.js"></script> <!-- Only needed for Chrome & Safari -->
+</head>
+<body>
+    <canvas id="canvas" width="400" height="200"></canvas>
+    <script type="text/javascript">
+        var canvas = document.getElementById("canvas"),
+            request = new window.XMLHttpRequest();
+
+        request.onreadystatechange = function () {
+            if (request.readyState == 4) {
+                rasterizeHTML.drawDocument(request.responseXML, canvas);
+            }
+        };
+        request.open('GET', "fixtures/test.html", true);
+        request.responseType = "document";
+        request.overrideMimeType("text/html");
+        if (window.navigator.userAgent.indexOf("Safari") >= 0 && window.navigator.userAgent.indexOf("Chrome") == -1) {
+            request.overrideMimeType('text/xml');
+        }
+        request.send(null);
+
+    </script>
+</body>
+</html>

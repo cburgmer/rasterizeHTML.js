@@ -21,6 +21,8 @@ SVG is not allowed to link to external resources, as such all used resources nee
 
 The code is tested under Firefox, Chrome & Safari. However IE is not supported so far.
 
+At the time of writing it seems that the individual browsers still have some issues with rendering SVGs with embedded HTML to the canvas. See the [wiki](https://github.com/cburgmer/rasterizeHTML.js/wiki/Browser-issues) for a list of known issues and do add your findings there.
+
 Testing
 -------
 
