@@ -1,6 +1,24 @@
 describe("Inline external resources", function () {
     var doc;
 
+    var readDocumentFixture = function (url) {
+        var doc,
+            fixtureUrl = jasmine.getFixtures().fixturesPath + url;
+
+        $.ajax({
+            dataType: 'xml',
+            mimeType: 'text/xml',
+            url: fixtureUrl,
+            async: false,
+            cache: false,
+            success: function (content) {
+                doc = content;
+            }
+        });
+
+        return doc;
+    };
+
     beforeEach(function () {
         doc = document.implementation.createHTMLDocument("");
 
@@ -13,7 +31,8 @@ describe("Inline external resources", function () {
     });
 
     describe("img inline", function () {
-        var getLocalDocumentImage = function (image, finishHandler) {
+        var joinUrlSpy = null,
+            getLocalDocumentImage = function (image, finishHandler) {
             var img = new window.Image();
 
             img.onload = function () {
@@ -21,6 +40,10 @@ describe("Inline external resources", function () {
             };
             img.src = image.attributes.src.nodeValue; // Chrome 19 sets image.src to ""
         };
+
+        beforeEach(function () {
+            joinUrlSpy = spyOn(rasterizeHTML.util, "joinUrl");
+        });
 
         it("should load external images", function () {
             var inlineFinished = false,
@@ -109,6 +132,34 @@ describe("Inline external resources", function () {
             });
         });
 
+        it("should respect the document's baseURI when loading the image", function () {
+            var inlineFinished = false,
+                localImg = null;
+
+            doc = readDocumentFixture("image.html");
+            joinUrlSpy.andCallThrough();
+
+            rasterizeHTML.loadAndInlineImages(doc, function () { inlineFinished = true; });
+
+            waitsFor(function () {
+                return inlineFinished;
+            }, "rasterizeHTML.loadAndInlineImages", 2000);
+
+            runs(function () {
+                expect(joinUrlSpy).toHaveBeenCalledWith(doc.baseURI, "rednblue.png");
+                // Gecko & Webkit won't allow direct comparison of images, need to get local first
+                getLocalDocumentImage(doc.getElementsByTagName("img")[0], function (img) { localImg = img; });
+            });
+
+            waitsFor(function () {
+                return localImg !== null;
+            }, "Move of image to local", 200);
+
+            runs(function () {
+                expect(doc.getElementsByTagName("img")[0].attributes.src.nodeValue).toMatch(/^data:image\/png;base64,/);
+                expect(localImg).toImageDiffEqual(window.document.getElementById("referenceImage1"));
+            });
+        });
     });
 
     describe("CSS inline", function () {
@@ -230,6 +281,28 @@ describe("Inline external resources", function () {
             });
         });
 
+        it("should respect the document's baseURI when loading linked CSS", function () {
+            var inlineFinished = false;
+
+            joinUrlSpy.andCallThrough();
+
+            doc = readDocumentFixture("externalCSS.html");
+
+            rasterizeHTML.loadAndInlineCSS(doc, function () { inlineFinished = true; });
+
+            waitsFor(function () {
+                return inlineFinished;
+            }, "rasterizeHTML.loadAndInlineCSS", 2000);
+
+            runs(function () {
+                expect(joinUrlSpy).toHaveBeenCalledWith(doc.baseURI, "some.css");
+
+                expect(doc.getElementsByTagName("style").length).toEqual(1);
+                expect(doc.getElementsByTagName("style")[0].textContent).toEqual("p { font-size: 14px; }");
+                expect(doc.getElementsByTagName("link").length).toEqual(0);
+            });
+        });
+
         it("should map resource paths relative to the stylesheet", function () {
             var inlineFinished = false;
 
@@ -255,8 +328,9 @@ describe("Inline external resources", function () {
     });
 
     describe("CSS background-image inline", function () {
-        var extractCssUrlSpy = null,
-            addStyleToDocument = function (doc, styleContent) {
+        var extractCssUrlSpy, joinUrlSpy;
+
+        var addStyleToDocument = function (doc, styleContent) {
             var styleNode = doc.createElement("style");
 
             styleNode.type = "text/css";
@@ -264,10 +338,6 @@ describe("Inline external resources", function () {
 
             doc.head.appendChild(styleNode);
         };
-
-        beforeEach(function () {
-            extractCssUrlSpy = spyOn(rasterizeHTML.util, "extractCssUrl");
-        });
 
         var getImageForURL = function (url, finishHandler) {
             var img = new window.Image();
@@ -277,6 +347,11 @@ describe("Inline external resources", function () {
             };
             img.src = url;
         };
+
+        beforeEach(function () {
+            extractCssUrlSpy = spyOn(rasterizeHTML.util, "extractCssUrl");
+            joinUrlSpy = spyOn(rasterizeHTML.util, "joinUrl");
+        });
 
         it("should do nothing if no CSS is found", function () {
             var inlineFinished = false;
@@ -351,7 +426,7 @@ describe("Inline external resources", function () {
             var backgroundImageRegex = /^span\s*\{\s*background-image: url\("([^\)]+)"\);\s*\}\s*$/,
                 inlineFinished = false,
                 resultImage = null,
-                url;
+                url, styleContent;
 
             extractCssUrlSpy.andReturn("fixtures/rednblue.png");
 
@@ -364,9 +439,54 @@ describe("Inline external resources", function () {
             }, "rasterizeHTML.loadAndInlineCSSReferences", 2000);
 
             runs(function () {
+                expect(extractCssUrlSpy).toHaveBeenCalledWith('url("fixtures/rednblue.png")');
+
                 expect(doc.head.getElementsByTagName("style").length).toEqual(1);
-                expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(backgroundImageRegex);
-                url = backgroundImageRegex.exec(doc.head.getElementsByTagName("style")[0].textContent)[1];
+                styleContent = doc.head.getElementsByTagName("style")[0].textContent;
+                expect(styleContent).toMatch(backgroundImageRegex);
+                url = backgroundImageRegex.exec(styleContent)[1];
+                expect(url).toMatch(/^data:image\/png;base64,/);
+            });
+
+            runs(function () {
+                getImageForURL(url, function (img) { resultImage = img; });
+            });
+
+            waitsFor(function () {
+                return resultImage !== null;
+            }, "getting result image", 2000);
+
+            runs(function () {
+                expect(resultImage).toImageDiffEqual(window.document.getElementById("referenceImage1"));
+            });
+        });
+
+        it("should respect the document's baseURI when loading the background-image", function () {
+            var backgroundImageRegex = /background-image:\s*url\("([^\)]+)"\);/,
+                inlineFinished = false,
+                resultImage = null,
+                url, styleContent;
+
+            extractCssUrlSpy.andReturn("rednblue.png");
+            joinUrlSpy.andCallThrough();
+
+            doc = readDocumentFixture("backgroundImage.html");
+
+            rasterizeHTML.loadAndInlineCSSReferences(doc, function () { inlineFinished = true; });
+
+            waitsFor(function () {
+                return inlineFinished;
+            }, "rasterizeHTML.loadAndInlineCSSReferences", 2000);
+
+            runs(function () {
+                expect(extractCssUrlSpy).toHaveBeenCalledWith('url("rednblue.png")');
+                expect(joinUrlSpy).toHaveBeenCalledWith(doc.baseURI, "rednblue.png");
+
+                expect(doc.getElementsByTagName("style").length).toEqual(1);
+                styleContent = doc.getElementsByTagName("style")[0].textContent;
+                expect(styleContent).toMatch(backgroundImageRegex);
+
+                url = backgroundImageRegex.exec(styleContent)[1];
                 expect(url).toMatch(/^data:image\/png;base64,/);
             });
 

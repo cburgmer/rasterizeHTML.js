@@ -119,6 +119,14 @@ var rasterizeHTML = (function () {
         img.src = url;
     };
 
+    var getUrlRelativeToDocumentBase = function (url, baseUrl) {
+        if (baseUrl && baseUrl !== "about:blank") {
+            url = module.util.joinUrl(baseUrl, url);
+        }
+
+        return url;
+    };
+
     var parseCss = function (styleContent) {
         var parser = new CSSParser(),
             parsedCSS = parser.parse(styleContent, false, true);
@@ -152,6 +160,8 @@ var rasterizeHTML = (function () {
         if (module.util.isDataUri(url)) {
             callback();
         }
+
+        url = getUrlRelativeToDocumentBase(url, image.ownerDocument.baseURI);
 
         getDataURIForImageURL(url, function (dataURI) {
             image.attributes.src.nodeValue = dataURI;
@@ -221,6 +231,8 @@ var rasterizeHTML = (function () {
             ajaxRequest = new window.XMLHttpRequest(),
             cssContent;
 
+        href = getUrlRelativeToDocumentBase(href, link.ownerDocument.baseURI);
+
         ajaxRequest.onreadystatechange = function () {
             if (ajaxRequest.readyState == 4) {
                 cssContent = adjustPathsOfCssResources(href, ajaxRequest.responseText);
@@ -268,7 +280,7 @@ var rasterizeHTML = (function () {
 
     /* CSS linked resource inlining */
 
-    var loadAndInlineBackgroundImage = function (cssDeclaration, callback) {
+    var loadAndInlineBackgroundImage = function (cssDeclaration, baseUri, callback) {
         var url;
         try {
             url = module.util.extractCssUrl(cssDeclaration.values[0].cssText());
@@ -282,6 +294,8 @@ var rasterizeHTML = (function () {
             return;
         }
 
+        url = getUrlRelativeToDocumentBase(url, baseUri);
+
         getDataURIForImageURL(url, function (dataURI) {
             cssDeclaration.values[0].setCssText('url("' + dataURI + '")');
 
@@ -289,12 +303,12 @@ var rasterizeHTML = (function () {
         });
     };
 
-    var iterateOverRulesAndInlineBackgroundImage = function (parsedCSS, callback) {
+    var iterateOverRulesAndInlineBackgroundImage = function (parsedCSS, baseUri, callback) {
         var declarationsToInline = findBackgroundImageDeclarations(parsedCSS),
             cssHasChanges;
 
         rasterizeHTML.util.map(declarationsToInline, function (declaration, callback) {
-            loadAndInlineBackgroundImage(declaration, callback);
+            loadAndInlineBackgroundImage(declaration, baseUri, callback);
         }, function (changedStates) {
             cssHasChanges = changedStates.indexOf(true) >= 0;
             callback(cssHasChanges);
@@ -304,7 +318,7 @@ var rasterizeHTML = (function () {
     var loadAndInlineCSSResources = function (style, callback) {
         var parsedCss = parseCss(style.textContent);
 
-        iterateOverRulesAndInlineBackgroundImage(parsedCss, function (hasChanges) {
+        iterateOverRulesAndInlineBackgroundImage(parsedCss, style.ownerDocument.baseURI, function (hasChanges) {
             if (hasChanges) {
                 style.childNodes[0].nodeValue = parsedCss.cssText();
             }
@@ -316,7 +330,7 @@ var rasterizeHTML = (function () {
         var styles = doc.getElementsByTagName("style");
 
         module.util.map(styles, function (style, finish) {
-            if (style.type === "text/css") {
+            if (style.attributes.type.nodeValue === "text/css") {
                 loadAndInlineCSSResources(style, finish);
             } else {
                 // We need to properly deal with non-css in this concurrent context
