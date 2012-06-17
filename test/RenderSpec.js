@@ -167,42 +167,24 @@ describe("Rendering the Canvas", function () {
         });
 
         it("should add a workaround for Firefox and Chrome to fix background-images not being rendered", function () {
-console.log(0);
             var renderFinished = false,
                 canvas = document.createElement("canvas"),
                 svg = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"></svg>';
 
-console.log(1);
-try {
             rasterizeHTML.drawSvgToCanvas(svg, canvas, function () { renderFinished = true; });
-} catch (err) {
-    console.log(err);
-}
-console.log(2);
 
             waitsFor(function () {
                 return renderFinished;
             }, "rasterizeHTML.drawSvgToCanvas", 2000);
 
-console.log(3);
             runs(function () {
-try {
-console.log(4);
                 if (window.navigator.userAgent.indexOf("Firefox") >= 0 || window.navigator.userAgent.indexOf("Chrome") >= 0) {
-console.log(5.1);
                     expect($("#rasterizeHTML_js_FirefoxWorkaround")).toExist();
-console.log(5.2);
                     expect($("#rasterizeHTML_js_FirefoxWorkaround svg")).toExist();
-console.log(5.3);
                     expect($("#rasterizeHTML_js_FirefoxWorkaround svg").css("visibility")).toEqual("hidden");
                 } else {
-console.log(6.1);
                     expect($("#rasterizeHTML_js_FirefoxWorkaround")).not.toExist();
                 }
-} catch (err) {
-    console.log(err);
-}
-console.log(7);
             });
         });
     });
