@@ -167,14 +167,14 @@ describe("Rendering the Canvas", function () {
         });
 
         it("should add a workaround for Firefox and Chrome to fix background-images not being rendered", function () {
-            var canvas = document.createElement("canvas"),
-                svg = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"></svg>',
-                callback = jasmine.createSpy("callback");
+            var renderFinished = false,
+                canvas = document.createElement("canvas"),
+                svg = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"></svg>';
 
-            rasterizeHTML.drawSvgToCanvas(svg, canvas, callback);
+            rasterizeHTML.drawSvgToCanvas(svg, canvas, function () { renderFinished = true; });
 
             waitsFor(function () {
-                return callback.wasCalled;
+                return renderFinished;
             }, "rasterizeHTML.drawSvgToCanvas", 2000);
 
             runs(function () {
