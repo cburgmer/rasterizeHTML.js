@@ -62,6 +62,11 @@
 //            return htmlReporter.specFilter(spec);
 //            };
 
+            // HACK trigger fallback logging in jasmine's console logger for console output on build pipeline
+            if (navigator.userAgent.indexOf("PhantomJS") >= 0) {
+                console.group = null;
+            }
+
             jasmine.getFixtures().fixturesPath = './fixtures/';
 
             var currentWindowOnload = window.onload;
