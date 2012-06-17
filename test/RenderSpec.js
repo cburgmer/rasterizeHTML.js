@@ -182,7 +182,7 @@ console.log(2);
 
             waitsFor(function () {
                 return renderFinished;
-            }, "rasterizeHTML.drawSvgToCanvas");
+            }, "rasterizeHTML.drawSvgToCanvas", 2000);
 
 console.log(3);
             runs(function () {
