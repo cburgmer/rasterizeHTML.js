@@ -392,7 +392,9 @@ var rasterizeHTML = (function () {
             // Deprecated interface
             return true;
         } else {
-            if (window.Blob) {
+            // Newer WebKit (under PhantomJS) seems to support the constructor, but loading an image with the blob fails
+            if (window.Blob &&
+                !(window.navigator.userAgent.indexOf("WebKit") >= 0 && window.navigator.userAgent.indexOf("Chrome") < 0)) {
                 // Available as constructor only in newer builds for all Browsers
                 try {
                     new window.Blob('<b></b>', { "type" : "text\/xml" });
