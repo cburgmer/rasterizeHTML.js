@@ -415,12 +415,13 @@ var rasterizeHTML = (function () {
         }
     };
 
-    var workAroundFirefoxBugForInlinedImages = function (doc, svg) {
-        // Firefox will not show an inlined background-image until the svg is connected to the DOM it seems.
+    var workAroundBrowserBugForBackgroundImages = function (doc, svg) {
+        // Firefox and Chrome will (sometimes) not show an inlined background-image until the svg is connected to
+        // the DOM it seems.
         var workaroundId = "rasterizeHTML_js_FirefoxWorkaround",
             doNotGarbageCollect;
 
-        if (window.navigator.userAgent.indexOf("Firefox") >= 0) {
+        if (window.navigator.userAgent.indexOf("Firefox") >= 0 || window.navigator.userAgent.indexOf("Chrome") >= 0) {
             doNotGarbageCollect = doc.getElementById(workaroundId);
             if (doNotGarbageCollect) {
                 doNotGarbageCollect.parentNode.removeChild(doNotGarbageCollect);
@@ -467,7 +468,7 @@ var rasterizeHTML = (function () {
         };
         image.src = url;
 
-        workAroundFirefoxBugForInlinedImages(canvas.ownerDocument, svg);
+        workAroundBrowserBugForBackgroundImages(canvas.ownerDocument, svg);
     };
 
     /* "Public" API */
