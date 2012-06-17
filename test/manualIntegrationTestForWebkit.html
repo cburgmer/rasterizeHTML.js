@@ -19,11 +19,9 @@
             }
         };
         request.open('GET', "fixtures/test.html", true);
+        // Seems to not work on Safari (https://developer.mozilla.org/en/HTML_in_XMLHttpRequest)
         request.responseType = "document";
         request.overrideMimeType("text/html");
-        if (window.navigator.userAgent.indexOf("Safari") >= 0 && window.navigator.userAgent.indexOf("Chrome") == -1) {
-            request.overrideMimeType('text/xml');
-        }
         request.send(null);
 
     </script>

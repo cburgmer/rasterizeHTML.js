@@ -10,11 +10,9 @@ describe("Integration test", function () {
             }
         };
         request.open('GET', url, true);
+        // Seems to not work on Safari (https://developer.mozilla.org/en/HTML_in_XMLHttpRequest)
         request.responseType = "document";
         request.overrideMimeType("text/html");
-        if (window.navigator.userAgent.indexOf("Safari") >= 0 && window.navigator.userAgent.indexOf("Chrome") == -1) {
-            request.overrideMimeType('text/xml');
-        }
         request.send(null);
 
         return doc;
@@ -28,12 +26,8 @@ describe("Integration test", function () {
         var canvas = $('<canvas width="204" height="100"></canvas>'), // Firefox adds a space between the divs and needs the canvas to fit horizontally for all content to be rendered
             finished = false,
             callback = function () { finished = true; },
-            referenceImg = $('<img id="referenceImage" src="fixtures/testResult.png" alt="test image"/>'),
+            referenceImg = $('<img src="fixtures/testResult.png" alt="test image"/>'),
             doc = null;
-
-        setFixtures(sandbox());
-        canvas.appendTo("#sandbox");
-        referenceImg.appendTo("#sandbox");
 
         loadDocFixture("fixtures/test.html", function (xmlDoc) {
             doc = xmlDoc;
@@ -52,7 +46,7 @@ describe("Integration test", function () {
         });
 
         runs(function () {
-            expect(canvas.get(0)).toImageDiffEqual(window.document.getElementById("referenceImage"));
+            expect(canvas.get(0)).toImageDiffEqual(referenceImg.get(0));
         });
     });
 
