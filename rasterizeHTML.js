@@ -303,25 +303,44 @@ var rasterizeHTML = (function () {
         });
     };
 
-    var iterateOverRulesAndInlineBackgroundImage = function (parsedCSS, baseUri, callback) {
-        var declarationsToInline = findBackgroundImageDeclarations(parsedCSS),
+    var iterateOverRulesAndInlineBackgroundImage = function (parsedCss, baseUri, callback) {
+        var declarationsToInline = findBackgroundImageDeclarations(parsedCss),
             cssHasChanges;
 
         rasterizeHTML.util.map(declarationsToInline, function (declaration, callback) {
             loadAndInlineBackgroundImage(declaration, baseUri, callback);
+
         }, function (changedStates) {
             cssHasChanges = changedStates.indexOf(true) >= 0;
             callback(cssHasChanges);
         });
     };
 
+    var workAroundWebkitBugIgnoringTheFirstRuleInCSS = function (cssContent, parsedCss) {
+        // Works around bug with webkit ignoring the first rule in each style declaration when rendering the SVG to the
+        // DOM. While this does not directly affect the process when rastering to canvas, this is needed for the
+        // workaround found in workAroundBrowserBugForBackgroundImages();
+        var hasBackgroundImageDeclarations = findBackgroundImageDeclarations(parsedCss).length > 0;
+
+        if (hasBackgroundImageDeclarations && window.navigator.userAgent.indexOf("WebKit") >= 0) {
+            return "span {}\n" + cssContent;
+        } else {
+            return cssContent;
+        }
+    };
+
     var loadAndInlineCSSResources = function (style, callback) {
-        var parsedCss = parseCss(style.textContent);
+        var cssContent = style.textContent,
+            parsedCss = parseCss(cssContent);
 
         iterateOverRulesAndInlineBackgroundImage(parsedCss, style.ownerDocument.baseURI, function (hasChanges) {
             if (hasChanges) {
-                style.childNodes[0].nodeValue = parsedCss.cssText();
+                // CSSParser is invasive, if no changes are needed, we leave the text as it is
+                cssContent = parsedCss.cssText();
             }
+            cssContent = workAroundWebkitBugIgnoringTheFirstRuleInCSS(cssContent, parsedCss);
+            style.childNodes[0].nodeValue = cssContent;
+
             callback();
         });
     };

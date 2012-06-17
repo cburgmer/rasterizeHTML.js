@@ -393,7 +393,7 @@ describe("Inline external resources", function () {
             });
         });
 
-        it("should not touch an already inlined image", function () {
+        it("should not touch an already inlined background-image", function () {
             var inlineFinished = false;
 
             extractCssUrlSpy.andReturn("data:image/png;base64,soMEfAkebASE64=");
@@ -408,7 +408,7 @@ describe("Inline external resources", function () {
 
             runs(function () {
                 expect(doc.head.getElementsByTagName("style").length).toEqual(1);
-                expect(doc.head.getElementsByTagName("style")[0].textContent).toEqual('span { background-image: url("data:image/png;base64,soMEfAkebASE64="); }');
+                expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/span \{ background-image: url\("data:image\/png;base64,soMEfAkebASE64="\); \}/);
             });
         });
 
@@ -427,12 +427,12 @@ describe("Inline external resources", function () {
 
             runs(function () {
                 expect(doc.head.getElementsByTagName("style").length).toEqual(1);
-                expect(doc.head.getElementsByTagName("style")[0].textContent).toEqual('span { background-image: "invalid url"; }');
+                expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/span \{ background-image: "invalid url"; \}/);
             });
         });
 
         it("should inline a background-image", function () {
-            var backgroundImageRegex = /^span\s*\{\s*background-image: url\("([^\)]+)"\);\s*\}\s*$/,
+            var backgroundImageRegex = /span\s*\{\s*background-image: url\("([^\)]+)"\);\s*\}/,
                 inlineFinished = false,
                 url, styleContent;
 
@@ -491,6 +491,29 @@ describe("Inline external resources", function () {
 
             runs(function () {
                 compareDataUriToReferenceImage(url, "referenceImage1");
+            });
+        });
+
+        it("should add a workaround for Webkit to account for first CSS rules being ignored", function () {
+            var inlineFinished = false;
+
+            extractCssUrlSpy.andReturn("data:image/png;base64,soMEfAkebASE64=");
+
+            addStyleToDocument(doc, 'span { background-image: url("data:image/png;base64,soMEfAkebASE64="); }');
+
+            rasterizeHTML.loadAndInlineCSSReferences(doc, function () { inlineFinished = true; });
+
+            waitsFor(function () {
+                return inlineFinished;
+            }, "rasterizeHTML.loadAndInlineCSSReferences", 2000);
+
+            runs(function () {
+                expect(doc.head.getElementsByTagName("style").length).toEqual(1);
+                if (window.navigator.userAgent.indexOf("WebKit") >= 0) {
+                    expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/^span \{\}/);
+                } else {
+                    expect(doc.head.getElementsByTagName("style")[0].textContent).not.toMatch(/^span \{\}/);
+                }
             });
         });
 
