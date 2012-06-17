@@ -470,24 +470,35 @@ var rasterizeHTML = (function () {
     };
 
     module.drawSvgToCanvas = function (svg, canvas, callback) {
+window.console.log("drawSvgToCanvas 0");
         var context, DOMURL, url, image;
 
+window.console.log("drawSvgToCanvas 1");
         context = canvas.getContext("2d");
+window.console.log("drawSvgToCanvas 2");
 
         url = buildImageUrl(svg);
+window.console.log("drawSvgToCanvas 3");
 
         image = new window.Image();
+window.console.log("drawSvgToCanvas 4");
         image.onload = function() {
+window.console.log("drawSvgToCanvas 8");
             context.drawImage(image, 0, 0);
+window.console.log("drawSvgToCanvas 9");
             cleanUpUrl(url);
+window.console.log("drawSvgToCanvas 10 callback:" + (typeof callback));
 
             if (typeof callback !== "undefined") {
                 callback(canvas);
             }
         };
+window.console.log("drawSvgToCanvas 5");
         image.src = url;
+window.console.log("drawSvgToCanvas 6 url:" + url);
 
         workAroundBrowserBugForBackgroundImages(canvas.ownerDocument, svg);
+window.console.log("drawSvgToCanvas 7");
     };
 
     /* "Public" API */
