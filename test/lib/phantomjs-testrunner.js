@@ -1,3 +1,21 @@
+// Colors, taken from https://github.com/loopj/commonjs-ansi-color
+var ANSI_CODES = {
+  "off": 0,
+  "bold": 1,
+  "red": 31,
+  "green": 32
+};
+
+function color(str,color) {
+  if(!color) return str;
+  var color_attrs = color.split("+");
+  var ansi_str = "";
+  for(var i=0, attr; attr = color_attrs[i]; i++) {
+    ansi_str += "\033[" + ANSI_CODES[attr] + "m";
+  }
+  ansi_str += str + "\033[" + ANSI_CODES["off"] + "m";
+  return ansi_str;
+}
 // Verify arguments
 if (phantom.args.length === 0) {
     console.log("Simple JasmineBDD test runner for phantom.js");
@@ -37,6 +55,11 @@ else {
         pages.push(page);
 
         page.onConsoleMessage = function(msg) {
+            if (msg === "Passed.") {
+                msg = color(msg, "green+bold");
+            } else if (msg === "Failed.") {
+                msg = color(msg, "red+bold");
+            }
             console.log(msg);
         };
     }
