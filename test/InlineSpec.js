@@ -19,6 +19,14 @@ describe("Inline external resources", function () {
         return doc;
     };
 
+    var readDocumentFixtureWithoutBaseURI = function (url) {
+        var html = readFixtures(url),
+            doc = document.implementation.createHTMLDocument("");
+
+        doc.documentElement.innerHTML = html;
+        return doc;
+    };
+
     beforeEach(function () {
         doc = document.implementation.createHTMLDocument("");
 
@@ -153,6 +161,47 @@ describe("Inline external resources", function () {
                 image = doc.getElementsByTagName("img")[0];
                 expect(image.attributes.src.nodeValue).toMatch(/^data:image\/png;base64,/);
                 compareImageToReference(image, "referenceImage1");
+            });
+        });
+
+        it("should respect optional baseUrl when loading the image", function () {
+            var inlineFinished = false;
+
+            doc = readDocumentFixtureWithoutBaseURI("image.html");
+
+            joinUrlSpy.andCallThrough();
+
+            rasterizeHTML.loadAndInlineImages(doc, "./fixtures/", function () { inlineFinished = true; });
+
+            waitsFor(function () {
+                return inlineFinished;
+            }, "rasterizeHTML.loadAndInlineImages", 2000);
+
+            runs(function () {
+                expect(joinUrlSpy).toHaveBeenCalled();
+                expect(joinUrlSpy).toHaveBeenCalledWith("./fixtures/", "rednblue.png");
+            });
+        });
+
+        it("should favour explicit baseUrl over document.baseURI when loading the image", function () {
+            var inlineFinished = false,
+                baseUrl = "./fixtures/";
+
+            doc = readDocumentFixture("image.html");
+            expect(doc.baseURI).not.toBeNull();
+            expect(doc.baseURI).not.toEqual("about:blank");
+            expect(doc.baseURI).not.toEqual(baseUrl);
+
+            joinUrlSpy.andCallThrough();
+
+            rasterizeHTML.loadAndInlineImages(doc, baseUrl, function () { inlineFinished = true; });
+
+            waitsFor(function () {
+                return inlineFinished;
+            }, "rasterizeHTML.loadAndInlineImages", 2000);
+
+            runs(function () {
+                expect(joinUrlSpy).toHaveBeenCalledWith("./fixtures/", "rednblue.png");
             });
         });
     });
@@ -295,6 +344,46 @@ describe("Inline external resources", function () {
                 expect(doc.getElementsByTagName("style").length).toEqual(1);
                 expect(doc.getElementsByTagName("style")[0].textContent).toEqual("p { font-size: 14px; }");
                 expect(doc.getElementsByTagName("link").length).toEqual(0);
+            });
+        });
+
+        it("should respect optional baseUrl when loading linked CSS", function () {
+            var inlineFinished = false;
+
+            joinUrlSpy.andCallThrough();
+
+            doc = readDocumentFixtureWithoutBaseURI("externalCSS.html");
+
+            rasterizeHTML.loadAndInlineCSS(doc, "./fixtures/", function () { inlineFinished = true; });
+
+            waitsFor(function () {
+                return inlineFinished;
+            }, "rasterizeHTML.loadAndInlineCSS", 2000);
+
+            runs(function () {
+                expect(joinUrlSpy).toHaveBeenCalledWith("./fixtures/", "some.css");
+            });
+        });
+
+        it("should favour explicit baseUrl over document.baseURI when loading linked CSS", function () {
+            var inlineFinished = false,
+                baseUrl = "./fixtures/";
+
+            joinUrlSpy.andCallThrough();
+
+            doc = readDocumentFixture("externalCSS.html");
+            expect(doc.baseURI).not.toBeNull();
+            expect(doc.baseURI).not.toEqual("about:blank");
+            expect(doc.baseURI).not.toEqual(baseUrl);
+
+            rasterizeHTML.loadAndInlineCSS(doc, "./fixtures/", function () { inlineFinished = true; });
+
+            waitsFor(function () {
+                return inlineFinished;
+            }, "rasterizeHTML.loadAndInlineCSS", 2000);
+
+            runs(function () {
+                expect(joinUrlSpy).toHaveBeenCalledWith("./fixtures/", "some.css");
             });
         });
 
@@ -491,6 +580,48 @@ describe("Inline external resources", function () {
 
             runs(function () {
                 compareDataUriToReferenceImage(url, "referenceImage1");
+            });
+        });
+
+        it("should respect optional baseUrl when loading the background-image", function () {
+            var inlineFinished = false;
+
+            extractCssUrlSpy.andReturn("rednblue.png");
+            joinUrlSpy.andCallThrough();
+
+            doc = readDocumentFixtureWithoutBaseURI("backgroundImage.html");
+
+            rasterizeHTML.loadAndInlineCSSReferences(doc, "./fixtures/", function () { inlineFinished = true; });
+
+            waitsFor(function () {
+                return inlineFinished;
+            }, "rasterizeHTML.loadAndInlineCSSReferences", 2000);
+
+            runs(function () {
+                expect(joinUrlSpy).toHaveBeenCalledWith("./fixtures/", "rednblue.png");
+            });
+        });
+
+        it("should favour explicit baseUrl over document.baseURI when loading the background-image", function () {
+            var inlineFinished = false,
+                baseUrl = "./fixtures/";
+
+            extractCssUrlSpy.andReturn("rednblue.png");
+            joinUrlSpy.andCallThrough();
+
+            doc = readDocumentFixture("backgroundImage.html");
+            expect(doc.baseURI).not.toBeNull();
+            expect(doc.baseURI).not.toEqual("about:blank");
+            expect(doc.baseURI).not.toEqual(baseUrl);
+
+            rasterizeHTML.loadAndInlineCSSReferences(doc, "./fixtures/", function () { inlineFinished = true; });
+
+            waitsFor(function () {
+                return inlineFinished;
+            }, "rasterizeHTML.loadAndInlineCSSReferences", 2000);
+
+            runs(function () {
+                expect(joinUrlSpy).toHaveBeenCalledWith("./fixtures/", "rednblue.png");
             });
         });
 

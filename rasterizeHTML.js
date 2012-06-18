@@ -152,16 +152,36 @@ var rasterizeHTML = (function () {
         return declarationsToInline;
     };
 
+    var parseOptionalParameters = function (baseUrl, callback) {
+        var parameters = {
+            baseUrl: null,
+            callback: null
+        };
+
+        if (typeof callback === "undefined" && typeof baseUrl === "function") {
+            parameters.callback = baseUrl;
+        } else {
+            if (typeof baseUrl !== "undefined") {
+                parameters.baseUrl = baseUrl;
+            }
+            if (typeof callback !== "undefined") {
+                parameters.callback = callback;
+            }
+        }
+        return parameters;
+    };
+
     /* Img Inlining */
 
-    var encodeImageAsDataURI = function (image, callback) {
-        var url = image.attributes.src.nodeValue; // Chrome 19 sets image.src to "";
+    var encodeImageAsDataURI = function (image, baseUrl, callback) {
+        var url = image.attributes.src.nodeValue,  // Chrome 19 sets image.src to ""
+            base = baseUrl || image.ownerDocument.baseURI;
 
         if (module.util.isDataUri(url)) {
             callback();
         }
 
-        url = getUrlRelativeToDocumentBase(url, image.ownerDocument.baseURI);
+        url = getUrlRelativeToDocumentBase(url, base);
 
         getDataURIForImageURL(url, function (dataURI) {
             image.attributes.src.nodeValue = dataURI;
@@ -169,13 +189,16 @@ var rasterizeHTML = (function () {
         });
     };
 
-    module.loadAndInlineImages = function (doc, callback) {
-        var images = doc.getElementsByTagName("img");
+    module.loadAndInlineImages = function (doc, baseUrl, callback) {
+        var params = parseOptionalParameters(baseUrl, callback),
+            images = doc.getElementsByTagName("img");
 
         module.util.map(images, function (image, finish) {
-            encodeImageAsDataURI(image, finish);
+            encodeImageAsDataURI(image, params.baseUrl, finish);
         }, function () {
-            callback();
+            if (params.callback) {
+                params.callback();
+            }
         });
     };
 
@@ -226,12 +249,13 @@ var rasterizeHTML = (function () {
         head.appendChild(styleNode);
     };
 
-    var loadLinkedCSSAndRemoveNode = function (link, callback) {
+    var loadLinkedCSSAndRemoveNode = function (link, baseUrl, callback) {
         var href = link.attributes.href.nodeValue, // Chrome 19 sets link.href to ""
+            base = baseUrl || link.ownerDocument.baseURI,
             ajaxRequest = new window.XMLHttpRequest(),
             cssContent;
 
-        href = getUrlRelativeToDocumentBase(href, link.ownerDocument.baseURI);
+        href = getUrlRelativeToDocumentBase(href, base);
 
         ajaxRequest.onreadystatechange = function () {
             if (ajaxRequest.readyState == 4) {
@@ -252,13 +276,14 @@ var rasterizeHTML = (function () {
         }
     };
 
-    module.loadAndInlineCSS = function (doc, callback) {
-        var links = doc.getElementsByTagName("link");
+    module.loadAndInlineCSS = function (doc, baseUrl, callback) {
+        var params = parseOptionalParameters(baseUrl, callback),
+            links = doc.getElementsByTagName("link");
 
         module.util.map(links, function (link, finish) {
             if (link.attributes.rel && link.attributes.rel.nodeValue === "stylesheet" &&
                 link.attributes.type && link.attributes.type.nodeValue === "text/css") {
-                loadLinkedCSSAndRemoveNode(link, function(css) {
+                loadLinkedCSSAndRemoveNode(link, params.baseUrl, function(css) {
                     if (css.trim()) {
                         finish(css + "\n");
                     } else {
@@ -272,8 +297,8 @@ var rasterizeHTML = (function () {
         }, function (styles) {
             mergeAndAddInlineStyle(doc, styles);
 
-            if (callback) {
-                callback();
+            if (params.callback) {
+                params.callback();
             }
         });
     };
@@ -329,11 +354,12 @@ var rasterizeHTML = (function () {
         }
     };
 
-    var loadAndInlineCSSResources = function (style, callback) {
+    var loadAndInlineCSSResources = function (style, baseUrl, callback) {
         var cssContent = style.textContent,
+            base = baseUrl || style.ownerDocument.baseURI,
             parsedCss = parseCss(cssContent);
 
-        iterateOverRulesAndInlineBackgroundImage(parsedCss, style.ownerDocument.baseURI, function (hasChanges) {
+        iterateOverRulesAndInlineBackgroundImage(parsedCss, base, function (hasChanges) {
             if (hasChanges) {
                 // CSSParser is invasive, if no changes are needed, we leave the text as it is
                 cssContent = parsedCss.cssText();
@@ -345,19 +371,20 @@ var rasterizeHTML = (function () {
         });
     };
 
-    module.loadAndInlineCSSReferences = function (doc, callback) {
-        var styles = doc.getElementsByTagName("style");
+    module.loadAndInlineCSSReferences = function (doc, baseUrl, callback) {
+        var params = parseOptionalParameters(baseUrl, callback),
+            styles = doc.getElementsByTagName("style");
 
         module.util.map(styles, function (style, finish) {
             if (style.attributes.type && style.attributes.type.nodeValue === "text/css") {
-                loadAndInlineCSSResources(style, finish);
+                loadAndInlineCSSResources(style, params.baseUrl, finish);
             } else {
                 // We need to properly deal with non-css in this concurrent context
                 finish();
             }
         }, function () {
-            if (callback) {
-                callback();
+            if (params.callback) {
+                params.callback();
             }
         });
     };
