@@ -41,6 +41,11 @@ describe("Utilities", function () {
             var url = rasterizeHTML.util.joinUrl("http://example.com/rel/path/", "http://github.com//the_relative_url");
             expect(url).toEqual("http://github.com//the_relative_url")
         });
+
+        it("should ignore base without directories", function () {
+            var url = rasterizeHTML.util.joinUrl("aFile", "anotherFile");
+            expect(url).toEqual("anotherFile");
+        });
     });
 
     describe("Data URI handling", function () {
