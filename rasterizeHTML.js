@@ -250,22 +250,21 @@ var rasterizeHTML = (function () {
     };
 
     var loadLinkedCSSAndRemoveNode = function (link, baseUrl, callback) {
-        var href = link.attributes.href.nodeValue, // Chrome 19 sets link.href to ""
-            base = baseUrl || link.ownerDocument.baseURI,
+        var cssHref = link.attributes.href.nodeValue, // Chrome 19 sets link.href to ""
+            documentBaseUrl = baseUrl || link.ownerDocument.baseURI,
+            cssHrefRelativeToDoc = getUrlRelativeToDocumentBase(cssHref, documentBaseUrl),
             ajaxRequest = new window.XMLHttpRequest(),
             cssContent;
 
-        href = getUrlRelativeToDocumentBase(href, base);
-
         ajaxRequest.onreadystatechange = function () {
             if (ajaxRequest.readyState == 4) {
-                cssContent = adjustPathsOfCssResources(href, ajaxRequest.responseText);
+                cssContent = adjustPathsOfCssResources(cssHref, ajaxRequest.responseText);
 
                 link.parentNode.removeChild(link);
                 callback(cssContent);
             }
         };
-        ajaxRequest.open('GET', href, true);
+        ajaxRequest.open('GET', cssHrefRelativeToDoc, true);
         ajaxRequest.send(null);
     };
 

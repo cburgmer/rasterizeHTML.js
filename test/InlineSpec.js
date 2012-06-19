@@ -207,7 +207,7 @@ describe("Inline external resources", function () {
     });
 
     describe("CSS inline", function () {
-        var cssLink, anotherCssLink, emptyCssLink, faviconLink, cssWithRelativeResource,
+        var cssLink, anotherCssLink, emptyCssLink, faviconLink,
             extractCssUrlSpy, joinUrlSpy;
 
         beforeEach(function () {
@@ -232,11 +232,6 @@ describe("Inline external resources", function () {
             faviconLink = window.document.createElement("link");
             faviconLink.href = "favicon.ico";
             faviconLink.type = "image/x-icon";
-
-            cssWithRelativeResource = window.document.createElement("link");
-            cssWithRelativeResource.href = "fixtures/backgroundImage.css";
-            cssWithRelativeResource.rel = "stylesheet";
-            cssWithRelativeResource.type = "text/css";
         });
 
         it("should do nothing if no linked CSS is found", function () {
@@ -388,14 +383,27 @@ describe("Inline external resources", function () {
         });
 
         it("should map resource paths relative to the stylesheet", function () {
-            var inlineFinished = false;
+            var inlineFinished = false,
+                cssWithRelativeResource;
 
-            extractCssUrlSpy.andReturn("green.png");
-            joinUrlSpy.andReturn("fixtures/green.png");
+            cssWithRelativeResource = window.document.createElement("link");
+            cssWithRelativeResource.href = "below/backgroundImage.css";
+            cssWithRelativeResource.rel = "stylesheet";
+            cssWithRelativeResource.type = "text/css";
+
+            extractCssUrlSpy.andReturn("../green.png");
+            joinUrlSpy.andCallFake(function (base, url) {
+                if (url === "below/backgroundImage.css" && base === "fixtures/") {
+                    return "fixtures/below/backgroundImage.css";
+                } else if (url === "../green.png" && base === "below/backgroundImage.css") {
+                    return "green.png";
+                }
+            });
 
             doc.head.appendChild(cssWithRelativeResource);
 
-            rasterizeHTML.loadAndInlineCSS(doc, function () { inlineFinished = true; });
+            // Let's assume the doc's baseURI is under "fixtures/"
+            rasterizeHTML.loadAndInlineCSS(doc, "fixtures/", function () { inlineFinished = true; });
 
             waitsFor(function () {
                 return inlineFinished;
@@ -403,10 +411,10 @@ describe("Inline external resources", function () {
 
             runs(function () {
                 // Chrome 19 sets cssWithRelativeResource.href to ""
-                expect(joinUrlSpy).toHaveBeenCalledWith(cssWithRelativeResource.attributes.href.nodeValue, "green.png");
+                expect(joinUrlSpy).toHaveBeenCalledWith("below/backgroundImage.css", "../green.png");
 
                 expect(doc.head.getElementsByTagName("style").length).toEqual(1);
-                expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/url\(\"fixtures\/green\.png\"\)/);
+                expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/url\(\"green\.png\"\)/);
             });
         });
     });
