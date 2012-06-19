@@ -511,7 +511,7 @@ var rasterizeHTML = (function () {
             context.drawImage(image, 0, 0);
             cleanUpUrl(url);
 
-            if (typeof callback !== "undefined") {
+            if (typeof callback !== "undefined" && callback) {
                 callback(canvas);
             }
         };
@@ -522,19 +522,27 @@ var rasterizeHTML = (function () {
 
     /* "Public" API */
 
-    module.drawDocument = function (doc, canvas, callback) {
-        var svg;
+    module.drawDocument = function (doc, canvas, baseUrl, callback) {
+        var params = parseOptionalParameters(baseUrl, callback),
+            svg;
 
-        module.loadAndInlineImages(doc, function () {
-            module.loadAndInlineCSS(doc, function () {
-                module.loadAndInlineCSSReferences(doc, function () {
+        module.loadAndInlineImages(doc, params.baseUrl, function () {
+            module.loadAndInlineCSS(doc, params.baseUrl, function () {
+                module.loadAndInlineCSSReferences(doc, params.baseUrl, function () {
                     svg = module.getSvgForDocument(doc, canvas.width, canvas.height);
 
-                    module.drawSvgToCanvas(svg, canvas, callback);
+                    module.drawSvgToCanvas(svg, canvas, params.callback);
                 });
             });
         });
+    };
 
+    module.drawHTML = function (html, canvas, baseUrl, callback) {
+        var params = parseOptionalParameters(baseUrl, callback),
+            doc = window.document.implementation.createHTMLDocument("");
+
+        doc.documentElement.innerHTML = html;
+        module.drawDocument(doc, canvas, params.baseUrl, params.callback);
     };
 
     return module;

@@ -8,22 +8,40 @@
     <script type="text/javascript" src="../lib/htmlparser.js"></script> <!-- Only needed for Chrome & Safari -->
 </head>
 <body>
-    <canvas id="canvas" width="400" height="200"></canvas>
-    <script type="text/javascript">
-        var canvas = document.getElementById("canvas"),
-            request = new window.XMLHttpRequest();
+    <div>
+        <canvas id="documentCanvas" width="400" height="200"></canvas>
+        <script type="text/javascript">
+            var documentCanvas = document.getElementById("documentCanvas"),
+                documentRequest = new window.XMLHttpRequest();
 
-        request.onreadystatechange = function () {
-            if (request.readyState == 4) {
-                rasterizeHTML.drawDocument(request.responseXML, canvas);
-            }
-        };
-        request.open('GET', "fixtures/test.html", true);
-        // Seems to not work on Safari (https://developer.mozilla.org/en/HTML_in_XMLHttpRequest)
-        request.responseType = "document";
-        request.overrideMimeType("text/html");
-        request.send(null);
+            documentRequest.onreadystatechange = function () {
+                if (documentRequest.readyState == 4) {
+                    rasterizeHTML.drawDocument(documentRequest.responseXML, documentCanvas);
+                }
+            };
+            documentRequest.open('GET', "fixtures/test.html", true);
+            // Seems to not work on Safari (https://developer.mozilla.org/en/HTML_in_XMLHttpRequest)
+            documentRequest.responseType = "document";
+            documentRequest.overrideMimeType("text/html");
+            documentRequest.send(null);
+        </script>
+    </div>
 
-    </script>
+    <div>
+        <canvas id="htmlCanvas" width="400" height="200"></canvas>
+        <script type="text/javascript">
+            var htmlCanvas = document.getElementById("htmlCanvas"),
+                htmlRequest = new window.XMLHttpRequest();
+
+            htmlRequest.onreadystatechange = function () {
+                if (htmlRequest.readyState == 4) {
+                    rasterizeHTML.drawHTML(htmlRequest.responseText, htmlCanvas, "fixtures/");
+                }
+            };
+            htmlRequest.open('GET', "fixtures/test.html", true);
+            htmlRequest.overrideMimeType("text/html");
+            htmlRequest.send(null);
+        </script>
+    </div>
 </body>
 </html>

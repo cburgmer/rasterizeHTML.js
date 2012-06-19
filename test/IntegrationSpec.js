@@ -50,4 +50,26 @@ describe("Integration test", function () {
         });
     });
 
+    ifNotInWebkitIt("should take a HTML string, inline all displayable content and render to the given canvas (flaky in Firefox)", function () {
+        var canvas = $('<canvas width="204" height="100"></canvas>'), // Firefox adds a space between the divs and needs the canvas to fit horizontally for all content to be rendered
+            finished = false,
+            callback = function () { finished = true; },
+            referenceImg = $('<img src="fixtures/testResult.png" alt="test image"/>'),
+            html = null;
+
+        html = readFixtures("test.html");
+
+        runs(function () {
+            rasterizeHTML.drawHTML(html, canvas.get(0), "./fixtures/", callback);
+        });
+
+        waitsFor(function () {
+            return finished;
+        });
+
+        runs(function () {
+            expect(canvas.get(0)).toImageDiffEqual(referenceImg.get(0));
+        });
+    });
+
 });
