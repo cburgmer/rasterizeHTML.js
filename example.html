@@ -28,33 +28,16 @@ body {
 </textarea>
     </div>
     <script type="text/javascript">
-        var input = document.getElementById("input");
-
-        function drawCanvas(text) {
-            var doc, svg, canvas;
-
-            doc = document.implementation.createHTMLDocument("");
-            doc.body.innerHTML = text;
-
-            rasterizeHTML.loadAndInlineImages(doc, function () {
-                rasterizeHTML.loadAndInlineCSSReferences(doc, function () {
-                    canvas = document.getElementById("canvas");
-
-                    svg = rasterizeHTML.getSvgForDocument(doc, canvas.width, canvas.height);
-                    rasterizeHTML.drawSvgToCanvas(svg, canvas);
-                });
-            });
-        }
+        var input = document.getElementById("input"),
+            canvas = document.getElementById("canvas");
 
         input.onkeyup = function () {
-            var canvas = document.getElementById("canvas");
-
             canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 
-            drawCanvas(this.value);
+            rasterizeHTML.drawHTML(input.value, canvas);
         };
 
-        drawCanvas(input.value);
+        rasterizeHTML.drawHTML(input.value, canvas);
     </script>
 </body>
 </html>

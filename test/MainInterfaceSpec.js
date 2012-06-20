@@ -77,4 +77,25 @@ describe("Main interface of rasterizeHTML.js", function () {
 
         expect(callback).toHaveBeenCalledWith(canvas);
     });
+
+    it("should take a URL, inline all displayable content and render to the given canvas", function () {
+        var canvas = document.createElement("canvas"),
+            finished = false,
+            callback = function (canvas) {
+                finished = true;
+            },
+            drawHtmlSpy = spyOn(rasterizeHTML, "drawHTML").andCallFake(function (html, canvas, baseUrl, callback) {
+                callback(canvas);
+            });
+
+        rasterizeHTML.drawURL("fixtures/image.html", canvas, callback);
+
+        waitsFor(function() {
+            return finished;
+        });
+
+        runs(function() {
+            expect(drawHtmlSpy).toHaveBeenCalledWith(readFixtures("image.html"), canvas, "fixtures/image.html", callback);
+        });
+    });
 });

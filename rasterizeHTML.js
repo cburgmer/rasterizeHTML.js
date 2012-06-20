@@ -545,5 +545,23 @@ var rasterizeHTML = (function () {
         module.drawDocument(doc, canvas, params.baseUrl, params.callback);
     };
 
+    var loadHtmlFromUrl = function (url, callback) {
+        var ajaxRequest = new window.XMLHttpRequest();
+
+        ajaxRequest.onreadystatechange = function () {
+            if (ajaxRequest.readyState == 4) {
+                callback(ajaxRequest.responseText);
+            }
+        };
+        ajaxRequest.open('GET', url, true);
+        ajaxRequest.send(null);
+    };
+
+    module.drawURL = function (url, canvas, callback) {
+        loadHtmlFromUrl(url, function (html) {
+            module.drawHTML(html, canvas, url, callback);
+        });
+    };
+
     return module;
 }());

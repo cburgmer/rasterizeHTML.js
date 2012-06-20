@@ -6,6 +6,11 @@
     <script type="text/javascript" src="../lib/URI.js"></script>
     <script type="text/javascript" src="../rasterizeHTML.js"></script>
     <script type="text/javascript" src="../lib/htmlparser.js"></script> <!-- Only needed for Chrome & Safari -->
+    <style type="text/css">
+        canvas {
+            border: 1px solid gray;
+        }
+    </style>
 </head>
 <body>
     <div>
@@ -41,6 +46,15 @@
             htmlRequest.open('GET', "fixtures/test.html", true);
             htmlRequest.overrideMimeType("text/html");
             htmlRequest.send(null);
+        </script>
+    </div>
+
+    <div>
+        <canvas id="urlCanvas" width="400" height="200"></canvas>
+        <script type="text/javascript">
+            var urlCanvas = document.getElementById("urlCanvas");
+
+            rasterizeHTML.drawURL("fixtures/test.html", urlCanvas);
         </script>
     </div>
 </body>
