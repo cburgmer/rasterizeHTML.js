@@ -1,0 +1,96 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>rasterizeHTML.js by cburgmer</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>rasterizeHTML.js</h1>
+        <p>Renders HTML into the browser's canvas</p>
+
+        <p class="view"><a href="https://github.com/cburgmer/rasterizeHTML.js">View the Project on GitHub <small>cburgmer/rasterizeHTML.js</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/cburgmer/rasterizeHTML.js/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/cburgmer/rasterizeHTML.js/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/cburgmer/rasterizeHTML.js">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>rasterizeHTML.js</h1>
+
+<p>Renders HTML into the browser's canvas.</p>
+
+<h2>How it works</h2>
+
+<p>For security reasons rendering HTML into a canvas is severly limited. Firefox offers such a function via ctx.drawWindow(), but only with Chrome privileges (see <a href="https://developer.mozilla.org/en/Drawing_Graphics_with_Canvas">https://developer.mozilla.org/en/Drawing_Graphics_with_Canvas</a>).</p>
+
+<p>As described in <a href="http://robert.ocallahan.org/2011/11/drawing-dom-content-to-canvas.html">http://robert.ocallahan.org/2011/11/drawing-dom-content-to-canvas.html</a> and <a href="https://developer.mozilla.org/en/HTML/Canvas/Drawing_DOM_objects_into_a_canvas">https://developer.mozilla.org/en/HTML/Canvas/Drawing_DOM_objects_into_a_canvas</a> however it is possible by embedding the HTML into an SVG image as a &lt;foreignObject&gt; and then drawing the resulting image via ctx.drawImage().</p>
+
+<p>To cope with the existing limitations, rasterizeHTML.js will load external images and stylesheets and store them inline via data: URIs or inline style elements respectively.</p>
+
+<h2>Limitations</h2>
+
+<p>This code is experimental.</p>
+
+<p>SVG is not allowed to link to external resources, as such all used resources need to be embedded using data: URIs. However resources can only be loaded if from the same origin, unless CORS is used.</p>
+
+<p>The code is tested under Firefox, Chrome &amp; Safari. However IE is not supported so far.</p>
+
+<p>At the time of writing it seems that the individual browsers still have some issues with rendering SVGs with embedded HTML to the canvas. See the <a href="https://github.com/cburgmer/rasterizeHTML.js/wiki/Browser-issues">wiki for a list of known issues</a> and do add your findings there.</p>
+
+<h2>Example code</h2>
+
+<div class="highlight">
+<pre><span class="cp">&lt;!DOCTYPE html&gt;</span>
+<span class="nt">&lt;html&gt;</span>
+<span class="nt">&lt;head&gt;</span>
+    <span class="nt">&lt;title&gt;</span>rasterizeHTML.js example<span class="nt">&lt;/title&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">type=</span><span class="s">"text/javascript"</span> <span class="na">src=</span><span class="s">"lib/htmlparser.js"</span><span class="nt">&gt;&lt;/script&gt;</span> <span class="c">&lt;!-- Needed for Chrome &amp; Safari to work around buggy XMLSerializer --&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">type=</span><span class="s">"text/javascript"</span> <span class="na">src=</span><span class="s">"lib/cssParser.js"</span><span class="nt">&gt;&lt;/script&gt;</span> <span class="c">&lt;!-- Needed to embed backgroundImages --&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">type=</span><span class="s">"text/javascript"</span> <span class="na">src=</span><span class="s">"lib/URI.js"</span><span class="nt">&gt;&lt;/script&gt;</span> <span class="c">&lt;!-- Needed to calculate paths when embedding stuff --&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">type=</span><span class="s">"text/javascript"</span> <span class="na">src=</span><span class="s">"rasterizeHTML.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+<span class="nt">&lt;/head&gt;</span>
+<span class="nt">&lt;body&gt;</span>
+    <span class="nt">&lt;canvas</span> <span class="na">id=</span><span class="s">"canvas"</span> <span class="na">width=</span><span class="s">"400"</span> <span class="na">height=</span><span class="s">"200"</span><span class="nt">&gt;&lt;/canvas&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">type=</span><span class="s">"text/javascript"</span><span class="nt">&gt;</span>
+        <span class="kd">var</span> <span class="nx">canvas</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s2">"canvas"</span><span class="p">);</span>
+
+        <span class="nx">rasterizeHTML</span><span class="p">.</span><span class="nx">drawHTML</span><span class="p">(</span><span class="s1">'Some &lt;span style="color: green"&gt;HTML&lt;/span&gt; with an image &lt;img src="someimg.png" /&gt;'</span><span class="p">,</span> <span class="nx">canvas</span><span class="p">);</span>
+    <span class="nt">&lt;/script&gt;</span>
+<span class="nt">&lt;/body&gt;</span>
+<span class="nt">&lt;/html&gt;</span>
+</pre>
+</div>
+
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/cburgmer">cburgmer</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+              <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-6236243-12");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+  </body>
+</html>
