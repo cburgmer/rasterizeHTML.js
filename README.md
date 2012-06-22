@@ -28,7 +28,7 @@ Testing
 
 $ ./run_tests.sh
 
-checks the code against JSHint and runs the unit tests via PhantomJS. Alternatively point your browser to test/SpecRunner.html (under Chrome you will need to load the page through a webserver).
+checks the code against JSHint and runs the unit tests via PhantomJS. Alternatively point your browser to test/SpecRunner.html (under Chrome you will either need to start the browser passing in the option "--allow-file-access-from-files" or load the page through a local webserver).
 
 Possibly due to a bug with the same origin policy under Webkit certain tests that need to read the canvas will fail and are disabled.
 

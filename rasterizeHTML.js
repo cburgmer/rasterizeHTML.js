@@ -107,15 +107,18 @@ var rasterizeHTML = (function () {
         return canvas.toDataURL("image/png");
     };
 
-    var getDataURIForImageURL = function (url, callback) {
+    var getDataURIForImageURL = function (url, successCallback, errorCallback) {
         var img = new window.Image(),
             dataURI;
 
         img.onload = function () {
             dataURI = getDataURIForImage(img);
 
-            callback(dataURI);
+            successCallback(dataURI);
         };
+        if (errorCallback) {
+            img.onerror = errorCallback;
+        }
         img.src = url;
     };
 
@@ -173,31 +176,40 @@ var rasterizeHTML = (function () {
 
     /* Img Inlining */
 
-    var encodeImageAsDataURI = function (image, baseUrl, callback) {
+    var encodeImageAsDataURI = function (image, baseUrl, successCallback, errorCallback) {
         var url = image.attributes.src.nodeValue,  // Chrome 19 sets image.src to ""
             base = baseUrl || image.ownerDocument.baseURI;
 
         if (module.util.isDataUri(url)) {
-            callback();
+            successCallback();
         }
 
         url = getUrlRelativeToDocumentBase(url, base);
 
         getDataURIForImageURL(url, function (dataURI) {
             image.attributes.src.nodeValue = dataURI;
-            callback();
+            successCallback();
+        }, function () {
+            errorCallback(url);
         });
     };
 
     module.loadAndInlineImages = function (doc, baseUrl, callback) {
         var params = parseOptionalParameters(baseUrl, callback),
-            images = doc.getElementsByTagName("img");
+            images = doc.getElementsByTagName("img"),
+            errors = [];
 
         module.util.map(images, function (image, finish) {
-            encodeImageAsDataURI(image, params.baseUrl, finish);
+            encodeImageAsDataURI(image, params.baseUrl, finish, function (url) {
+                errors.push({
+                    resourceType: "image",
+                    url: url
+                });
+                finish();
+            });
         }, function () {
             if (params.callback) {
-                params.callback();
+                params.callback(errors);
             }
         });
     };
@@ -249,23 +261,34 @@ var rasterizeHTML = (function () {
         head.appendChild(styleNode);
     };
 
-    var loadLinkedCSSAndRemoveNode = function (link, baseUrl, callback) {
+    var loadLinkedCSSAndRemoveNode = function (link, baseUrl, successCallback, errorCallback) {
         var cssHref = link.attributes.href.nodeValue, // Chrome 19 sets link.href to ""
             documentBaseUrl = baseUrl || link.ownerDocument.baseURI,
             cssHrefRelativeToDoc = getUrlRelativeToDocumentBase(cssHref, documentBaseUrl),
             ajaxRequest = new window.XMLHttpRequest(),
             cssContent;
 
-        ajaxRequest.onreadystatechange = function () {
-            if (ajaxRequest.readyState == 4) {
+        ajaxRequest.addEventListener("load", function (e) {
+            if (ajaxRequest.status === 200 || ajaxRequest.status === 0) {
                 cssContent = adjustPathsOfCssResources(cssHref, ajaxRequest.responseText);
 
                 link.parentNode.removeChild(link);
-                callback(cssContent);
+                successCallback(cssContent);
+            } else {
+                errorCallback(cssHrefRelativeToDoc);
             }
-        };
+        }, false);
+
+        ajaxRequest.addEventListener("error", function () {
+            errorCallback(cssHrefRelativeToDoc);
+        }, false);
+
         ajaxRequest.open('GET', cssHrefRelativeToDoc, true);
-        ajaxRequest.send(null);
+        try {
+            ajaxRequest.send(null);
+        } catch (err) {
+            errorCallback(cssHrefRelativeToDoc);
+        }
     };
 
     var mergeAndAddInlineStyle = function (doc, styles) {
@@ -277,7 +300,8 @@ var rasterizeHTML = (function () {
 
     module.loadAndInlineCSS = function (doc, baseUrl, callback) {
         var params = parseOptionalParameters(baseUrl, callback),
-            links = doc.getElementsByTagName("link");
+            links = doc.getElementsByTagName("link"),
+            errors = [];
 
         module.util.map(links, function (link, finish) {
             if (link.attributes.rel && link.attributes.rel.nodeValue === "stylesheet" &&
@@ -288,6 +312,13 @@ var rasterizeHTML = (function () {
                     } else {
                         finish('');
                     }
+                }, function (url) {
+                    errors.push({
+                        resourceType: "stylesheet",
+                        url: url
+                    });
+
+                    finish('');
                 });
             } else {
                 // We need to properly deal with non-stylesheet in this concurrent context
@@ -297,24 +328,24 @@ var rasterizeHTML = (function () {
             mergeAndAddInlineStyle(doc, styles);
 
             if (params.callback) {
-                params.callback();
+                params.callback(errors);
             }
         });
     };
 
     /* CSS linked resource inlining */
 
-    var loadAndInlineBackgroundImage = function (cssDeclaration, baseUri, callback) {
+    var loadAndInlineBackgroundImage = function (cssDeclaration, baseUri, successCallback, errorCallback) {
         var url;
         try {
             url = module.util.extractCssUrl(cssDeclaration.values[0].cssText());
         } catch (e) {
-            callback(false);
+            successCallback(false);
             return;
         }
 
         if (module.util.isDataUri(url)) {
-            callback(false);
+            successCallback(false);
             return;
         }
 
@@ -323,20 +354,29 @@ var rasterizeHTML = (function () {
         getDataURIForImageURL(url, function (dataURI) {
             cssDeclaration.values[0].setCssText('url("' + dataURI + '")');
 
-            callback(true);
+            successCallback(true);
+        }, function () {
+            errorCallback(url);
         });
     };
 
     var iterateOverRulesAndInlineBackgroundImage = function (parsedCss, baseUri, callback) {
         var declarationsToInline = findBackgroundImageDeclarations(parsedCss),
+            errors = [],
             cssHasChanges;
 
-        rasterizeHTML.util.map(declarationsToInline, function (declaration, callback) {
-            loadAndInlineBackgroundImage(declaration, baseUri, callback);
+        rasterizeHTML.util.map(declarationsToInline, function (declaration, finish) {
+            loadAndInlineBackgroundImage(declaration, baseUri, finish, function (url) {
+                errors.push({
+                    resourceType: "backgroundImage",
+                    url: url
+                })
+                finish();
+            });
 
         }, function (changedStates) {
             cssHasChanges = changedStates.indexOf(true) >= 0;
-            callback(cssHasChanges);
+            callback(cssHasChanges, errors);
         });
     };
 
@@ -358,7 +398,7 @@ var rasterizeHTML = (function () {
             base = baseUrl || style.ownerDocument.baseURI,
             parsedCss = parseCss(cssContent);
 
-        iterateOverRulesAndInlineBackgroundImage(parsedCss, base, function (hasChanges) {
+        iterateOverRulesAndInlineBackgroundImage(parsedCss, base, function (hasChanges, errors) {
             if (hasChanges) {
                 // CSSParser is invasive, if no changes are needed, we leave the text as it is
                 cssContent = parsedCss.cssText();
@@ -366,24 +406,28 @@ var rasterizeHTML = (function () {
             cssContent = workAroundWebkitBugIgnoringTheFirstRuleInCSS(cssContent, parsedCss);
             style.childNodes[0].nodeValue = cssContent;
 
-            callback();
+            callback(errors);
         });
     };
 
     module.loadAndInlineCSSReferences = function (doc, baseUrl, callback) {
         var params = parseOptionalParameters(baseUrl, callback),
+            allErrors = [],
             styles = doc.getElementsByTagName("style");
 
         module.util.map(styles, function (style, finish) {
             if (style.attributes.type && style.attributes.type.nodeValue === "text/css") {
-                loadAndInlineCSSResources(style, params.baseUrl, finish);
+                loadAndInlineCSSResources(style, params.baseUrl, function (errors) {
+                    allErrors = allErrors.concat(errors);
+                    finish();
+                });
             } else {
                 // We need to properly deal with non-css in this concurrent context
                 finish();
             }
         }, function () {
             if (params.callback) {
-                params.callback();
+                params.callback(allErrors);
             }
         });
     };

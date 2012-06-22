@@ -96,9 +96,9 @@ describe("Inline external resources", function () {
                 image1, image2;
 
             doc.body.innerHTML = (
-                    '<img id="image1" src="fixtures/rednblue.png" alt="test image"/>' +
-                    '<img id="image2" src="fixtures/green.png" alt="test image"/>'
-                );
+                '<img id="image1" src="fixtures/rednblue.png" alt="test image"/>' +
+                '<img id="image2" src="fixtures/green.png" alt="test image"/>'
+            );
 
             rasterizeHTML.loadAndInlineImages(doc, function () { inlineFinished = true; });
 
@@ -202,6 +202,85 @@ describe("Inline external resources", function () {
 
             runs(function () {
                 expect(joinUrlSpy).toHaveBeenCalledWith("./fixtures/", "rednblue.png");
+            });
+        });
+
+        describe("Image inline error handling", function () {
+            var callback;
+
+            beforeEach(function () {
+                callback = jasmine.createSpy("callback");
+
+                joinUrlSpy.andCallThrough();
+            });
+
+            it("should report an error if an image could not be loaded", function () {
+                doc.body.innerHTML = '<img src="image_that_doesnt_exist.png" alt="test image"/>';
+
+                rasterizeHTML.loadAndInlineImages(doc, "some_base_url/", callback);
+
+                waitsFor(function () {
+                    return callback.wasCalled;
+                }, "rasterizeHTML.loadAndInlineImages");
+
+                runs(function () {
+                    expect(callback).toHaveBeenCalledWith([{
+                        resourceType: "image",
+                        url: "some_base_url/image_that_doesnt_exist.png"
+                    }]);
+                });
+            });
+
+            it("should only report a failing image as error", function () {
+                doc.body.innerHTML = (
+                    '<img src="image_that_doesnt_exist.png" alt="test image"/>' +
+                    '<img src="fixtures/green.png" alt="test image"/>'
+                );
+
+                rasterizeHTML.loadAndInlineImages(doc, callback);
+
+                waitsFor(function () {
+                    return callback.wasCalled;
+                }, "rasterizeHTML.loadAndInlineImages");
+
+                runs(function () {
+                    expect(callback).toHaveBeenCalledWith([{
+                        resourceType: "image",
+                        url: "image_that_doesnt_exist.png"
+                    }]);
+                });
+            });
+
+            it("should report multiple failing images as error", function () {
+                doc.body.innerHTML = (
+                    '<img src="image_that_doesnt_exist.png" alt="test image"/>' +
+                    '<img src="another_image_that_doesnt_exist.png" alt="test image"/>'
+                );
+
+                rasterizeHTML.loadAndInlineImages(doc, callback);
+
+                waitsFor(function () {
+                    return callback.wasCalled;
+                }, "rasterizeHTML.loadAndInlineImages");
+
+                runs(function () {
+                    expect(callback).toHaveBeenCalledWith([jasmine.any(Object), jasmine.any(Object)]);
+                    expect(callback.mostRecentCall.args[0][0]).not.toEqual(callback.mostRecentCall.args[0][1]);
+                });
+            });
+
+            it("should report an empty list for a successful image", function () {
+                doc.body.innerHTML = ('<img src="fixtures/green.png" alt="test image"/>');
+
+                rasterizeHTML.loadAndInlineImages(doc, callback);
+
+                waitsFor(function () {
+                    return callback.wasCalled;
+                }, "rasterizeHTML.loadAndInlineImages");
+
+                runs(function () {
+                    expect(callback).toHaveBeenCalledWith([]);
+                });
             });
         });
     });
@@ -415,6 +494,91 @@ describe("Inline external resources", function () {
 
                 expect(doc.head.getElementsByTagName("style").length).toEqual(1);
                 expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/url\(\"green\.png\"\)/);
+            });
+        });
+
+        describe("CSS inline error handling", function () {
+            var callback, brokenCssLink, anotherBrokenCssLink;
+
+            beforeEach(function () {
+                brokenCssLink = window.document.createElement("link");
+                brokenCssLink.href = "a_document_that_doesnt_exist.css";
+                brokenCssLink.rel = "stylesheet";
+                brokenCssLink.type = "text/css";
+
+                anotherBrokenCssLink = window.document.createElement("link");
+                anotherBrokenCssLink.href = "another_document_that_doesnt_exist.css";
+                anotherBrokenCssLink.rel = "stylesheet";
+                anotherBrokenCssLink.type = "text/css";
+
+                joinUrlSpy.andCallThrough();
+
+                callback = jasmine.createSpy("callback");
+            });
+
+            it("should report an error if a stylesheet could not be loaded", function () {
+                doc.head.appendChild(brokenCssLink);
+
+                rasterizeHTML.loadAndInlineCSS(doc, "some_base_url/", callback);
+
+                waitsFor(function () {
+                    return callback.wasCalled;
+                }, "rasterizeHTML.loadAndInlineCSS");
+
+                runs(function () {
+                    expect(callback).toHaveBeenCalledWith([{
+                        resourceType: "stylesheet",
+                        url: "some_base_url/a_document_that_doesnt_exist.css"
+                    }]);
+                });
+            });
+
+            it("should only report a failing stylesheet as error", function () {
+                doc.head.appendChild(brokenCssLink);
+                doc.head.appendChild(cssLink);
+
+                rasterizeHTML.loadAndInlineCSS(doc, callback);
+
+                waitsFor(function () {
+                    return callback.wasCalled;
+                }, "rasterizeHTML.loadAndInlineCSS");
+
+                runs(function () {
+                    expect(callback).toHaveBeenCalledWith([{
+                        resourceType: "stylesheet",
+                        url: "a_document_that_doesnt_exist.css"
+                    }]);
+                });
+            });
+
+            it("should report multiple failing stylesheet as error", function () {
+                doc.head.appendChild(brokenCssLink);
+                doc.head.appendChild(anotherBrokenCssLink);
+
+                rasterizeHTML.loadAndInlineCSS(doc, callback);
+
+                waitsFor(function () {
+                    return callback.wasCalled;
+                }, "rasterizeHTML.loadAndInlineCSS");
+
+                runs(function () {
+                    expect(callback).toHaveBeenCalledWith([jasmine.any(Object), jasmine.any(Object)]);
+                    expect(callback.mostRecentCall.args[0][0]).not.toEqual(callback.mostRecentCall.args[0][1]);
+                });
+            });
+
+            it("should report an empty list for a successful stylesheet", function () {
+                doc.head.appendChild(cssLink);
+
+                rasterizeHTML.loadAndInlineCSS(doc, callback);
+
+                waitsFor(function () {
+                    return callback.wasCalled;
+                }, "rasterizeHTML.loadAndInlineCSS");
+
+                runs(function () {
+                    expect(callback).toHaveBeenCalledWith([]);
+                });
             });
         });
     });
@@ -656,5 +820,95 @@ describe("Inline external resources", function () {
             });
         });
 
+        describe("backgroundImage inline error handling", function () {
+            var callback;
+
+            beforeEach(function () {
+                callback = jasmine.createSpy("callback");
+
+                joinUrlSpy.andCallThrough();
+            });
+
+            it("should report an error if a backgroundImage could not be loaded", function () {
+                addStyleToDocument(doc, 'span { background-image: url(a_backgroundImage_that_doesnt_exist.png); }');
+                extractCssUrlSpy.andReturn("a_backgroundImage_that_doesnt_exist.png");
+
+                rasterizeHTML.loadAndInlineCSSReferences(doc, "some_base_url/", callback);
+
+                waitsFor(function () {
+                    return callback.wasCalled;
+                }, "rasterizeHTML.loadAndInlineCSSReferences");
+
+                runs(function () {
+                    expect(callback).toHaveBeenCalledWith([{
+                        resourceType: "backgroundImage",
+                        url: "some_base_url/a_backgroundImage_that_doesnt_exist.png"
+                    }]);
+                });
+            });
+
+            it("should only report a failing backgroundImage as error", function () {
+                addStyleToDocument(doc, 'span { background-image: url(a_backgroundImage_that_doesnt_exist.png); }');
+                addStyleToDocument(doc, 'span { background-image: url(fixtures/rednblue.png); }');
+                extractCssUrlSpy.andCallFake(function (cssUrl) {
+                    if (cssUrl === "url(fixtures/rednblue.png)") {
+                        return "fixtures/rednblue.png";
+                    } else if (cssUrl === "url(a_backgroundImage_that_doesnt_exist.png)") {
+                        return "a_backgroundImage_that_doesnt_exist.png";
+                    }
+                });
+
+                rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
+
+                waitsFor(function () {
+                    return callback.wasCalled;
+                }, "rasterizeHTML.loadAndInlineCSSReferences");
+
+                runs(function () {
+                    expect(callback).toHaveBeenCalledWith([{
+                        resourceType: "backgroundImage",
+                        url: "a_backgroundImage_that_doesnt_exist.png"
+                    }]);
+                });
+            });
+
+            it("should report multiple failing backgroundImage as error", function () {
+                addStyleToDocument(doc, 'span { background-image: url(a_backgroundImage_that_doesnt_exist.png); }');
+                addStyleToDocument(doc, 'span { background-image: url(another_backgroundImage_that_doesnt_exist.png); }');
+                extractCssUrlSpy.andCallFake(function (cssUrl) {
+                    if (cssUrl === "url(another_backgroundImage_that_doesnt_exist.png)") {
+                        return "another_backgroundImage_that_doesnt_exist.png";
+                    } else if (cssUrl === "url(a_backgroundImage_that_doesnt_exist.png)") {
+                        return "a_backgroundImage_that_doesnt_exist.png";
+                    }
+                });
+
+                rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
+
+                waitsFor(function () {
+                    return callback.wasCalled;
+                }, "rasterizeHTML.loadAndInlineCSSReferences");
+
+                runs(function () {
+                    expect(callback).toHaveBeenCalledWith([jasmine.any(Object), jasmine.any(Object)]);
+                    expect(callback.mostRecentCall.args[0][0]).not.toEqual(callback.mostRecentCall.args[0][1]);
+                });
+            });
+
+            it("should report an empty list for a successful backgroundImage", function () {
+                addStyleToDocument(doc, 'span { background-image: url(fixtures/rednblue.png); }');
+                extractCssUrlSpy.andReturn("fixtures/rednblue.png");
+
+                rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
+
+                waitsFor(function () {
+                    return callback.wasCalled;
+                }, "rasterizeHTML.loadAndInlineCSSReferences");
+
+                runs(function () {
+                    expect(callback).toHaveBeenCalledWith([]);
+                });
+            });
+        });
     });
 });
