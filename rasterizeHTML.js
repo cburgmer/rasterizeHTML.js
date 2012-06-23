@@ -370,7 +370,7 @@ var rasterizeHTML = (function () {
                 errors.push({
                     resourceType: "backgroundImage",
                     url: url
-                })
+                });
                 finish();
             });
 
@@ -568,14 +568,21 @@ var rasterizeHTML = (function () {
 
     module.drawDocument = function (doc, canvas, baseUrl, callback) {
         var params = parseOptionalParameters(baseUrl, callback),
+            allErrors = [],
             svg;
 
-        module.loadAndInlineImages(doc, params.baseUrl, function () {
-            module.loadAndInlineCSS(doc, params.baseUrl, function () {
-                module.loadAndInlineCSSReferences(doc, params.baseUrl, function () {
+        module.loadAndInlineImages(doc, params.baseUrl, function (errors) {
+            allErrors = allErrors.concat(errors);
+            module.loadAndInlineCSS(doc, params.baseUrl, function (errors) {
+                allErrors = allErrors.concat(errors);
+                module.loadAndInlineCSSReferences(doc, params.baseUrl, function (errors) {
+                    allErrors = allErrors.concat(errors);
+
                     svg = module.getSvgForDocument(doc, canvas.width, canvas.height);
 
-                    module.drawSvgToCanvas(svg, canvas, params.callback);
+                    module.drawSvgToCanvas(svg, canvas, function () {
+                        params.callback(canvas, allErrors);
+                    });
                 });
             });
         });

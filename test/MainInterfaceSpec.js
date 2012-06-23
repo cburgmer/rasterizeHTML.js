@@ -1,101 +1,180 @@
 describe("Main interface of rasterizeHTML.js", function () {
-    var callbackCaller = function (doc, baseUrl, callback) { callback(); },
+    var callbackCaller = function (doc, baseUrl, callback) { callback([]); },
         svg = "the svg",
+        canvas = document.createElement("canvas"),
         loadAndInlineImages, loadAndInlineCSS, loadAndInlineCSSReferences,
         getSvgForDocument, drawSvgToCanvas;
 
-    beforeEach(function () {
-        loadAndInlineImages = spyOn(rasterizeHTML, "loadAndInlineImages").andCallFake(callbackCaller);
-        loadAndInlineCSS = spyOn(rasterizeHTML, "loadAndInlineCSS").andCallFake(callbackCaller);
-        loadAndInlineCSSReferences = spyOn(rasterizeHTML, "loadAndInlineCSSReferences").andCallFake(callbackCaller);
-        getSvgForDocument = spyOn(rasterizeHTML, "getSvgForDocument").andReturn(svg);
-        drawSvgToCanvas = spyOn(rasterizeHTML, "drawSvgToCanvas").andCallFake(function (svg, canvas, callback) {
-            callback(canvas);
+    describe("Rendering", function () {
+        var callback;
+
+        beforeEach(function () {
+            callback = jasmine.createSpy("drawCallback");
+
+            loadAndInlineImages = spyOn(rasterizeHTML, "loadAndInlineImages").andCallFake(callbackCaller);
+            loadAndInlineCSS = spyOn(rasterizeHTML, "loadAndInlineCSS").andCallFake(callbackCaller);
+            loadAndInlineCSSReferences = spyOn(rasterizeHTML, "loadAndInlineCSSReferences").andCallFake(callbackCaller);
+            getSvgForDocument = spyOn(rasterizeHTML, "getSvgForDocument").andReturn(svg);
+            drawSvgToCanvas = spyOn(rasterizeHTML, "drawSvgToCanvas").andCallFake(function (svg, canvas, callback) {
+                callback(canvas);
+            });
+        });
+
+        it("should take a document, inline all displayable content and render to the given canvas", function () {
+            var doc = "doc";
+
+            rasterizeHTML.drawDocument(doc, canvas, callback);
+
+            expect(loadAndInlineImages).toHaveBeenCalledWith(doc, null, jasmine.any(Function));
+            expect(loadAndInlineCSS).toHaveBeenCalledWith(doc, null, jasmine.any(Function));
+            expect(loadAndInlineCSSReferences).toHaveBeenCalledWith(doc, null, jasmine.any(Function));
+            expect(getSvgForDocument).toHaveBeenCalledWith(doc, canvas.width, canvas.height);
+            expect(drawSvgToCanvas).toHaveBeenCalledWith(svg, canvas, jasmine.any(Function));
+
+            expect(callback).toHaveBeenCalledWith(canvas, []);
+        });
+
+        it("should take a document with optional baseUrl, inline all displayable content and render to the given canvas", function () {
+            var doc = "doc";
+
+            rasterizeHTML.drawDocument(doc, canvas, "a_baseUrl", callback);
+
+            expect(loadAndInlineImages).toHaveBeenCalledWith(doc, "a_baseUrl", jasmine.any(Function));
+            expect(loadAndInlineCSS).toHaveBeenCalledWith(doc, "a_baseUrl", jasmine.any(Function));
+            expect(loadAndInlineCSSReferences).toHaveBeenCalledWith(doc, "a_baseUrl", jasmine.any(Function));
+            expect(getSvgForDocument).toHaveBeenCalledWith(doc, canvas.width, canvas.height);
+            expect(drawSvgToCanvas).toHaveBeenCalledWith(svg, canvas, jasmine.any(Function));
+
+            expect(callback).toHaveBeenCalledWith(canvas, []);
+        });
+
+        it("should take a HTML string, inline all displayable content and render to the given canvas", function () {
+            var html = "<head><title>a title</title></head><body>some html</body>",
+                drawDocumentSpy = spyOn(rasterizeHTML, "drawDocument").andCallFake(function (doc, canvas, baseUrl, callback) {
+                    callback(canvas);
+                });
+
+            rasterizeHTML.drawHTML(html, canvas, callback);
+
+            expect(drawDocumentSpy).toHaveBeenCalledWith(jasmine.any(Object), canvas, null, callback);
+            expect(drawDocumentSpy.mostRecentCall.args[0].documentElement.innerHTML).toEqual(html);
+
+            expect(callback).toHaveBeenCalledWith(canvas);
+        });
+
+        it("should take a HTML string with optional baseUrl, inline all displayable content and render to the given canvas", function () {
+            var html = "<head><title>a title</title></head><body>some html</body>",
+                drawDocumentSpy = spyOn(rasterizeHTML, "drawDocument").andCallFake(function (doc, canvas, baseUrl, callback) {
+                    callback(canvas);
+                });
+
+            rasterizeHTML.drawHTML(html, canvas, "a_baseUrl", callback);
+
+            expect(drawDocumentSpy).toHaveBeenCalledWith(jasmine.any(Object), canvas, "a_baseUrl", callback);
+            expect(drawDocumentSpy.mostRecentCall.args[0].documentElement.innerHTML).toEqual(html);
+
+            expect(callback).toHaveBeenCalledWith(canvas);
+        });
+
+        it("should take a URL, inline all displayable content and render to the given canvas", function () {
+            var finished = false,
+                callback = function (canvas) {
+                    finished = true;
+                },
+                drawHtmlSpy = spyOn(rasterizeHTML, "drawHTML").andCallFake(function (html, canvas, baseUrl, callback) {
+                    callback(canvas);
+                });
+
+            rasterizeHTML.drawURL("fixtures/image.html", canvas, callback);
+
+            waitsFor(function() {
+                return finished;
+            });
+
+            runs(function() {
+                expect(drawHtmlSpy).toHaveBeenCalledWith(readFixtures("image.html"), canvas, "fixtures/image.html", callback);
+            });
         });
     });
 
-    it("should take a document, inline all displayable content and render to the given canvas", function () {
-        var doc = "doc",
-            canvas = document.createElement("canvas"),
-            callback = jasmine.createSpy("drawDocumentCallback");
+    describe("Error handling", function () {
+        var callback;
 
-        rasterizeHTML.drawDocument(doc, canvas, callback);
+        beforeEach(function () {
+            callback = jasmine.createSpy("drawCallback");
 
-        expect(loadAndInlineImages).toHaveBeenCalledWith(doc, null, jasmine.any(Function));
-        expect(loadAndInlineCSS).toHaveBeenCalledWith(doc, null, jasmine.any(Function));
-        expect(loadAndInlineCSSReferences).toHaveBeenCalledWith(doc, null, jasmine.any(Function));
-        expect(getSvgForDocument).toHaveBeenCalledWith(doc, canvas.width, canvas.height);
-        expect(drawSvgToCanvas).toHaveBeenCalledWith(svg, canvas, jasmine.any(Function));
-
-        expect(callback).toHaveBeenCalledWith(canvas);
-    });
-
-    it("should take a document with optional baseUrl, inline all displayable content and render to the given canvas", function () {
-        var doc = "doc",
-            canvas = document.createElement("canvas"),
-            callback = jasmine.createSpy("drawDocumentCallback");
-
-        rasterizeHTML.drawDocument(doc, canvas, "a_baseUrl", callback);
-
-        expect(loadAndInlineImages).toHaveBeenCalledWith(doc, "a_baseUrl", jasmine.any(Function));
-        expect(loadAndInlineCSS).toHaveBeenCalledWith(doc, "a_baseUrl", jasmine.any(Function));
-        expect(loadAndInlineCSSReferences).toHaveBeenCalledWith(doc, "a_baseUrl", jasmine.any(Function));
-        expect(getSvgForDocument).toHaveBeenCalledWith(doc, canvas.width, canvas.height);
-        expect(drawSvgToCanvas).toHaveBeenCalledWith(svg, canvas, jasmine.any(Function));
-
-        expect(callback).toHaveBeenCalledWith(canvas);
-    });
-
-    it("should take a HTML string, inline all displayable content and render to the given canvas", function () {
-        var html = "<head><title>a title</title></head><body>some html</body>",
-            canvas = document.createElement("canvas"),
-            callback = jasmine.createSpy("drawDocumentCallback"),
-            drawDocumentSpy = spyOn(rasterizeHTML, "drawDocument").andCallFake(function (doc, canvas, baseUrl, callback) {
+            getSvgForDocument = spyOn(rasterizeHTML, "getSvgForDocument").andReturn(svg);
+            drawSvgToCanvas = spyOn(rasterizeHTML, "drawSvgToCanvas").andCallFake(function (svg, canvas, callback) {
                 callback(canvas);
             });
-
-        rasterizeHTML.drawHTML(html, canvas, callback);
-
-        expect(drawDocumentSpy).toHaveBeenCalledWith(jasmine.any(Object), canvas, null, callback);
-        expect(drawDocumentSpy.mostRecentCall.args[0].documentElement.innerHTML).toEqual(html);
-
-        expect(callback).toHaveBeenCalledWith(canvas);
-    });
-
-    it("should take a HTML string with optional baseUrl, inline all displayable content and render to the given canvas", function () {
-        var html = "<head><title>a title</title></head><body>some html</body>",
-            canvas = document.createElement("canvas"),
-            callback = jasmine.createSpy("drawDocumentCallback"),
-            drawDocumentSpy = spyOn(rasterizeHTML, "drawDocument").andCallFake(function (doc, canvas, baseUrl, callback) {
-                callback(canvas);
-            });
-
-        rasterizeHTML.drawHTML(html, canvas, "a_baseUrl", callback);
-
-        expect(drawDocumentSpy).toHaveBeenCalledWith(jasmine.any(Object), canvas, "a_baseUrl", callback);
-        expect(drawDocumentSpy.mostRecentCall.args[0].documentElement.innerHTML).toEqual(html);
-
-        expect(callback).toHaveBeenCalledWith(canvas);
-    });
-
-    it("should take a URL, inline all displayable content and render to the given canvas", function () {
-        var canvas = document.createElement("canvas"),
-            finished = false,
-            callback = function (canvas) {
-                finished = true;
-            },
-            drawHtmlSpy = spyOn(rasterizeHTML, "drawHTML").andCallFake(function (html, canvas, baseUrl, callback) {
-                callback(canvas);
-            });
-
-        rasterizeHTML.drawURL("fixtures/image.html", canvas, callback);
-
-        waitsFor(function() {
-            return finished;
         });
 
-        runs(function() {
-            expect(drawHtmlSpy).toHaveBeenCalledWith(readFixtures("image.html"), canvas, "fixtures/image.html", callback);
+        it("should pass through an error from inlining on drawDocument", function () {
+            var doc = "doc";
+
+            loadAndInlineImages = spyOn(rasterizeHTML, "loadAndInlineImages").andCallFake(function (doc, baseUrl, callback) {
+                callback(["the error"]);
+            });
+            loadAndInlineCSS = spyOn(rasterizeHTML, "loadAndInlineCSS").andCallFake(callbackCaller);
+            loadAndInlineCSSReferences = spyOn(rasterizeHTML, "loadAndInlineCSSReferences").andCallFake(callbackCaller);
+
+            rasterizeHTML.drawDocument(doc, canvas, callback);
+
+            expect(loadAndInlineImages).toHaveBeenCalled();
+
+            expect(callback).toHaveBeenCalledWith(canvas, ["the error"]);
+        });
+
+        it("should pass through multiple errors from inlining on drawDocument", function () {
+            var doc = "doc";
+
+            loadAndInlineImages = spyOn(rasterizeHTML, "loadAndInlineImages").andCallFake(function (doc, baseUrl, callback) {
+                callback(["the error"]);
+            });
+            loadAndInlineCSS = spyOn(rasterizeHTML, "loadAndInlineCSS").andCallFake(function (doc, baseUrl, callback) {
+                callback(["another error"]);
+            });
+            loadAndInlineCSSReferences = spyOn(rasterizeHTML, "loadAndInlineCSSReferences").andCallFake(function (doc, baseUrl, callback) {
+                callback(["yet another error", "and even more"]);
+            });
+
+            rasterizeHTML.drawDocument(doc, canvas, callback);
+
+            expect(loadAndInlineImages).toHaveBeenCalled();
+
+            expect(callback).toHaveBeenCalledWith(canvas, ["the error", "another error", "yet another error", "and even more"]);
+        });
+
+        it("should pass through errors from drawHTML", function () {
+            var drawDocumentSpy = spyOn(rasterizeHTML, "drawDocument").andCallFake(function (doc, canvas, baseUrl, callback) {
+                    callback(canvas, ["an error"]);
+                });
+
+            rasterizeHTML.drawHTML("", canvas, callback);
+
+            expect(drawDocumentSpy).toHaveBeenCalled();
+            expect(callback).toHaveBeenCalledWith(canvas, ["an error"]);
+        });
+
+        it("should pass through errors from drawURL", function () {
+            var finished = false,
+                callback = jasmine.createSpy("callback").andCallFake(function () {
+                    finished = true;
+                }),
+                drawHtmlSpy = spyOn(rasterizeHTML, "drawHTML").andCallFake(function (html, canvas, baseUrl, callback) {
+                    callback(canvas, ["some error"]);
+                });
+
+            rasterizeHTML.drawURL("fixtures/image.html", canvas, callback);
+
+            waitsFor(function() {
+                return finished;
+            });
+
+            runs(function() {
+                expect(drawHtmlSpy).toHaveBeenCalled();
+                expect(callback).toHaveBeenCalledWith(canvas, ["some error"]);
+            });
         });
     });
 });
