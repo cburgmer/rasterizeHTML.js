@@ -25,7 +25,7 @@ var rasterizeHTML = (function () {
 
     module.util.joinUrl = function (baseUrl, url) {
         var theUrl = new URI(url);
-        if (theUrl.is("relative") && baseUrl.indexOf("/") >= 0) {
+        if (theUrl.is("relative")) {
             theUrl = theUrl.absoluteTo(baseUrl);
         }
         return theUrl.toString();
