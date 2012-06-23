@@ -34,6 +34,12 @@ Possibly due to a bug with the same origin policy under Webkit certain tests tha
 
 [![Build Status](https://secure.travis-ci.org/cburgmer/rasterizeHTML.js.png?branch=master)](http://travis-ci.org/cburgmer/rasterizeHTML.js)
 
+Dependencies
+------------
+- URI.js, >=1.6.2 (http://medialize.github.com/URI.js/)
+- cssParser.js, JSCSSP (http://glazman.org/JSCSSP/)
+- htmlparser.js, HTML Parser By John Resig (patched version under https://github.com/cburgmer/rasterizeHTML.js/blob/master/lib/htmlparser.js)
+
 Demo
 ----
 
