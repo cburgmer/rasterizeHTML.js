@@ -176,5 +176,27 @@ describe("Main interface of rasterizeHTML.js", function () {
                 expect(callback).toHaveBeenCalledWith(canvas, ["some error"]);
             });
         });
+
+        it("should report error on loading an URL", function () {
+            var finished = false,
+                callback = jasmine.createSpy("callback").andCallFake(function () {
+                    finished = true;
+                }),
+                drawHtmlSpy = spyOn(rasterizeHTML, "drawHTML");
+
+            rasterizeHTML.drawURL("non_existing.html", canvas, callback);
+
+            waitsFor(function() {
+                return finished;
+            });
+
+            runs(function() {
+                expect(drawHtmlSpy).not.toHaveBeenCalled();
+                expect(callback).toHaveBeenCalledWith(canvas, [{
+                    resourceType: "page",
+                    url: "non_existing.html"
+                }]);
+            });
+        });
     });
 });

@@ -66,6 +66,29 @@ var rasterizeHTML = (function () {
         }
     };
 
+    module.util.ajax = function (url, successCallback, errorCallback) {
+        var ajaxRequest = new window.XMLHttpRequest();
+
+        ajaxRequest.addEventListener("load", function (e) {
+            if (ajaxRequest.status === 200 || ajaxRequest.status === 0) {
+                successCallback(ajaxRequest.responseText);
+            } else {
+                errorCallback();
+            }
+        }, false);
+
+        ajaxRequest.addEventListener("error", function () {
+            errorCallback();
+        }, false);
+
+        ajaxRequest.open('GET', url, true);
+        try {
+            ajaxRequest.send(null);
+        } catch (err) {
+            errorCallback();
+        }
+    };
+
     var unquoteUrl = function (quotedUrl) {
         var doubleQuoteRegex = /^"(.+)*"$/,
             singleQuoteRegex = /^'(.+)*'$/;
@@ -596,21 +619,14 @@ var rasterizeHTML = (function () {
         module.drawDocument(doc, canvas, params.baseUrl, params.callback);
     };
 
-    var loadHtmlFromUrl = function (url, callback) {
-        var ajaxRequest = new window.XMLHttpRequest();
-
-        ajaxRequest.onreadystatechange = function () {
-            if (ajaxRequest.readyState == 4) {
-                callback(ajaxRequest.responseText);
-            }
-        };
-        ajaxRequest.open('GET', url, true);
-        ajaxRequest.send(null);
-    };
-
     module.drawURL = function (url, canvas, callback) {
-        loadHtmlFromUrl(url, function (html) {
+        module.util.ajax(url, function (html) {
             module.drawHTML(html, canvas, url, callback);
+        }, function () {
+            callback(canvas, [{
+                resourceType: "page",
+                url: url
+            }]);
         });
     };
 
