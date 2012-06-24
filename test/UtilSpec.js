@@ -164,6 +164,45 @@ describe("Utilities", function () {
 
     });
 
+    describe("Ajax", function () {
+        it("should load content from a URL", function () {
+            var finished = false,
+                loadedContent;
+
+            rasterizeHTML.util.ajax("fixtures/some.css", function (content) {
+                loadedContent = content;
+                finished = true;
+            });
+
+            waitsFor(function () {
+                return finished;
+            });
+
+            runs(function () {
+                expect(loadedContent).toEqual("p { font-size: 14px; }");
+            });
+        });
+
+        it("should call error callback on fail", function () {
+            var finished = false,
+                successCallback = jasmine.createSpy("successCallback"),
+                errorCallback = jasmine.createSpy("errorCallback").andCallFake(function () {
+                    finished = true;
+                });
+
+            rasterizeHTML.util.ajax("non_existing_url.html", successCallback, errorCallback);
+
+            waitsFor(function () {
+                return finished;
+            });
+
+            runs(function () {
+                expect(successCallback).not.toHaveBeenCalled();
+                expect(errorCallback).toHaveBeenCalled();
+            });
+        });
+    });
+
     describe("CSS URL extraction", function () {
         it("should extract a CSS URL", function () {
             var url = rasterizeHTML.util.extractCssUrl('url(path/file.png)');

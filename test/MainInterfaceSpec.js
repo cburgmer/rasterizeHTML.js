@@ -2,8 +2,13 @@ describe("Main interface of rasterizeHTML.js", function () {
     var callbackCaller = function (doc, baseUrl, callback) { callback([]); },
         svg = "the svg",
         canvas = document.createElement("canvas"),
+        ajaxSpy,
         loadAndInlineImages, loadAndInlineCSS, loadAndInlineCSSReferences,
         getSvgForDocument, drawSvgToCanvas;
+
+    beforeEach(function () {
+        ajaxSpy = spyOn(rasterizeHTML.util, "ajax");
+    });
 
     describe("Rendering", function () {
         var callback;
@@ -51,7 +56,7 @@ describe("Main interface of rasterizeHTML.js", function () {
         it("should take a HTML string, inline all displayable content and render to the given canvas", function () {
             var html = "<head><title>a title</title></head><body>some html</body>",
                 drawDocumentSpy = spyOn(rasterizeHTML, "drawDocument").andCallFake(function (doc, canvas, baseUrl, callback) {
-                    callback(canvas);
+                    callback(canvas, []);
                 });
 
             rasterizeHTML.drawHTML(html, canvas, callback);
@@ -59,13 +64,13 @@ describe("Main interface of rasterizeHTML.js", function () {
             expect(drawDocumentSpy).toHaveBeenCalledWith(jasmine.any(Object), canvas, null, callback);
             expect(drawDocumentSpy.mostRecentCall.args[0].documentElement.innerHTML).toEqual(html);
 
-            expect(callback).toHaveBeenCalledWith(canvas);
+            expect(callback).toHaveBeenCalledWith(canvas, []);
         });
 
         it("should take a HTML string with optional baseUrl, inline all displayable content and render to the given canvas", function () {
             var html = "<head><title>a title</title></head><body>some html</body>",
                 drawDocumentSpy = spyOn(rasterizeHTML, "drawDocument").andCallFake(function (doc, canvas, baseUrl, callback) {
-                    callback(canvas);
+                    callback(canvas, []);
                 });
 
             rasterizeHTML.drawHTML(html, canvas, "a_baseUrl", callback);
@@ -73,27 +78,23 @@ describe("Main interface of rasterizeHTML.js", function () {
             expect(drawDocumentSpy).toHaveBeenCalledWith(jasmine.any(Object), canvas, "a_baseUrl", callback);
             expect(drawDocumentSpy.mostRecentCall.args[0].documentElement.innerHTML).toEqual(html);
 
-            expect(callback).toHaveBeenCalledWith(canvas);
+            expect(callback).toHaveBeenCalledWith(canvas, []);
         });
 
         it("should take a URL, inline all displayable content and render to the given canvas", function () {
             var finished = false,
-                callback = function (canvas) {
-                    finished = true;
-                },
                 drawHtmlSpy = spyOn(rasterizeHTML, "drawHTML").andCallFake(function (html, canvas, baseUrl, callback) {
-                    callback(canvas);
+                    callback(canvas, []);
                 });
+
+            ajaxSpy.andCallFake(function (url, success, error) {
+                success("some html");
+            });
 
             rasterizeHTML.drawURL("fixtures/image.html", canvas, callback);
 
-            waitsFor(function() {
-                return finished;
-            });
-
-            runs(function() {
-                expect(drawHtmlSpy).toHaveBeenCalledWith(readFixtures("image.html"), canvas, "fixtures/image.html", callback);
-            });
+            expect(callback).toHaveBeenCalledWith(canvas, []);
+            expect(drawHtmlSpy).toHaveBeenCalledWith("some html", canvas, "fixtures/image.html", callback);
         });
     });
 
@@ -157,46 +158,37 @@ describe("Main interface of rasterizeHTML.js", function () {
         });
 
         it("should pass through errors from drawURL", function () {
-            var finished = false,
-                callback = jasmine.createSpy("callback").andCallFake(function () {
-                    finished = true;
-                }),
+            var callback = jasmine.createSpy("callback"),
                 drawHtmlSpy = spyOn(rasterizeHTML, "drawHTML").andCallFake(function (html, canvas, baseUrl, callback) {
                     callback(canvas, ["some error"]);
                 });
 
+            ajaxSpy.andCallFake(function (url, success, error) {
+                success();
+            });
+
             rasterizeHTML.drawURL("fixtures/image.html", canvas, callback);
 
-            waitsFor(function() {
-                return finished;
-            });
-
-            runs(function() {
-                expect(drawHtmlSpy).toHaveBeenCalled();
-                expect(callback).toHaveBeenCalledWith(canvas, ["some error"]);
-            });
+            expect(drawHtmlSpy).toHaveBeenCalled();
+            expect(callback).toHaveBeenCalledWith(canvas, ["some error"]);
         });
 
-        it("should report error on loading an URL", function () {
-            var finished = false,
-                callback = jasmine.createSpy("callback").andCallFake(function () {
-                    finished = true;
-                }),
+        it("should report an error on loading a broken URL", function () {
+            var callback = jasmine.createSpy("callback"),
                 drawHtmlSpy = spyOn(rasterizeHTML, "drawHTML");
+
+            ajaxSpy.andCallFake(function (url, success, error) {
+                error();
+            });
 
             rasterizeHTML.drawURL("non_existing.html", canvas, callback);
 
-            waitsFor(function() {
-                return finished;
-            });
-
-            runs(function() {
-                expect(drawHtmlSpy).not.toHaveBeenCalled();
-                expect(callback).toHaveBeenCalledWith(canvas, [{
-                    resourceType: "page",
-                    url: "non_existing.html"
-                }]);
-            });
+            expect(drawHtmlSpy).not.toHaveBeenCalled();
+            expect(ajaxSpy).toHaveBeenCalled();
+            expect(callback).toHaveBeenCalledWith(canvas, [{
+                resourceType: "page",
+                url: "non_existing.html"
+            }]);
         });
     });
 });

@@ -287,11 +287,26 @@ describe("Inline external resources", function () {
 
     describe("CSS inline", function () {
         var cssLink, anotherCssLink, emptyCssLink, faviconLink,
-            extractCssUrlSpy, joinUrlSpy;
+            extractCssUrlSpy, joinUrlSpy, ajaxSpy, callback;
+
+        var getBaseUri = function () {
+            // Strip of file part
+            return document.baseURI.replace(/\/[^\/]*$/, "/");
+        };
 
         beforeEach(function () {
             extractCssUrlSpy = spyOn(rasterizeHTML.util, "extractCssUrl");
             joinUrlSpy = spyOn(rasterizeHTML.util, "joinUrl");
+            ajaxSpy = spyOn(rasterizeHTML.util, "ajax").andCallFake(function (url, success, error) {
+                var fixturesUrl = url.replace(getBaseUri(), "").replace(/^(.\/)?fixtures\//, "");
+
+                try {
+                    success(readFixtures(fixturesUrl));
+                } catch (err) {
+                    error();
+                }
+            });
+            callback = jasmine.createSpy("loadAndInlineCssCallback");
 
             cssLink = window.document.createElement("link");
             cssLink.href = "fixtures/some.css";
@@ -314,134 +329,84 @@ describe("Inline external resources", function () {
         });
 
         it("should do nothing if no linked CSS is found", function () {
-            var inlineFinished = false;
+            rasterizeHTML.loadAndInlineCSS(doc, callback);
 
-            rasterizeHTML.loadAndInlineCSS(doc, function () { inlineFinished = true; });
-
-            waitsFor(function () {
-                return inlineFinished;
-            }, "rasterizeHTML.loadAndInlineCSS", 2000);
-
-            runs(function () {
-                expect(doc.head.getElementsByTagName("style").length).toEqual(0);
-            });
+            expect(callback).toHaveBeenCalled();
+            expect(doc.head.getElementsByTagName("style").length).toEqual(0);
         });
 
         it("should not touch non-CSS links", function () {
-            var inlineFinished = false;
-
             doc.head.appendChild(faviconLink);
 
-            rasterizeHTML.loadAndInlineCSS(doc, function () { inlineFinished = true; });
+            rasterizeHTML.loadAndInlineCSS(doc, callback);
 
-            waitsFor(function () {
-                return inlineFinished;
-            }, "rasterizeHTML.loadAndInlineCSS", 2000);
-
-            runs(function () {
-                expect(doc.head.getElementsByTagName("style").length).toEqual(0);
-                expect(doc.head.getElementsByTagName("link").length).toEqual(1);
-            });
+            expect(callback).toHaveBeenCalled();
+            expect(doc.head.getElementsByTagName("style").length).toEqual(0);
+            expect(doc.head.getElementsByTagName("link").length).toEqual(1);
         });
 
         it("should inline linked CSS", function () {
-            var inlineFinished = false;
-
             doc.head.appendChild(cssLink);
 
-            rasterizeHTML.loadAndInlineCSS(doc, function () { inlineFinished = true; });
+            rasterizeHTML.loadAndInlineCSS(doc, callback);
 
-            waitsFor(function () {
-                return inlineFinished;
-            }, "rasterizeHTML.loadAndInlineCSS", 2000);
-
-            runs(function () {
-                expect(doc.head.getElementsByTagName("style").length).toEqual(1);
-                expect(doc.head.getElementsByTagName("style")[0].textContent).toEqual("p { font-size: 14px; }");
-                expect(doc.head.getElementsByTagName("link").length).toEqual(0);
-            });
+            expect(callback).toHaveBeenCalled();
+            expect(doc.head.getElementsByTagName("style").length).toEqual(1);
+            expect(doc.head.getElementsByTagName("style")[0].textContent).toEqual("p { font-size: 14px; }");
+            expect(doc.head.getElementsByTagName("link").length).toEqual(0);
         });
 
         it("should inline multiple linked CSS", function () {
-            var inlineFinished = false;
-
             doc.head.appendChild(cssLink);
             doc.head.appendChild(anotherCssLink);
 
-            rasterizeHTML.loadAndInlineCSS(doc, function () { inlineFinished = true; });
+            rasterizeHTML.loadAndInlineCSS(doc, callback);
 
-            waitsFor(function () {
-                return inlineFinished;
-            }, "rasterizeHTML.loadAndInlineCSS", 2000);
-
-            runs(function () {
-                expect(doc.head.getElementsByTagName("style").length).toEqual(1);
-                expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/(^|\n)p \{ font-size: 14px; \}($|\n)/);
-                expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/(^|\n)a \{ text-decoration: none; \}($|\n)/);
-                expect(doc.head.getElementsByTagName("link").length).toEqual(0);
-            });
+            expect(callback).toHaveBeenCalled();
+            expect(doc.head.getElementsByTagName("style").length).toEqual(1);
+            expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/(^|\n)p \{ font-size: 14px; \}($|\n)/);
+            expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/(^|\n)a \{ text-decoration: none; \}($|\n)/);
+            expect(doc.head.getElementsByTagName("link").length).toEqual(0);
         });
 
         it("should not add inline CSS if no content given", function () {
-            var inlineFinished = false;
-
             doc.head.appendChild(emptyCssLink);
 
-            rasterizeHTML.loadAndInlineCSS(doc, function () { inlineFinished = true; });
+            rasterizeHTML.loadAndInlineCSS(doc, callback);
 
-            waitsFor(function () {
-                return inlineFinished;
-            }, "rasterizeHTML.loadAndInlineCSS", 2000);
-
-            runs(function () {
-                expect(doc.head.getElementsByTagName("style").length).toEqual(0);
-                expect(doc.head.getElementsByTagName("link").length).toEqual(0);
-            });
+            expect(callback).toHaveBeenCalled();
+            expect(doc.head.getElementsByTagName("style").length).toEqual(0);
+            expect(doc.head.getElementsByTagName("link").length).toEqual(0);
         });
 
         it("should respect the document's baseURI when loading linked CSS", function () {
-            var inlineFinished = false;
-
             joinUrlSpy.andCallThrough();
 
             doc = readDocumentFixture("externalCSS.html");
 
-            rasterizeHTML.loadAndInlineCSS(doc, function () { inlineFinished = true; });
+            rasterizeHTML.loadAndInlineCSS(doc, callback);
 
-            waitsFor(function () {
-                return inlineFinished;
-            }, "rasterizeHTML.loadAndInlineCSS", 2000);
+            expect(callback).toHaveBeenCalled();
+            expect(joinUrlSpy).toHaveBeenCalledWith(doc.baseURI, "some.css");
 
-            runs(function () {
-                expect(joinUrlSpy).toHaveBeenCalledWith(doc.baseURI, "some.css");
-
-                expect(doc.getElementsByTagName("style").length).toEqual(1);
-                expect(doc.getElementsByTagName("style")[0].textContent).toEqual("p { font-size: 14px; }");
-                expect(doc.getElementsByTagName("link").length).toEqual(0);
-            });
+            expect(doc.getElementsByTagName("style").length).toEqual(1);
+            expect(doc.getElementsByTagName("style")[0].textContent).toEqual("p { font-size: 14px; }");
+            expect(doc.getElementsByTagName("link").length).toEqual(0);
         });
 
         it("should respect optional baseUrl when loading linked CSS", function () {
-            var inlineFinished = false;
-
             joinUrlSpy.andCallThrough();
 
             doc = readDocumentFixtureWithoutBaseURI("externalCSS.html");
 
-            rasterizeHTML.loadAndInlineCSS(doc, "./fixtures/", function () { inlineFinished = true; });
+            rasterizeHTML.loadAndInlineCSS(doc, "./fixtures/", callback);
 
-            waitsFor(function () {
-                return inlineFinished;
-            }, "rasterizeHTML.loadAndInlineCSS", 2000);
-
-            runs(function () {
-                expect(joinUrlSpy).toHaveBeenCalledWith("./fixtures/", "some.css");
-            });
+            expect(callback).toHaveBeenCalled();
+            expect(joinUrlSpy).toHaveBeenCalledWith("./fixtures/", "some.css");
         });
 
         it("should favour explicit baseUrl over document.baseURI when loading linked CSS", function () {
-            var inlineFinished = false,
-                baseUrl = "./fixtures/";
+            var baseUrl = "./fixtures/";
 
             joinUrlSpy.andCallThrough();
 
@@ -450,20 +415,14 @@ describe("Inline external resources", function () {
             expect(doc.baseURI).not.toEqual("about:blank");
             expect(doc.baseURI).not.toEqual(baseUrl);
 
-            rasterizeHTML.loadAndInlineCSS(doc, "./fixtures/", function () { inlineFinished = true; });
+            rasterizeHTML.loadAndInlineCSS(doc, "./fixtures/", callback);
 
-            waitsFor(function () {
-                return inlineFinished;
-            }, "rasterizeHTML.loadAndInlineCSS", 2000);
-
-            runs(function () {
-                expect(joinUrlSpy).toHaveBeenCalledWith("./fixtures/", "some.css");
-            });
+            expect(callback).toHaveBeenCalled();
+            expect(joinUrlSpy).toHaveBeenCalledWith("./fixtures/", "some.css");
         });
 
         it("should map resource paths relative to the stylesheet", function () {
-            var inlineFinished = false,
-                cssWithRelativeResource;
+            var cssWithRelativeResource;
 
             cssWithRelativeResource = window.document.createElement("link");
             cssWithRelativeResource.href = "below/backgroundImage.css";
@@ -482,19 +441,14 @@ describe("Inline external resources", function () {
             doc.head.appendChild(cssWithRelativeResource);
 
             // Let's assume the doc's baseURI is under "fixtures/"
-            rasterizeHTML.loadAndInlineCSS(doc, "fixtures/", function () { inlineFinished = true; });
+            rasterizeHTML.loadAndInlineCSS(doc, "fixtures/", callback);
 
-            waitsFor(function () {
-                return inlineFinished;
-            }, "rasterizeHTML.loadAndInlineCSS", 2000);
+            expect(callback).toHaveBeenCalled();
+            // Chrome 19 sets cssWithRelativeResource.href to ""
+            expect(joinUrlSpy).toHaveBeenCalledWith("below/backgroundImage.css", "../green.png");
 
-            runs(function () {
-                // Chrome 19 sets cssWithRelativeResource.href to ""
-                expect(joinUrlSpy).toHaveBeenCalledWith("below/backgroundImage.css", "../green.png");
-
-                expect(doc.head.getElementsByTagName("style").length).toEqual(1);
-                expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/url\(\"green\.png\"\)/);
-            });
+            expect(doc.head.getElementsByTagName("style").length).toEqual(1);
+            expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/url\(\"green\.png\"\)/);
         });
 
         describe("CSS inline error handling", function () {
@@ -521,16 +475,10 @@ describe("Inline external resources", function () {
 
                 rasterizeHTML.loadAndInlineCSS(doc, "some_base_url/", callback);
 
-                waitsFor(function () {
-                    return callback.wasCalled;
-                }, "rasterizeHTML.loadAndInlineCSS");
-
-                runs(function () {
-                    expect(callback).toHaveBeenCalledWith([{
-                        resourceType: "stylesheet",
-                        url: "some_base_url/a_document_that_doesnt_exist.css"
-                    }]);
-                });
+                expect(callback).toHaveBeenCalledWith([{
+                    resourceType: "stylesheet",
+                    url: "some_base_url/a_document_that_doesnt_exist.css"
+                }]);
             });
 
             it("should only report a failing stylesheet as error", function () {
@@ -539,16 +487,10 @@ describe("Inline external resources", function () {
 
                 rasterizeHTML.loadAndInlineCSS(doc, callback);
 
-                waitsFor(function () {
-                    return callback.wasCalled;
-                }, "rasterizeHTML.loadAndInlineCSS");
-
-                runs(function () {
-                    expect(callback).toHaveBeenCalledWith([{
-                        resourceType: "stylesheet",
-                        url: "a_document_that_doesnt_exist.css"
-                    }]);
-                });
+                expect(callback).toHaveBeenCalledWith([{
+                    resourceType: "stylesheet",
+                    url: "a_document_that_doesnt_exist.css"
+                }]);
             });
 
             it("should report multiple failing stylesheet as error", function () {
@@ -557,14 +499,8 @@ describe("Inline external resources", function () {
 
                 rasterizeHTML.loadAndInlineCSS(doc, callback);
 
-                waitsFor(function () {
-                    return callback.wasCalled;
-                }, "rasterizeHTML.loadAndInlineCSS");
-
-                runs(function () {
-                    expect(callback).toHaveBeenCalledWith([jasmine.any(Object), jasmine.any(Object)]);
-                    expect(callback.mostRecentCall.args[0][0]).not.toEqual(callback.mostRecentCall.args[0][1]);
-                });
+                expect(callback).toHaveBeenCalledWith([jasmine.any(Object), jasmine.any(Object)]);
+                expect(callback.mostRecentCall.args[0][0]).not.toEqual(callback.mostRecentCall.args[0][1]);
             });
 
             it("should report an empty list for a successful stylesheet", function () {
@@ -572,13 +508,7 @@ describe("Inline external resources", function () {
 
                 rasterizeHTML.loadAndInlineCSS(doc, callback);
 
-                waitsFor(function () {
-                    return callback.wasCalled;
-                }, "rasterizeHTML.loadAndInlineCSS");
-
-                runs(function () {
-                    expect(callback).toHaveBeenCalledWith([]);
-                });
+                expect(callback).toHaveBeenCalledWith([]);
             });
         });
     });

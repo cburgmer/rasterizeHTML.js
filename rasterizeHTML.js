@@ -288,30 +288,16 @@ var rasterizeHTML = (function () {
         var cssHref = link.attributes.href.nodeValue, // Chrome 19 sets link.href to ""
             documentBaseUrl = baseUrl || link.ownerDocument.baseURI,
             cssHrefRelativeToDoc = getUrlRelativeToDocumentBase(cssHref, documentBaseUrl),
-            ajaxRequest = new window.XMLHttpRequest(),
             cssContent;
 
-        ajaxRequest.addEventListener("load", function (e) {
-            if (ajaxRequest.status === 200 || ajaxRequest.status === 0) {
-                cssContent = adjustPathsOfCssResources(cssHref, ajaxRequest.responseText);
+        module.util.ajax(cssHrefRelativeToDoc, function (content) {
+            cssContent = adjustPathsOfCssResources(cssHref, content);
 
-                link.parentNode.removeChild(link);
-                successCallback(cssContent);
-            } else {
-                errorCallback(cssHrefRelativeToDoc);
-            }
-        }, false);
-
-        ajaxRequest.addEventListener("error", function () {
+            link.parentNode.removeChild(link);
+            successCallback(cssContent);
+        }, function () {
             errorCallback(cssHrefRelativeToDoc);
-        }, false);
-
-        ajaxRequest.open('GET', cssHrefRelativeToDoc, true);
-        try {
-            ajaxRequest.send(null);
-        } catch (err) {
-            errorCallback(cssHrefRelativeToDoc);
-        }
+        });
     };
 
     var mergeAndAddInlineStyle = function (doc, styles) {
