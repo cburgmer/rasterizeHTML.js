@@ -19,6 +19,26 @@ describe("Inline external resources", function () {
         return doc;
     };
 
+    var readFixturesOrFail = function (url) {
+        var content,
+            fixtureUrl = jasmine.getFixtures().fixturesPath + url;
+
+        $.ajax({
+            dataType: 'text',
+            url: fixtureUrl,
+            async: false,
+            cache: false,
+            success: function (theContent) {
+                content = theContent;
+            },
+            error: function () {
+                throw "unable to read fixture";
+            }
+        });
+
+        return content;
+    };
+
     var readDocumentFixtureWithoutBaseURI = function (url) {
         var html = readFixtures(url),
             doc = document.implementation.createHTMLDocument("");
@@ -301,7 +321,7 @@ describe("Inline external resources", function () {
                 var fixturesUrl = url.replace(getBaseUri(), "").replace(/^(.\/)?fixtures\//, "");
 
                 try {
-                    success(readFixtures(fixturesUrl));
+                    success(readFixturesOrFail(fixturesUrl));
                 } catch (err) {
                     error();
                 }
