@@ -533,7 +533,7 @@ describe("Inline external resources", function () {
         });
     });
 
-    describe("CSS background-image inline", function () {
+    describe("CSS references inline", function () {
         var extractCssUrlSpy, joinUrlSpy;
 
         var addStyleToDocument = function (doc, styleContent) {
@@ -604,149 +604,6 @@ describe("Inline external resources", function () {
             });
         });
 
-        it("should not touch an already inlined background-image", function () {
-            var inlineFinished = false;
-
-            extractCssUrlSpy.andReturn("data:image/png;base64,soMEfAkebASE64=");
-
-            addStyleToDocument(doc, 'span { background-image: url("data:image/png;base64,soMEfAkebASE64="); }');
-
-            rasterizeHTML.loadAndInlineCSSReferences(doc, function () { inlineFinished = true; });
-
-            waitsFor(function () {
-                return inlineFinished;
-            }, "rasterizeHTML.loadAndInlineCSSReferences", 2000);
-
-            runs(function () {
-                expect(doc.head.getElementsByTagName("style").length).toEqual(1);
-                expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/span \{ background-image: url\("data:image\/png;base64,soMEfAkebASE64="\); \}/);
-            });
-        });
-
-        it("should ignore invalid values", function () {
-            var inlineFinished = false;
-
-            extractCssUrlSpy.andThrow("Invalid url");
-
-            addStyleToDocument(doc, 'span { background-image: "invalid url"; }');
-
-            rasterizeHTML.loadAndInlineCSSReferences(doc, function () { inlineFinished = true; });
-
-            waitsFor(function () {
-                return inlineFinished;
-            }, "rasterizeHTML.loadAndInlineCSSReferences", 2000);
-
-            runs(function () {
-                expect(doc.head.getElementsByTagName("style").length).toEqual(1);
-                expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/span \{ background-image: "invalid url"; \}/);
-            });
-        });
-
-        it("should inline a background-image", function () {
-            var backgroundImageRegex = /span\s*\{\s*background-image: url\("([^\)]+)"\);\s*\}/,
-                inlineFinished = false,
-                url, styleContent;
-
-            extractCssUrlSpy.andReturn("fixtures/rednblue.png");
-
-            addStyleToDocument(doc, 'span { background-image: url("fixtures/rednblue.png"); }');
-
-            rasterizeHTML.loadAndInlineCSSReferences(doc, function () { inlineFinished = true; });
-
-            waitsFor(function () {
-                return inlineFinished;
-            }, "rasterizeHTML.loadAndInlineCSSReferences", 2000);
-
-            runs(function () {
-                expect(extractCssUrlSpy).toHaveBeenCalledWith('url("fixtures/rednblue.png")');
-
-                expect(doc.head.getElementsByTagName("style").length).toEqual(1);
-                styleContent = doc.head.getElementsByTagName("style")[0].textContent;
-                expect(styleContent).toMatch(backgroundImageRegex);
-                url = backgroundImageRegex.exec(styleContent)[1];
-                expect(url).toMatch(/^data:image\/png;base64,/);
-            });
-
-            runs(function () {
-                compareDataUriToReferenceImage(url, "referenceImage1");
-            });
-        });
-
-        it("should respect the document's baseURI when loading the background-image", function () {
-            var backgroundImageRegex = /background-image:\s*url\("([^\)]+)"\);/,
-                inlineFinished = false,
-                url, styleContent;
-
-            extractCssUrlSpy.andReturn("rednblue.png");
-            joinUrlSpy.andCallThrough();
-
-            doc = readDocumentFixture("backgroundImage.html");
-
-            rasterizeHTML.loadAndInlineCSSReferences(doc, function () { inlineFinished = true; });
-
-            waitsFor(function () {
-                return inlineFinished;
-            }, "rasterizeHTML.loadAndInlineCSSReferences", 2000);
-
-            runs(function () {
-                expect(extractCssUrlSpy).toHaveBeenCalledWith('url("rednblue.png")');
-                expect(joinUrlSpy).toHaveBeenCalledWith(doc.baseURI, "rednblue.png");
-
-                expect(doc.getElementsByTagName("style").length).toEqual(1);
-                styleContent = doc.getElementsByTagName("style")[0].textContent;
-                expect(styleContent).toMatch(backgroundImageRegex);
-
-                url = backgroundImageRegex.exec(styleContent)[1];
-                expect(url).toMatch(/^data:image\/png;base64,/);
-            });
-
-            runs(function () {
-                compareDataUriToReferenceImage(url, "referenceImage1");
-            });
-        });
-
-        it("should respect optional baseUrl when loading the background-image", function () {
-            var inlineFinished = false;
-
-            extractCssUrlSpy.andReturn("rednblue.png");
-            joinUrlSpy.andCallThrough();
-
-            doc = readDocumentFixtureWithoutBaseURI("backgroundImage.html");
-
-            rasterizeHTML.loadAndInlineCSSReferences(doc, "./fixtures/", function () { inlineFinished = true; });
-
-            waitsFor(function () {
-                return inlineFinished;
-            }, "rasterizeHTML.loadAndInlineCSSReferences", 2000);
-
-            runs(function () {
-                expect(joinUrlSpy).toHaveBeenCalledWith("./fixtures/", "rednblue.png");
-            });
-        });
-
-        it("should favour explicit baseUrl over document.baseURI when loading the background-image", function () {
-            var inlineFinished = false,
-                baseUrl = "./fixtures/";
-
-            extractCssUrlSpy.andReturn("rednblue.png");
-            joinUrlSpy.andCallThrough();
-
-            doc = readDocumentFixture("backgroundImage.html");
-            expect(doc.baseURI).not.toBeNull();
-            expect(doc.baseURI).not.toEqual("about:blank");
-            expect(doc.baseURI).not.toEqual(baseUrl);
-
-            rasterizeHTML.loadAndInlineCSSReferences(doc, "./fixtures/", function () { inlineFinished = true; });
-
-            waitsFor(function () {
-                return inlineFinished;
-            }, "rasterizeHTML.loadAndInlineCSSReferences", 2000);
-
-            runs(function () {
-                expect(joinUrlSpy).toHaveBeenCalledWith("./fixtures/", "rednblue.png");
-            });
-        });
-
         it("should add a workaround for Webkit to account for first CSS rules being ignored", function () {
             var inlineFinished = false;
 
@@ -767,6 +624,151 @@ describe("Inline external resources", function () {
                 } else {
                     expect(doc.head.getElementsByTagName("style")[0].textContent).not.toMatch(/^span \{\}/);
                 }
+            });
+        });
+
+        describe("CSS background-image inline", function () {
+            it("should not touch an already inlined background-image", function () {
+                var inlineFinished = false;
+
+                extractCssUrlSpy.andReturn("data:image/png;base64,soMEfAkebASE64=");
+
+                addStyleToDocument(doc, 'span { background-image: url("data:image/png;base64,soMEfAkebASE64="); }');
+
+                rasterizeHTML.loadAndInlineCSSReferences(doc, function () { inlineFinished = true; });
+
+                waitsFor(function () {
+                    return inlineFinished;
+                }, "rasterizeHTML.loadAndInlineCSSReferences", 2000);
+
+                runs(function () {
+                    expect(doc.head.getElementsByTagName("style").length).toEqual(1);
+                    expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/span \{ background-image: url\("data:image\/png;base64,soMEfAkebASE64="\); \}/);
+                });
+            });
+
+            it("should ignore invalid values", function () {
+                var inlineFinished = false;
+
+                extractCssUrlSpy.andThrow("Invalid url");
+
+                addStyleToDocument(doc, 'span { background-image: "invalid url"; }');
+
+                rasterizeHTML.loadAndInlineCSSReferences(doc, function () { inlineFinished = true; });
+
+                waitsFor(function () {
+                    return inlineFinished;
+                }, "rasterizeHTML.loadAndInlineCSSReferences", 2000);
+
+                runs(function () {
+                    expect(doc.head.getElementsByTagName("style").length).toEqual(1);
+                    expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/span \{ background-image: "invalid url"; \}/);
+                });
+            });
+
+            it("should inline a background-image", function () {
+                var backgroundImageRegex = /span\s*\{\s*background-image: url\("([^\)]+)"\);\s*\}/,
+                    inlineFinished = false,
+                    url, styleContent;
+
+                extractCssUrlSpy.andReturn("fixtures/rednblue.png");
+
+                addStyleToDocument(doc, 'span { background-image: url("fixtures/rednblue.png"); }');
+
+                rasterizeHTML.loadAndInlineCSSReferences(doc, function () { inlineFinished = true; });
+
+                waitsFor(function () {
+                    return inlineFinished;
+                }, "rasterizeHTML.loadAndInlineCSSReferences", 2000);
+
+                runs(function () {
+                    expect(extractCssUrlSpy).toHaveBeenCalledWith('url("fixtures/rednblue.png")');
+
+                    expect(doc.head.getElementsByTagName("style").length).toEqual(1);
+                    styleContent = doc.head.getElementsByTagName("style")[0].textContent;
+                    expect(styleContent).toMatch(backgroundImageRegex);
+                    url = backgroundImageRegex.exec(styleContent)[1];
+                    expect(url).toMatch(/^data:image\/png;base64,/);
+                });
+
+                runs(function () {
+                    compareDataUriToReferenceImage(url, "referenceImage1");
+                });
+            });
+
+            it("should respect the document's baseURI when loading the background-image", function () {
+                var backgroundImageRegex = /background-image:\s*url\("([^\)]+)"\);/,
+                    inlineFinished = false,
+                    url, styleContent;
+
+                extractCssUrlSpy.andReturn("rednblue.png");
+                joinUrlSpy.andCallThrough();
+
+                doc = readDocumentFixture("backgroundImage.html");
+
+                rasterizeHTML.loadAndInlineCSSReferences(doc, function () { inlineFinished = true; });
+
+                waitsFor(function () {
+                    return inlineFinished;
+                }, "rasterizeHTML.loadAndInlineCSSReferences", 2000);
+
+                runs(function () {
+                    expect(extractCssUrlSpy).toHaveBeenCalledWith('url("rednblue.png")');
+                    expect(joinUrlSpy).toHaveBeenCalledWith(doc.baseURI, "rednblue.png");
+
+                    expect(doc.getElementsByTagName("style").length).toEqual(1);
+                    styleContent = doc.getElementsByTagName("style")[0].textContent;
+                    expect(styleContent).toMatch(backgroundImageRegex);
+
+                    url = backgroundImageRegex.exec(styleContent)[1];
+                    expect(url).toMatch(/^data:image\/png;base64,/);
+                });
+
+                runs(function () {
+                    compareDataUriToReferenceImage(url, "referenceImage1");
+                });
+            });
+
+            it("should respect optional baseUrl when loading the background-image", function () {
+                var inlineFinished = false;
+
+                extractCssUrlSpy.andReturn("rednblue.png");
+                joinUrlSpy.andCallThrough();
+
+                doc = readDocumentFixtureWithoutBaseURI("backgroundImage.html");
+
+                rasterizeHTML.loadAndInlineCSSReferences(doc, "./fixtures/", function () { inlineFinished = true; });
+
+                waitsFor(function () {
+                    return inlineFinished;
+                }, "rasterizeHTML.loadAndInlineCSSReferences", 2000);
+
+                runs(function () {
+                    expect(joinUrlSpy).toHaveBeenCalledWith("./fixtures/", "rednblue.png");
+                });
+            });
+
+            it("should favour explicit baseUrl over document.baseURI when loading the background-image", function () {
+                var inlineFinished = false,
+                    baseUrl = "./fixtures/";
+
+                extractCssUrlSpy.andReturn("rednblue.png");
+                joinUrlSpy.andCallThrough();
+
+                doc = readDocumentFixture("backgroundImage.html");
+                expect(doc.baseURI).not.toBeNull();
+                expect(doc.baseURI).not.toEqual("about:blank");
+                expect(doc.baseURI).not.toEqual(baseUrl);
+
+                rasterizeHTML.loadAndInlineCSSReferences(doc, "./fixtures/", function () { inlineFinished = true; });
+
+                waitsFor(function () {
+                    return inlineFinished;
+                }, "rasterizeHTML.loadAndInlineCSSReferences", 2000);
+
+                runs(function () {
+                    expect(joinUrlSpy).toHaveBeenCalledWith("./fixtures/", "rednblue.png");
+                });
             });
         });
 
@@ -822,7 +824,7 @@ describe("Inline external resources", function () {
                 });
             });
 
-            it("should report multiple failing backgroundImage as error", function () {
+            it("should report multiple failing backgroundImages as error", function () {
                 addStyleToDocument(doc, 'span { background-image: url(a_backgroundImage_that_doesnt_exist.png); }');
                 addStyleToDocument(doc, 'span { background-image: url(another_backgroundImage_that_doesnt_exist.png); }');
                 extractCssUrlSpy.andCallFake(function (cssUrl) {
