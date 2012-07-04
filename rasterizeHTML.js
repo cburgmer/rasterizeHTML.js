@@ -590,7 +590,9 @@ var rasterizeHTML = (function () {
                     svg = module.getSvgForDocument(doc, canvas.width, canvas.height);
 
                     module.drawSvgToCanvas(svg, canvas, function () {
-                        params.callback(canvas, allErrors);
+                        if (params.callback) {
+                            params.callback(canvas, allErrors);
+                        }
                     });
                 });
             });

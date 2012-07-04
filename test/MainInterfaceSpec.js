@@ -53,6 +53,10 @@ describe("Main interface of rasterizeHTML.js", function () {
             expect(callback).toHaveBeenCalledWith(canvas, []);
         });
 
+        it("should make callback optional for drawDocument", function () {
+            rasterizeHTML.drawDocument("doc", canvas, "a_baseUrl");
+        });
+
         it("should take a HTML string, inline all displayable content and render to the given canvas", function () {
             var html = "<head><title>a title</title></head><body>some html</body>",
                 drawDocumentSpy = spyOn(rasterizeHTML, "drawDocument").andCallFake(function (doc, canvas, baseUrl, callback) {
@@ -81,6 +85,10 @@ describe("Main interface of rasterizeHTML.js", function () {
             expect(callback).toHaveBeenCalledWith(canvas, []);
         });
 
+        it("should make callback optional for drawHTML", function () {
+            rasterizeHTML.drawHTML("<html></html>", canvas, "a_baseUrl");
+        });
+
         it("should take a URL, inline all displayable content and render to the given canvas", function () {
             var finished = false,
                 drawHtmlSpy = spyOn(rasterizeHTML, "drawHTML").andCallFake(function (html, canvas, baseUrl, callback) {
@@ -96,6 +104,15 @@ describe("Main interface of rasterizeHTML.js", function () {
             expect(callback).toHaveBeenCalledWith(canvas, []);
             expect(drawHtmlSpy).toHaveBeenCalledWith("some html", canvas, "fixtures/image.html", callback);
         });
+
+        it("should make callback optional for drawURL", function () {
+            ajaxSpy.andCallFake(function (url, success, error) {
+                success("some html");
+            });
+
+            rasterizeHTML.drawURL("fixtures/image.html", canvas);
+        });
+
     });
 
     describe("Error handling", function () {
