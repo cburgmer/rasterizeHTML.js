@@ -2,7 +2,7 @@
 // Distributed under the MIT License
 // For source and documentation visit:
 // http://www.github.com/cburgmer/rasterizeHTML.js
-/*global window, CSSParser, URI*/
+/*global window, btoa, CSSParser, URI*/
 
 var rasterizeHTML = (function () {
     "use strict";
@@ -66,12 +66,12 @@ var rasterizeHTML = (function () {
         }
     };
 
-    module.util.ajax = function (url, successCallback, errorCallback) {
+    module.util.ajax = function (url, successCallback, errorCallback, mimeType) {
         var ajaxRequest = new window.XMLHttpRequest();
 
         ajaxRequest.addEventListener("load", function (e) {
             if (ajaxRequest.status === 200 || ajaxRequest.status === 0) {
-                successCallback(ajaxRequest.responseText);
+                successCallback(ajaxRequest.response);
             } else {
                 errorCallback();
             }
@@ -82,11 +82,23 @@ var rasterizeHTML = (function () {
         }, false);
 
         ajaxRequest.open('GET', url, true);
+        ajaxRequest.overrideMimeType(mimeType);
         try {
             ajaxRequest.send(null);
         } catch (err) {
             errorCallback();
         }
+    };
+
+    module.util.binaryAjax = function (url, successCallback, errorCallback) {
+        var binaryContent = "";
+
+        module.util.ajax(url, function (content) {
+            for (var i = 0; i < content.length; i++) {
+                binaryContent += String.fromCharCode(content.charCodeAt(i) & 0xFF);
+            }
+            successCallback(binaryContent);
+        }, errorCallback, 'text/plain; charset=x-user-defined');
     };
 
     var unquoteUrl = function (quotedUrl) {
@@ -176,6 +188,24 @@ var rasterizeHTML = (function () {
         }
 
         return declarationsToInline;
+    };
+
+    var findFontFaceDescriptors = function (parsedCSS) {
+        var descriptorsToInline = [],
+            i, j, rule;
+
+        for (i = 0; i < parsedCSS.cssRules.length; i++) {
+            rule = parsedCSS.cssRules[i];
+            if (rule.type === window.kJscsspFONT_FACE_RULE) {
+                for (j = 0; j < rule.descriptors.length; j++) {
+                    if (rule.descriptors[j].property === "src") {
+                        descriptorsToInline.push(rule.descriptors[j]);
+                    }
+                }
+            }
+        }
+
+        return descriptorsToInline;
     };
 
     var parseOptionalParameters = function (baseUrl, callback) {
@@ -389,6 +419,47 @@ var rasterizeHTML = (function () {
         });
     };
 
+    var loadAndInlineFontFace = function (cssDeclaration, baseUri, successCallback, errorCallback) {
+        var url, base64Content;
+        try {
+            url = module.util.extractCssUrl(cssDeclaration.values[0].cssText());
+        } catch (e) {
+            successCallback(false);
+            return;
+        }
+
+        if (module.util.isDataUri(url)) {
+            successCallback(false);
+            return;
+        }
+
+        url = getUrlRelativeToDocumentBase(url, baseUri);
+
+        module.util.binaryAjax(url, function (content) {
+            base64Content = btoa(content);
+            cssDeclaration.values[0].setCssText('url("data:font/woff;base64,' + base64Content + '")');
+
+            successCallback(true);
+        }, function () {
+            errorCallback(url);
+        });
+    };
+
+    var iterateOverRulesAndInlineFontFace = function (parsedCss, baseUri, callback) {
+        var descriptorsToInline = findFontFaceDescriptors(parsedCss),
+            cssHasChanges;
+
+        rasterizeHTML.util.map(descriptorsToInline, function (declaration, finish) {
+            loadAndInlineFontFace(declaration, baseUri, finish, function () {
+                finish();
+            });
+
+        }, function (changedStates) {
+            cssHasChanges = changedStates.indexOf(true) >= 0;
+            callback(cssHasChanges);
+        });
+    };
+
     var workAroundWebkitBugIgnoringTheFirstRuleInCSS = function (cssContent, parsedCss) {
         // Works around bug with webkit ignoring the first rule in each style declaration when rendering the SVG to the
         // DOM. While this does not directly affect the process when rastering to canvas, this is needed for the
@@ -402,20 +473,22 @@ var rasterizeHTML = (function () {
         }
     };
 
-    var loadAndInlineCSSResources = function (style, baseUrl, callback) {
+    var loadAndInlineCSSResourcesForStyle = function (style, baseUrl, callback) {
         var cssContent = style.textContent,
             base = baseUrl || style.ownerDocument.baseURI,
             parsedCss = parseCss(cssContent);
 
-        iterateOverRulesAndInlineBackgroundImage(parsedCss, base, function (hasChanges, errors) {
-            if (hasChanges) {
+        iterateOverRulesAndInlineBackgroundImage(parsedCss, base, function (bgImagesHaveChanges, errors) {
+            iterateOverRulesAndInlineFontFace(parsedCss, base, function (fontsHaveChanges) {
                 // CSSParser is invasive, if no changes are needed, we leave the text as it is
-                cssContent = parsedCss.cssText();
-            }
-            cssContent = workAroundWebkitBugIgnoringTheFirstRuleInCSS(cssContent, parsedCss);
-            style.childNodes[0].nodeValue = cssContent;
+                if (bgImagesHaveChanges || fontsHaveChanges) {
+                    cssContent = parsedCss.cssText();
+                }
+                cssContent = workAroundWebkitBugIgnoringTheFirstRuleInCSS(cssContent, parsedCss);
+                style.childNodes[0].nodeValue = cssContent;
 
-            callback(errors);
+                callback(errors);
+            });
         });
     };
 
@@ -426,7 +499,7 @@ var rasterizeHTML = (function () {
 
         module.util.map(styles, function (style, finish) {
             if (style.attributes.type && style.attributes.type.nodeValue === "text/css") {
-                loadAndInlineCSSResources(style, params.baseUrl, function (errors) {
+                loadAndInlineCSSResourcesForStyle(style, params.baseUrl, function (errors) {
                     allErrors = allErrors.concat(errors);
                     finish();
                 });

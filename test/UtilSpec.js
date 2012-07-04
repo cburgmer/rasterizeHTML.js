@@ -201,6 +201,24 @@ describe("Utilities", function () {
                 expect(errorCallback).toHaveBeenCalled();
             });
         });
+
+        it("should load binary data", function () {
+            var finished = false,
+                loadedContent;
+
+            rasterizeHTML.util.binaryAjax("fixtures/green.png", function (content) {
+                loadedContent = content;
+                finished = true;
+            });
+
+            waitsFor(function () {
+                return finished;
+            });
+
+            runs(function () {
+                expect(btoa(loadedContent)).toEqual("iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAABFElEQVR4nO3OMQ0AAAjAMPybhnsKxrHUQGc2r+iBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YHAAV821mT1w27RAAAAAElFTkSuQmCC");
+            });
+        });
     });
 
     describe("CSS URL extraction", function () {

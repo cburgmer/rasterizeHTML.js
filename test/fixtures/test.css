@@ -1,3 +1,14 @@
+@font-face {
+    font-family: "RaphaelIcons";
+    src: url('raphaelicons-webfont.woff');
+}
+
 .bgimage {
     background-image: url("rednblue.png");
+}
+.webfont {
+    font-family: 'RaphaelIcons';
+    font-size: 100px;
+    line-height: 100px;
+    color: #f52887;
 }

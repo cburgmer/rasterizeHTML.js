@@ -48,7 +48,7 @@ describe("Integration test", function () {
         });
 
         runs(function () {
-            expect(canvas.get(0)).toImageDiffEqual(referenceImg.get(0));
+            expect(canvas.get(0)).toImageDiffEqual(referenceImg.get(0), 50);
         });
     });
 
@@ -66,7 +66,7 @@ describe("Integration test", function () {
         });
 
         runs(function () {
-            expect(canvas.get(0)).toImageDiffEqual(referenceImg.get(0));
+            expect(canvas.get(0)).toImageDiffEqual(referenceImg.get(0), 50);
         });
     });
 
@@ -80,7 +80,7 @@ describe("Integration test", function () {
         });
 
         runs(function () {
-            expect(canvas.get(0)).toImageDiffEqual(referenceImg.get(0));
+            expect(canvas.get(0)).toImageDiffEqual(referenceImg.get(0), 50);
         });
     });
 

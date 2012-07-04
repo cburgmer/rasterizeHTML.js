@@ -1,12 +1,13 @@
 describe("CSS references inline", function () {
     var doc,
-        extractCssUrlSpy, joinUrlSpy;
+        extractCssUrlSpy, joinUrlSpy, binaryAjaxSpy;
 
     beforeEach(function () {
         doc = document.implementation.createHTMLDocument("");
 
         extractCssUrlSpy = spyOn(rasterizeHTML.util, "extractCssUrl");
         joinUrlSpy = spyOn(rasterizeHTML.util, "joinUrl");
+        binaryAjaxSpy = spyOn(rasterizeHTML.util, "binaryAjax");
     });
 
     it("should do nothing if no CSS is found", function () {
@@ -95,7 +96,7 @@ describe("CSS references inline", function () {
         it("should ignore invalid values", function () {
             var inlineFinished = false;
 
-            extractCssUrlSpy.andThrow("Invalid url");
+            extractCssUrlSpy.andThrow("invalid url");
 
             rasterizeHTMLTestHelper.addStyleToDocument(doc, 'span { background-image: "invalid url"; }');
 
@@ -306,5 +307,91 @@ describe("CSS references inline", function () {
                 expect(callback).toHaveBeenCalledWith([]);
             });
         });
+    });
+
+    describe("CSS font-style inline", function () {
+        var fontFaceRegex = /\s*@font-face\s*\{\s*font-family\s*:\s*"([^\"]+)";\s*src:\s*url\("([^\)]+)"\);\s*\}/,
+            callback;
+
+        var expectFontFaceUrlToMatch = function (url) {
+            var extractedUrl, styleContent;
+
+            expect(doc.getElementsByTagName("style").length).toEqual(1);
+            styleContent = doc.getElementsByTagName("style")[0].textContent;
+            expect(styleContent).toMatch(fontFaceRegex);
+            extractedUrl = fontFaceRegex.exec(styleContent)[2];
+            expect(extractedUrl).toEqual(url);
+        };
+
+        beforeEach(function () {
+            callback = jasmine.createSpy("callback");
+        });
+
+        it("should not touch an already inlined font", function () {
+            extractCssUrlSpy.andReturn("data:font/woff;base64,soMEfAkebASE64=");
+
+            rasterizeHTMLTestHelper.addStyleToDocument(doc, '@font-face { font-family: "test font"; src: url("data:font/woff;base64,soMEfAkebASE64="); }');
+
+            rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
+
+            expect(callback).toHaveBeenCalled();
+
+            expectFontFaceUrlToMatch("data:font/woff;base64,soMEfAkebASE64=");
+        });
+
+        it("should ignore invalid values", function () {
+            extractCssUrlSpy.andThrow("invalid url");
+
+            rasterizeHTMLTestHelper.addStyleToDocument(doc, '@font-face { font-family: "test font"; src: "invalid url"; }');
+
+            rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
+
+            expect(callback).toHaveBeenCalled();
+            expect(binaryAjaxSpy).not.toHaveBeenCalled();
+
+            expect(doc.head.getElementsByTagName("style").length).toEqual(1);
+            expect(doc.head.getElementsByTagName("style")[0].textContent).toEqual('@font-face { font-family: "test font"; src: "invalid url"; }');
+        });
+
+        it("should inline a font", function () {
+            extractCssUrlSpy.andReturn("fake.woff");
+            binaryAjaxSpy.andCallFake(function (url, success, error) {
+                success("this is not a font");
+            });
+
+            rasterizeHTMLTestHelper.addStyleToDocument(doc, '@font-face { font-family: "test font"; src: url("fake.woff"); }');
+
+            rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
+
+            expect(callback).toHaveBeenCalled();
+
+            expect(extractCssUrlSpy).toHaveBeenCalledWith('url("fake.woff")');
+            expect(binaryAjaxSpy).toHaveBeenCalledWith("fake.woff", jasmine.any(Function), jasmine.any(Function));
+
+            expectFontFaceUrlToMatch("data:font/woff;base64,dGhpcyBpcyBub3QgYSBmb250");
+        });
+
+        it("should respect the document's baseURI when loading the font", function () {
+            extractCssUrlSpy.andReturn("raphaelicons-webfont.woff");
+            joinUrlSpy.andCallThrough();
+
+            binaryAjaxSpy.andCallFake(function (url, success, error) {
+                success("this is not a font");
+            });
+
+            doc = rasterizeHTMLTestHelper.readDocumentFixture("fontFace.html");
+
+            rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
+
+            expect(callback).toHaveBeenCalled();
+
+            expect(extractCssUrlSpy).toHaveBeenCalledWith("url('raphaelicons-webfont.woff')");
+            expect(joinUrlSpy).toHaveBeenCalledWith(doc.baseURI, "raphaelicons-webfont.woff");
+            expect(binaryAjaxSpy).toHaveBeenCalledWith(rasterizeHTMLTestHelper.getBaseUri() + "fixtures/raphaelicons-webfont.woff",
+                jasmine.any(Function), jasmine.any(Function));
+
+            expectFontFaceUrlToMatch("data:font/woff;base64,dGhpcyBpcyBub3QgYSBmb250");
+        });
+
     });
 });
