@@ -2,12 +2,8 @@ describe("CSS inline", function () {
     var doc, cssLink, anotherCssLink, emptyCssLink, faviconLink,
         extractCssUrlSpy, joinUrlSpy, ajaxSpy, callback;
 
-    beforeEach(function () {
-        doc = document.implementation.createHTMLDocument("");
-
-        extractCssUrlSpy = spyOn(rasterizeHTML.util, "extractCssUrl");
-        joinUrlSpy = spyOn(rasterizeHTML.util, "joinUrl");
-        ajaxSpy = spyOn(rasterizeHTML.util, "ajax").andCallFake(function (url, success, error) {
+    var setUpAjaxSpyToLoadFixturesThroughTestSetup = function () {
+        ajaxSpy.andCallFake(function (url, success, error) {
             var fixturesUrl = url.replace(rasterizeHTMLTestHelper.getBaseUri(), "").replace(/^(.\/)?fixtures\//, "");
 
             try {
@@ -16,6 +12,14 @@ describe("CSS inline", function () {
                 error();
             }
         });
+    };
+
+    beforeEach(function () {
+        doc = document.implementation.createHTMLDocument("");
+
+        extractCssUrlSpy = spyOn(rasterizeHTML.util, "extractCssUrl");
+        joinUrlSpy = spyOn(rasterizeHTML.util, "joinUrl");
+        ajaxSpy = spyOn(rasterizeHTML.util, "ajax");
         callback = jasmine.createSpy("loadAndInlineCssCallback");
 
         cssLink = window.document.createElement("link");
@@ -47,6 +51,7 @@ describe("CSS inline", function () {
 
     it("should not touch non-CSS links", function () {
         doc.head.appendChild(faviconLink);
+        setUpAjaxSpyToLoadFixturesThroughTestSetup();
 
         rasterizeHTML.loadAndInlineCSS(doc, callback);
 
@@ -57,6 +62,7 @@ describe("CSS inline", function () {
 
     it("should inline linked CSS", function () {
         doc.head.appendChild(cssLink);
+        setUpAjaxSpyToLoadFixturesThroughTestSetup();
 
         rasterizeHTML.loadAndInlineCSS(doc, callback);
 
@@ -69,6 +75,7 @@ describe("CSS inline", function () {
     it("should inline multiple linked CSS", function () {
         doc.head.appendChild(cssLink);
         doc.head.appendChild(anotherCssLink);
+        setUpAjaxSpyToLoadFixturesThroughTestSetup();
 
         rasterizeHTML.loadAndInlineCSS(doc, callback);
 
@@ -82,7 +89,12 @@ describe("CSS inline", function () {
     it("should not add inline CSS if no content given", function () {
         doc.head.appendChild(emptyCssLink);
 
-        rasterizeHTML.loadAndInlineCSS(doc, callback);
+        // Circumvent Firefox having an issue locally loading empty files and returning a "404" instead.
+        ajaxSpy.andCallFake(function (url, success, error) {
+            success("");
+        });
+
+        rasterizeHTML.loadAndInlineCSS(doc, callback());
 
         expect(callback).toHaveBeenCalled();
         expect(doc.head.getElementsByTagName("style").length).toEqual(0);
@@ -91,6 +103,7 @@ describe("CSS inline", function () {
 
     it("should respect the document's baseURI when loading linked CSS", function () {
         joinUrlSpy.andCallThrough();
+        setUpAjaxSpyToLoadFixturesThroughTestSetup();
 
         doc = rasterizeHTMLTestHelper.readDocumentFixture("externalCSS.html");
 
@@ -106,6 +119,7 @@ describe("CSS inline", function () {
 
     it("should respect optional baseUrl when loading linked CSS", function () {
         joinUrlSpy.andCallThrough();
+        setUpAjaxSpyToLoadFixturesThroughTestSetup();
 
         doc = rasterizeHTMLTestHelper.readDocumentFixtureWithoutBaseURI("externalCSS.html");
 
@@ -119,6 +133,7 @@ describe("CSS inline", function () {
         var baseUrl = "./fixtures/";
 
         joinUrlSpy.andCallThrough();
+        setUpAjaxSpyToLoadFixturesThroughTestSetup();
 
         doc = rasterizeHTMLTestHelper.readDocumentFixture("externalCSS.html");
         expect(doc.baseURI).not.toBeNull();
@@ -147,6 +162,7 @@ describe("CSS inline", function () {
                 return "green.png";
             }
         });
+        setUpAjaxSpyToLoadFixturesThroughTestSetup();
 
         doc.head.appendChild(cssWithRelativeResource);
 
@@ -182,6 +198,7 @@ describe("CSS inline", function () {
 
         it("should report an error if a stylesheet could not be loaded", function () {
             doc.head.appendChild(brokenCssLink);
+            setUpAjaxSpyToLoadFixturesThroughTestSetup();
 
             rasterizeHTML.loadAndInlineCSS(doc, "some_base_url/", callback);
 
@@ -194,6 +211,7 @@ describe("CSS inline", function () {
         it("should only report a failing stylesheet as error", function () {
             doc.head.appendChild(brokenCssLink);
             doc.head.appendChild(cssLink);
+            setUpAjaxSpyToLoadFixturesThroughTestSetup();
 
             rasterizeHTML.loadAndInlineCSS(doc, callback);
 
@@ -206,6 +224,7 @@ describe("CSS inline", function () {
         it("should report multiple failing stylesheet as error", function () {
             doc.head.appendChild(brokenCssLink);
             doc.head.appendChild(anotherBrokenCssLink);
+            setUpAjaxSpyToLoadFixturesThroughTestSetup();
 
             rasterizeHTML.loadAndInlineCSS(doc, callback);
 
@@ -215,6 +234,7 @@ describe("CSS inline", function () {
 
         it("should report an empty list for a successful stylesheet", function () {
             doc.head.appendChild(cssLink);
+            setUpAjaxSpyToLoadFixturesThroughTestSetup();
 
             rasterizeHTML.loadAndInlineCSS(doc, callback);
 

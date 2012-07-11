@@ -186,6 +186,10 @@ var rasterizeHTML = (function () {
         var declarationsToInline = [],
             i, j, rule;
 
+        if (! parsedCSS) {
+            return [];
+        }
+
         for (i = 0; i < parsedCSS.cssRules.length; i++) {
             rule = parsedCSS.cssRules[i];
             if (rule.type === window.kJscsspSTYLE_RULE) {
