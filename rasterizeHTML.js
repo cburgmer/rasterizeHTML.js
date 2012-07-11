@@ -11,7 +11,17 @@ var rasterizeHTML = (function () {
 
     /* Utilities */
 
+    var uniqueIdList = [];
+
     module.util = {};
+
+    module.util.getConstantUniqueIdFor = function (element) {
+        // HACK, using a list results in O(n), but how do we hash e.g. a DOM node?
+        if (uniqueIdList.indexOf(element) < 0) {
+            uniqueIdList.push(element);
+        }
+        return uniqueIdList.indexOf(element);
+    };
 
     module.util.cloneArray = function (nodeList) {
         return Array.prototype.slice.apply(nodeList, [0]);
@@ -590,25 +600,32 @@ var rasterizeHTML = (function () {
         }
     };
 
-    var workAroundBrowserBugForBackgroundImages = function (doc, svg) {
-        // Firefox and Chrome will (sometimes) not show an inlined background-image until the svg is connected to
+    var getOrCreateHiddenDivWithId = function (doc, id) {
+        var div = doc.getElementById(id);
+        if (! div) {
+            div = doc.createElement("div");
+            div.style.visibility = "hidden";
+            div.style.width = "0px";
+            div.style.height = "0px";
+            div.style.position = "absolute";
+            div.style.top = "-10000px";
+            div.style.left = "-10000px";
+            div.id = id;
+            doc.getElementsByTagName("body")[0].appendChild(div);
+        }
+
+        return div;
+    };
+
+    var workAroundBrowserBugForBackgroundImages = function (canvas, svg) {
+        // Firefox, Chrome & Safari will (sometimes) not show an inlined background-image until the svg is connected to
         // the DOM it seems.
         var workaroundId = "rasterizeHTML_js_FirefoxWorkaround",
-            doNotGarbageCollect;
+            uniqueId = module.util.getConstantUniqueIdFor(canvas),
+            doNotGarbageCollect = getOrCreateHiddenDivWithId(canvas.ownerDocument, workaroundId + uniqueId);
 
-        if (window.navigator.userAgent.indexOf("Firefox") >= 0 || window.navigator.userAgent.indexOf("Chrome") >= 0) {
-            doNotGarbageCollect = doc.getElementById(workaroundId);
-            if (doNotGarbageCollect) {
-                doNotGarbageCollect.parentNode.removeChild(doNotGarbageCollect);
-            }
-            doNotGarbageCollect = doc.createElement("div");
-            doNotGarbageCollect.innerHTML = svg;
-            doNotGarbageCollect.style.visibility = "hidden";
-            doNotGarbageCollect.style.width = "0px";
-            doNotGarbageCollect.style.height = "0px";
-            doNotGarbageCollect.id = workaroundId;
-            doc.getElementsByTagName("body")[0].appendChild(doNotGarbageCollect);
-        }
+        doNotGarbageCollect.innerHTML = svg;
+        doNotGarbageCollect.className = workaroundId; // Make if findable for debugging & testing purposes
     };
 
     module.getSvgForDocument = function (doc, width, height) {
@@ -628,6 +645,8 @@ var rasterizeHTML = (function () {
     module.drawSvgToCanvas = function (svg, canvas, callback) {
         var context, DOMURL, url, image;
 
+        workAroundBrowserBugForBackgroundImages(canvas, svg);
+
         context = canvas.getContext("2d");
 
         url = buildImageUrl(svg);
@@ -642,8 +661,6 @@ var rasterizeHTML = (function () {
             }
         };
         image.src = url;
-
-        workAroundBrowserBugForBackgroundImages(canvas.ownerDocument, svg);
     };
 
     /* "Public" API */

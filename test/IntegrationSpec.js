@@ -66,7 +66,7 @@ describe("Integration test", function () {
         });
 
         runs(function () {
-            expect(canvas.get(0)).toImageDiffEqual(referenceImg.get(0), 50);
+            expect(canvas.get(0)).toImageDiffEqual(referenceImg.get(0), 70);
         });
     });
 
@@ -80,7 +80,7 @@ describe("Integration test", function () {
         });
 
         runs(function () {
-            expect(canvas.get(0)).toImageDiffEqual(referenceImg.get(0), 50);
+            expect(canvas.get(0)).toImageDiffEqual(referenceImg.get(0), 90);
         });
     });
 
