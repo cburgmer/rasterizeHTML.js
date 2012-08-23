@@ -1,21 +1,3 @@
-// Colors, taken from https://github.com/loopj/commonjs-ansi-color
-var ANSI_CODES = {
-  "off": 0,
-  "bold": 1,
-  "red": 31,
-  "green": 32
-};
-
-function color(str,color) {
-  if(!color) return str;
-  var color_attrs = color.split("+");
-  var ansi_str = "";
-  for(var i=0, attr; attr = color_attrs[i]; i++) {
-    ansi_str += "\033[" + ANSI_CODES[attr] + "m";
-  }
-  ansi_str += str + "\033[" + ANSI_CODES["off"] + "m";
-  return ansi_str;
-}
 // Verify arguments
 if (phantom.args.length === 0) {
     console.log("Simple JasmineBDD test runner for phantom.js");
@@ -54,14 +36,7 @@ else {
         page.open(address, processPage(null, page, resultsKey));
         pages.push(page);
 
-        page.onConsoleMessage = function(msg) {
-            if (msg === "Passed.") {
-                msg = color(msg, "green+bold");
-            } else if (msg === "Failed.") {
-                msg = color(msg, "red+bold");
-            }
-            console.log(msg);
-        };
+        page.onConsoleMessage = logAndWorkAroundDefaultLineBreaking;
     }
 
     // bail when all pages have been processed
@@ -99,6 +74,22 @@ function replaceFunctionPlaceholders(fn, replacements) {
         }
     }
     return fn;
+}
+
+/**
+ * Logs a message. Does not add a line-break for single characters '.' and 'F' or lines ending in ' ...'
+ *
+ * @param msg
+ */
+function logAndWorkAroundDefaultLineBreaking(msg) {
+    var interpretAsWithoutNewline = /(^(\033\[\d+m)*[\.F](\033\[\d+m)*$)|( \.\.\.$)/;
+    if (interpretAsWithoutNewline.test(msg)) {
+        var fs = require('fs');
+        // system.stdout.write(msg) ? wait for http://code.google.com/p/phantomjs/issues/detail?id=243 to be implemented
+        fs.write('/dev/stdout', msg, 'w');
+    } else {
+        console.log(msg);
+    }
 }
 
 /**
@@ -191,16 +182,12 @@ function processPage(status, page, resultsKey) {
 
                 // print out a success / failure message of the results
                 var results = getResults();
-                var specs = Number(results[1]);
                 var failures = Number(results[2]);
-                console.log("Results for url " + page.url + ":");
                 if (failures > 0) {
-                    console.error("  FAILURE: " + results[0]);
                     page.__exit_code = 1;
                     clearInterval(ival);
                 }
                 else {
-                    console.log("  SUCCESS: " + results[0]);
                     page.__exit_code = 0;
                     clearInterval(ival);
                 }

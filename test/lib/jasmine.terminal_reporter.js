@@ -1,0 +1,1 @@
+../../../jasmine-reporters/src/jasmine.terminal_reporter.js
