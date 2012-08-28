@@ -207,5 +207,16 @@ describe("Main interface of rasterizeHTML.js", function () {
                 url: "non_existing.html"
             }]);
         });
+
+        it("should deal with a missing callback when loading a broken URL", function () {
+            var drawHtmlSpy = spyOn(rasterizeHTML, "drawHTML");
+
+            ajaxSpy.andCallFake(function (url, success, error) {
+                error();
+            });
+
+            rasterizeHTML.drawURL("non_existing.html", canvas);
+            expect(ajaxSpy).toHaveBeenCalled();
+        });
     });
 });

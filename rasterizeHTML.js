@@ -705,10 +705,12 @@ var rasterizeHTML = (function () {
         module.util.ajax(url, function (html) {
             module.drawHTML(html, canvas, url, callback);
         }, function () {
-            callback(canvas, [{
-                resourceType: "page",
-                url: url
-            }]);
+            if (callback) {
+                callback(canvas, [{
+                    resourceType: "page",
+                    url: url
+                }]);
+            }
         });
     };
 
