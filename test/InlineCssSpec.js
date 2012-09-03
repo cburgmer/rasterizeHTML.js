@@ -1,5 +1,5 @@
 describe("CSS inline", function () {
-    var doc, cssLink, anotherCssLink, emptyCssLink, faviconLink,
+    var doc, cssLink,
         extractCssUrlSpy, joinUrlSpy, ajaxSpy, callback;
 
     var setUpAjaxSpyToLoadFixturesThroughTestSetup = function () {
@@ -26,20 +26,6 @@ describe("CSS inline", function () {
         cssLink.href = "fixtures/some.css";
         cssLink.rel = "stylesheet";
         cssLink.type = "text/css";
-
-        anotherCssLink = window.document.createElement("link");
-        anotherCssLink.href = "fixtures/another.css";
-        anotherCssLink.rel = "stylesheet";
-        anotherCssLink.type = "text/css";
-
-        emptyCssLink = window.document.createElement("link");
-        emptyCssLink.href = "fixtures/empty.css";
-        emptyCssLink.rel = "stylesheet";
-        emptyCssLink.type = "text/css";
-
-        faviconLink = window.document.createElement("link");
-        faviconLink.href = "favicon.ico";
-        faviconLink.type = "image/x-icon";
     });
 
     it("should do nothing if no linked CSS is found", function () {
@@ -50,6 +36,10 @@ describe("CSS inline", function () {
     });
 
     it("should not touch non-CSS links", function () {
+        var faviconLink = window.document.createElement("link");
+        faviconLink.href = "favicon.ico";
+        faviconLink.type = "image/x-icon";
+
         doc.head.appendChild(faviconLink);
         setUpAjaxSpyToLoadFixturesThroughTestSetup();
 
@@ -72,7 +62,28 @@ describe("CSS inline", function () {
         expect(doc.head.getElementsByTagName("link").length).toEqual(0);
     });
 
+    it("should inline linked CSS without a type", function () {
+        var noTypeCssLink = window.document.createElement("link");
+        noTypeCssLink.href = "fixtures/some.css";
+        noTypeCssLink.rel = "stylesheet";
+
+        doc.head.appendChild(noTypeCssLink);
+        setUpAjaxSpyToLoadFixturesThroughTestSetup();
+
+        rasterizeHTML.loadAndInlineCSS(doc, callback);
+
+        expect(callback).toHaveBeenCalled();
+        expect(doc.head.getElementsByTagName("style").length).toEqual(1);
+        expect(doc.head.getElementsByTagName("style")[0].textContent).toEqual("p { font-size: 14px; }");
+        expect(doc.head.getElementsByTagName("link").length).toEqual(0);
+    });
+
     it("should inline multiple linked CSS", function () {
+        var anotherCssLink = window.document.createElement("link");
+        anotherCssLink.href = "fixtures/another.css";
+        anotherCssLink.rel = "stylesheet";
+        anotherCssLink.type = "text/css";
+
         doc.head.appendChild(cssLink);
         doc.head.appendChild(anotherCssLink);
         setUpAjaxSpyToLoadFixturesThroughTestSetup();
@@ -87,6 +98,11 @@ describe("CSS inline", function () {
     });
 
     it("should not add inline CSS if no content given", function () {
+        var emptyCssLink = window.document.createElement("link");
+        emptyCssLink.href = "fixtures/empty.css";
+        emptyCssLink.rel = "stylesheet";
+        emptyCssLink.type = "text/css";
+
         doc.head.appendChild(emptyCssLink);
 
         // Circumvent Firefox having an issue locally loading empty files and returning a "404" instead.

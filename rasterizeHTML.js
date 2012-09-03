@@ -358,7 +358,7 @@ var rasterizeHTML = (function () {
 
         module.util.map(links, function (link, finish) {
             if (link.attributes.rel && link.attributes.rel.nodeValue === "stylesheet" &&
-                link.attributes.type && link.attributes.type.nodeValue === "text/css") {
+                (!link.attributes.type || link.attributes.type.nodeValue === "text/css")) {
                 loadLinkedCSSAndRemoveNode(link, params.baseUrl, function(css) {
                     if (css.trim()) {
                         finish(css + "\n");
