@@ -34,7 +34,7 @@ describe("Main interface of rasterizeHTML.js", function () {
             expect(loadAndInlineCSS).toHaveBeenCalledWith(doc, null, jasmine.any(Function));
             expect(loadAndInlineCSSReferences).toHaveBeenCalledWith(doc, null, jasmine.any(Function));
             expect(getSvgForDocument).toHaveBeenCalledWith(doc, canvas.width, canvas.height);
-            expect(drawSvgToCanvas).toHaveBeenCalledWith(svg, canvas, jasmine.any(Function));
+            expect(drawSvgToCanvas).toHaveBeenCalledWith(svg, canvas, jasmine.any(Function), jasmine.any(Function));
 
             expect(callback).toHaveBeenCalledWith(canvas, []);
         });
@@ -48,7 +48,7 @@ describe("Main interface of rasterizeHTML.js", function () {
             expect(loadAndInlineCSS).toHaveBeenCalledWith(doc, "a_baseUrl", jasmine.any(Function));
             expect(loadAndInlineCSSReferences).toHaveBeenCalledWith(doc, "a_baseUrl", jasmine.any(Function));
             expect(getSvgForDocument).toHaveBeenCalledWith(doc, canvas.width, canvas.height);
-            expect(drawSvgToCanvas).toHaveBeenCalledWith(svg, canvas, jasmine.any(Function));
+            expect(drawSvgToCanvas).toHaveBeenCalledWith(svg, canvas, jasmine.any(Function), jasmine.any(Function));
 
             expect(callback).toHaveBeenCalledWith(canvas, []);
         });
@@ -175,8 +175,7 @@ describe("Main interface of rasterizeHTML.js", function () {
         });
 
         it("should pass through errors from drawURL", function () {
-            var callback = jasmine.createSpy("callback"),
-                drawHtmlSpy = spyOn(rasterizeHTML, "drawHTML").andCallFake(function (html, canvas, baseUrl, callback) {
+            var drawHtmlSpy = spyOn(rasterizeHTML, "drawHTML").andCallFake(function (html, canvas, baseUrl, callback) {
                     callback(canvas, ["some error"]);
                 });
 
@@ -191,8 +190,7 @@ describe("Main interface of rasterizeHTML.js", function () {
         });
 
         it("should report an error on loading a broken URL", function () {
-            var callback = jasmine.createSpy("callback"),
-                drawHtmlSpy = spyOn(rasterizeHTML, "drawHTML");
+            var drawHtmlSpy = spyOn(rasterizeHTML, "drawHTML");
 
             ajaxSpy.andCallFake(function (url, success, error) {
                 error();
@@ -218,5 +216,47 @@ describe("Main interface of rasterizeHTML.js", function () {
             rasterizeHTML.drawURL("non_existing.html", canvas);
             expect(ajaxSpy).toHaveBeenCalled();
         });
+    });
+
+    describe("Internal errors", function () {
+        var callback;
+
+        beforeEach(function () {
+            callback = jasmine.createSpy("drawCallback");
+
+            loadAndInlineImages = spyOn(rasterizeHTML, "loadAndInlineImages").andCallFake(callbackCaller);
+            loadAndInlineCSS = spyOn(rasterizeHTML, "loadAndInlineCSS").andCallFake(callbackCaller);
+            loadAndInlineCSSReferences = spyOn(rasterizeHTML, "loadAndInlineCSSReferences").andCallFake(callbackCaller);
+
+            getSvgForDocument = spyOn(rasterizeHTML, "getSvgForDocument").andReturn(svg);
+        });
+
+        it("should pass through an error from inlining on drawDocument", function () {
+            var doc = "doc";
+
+            drawSvgToCanvas = spyOn(rasterizeHTML, "drawSvgToCanvas").andCallFake(function (svg, canvas, successCallback, errorCallback) {
+                errorCallback();
+            });
+
+            rasterizeHTML.drawDocument(doc, canvas, callback);
+
+            expect(drawSvgToCanvas).toHaveBeenCalled();
+            expect(callback).toHaveBeenCalledWith(canvas, [{
+                resourceType: "document"
+            }]);
+        });
+
+        it("should work without a callback specified on error in drawDocument", function () {
+            var doc = "doc";
+
+            drawSvgToCanvas = spyOn(rasterizeHTML, "drawSvgToCanvas").andCallFake(function (svg, canvas, successCallback, errorCallback) {
+                errorCallback();
+            });
+
+            rasterizeHTML.drawDocument(doc, canvas);
+
+            expect(drawSvgToCanvas).toHaveBeenCalled();
+        });
+
     });
 });

@@ -166,6 +166,32 @@ describe("Rendering the Canvas", function () {
             });
         });
 
+        it("should return an error when the SVG cannot be rendered to the canvas", function () {
+            var canvas = document.createElement("canvas"),
+                svg = (
+                    '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">' +
+                        '<foreignObject width="100%" height="100%">' +
+                            '<html xmlns="http://www.w3.org/1999/xhtml">' +
+                                '<body>\n' +
+                                '    &nbsp;\n' + // &nbsp; is not allowed inside XHTML documents
+                                '</body>' +
+                            '</html>' +
+                        '</foreignObject' +
+                    '</svg>'
+                ),
+                errorCallback = jasmine.createSpy("errorCallback");
+
+            rasterizeHTML.drawSvgToCanvas(svg, canvas, function () {}, errorCallback);
+
+            waitsFor(function () {
+                return errorCallback.wasCalled;
+            }, "rasterizeHTML.drawSvgToCanvas", 2000);
+
+            runs(function () {
+                expect(errorCallback).toHaveBeenCalledWith();
+            });
+        });
+
         describe("Workaround for Firefox and Webkit to fix background-images not being rendered", function () {
 
             beforeEach(function () {

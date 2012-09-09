@@ -646,7 +646,7 @@ var rasterizeHTML = (function () {
         );
     };
 
-    module.drawSvgToCanvas = function (svg, canvas, callback) {
+    module.drawSvgToCanvas = function (svg, canvas, successCallback, errorCallback) {
         var context, DOMURL, url, image;
 
         workAroundBrowserBugForBackgroundImages(canvas, svg);
@@ -657,12 +657,21 @@ var rasterizeHTML = (function () {
 
         image = new window.Image();
         image.onload = function() {
-            context.drawImage(image, 0, 0);
+            try {
+                context.drawImage(image, 0, 0);
+            } catch (e) {
+                // Firefox throws a 'NS_ERROR_NOT_AVAILABLE' if the SVG is faulty
+                errorCallback();
+            }
             cleanUpUrl(url);
 
-            if (typeof callback !== "undefined" && callback) {
-                callback(canvas);
+            if (successCallback) {
+                successCallback(canvas);
             }
+        };
+        image.onerror = function () {
+            // Webkit calls the onerror handler if the SVG is faulty
+            errorCallback();
         };
         image.src = url;
     };
@@ -684,6 +693,14 @@ var rasterizeHTML = (function () {
                     svg = module.getSvgForDocument(doc, canvas.width, canvas.height);
 
                     module.drawSvgToCanvas(svg, canvas, function () {
+                        if (params.callback) {
+                            params.callback(canvas, allErrors);
+                        }
+                    }, function () {
+                        allErrors.push({
+                            resourceType: "document"
+                        });
+
                         if (params.callback) {
                             params.callback(canvas, allErrors);
                         }
