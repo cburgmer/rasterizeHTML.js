@@ -1,0 +1,6 @@
+{
+  "name": "rasterizeHTML.js",
+  "version": "0.1.0",
+  "main": ["rasterizeHTML.js", "lib/URI.js", "lib/cssParser.js", "lib/htmlparser.js"],
+  "dependencies": {}
+}
