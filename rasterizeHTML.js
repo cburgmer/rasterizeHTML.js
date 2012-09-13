@@ -621,15 +621,24 @@ var rasterizeHTML = (function () {
         return div;
     };
 
+    var WORKAROUND_ID = "rasterizeHTML_js_FirefoxWorkaround";
+
     var workAroundBrowserBugForBackgroundImages = function (canvas, svg) {
         // Firefox, Chrome & Safari will (sometimes) not show an inlined background-image until the svg is connected to
         // the DOM it seems.
-        var workaroundId = "rasterizeHTML_js_FirefoxWorkaround",
-            uniqueId = module.util.getConstantUniqueIdFor(canvas),
-            doNotGarbageCollect = getOrCreateHiddenDivWithId(canvas.ownerDocument, workaroundId + uniqueId);
+        var uniqueId = module.util.getConstantUniqueIdFor(canvas),
+            doNotGarbageCollect = getOrCreateHiddenDivWithId(canvas.ownerDocument, WORKAROUND_ID + uniqueId);
 
         doNotGarbageCollect.innerHTML = svg;
-        doNotGarbageCollect.className = workaroundId; // Make if findable for debugging & testing purposes
+        doNotGarbageCollect.className = WORKAROUND_ID; // Make if findable for debugging & testing purposes
+    };
+
+    var cleanUpAfterWorkAroundForBackgroundImages = function (canvas) {
+        var uniqueId = module.util.getConstantUniqueIdFor(canvas),
+            div = canvas.ownerDocument.getElementById(WORKAROUND_ID + uniqueId);
+        if (div) {
+            canvas.ownerDocument.getElementsByTagName("body")[0].removeChild(div);
+        }
     };
 
     module.getSvgForDocument = function (doc, width, height) {
@@ -647,7 +656,13 @@ var rasterizeHTML = (function () {
     };
 
     module.drawSvgToCanvas = function (svg, canvas, successCallback, errorCallback) {
-        var context, DOMURL, url, image;
+        var context, DOMURL, url, image,
+            cleanUp = function () {
+                if (url) {
+                    cleanUpUrl(url);
+                }
+                cleanUpAfterWorkAroundForBackgroundImages(canvas);
+            };
 
         workAroundBrowserBugForBackgroundImages(canvas, svg);
 
@@ -665,7 +680,7 @@ var rasterizeHTML = (function () {
 
                 return;
             } finally {
-                cleanUpUrl(url);
+                cleanUp();
             }
 
             if (successCallback) {
@@ -673,7 +688,7 @@ var rasterizeHTML = (function () {
             }
         };
         image.onerror = function () {
-            cleanUpUrl(url);
+            cleanUp();
 
             // Webkit calls the onerror handler if the SVG is faulty
             errorCallback();

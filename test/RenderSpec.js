@@ -201,6 +201,50 @@ describe("Rendering the Canvas", function () {
             });
 
             it("should add hidden svg", function () {
+                var canvas = document.createElement("canvas"),
+                    svg = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"></svg>';
+
+                // Stop method of finishing and removing div
+                spyOn(window, "Image").andReturn({});
+
+                rasterizeHTML.drawSvgToCanvas(svg, canvas);
+
+                expect($(".rasterizeHTML_js_FirefoxWorkaround")).toExist();
+                expect($(".rasterizeHTML_js_FirefoxWorkaround svg")).toExist();
+                expect($(".rasterizeHTML_js_FirefoxWorkaround").css("visibility")).toEqual("hidden");
+                expect($(".rasterizeHTML_js_FirefoxWorkaround").css("position")).toEqual("absolute");
+                expect($(".rasterizeHTML_js_FirefoxWorkaround").css("top")).toEqual("-10000px");
+                expect($(".rasterizeHTML_js_FirefoxWorkaround").css("left")).toEqual("-10000px");
+            });
+
+            it("should add the workaround for each canvas", function () {
+                var canvas1 = document.createElement("canvas"),
+                    canvas2 = document.createElement("canvas"),
+                    svg = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"></svg>';
+
+                // Stop method of finishing and removing div
+                spyOn(window, "Image").andReturn({});
+
+                rasterizeHTML.drawSvgToCanvas(svg, canvas1);
+                rasterizeHTML.drawSvgToCanvas(svg, canvas2);
+
+                expect($(".rasterizeHTML_js_FirefoxWorkaround").length).toEqual(2);
+            });
+
+            it("should update the workaround when re-rendering the canvas", function () {
+                var canvas = document.createElement("canvas"),
+                    svg = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"></svg>';
+
+                // Stop method of finishing and removing div
+                spyOn(window, "Image").andReturn({});
+
+                rasterizeHTML.drawSvgToCanvas(svg, canvas);
+                rasterizeHTML.drawSvgToCanvas(svg, canvas);
+
+                expect($(".rasterizeHTML_js_FirefoxWorkaround").length).toEqual(1);
+            });
+
+            it("should remove the workaround div once the canvas has been rendered", function () {
                 var renderFinished = false,
                     canvas = document.createElement("canvas"),
                     svg = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"></svg>';
@@ -212,55 +256,45 @@ describe("Rendering the Canvas", function () {
                 }, "rasterizeHTML.drawSvgToCanvas", 2000);
 
                 runs(function () {
-                    expect($(".rasterizeHTML_js_FirefoxWorkaround")).toExist();
-                    expect($(".rasterizeHTML_js_FirefoxWorkaround svg")).toExist();
-                    expect($(".rasterizeHTML_js_FirefoxWorkaround").css("visibility")).toEqual("hidden");
-                    expect($(".rasterizeHTML_js_FirefoxWorkaround").css("position")).toEqual("absolute");
-                    expect($(".rasterizeHTML_js_FirefoxWorkaround").css("top")).toEqual("-10000px");
-                    expect($(".rasterizeHTML_js_FirefoxWorkaround").css("left")).toEqual("-10000px");
+                    expect($(".rasterizeHTML_js_FirefoxWorkaround")).not.toExist();
                 });
             });
 
-            it("should add the workaround for each canvas", function () {
-                var renderFinishedCount = 0,
-                    canvas1 = document.createElement("canvas"),
-                    canvas2 = document.createElement("canvas"),
+            it("should remove the workaround div once the canvas has been rendered even if an error occurs when drawing the image", function () {
+                var renderFinished = false,
+                    canvas = jasmine.createSpyObj("canvas", ["getContext"]),
+                    context = jasmine.createSpyObj("context", ["drawImage"]),
                     svg = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"></svg>';
 
-                rasterizeHTML.drawSvgToCanvas(svg, canvas1, function () { renderFinishedCount++; });
-                rasterizeHTML.drawSvgToCanvas(svg, canvas2, function () { renderFinishedCount++; });
+                canvas.getContext.andReturn(context);
+                canvas.ownerDocument = window.document;
+                context.drawImage.andThrow("exception");
+
+                rasterizeHTML.drawSvgToCanvas(svg, canvas, function () {}, function () { renderFinished = true; });
 
                 waitsFor(function () {
-                    return renderFinishedCount >= 2;
+                    return renderFinished;
                 }, "rasterizeHTML.drawSvgToCanvas", 2000);
 
                 runs(function () {
-                    expect($(".rasterizeHTML_js_FirefoxWorkaround").length).toEqual(2);
+                    expect($(".rasterizeHTML_js_FirefoxWorkaround")).not.toExist();
                 });
             });
 
-            it("should update the workaround when re-rendering the canvas", function () {
-                var renderFinishedCount = 0,
+            it("should remove the workaround div once the canvas has been rendered even if an error occurs when loading the image", function () {
+                var renderFinished = false,
                     canvas = document.createElement("canvas"),
-                    svg = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"></svg>';
+                    svg = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"></svg>',
+                    imageInstance = {},
+                    windowImageSpy = spyOn(window, "Image").andReturn(imageInstance);
 
-                rasterizeHTML.drawSvgToCanvas(svg, canvas, function () { renderFinishedCount++; });
+                rasterizeHTML.drawSvgToCanvas(svg, canvas, function () {}, function () { renderFinished = true; });
 
-                waitsFor(function () {
-                    return renderFinishedCount >= 1;
-                }, "rasterizeHTML.drawSvgToCanvas", 2000);
+                imageInstance.onerror();
 
-                runs(function () {
-                    rasterizeHTML.drawSvgToCanvas(svg, canvas, function () { renderFinishedCount++; });
-                });
+                expect(renderFinished).toBeTruthy();
 
-                waitsFor(function () {
-                    return renderFinishedCount >= 2;
-                }, "rasterizeHTML.drawSvgToCanvas", 2000);
-
-                runs(function () {
-                    expect($(".rasterizeHTML_js_FirefoxWorkaround").length).toEqual(1);
-                });
+                expect($(".rasterizeHTML_js_FirefoxWorkaround")).not.toExist();
             });
         });
     });
