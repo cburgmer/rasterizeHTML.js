@@ -82,7 +82,7 @@ describe("Rendering the Canvas", function () {
         ifNotInWebkitIt("should render the SVG into the canvas", function () {
             var renderFinished = false,
                 canvas = $('<canvas width="100" height="100"></canvas>'),
-                referenceImg = $('<img src="fixtures/rednblue.png" alt="test image"/>'),
+                referenceImg = $('<img src="' + jasmine.getFixtures().fixturesPath + 'rednblue.png" alt="test image"/>'),
                 twoColorSvg = (
                     '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">' +
                         '<foreignObject width="100%" height="100%">' +
@@ -118,7 +118,7 @@ describe("Rendering the Canvas", function () {
         ifNotInWebkitIt("should render an SVG with inline image into the canvas", function () {
             var renderFinished = false,
                 canvas = $('<canvas width="100" height="100"></canvas>'),
-                referenceImg = $('<img src="fixtures/rednblue.png" alt="test image"/>'),
+                referenceImg = $('<img src="' + jasmine.getFixtures().fixturesPath + 'rednblue.png" alt="test image"/>'),
                 twoColorSvg = (
                     '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">' +
                         '<foreignObject width="100%" height="100%">' +

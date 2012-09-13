@@ -1,4 +1,3 @@
-rvm:
-  - 1.9.3
-script:
-  - ./run_tests.sh
+language: node_js
+node_js:
+  - 0.8

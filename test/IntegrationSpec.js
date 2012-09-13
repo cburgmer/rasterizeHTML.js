@@ -2,14 +2,14 @@ describe("Integration test", function () {
     var canvas = $('<canvas width="204" height="100"></canvas>'), // Firefox adds a space between the divs and needs the canvas to fit horizontally for all content to be rendered
         finished = false,
         callback = function () { finished = true; },
-        referenceImg = $('<img src="fixtures/testResult.png" alt="test image"/>');
+        referenceImg;
 
     var loadDocFixture = function (url, callback) {
         var request = new window.XMLHttpRequest(),
             doc;
 
         request.onreadystatechange = function () {
-            if (request.readyState == 4) {
+            if (request.readyState === 4) {
                 callback(request.responseXML);
             }
         };
@@ -25,13 +25,14 @@ describe("Integration test", function () {
     beforeEach(function () {
         this.addMatchers(imagediff.jasmine);
 
+        referenceImg = $('<img src="'+ jasmine.getFixtures().fixturesPath + '/testResult.png" alt="test image"/>');
         finished = false;
     });
 
     ifNotInWebkitIt("should take a document, inline all displayable content and render to the given canvas (flaky in Firefox)", function () {
         var doc = null;
 
-        loadDocFixture("fixtures/test.html", function (xmlDoc) {
+        loadDocFixture(jasmine.getFixtures().fixturesPath + "test.html", function (xmlDoc) {
             doc = xmlDoc;
         });
 
@@ -58,7 +59,7 @@ describe("Integration test", function () {
         html = readFixtures("test.html");
 
         runs(function () {
-            rasterizeHTML.drawHTML(html, canvas.get(0), "./fixtures/", callback);
+            rasterizeHTML.drawHTML(html, canvas.get(0), jasmine.getFixtures().fixturesPath, callback);
         });
 
         waitsFor(function () {
@@ -72,7 +73,7 @@ describe("Integration test", function () {
 
     ifNotInWebkitIt("should take a URL, inline all displayable content and render to the given canvas (flaky in Firefox)", function () {
         runs(function () {
-            rasterizeHTML.drawURL("fixtures/test.html", canvas.get(0), callback);
+            rasterizeHTML.drawURL(jasmine.getFixtures().fixturesPath + "test.html", canvas.get(0), callback);
         });
 
         waitsFor(function () {

@@ -69,8 +69,8 @@ describe("CSS references inline", function () {
             this.addMatchers(imagediff.jasmine);
 
             setFixtures(
-                '<img id="referenceImage1" src="fixtures/rednblue.png" alt="test image"/>' +
-                '<img id="referenceImage2" src="fixtures/green.png" alt="test image"/>'
+                '<img id="referenceImage1" src="' + jasmine.getFixtures().fixturesPath + 'rednblue.png" alt="test image"/>' +
+                '<img id="referenceImage2" src="' + jasmine.getFixtures().fixturesPath + 'green.png" alt="test image"/>'
             );
         });
 
@@ -117,9 +117,9 @@ describe("CSS references inline", function () {
                 inlineFinished = false,
                 url, styleContent;
 
-            extractCssUrlSpy.andReturn("fixtures/rednblue.png");
+            extractCssUrlSpy.andReturn(jasmine.getFixtures().fixturesPath + "rednblue.png");
 
-            rasterizeHTMLTestHelper.addStyleToDocument(doc, 'span { background-image: url("fixtures/rednblue.png"); }');
+            rasterizeHTMLTestHelper.addStyleToDocument(doc, 'span { background-image: url("' + jasmine.getFixtures().fixturesPath + 'rednblue.png"); }');
 
             rasterizeHTML.loadAndInlineCSSReferences(doc, function () { inlineFinished = true; });
 
@@ -128,7 +128,7 @@ describe("CSS references inline", function () {
             }, "rasterizeHTML.loadAndInlineCSSReferences", 2000);
 
             runs(function () {
-                expect(extractCssUrlSpy).toHaveBeenCalledWith('url("fixtures/rednblue.png")');
+                expect(extractCssUrlSpy).toHaveBeenCalledWith('url("' + jasmine.getFixtures().fixturesPath + 'rednblue.png")');
 
                 expect(doc.head.getElementsByTagName("style").length).toEqual(1);
                 styleContent = doc.head.getElementsByTagName("style")[0].textContent;
@@ -183,20 +183,20 @@ describe("CSS references inline", function () {
 
             doc = rasterizeHTMLTestHelper.readDocumentFixtureWithoutBaseURI("backgroundImage.html");
 
-            rasterizeHTML.loadAndInlineCSSReferences(doc, "./fixtures/", function () { inlineFinished = true; });
+            rasterizeHTML.loadAndInlineCSSReferences(doc, jasmine.getFixtures().fixturesPath, function () { inlineFinished = true; });
 
             waitsFor(function () {
                 return inlineFinished;
             }, "rasterizeHTML.loadAndInlineCSSReferences", 2000);
 
             runs(function () {
-                expect(joinUrlSpy).toHaveBeenCalledWith("./fixtures/", "rednblue.png");
+                expect(joinUrlSpy).toHaveBeenCalledWith(jasmine.getFixtures().fixturesPath, "rednblue.png");
             });
         });
 
         it("should favour explicit baseUrl over document.baseURI when loading the background-image", function () {
             var inlineFinished = false,
-                baseUrl = "./fixtures/";
+                baseUrl = jasmine.getFixtures().fixturesPath;
 
             extractCssUrlSpy.andReturn("rednblue.png");
             joinUrlSpy.andCallThrough();
@@ -206,14 +206,14 @@ describe("CSS references inline", function () {
             expect(doc.baseURI).not.toEqual("about:blank");
             expect(doc.baseURI).not.toEqual(baseUrl);
 
-            rasterizeHTML.loadAndInlineCSSReferences(doc, "./fixtures/", function () { inlineFinished = true; });
+            rasterizeHTML.loadAndInlineCSSReferences(doc, jasmine.getFixtures().fixturesPath, function () { inlineFinished = true; });
 
             waitsFor(function () {
                 return inlineFinished;
             }, "rasterizeHTML.loadAndInlineCSSReferences", 2000);
 
             runs(function () {
-                expect(joinUrlSpy).toHaveBeenCalledWith("./fixtures/", "rednblue.png");
+                expect(joinUrlSpy).toHaveBeenCalledWith(jasmine.getFixtures().fixturesPath, "rednblue.png");
             });
         });
     });
@@ -247,10 +247,10 @@ describe("CSS references inline", function () {
 
         it("should only report a failing backgroundImage as error", function () {
             rasterizeHTMLTestHelper.addStyleToDocument(doc, 'span { background-image: url(a_backgroundImage_that_doesnt_exist.png); }');
-            rasterizeHTMLTestHelper.addStyleToDocument(doc, 'span { background-image: url(fixtures/rednblue.png); }');
+            rasterizeHTMLTestHelper.addStyleToDocument(doc, 'span { background-image: url(the_fixtures/rednblue.png); }');
             extractCssUrlSpy.andCallFake(function (cssUrl) {
-                if (cssUrl === "url(fixtures/rednblue.png)") {
-                    return "fixtures/rednblue.png";
+                if (cssUrl === "url(the_fixtures/rednblue.png)") {
+                    return jasmine.getFixtures().fixturesPath + "rednblue.png";
                 } else if (cssUrl === "url(a_backgroundImage_that_doesnt_exist.png)") {
                     return "a_backgroundImage_that_doesnt_exist.png";
                 }
@@ -294,8 +294,8 @@ describe("CSS references inline", function () {
         });
 
         it("should report an empty list for a successful backgroundImage", function () {
-            rasterizeHTMLTestHelper.addStyleToDocument(doc, 'span { background-image: url(fixtures/rednblue.png); }');
-            extractCssUrlSpy.andReturn("fixtures/rednblue.png");
+            rasterizeHTMLTestHelper.addStyleToDocument(doc, 'span { background-image: url(the_fixtures/rednblue.png); }');
+            extractCssUrlSpy.andReturn(jasmine.getFixtures().fixturesPath + "rednblue.png");
 
             rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
 
@@ -387,7 +387,7 @@ describe("CSS references inline", function () {
 
             expect(extractCssUrlSpy).toHaveBeenCalledWith("url('raphaelicons-webfont.woff')");
             expect(joinUrlSpy).toHaveBeenCalledWith(doc.baseURI, "raphaelicons-webfont.woff");
-            expect(binaryAjaxSpy).toHaveBeenCalledWith(rasterizeHTMLTestHelper.getBaseUri() + "fixtures/raphaelicons-webfont.woff",
+            expect(binaryAjaxSpy).toHaveBeenCalledWith(rasterizeHTMLTestHelper.getBaseUri() + jasmine.getFixtures().fixturesPath + "raphaelicons-webfont.woff",
                 jasmine.any(Function), jasmine.any(Function));
 
             expectFontFaceUrlToMatch("data:font/woff;base64,dGhpcyBpcyBub3QgYSBmb250");

@@ -4,7 +4,7 @@ describe("CSS inline", function () {
 
     var setUpAjaxSpyToLoadFixturesThroughTestSetup = function () {
         ajaxSpy.andCallFake(function (url, success, error) {
-            var fixturesUrl = url.replace(rasterizeHTMLTestHelper.getBaseUri(), "").replace(/^(.\/)?fixtures\//, "");
+            var fixturesUrl = url.replace(rasterizeHTMLTestHelper.getBaseUri(), "").replace(jasmine.getFixtures().fixturesPath, "");
 
             try {
                 success(rasterizeHTMLTestHelper.readFixturesOrFail(fixturesUrl));
@@ -23,7 +23,7 @@ describe("CSS inline", function () {
         callback = jasmine.createSpy("loadAndInlineCssCallback");
 
         cssLink = window.document.createElement("link");
-        cssLink.href = "fixtures/some.css";
+        cssLink.href = jasmine.getFixtures().fixturesPath + "some.css";
         cssLink.rel = "stylesheet";
         cssLink.type = "text/css";
     });
@@ -64,7 +64,7 @@ describe("CSS inline", function () {
 
     it("should inline linked CSS without a type", function () {
         var noTypeCssLink = window.document.createElement("link");
-        noTypeCssLink.href = "fixtures/some.css";
+        noTypeCssLink.href = jasmine.getFixtures().fixturesPath + "some.css";
         noTypeCssLink.rel = "stylesheet";
 
         doc.head.appendChild(noTypeCssLink);
@@ -80,7 +80,7 @@ describe("CSS inline", function () {
 
     it("should inline multiple linked CSS", function () {
         var anotherCssLink = window.document.createElement("link");
-        anotherCssLink.href = "fixtures/another.css";
+        anotherCssLink.href = jasmine.getFixtures().fixturesPath + "another.css";
         anotherCssLink.rel = "stylesheet";
         anotherCssLink.type = "text/css";
 
@@ -99,7 +99,7 @@ describe("CSS inline", function () {
 
     it("should not add inline CSS if no content given", function () {
         var emptyCssLink = window.document.createElement("link");
-        emptyCssLink.href = "fixtures/empty.css";
+        emptyCssLink.href = jasmine.getFixtures().fixturesPath + "empty.css";
         emptyCssLink.rel = "stylesheet";
         emptyCssLink.type = "text/css";
 
@@ -139,14 +139,14 @@ describe("CSS inline", function () {
 
         doc = rasterizeHTMLTestHelper.readDocumentFixtureWithoutBaseURI("externalCSS.html");
 
-        rasterizeHTML.loadAndInlineCSS(doc, "./fixtures/", callback);
+        rasterizeHTML.loadAndInlineCSS(doc, jasmine.getFixtures().fixturesPath, callback);
 
         expect(callback).toHaveBeenCalled();
-        expect(joinUrlSpy).toHaveBeenCalledWith("./fixtures/", "some.css");
+        expect(joinUrlSpy).toHaveBeenCalledWith(jasmine.getFixtures().fixturesPath, "some.css");
     });
 
     it("should favour explicit baseUrl over document.baseURI when loading linked CSS", function () {
-        var baseUrl = "./fixtures/";
+        var baseUrl = jasmine.getFixtures().fixturesPath;
 
         joinUrlSpy.andCallThrough();
         setUpAjaxSpyToLoadFixturesThroughTestSetup();
@@ -156,10 +156,10 @@ describe("CSS inline", function () {
         expect(doc.baseURI).not.toEqual("about:blank");
         expect(doc.baseURI).not.toEqual(baseUrl);
 
-        rasterizeHTML.loadAndInlineCSS(doc, "./fixtures/", callback);
+        rasterizeHTML.loadAndInlineCSS(doc, jasmine.getFixtures().fixturesPath, callback);
 
         expect(callback).toHaveBeenCalled();
-        expect(joinUrlSpy).toHaveBeenCalledWith("./fixtures/", "some.css");
+        expect(joinUrlSpy).toHaveBeenCalledWith(jasmine.getFixtures().fixturesPath, "some.css");
     });
 
     it("should map resource paths relative to the stylesheet", function () {
@@ -172,8 +172,8 @@ describe("CSS inline", function () {
 
         extractCssUrlSpy.andReturn("../green.png");
         joinUrlSpy.andCallFake(function (base, url) {
-            if (url === "below/backgroundImage.css" && base === "fixtures/") {
-                return "fixtures/below/backgroundImage.css";
+            if (url === "below/backgroundImage.css" && base === "the_fixtures/") {
+                return jasmine.getFixtures().fixturesPath + "below/backgroundImage.css";
             } else if (url === "../green.png" && base === "below/backgroundImage.css") {
                 return "green.png";
             }
@@ -182,8 +182,8 @@ describe("CSS inline", function () {
 
         doc.head.appendChild(cssWithRelativeResource);
 
-        // Let's assume the doc's baseURI is under "fixtures/"
-        rasterizeHTML.loadAndInlineCSS(doc, "fixtures/", callback);
+        // Let's assume the doc's baseURI is under "the_fixtures/"
+        rasterizeHTML.loadAndInlineCSS(doc, "the_fixtures/", callback);
 
         expect(callback).toHaveBeenCalled();
         // Chrome 19 sets cssWithRelativeResource.href to ""

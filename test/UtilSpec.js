@@ -169,7 +169,7 @@ describe("Utilities", function () {
             var finished = false,
                 loadedContent;
 
-            rasterizeHTML.util.ajax("fixtures/some.css", function (content) {
+            rasterizeHTML.util.ajax(jasmine.getFixtures().fixturesPath + "some.css", function (content) {
                 loadedContent = content;
                 finished = true;
             });
@@ -206,7 +206,7 @@ describe("Utilities", function () {
             var finished = false,
                 loadedContent;
 
-            rasterizeHTML.util.binaryAjax("fixtures/green.png", function (content) {
+            rasterizeHTML.util.binaryAjax(jasmine.getFixtures().fixturesPath + "green.png", function (content) {
                 loadedContent = content;
                 finished = true;
             });
