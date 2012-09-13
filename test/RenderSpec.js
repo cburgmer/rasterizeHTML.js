@@ -179,16 +179,18 @@ describe("Rendering the Canvas", function () {
                         '</foreignObject' +
                     '</svg>'
                 ),
+                successCallback = jasmine.createSpy("successCallback"),
                 errorCallback = jasmine.createSpy("errorCallback");
 
-            rasterizeHTML.drawSvgToCanvas(svg, canvas, function () {}, errorCallback);
+            rasterizeHTML.drawSvgToCanvas(svg, canvas, successCallback, errorCallback);
 
             waitsFor(function () {
                 return errorCallback.wasCalled;
             }, "rasterizeHTML.drawSvgToCanvas", 2000);
 
             runs(function () {
-                expect(errorCallback).toHaveBeenCalledWith();
+                expect(errorCallback).toHaveBeenCalled();
+                expect(successCallback).not.toHaveBeenCalled(); // Quite possibly depends on the underlying JS implementation to actually work :{
             });
         });
 

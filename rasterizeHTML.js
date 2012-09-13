@@ -662,14 +662,19 @@ var rasterizeHTML = (function () {
             } catch (e) {
                 // Firefox throws a 'NS_ERROR_NOT_AVAILABLE' if the SVG is faulty
                 errorCallback();
+
+                return;
+            } finally {
+                cleanUpUrl(url);
             }
-            cleanUpUrl(url);
 
             if (successCallback) {
                 successCallback(canvas);
             }
         };
         image.onerror = function () {
+            cleanUpUrl(url);
+
             // Webkit calls the onerror handler if the SVG is faulty
             errorCallback();
         };
