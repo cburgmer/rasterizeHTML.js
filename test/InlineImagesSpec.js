@@ -1,25 +1,32 @@
 describe("Image inline", function () {
-    var joinUrlSpy = null,
-        doc;
+    var firstImage = "firstImage.png",
+        secondImage = "secondImage.png",
+        firstImageDataURI = "mock data URI of the first image",
+        secondImageDataURI = "mock data URI of the second image",
+        joinUrlSpy, getDataURIForImageURLSpy, doc;
+
+    var setUpGetDataURIForImageURLSpyToRouteFirstAndSecondImage = function() {
+        getDataURIForImageURLSpy.andCallFake(function (url, successCallback, errorCallback) {
+            if (url === firstImage) {
+                successCallback(firstImageDataURI);
+            } else if (url === secondImage) {
+                successCallback(secondImageDataURI);
+            }
+        });
+    };
 
     beforeEach(function () {
         joinUrlSpy = spyOn(rasterizeHTML.util, "joinUrl");
+        getDataURIForImageURLSpy = spyOn(rasterizeHTML.util, "getDataURIForImageURL");
 
         doc = document.implementation.createHTMLDocument("");
-
-        this.addMatchers(imagediff.jasmine);
-
-        setFixtures(
-            '<img id="referenceImage1" src="' + jasmine.getFixtures().fixturesPath + 'rednblue.png" alt="test image"/>' +
-            '<img id="referenceImage2" src="' + jasmine.getFixtures().fixturesPath + 'green.png" alt="test image"/>'
-        );
     });
 
     it("should load external images", function () {
-        var inlineFinished = false,
-            image;
+        var inlineFinished = false;
+        setUpGetDataURIForImageURLSpyToRouteFirstAndSecondImage();
 
-        doc.body.innerHTML = '<img id="image" src="' + jasmine.getFixtures().fixturesPath + 'rednblue.png" alt="test image"/>';
+        doc.body.innerHTML = '<img id="image" src="' + firstImage + '" alt="test image"/>';
 
         rasterizeHTML.loadAndInlineImages(doc, function () { inlineFinished = true; });
 
@@ -27,21 +34,18 @@ describe("Image inline", function () {
             return inlineFinished;
         }, "rasterizeHTML.loadAndInlineImages", 2000);
 
-        // Gecko & Webkit won't allow direct comparison of images, need to get local first
         runs(function () {
-            image = doc.getElementById("image");
-            expect(image.src).toMatch(/^data:image\/png;base64,/);
-            rasterizeHTMLTestHelper.compareImageToReference(image, "referenceImage1");
+            expect(doc.getElementById("image").src).toEqual(firstImageDataURI);
         });
     });
 
     it("should load multiple external images", function () {
-        var inlineFinished = false,
-            image1, image2;
+        var inlineFinished = false;
+        setUpGetDataURIForImageURLSpyToRouteFirstAndSecondImage();
 
         doc.body.innerHTML = (
-            '<img id="image1" src="' + jasmine.getFixtures().fixturesPath + 'rednblue.png" alt="test image"/>' +
-            '<img id="image2" src="' + jasmine.getFixtures().fixturesPath + 'green.png" alt="test image"/>'
+            '<img id="image1" src="' + firstImage + '" alt="test image"/>' +
+            '<img id="image2" src="' + secondImage +'" alt="test image"/>'
         );
 
         rasterizeHTML.loadAndInlineImages(doc, function () { inlineFinished = true; });
@@ -51,12 +55,8 @@ describe("Image inline", function () {
         }, "rasterizeHTML.loadAndInlineImages", 2000);
 
         runs(function () {
-            image1 = doc.getElementById("image1");
-            image2 = doc.getElementById("image2");
-            expect(image1.src).toMatch(/^data:image\/png;base64,/);
-            rasterizeHTMLTestHelper.compareImageToReference(image1, "referenceImage1");
-            expect(image2.src).toMatch(/^data:image\/png;base64,/);
-            rasterizeHTMLTestHelper.compareImageToReference(image2, "referenceImage2");
+            expect(doc.getElementById("image1").src).toEqual(firstImageDataURI);
+            expect(doc.getElementById("image2").src).toEqual(secondImageDataURI);
         });
     });
 
@@ -87,11 +87,12 @@ describe("Image inline", function () {
     });
 
     it("should respect the document's baseURI when loading the image", function () {
-        var inlineFinished = false,
-            image;
+        var inlineFinished = false;
 
         doc = rasterizeHTMLTestHelper.readDocumentFixture("image.html");
-        joinUrlSpy.andCallThrough();
+        getDataURIForImageURLSpy.andCallFake(function (url, successCallback, errorCallback) {
+            successCallback();
+        });
 
         rasterizeHTML.loadAndInlineImages(doc, function () { inlineFinished = true; });
 
@@ -101,10 +102,6 @@ describe("Image inline", function () {
 
         runs(function () {
             expect(joinUrlSpy).toHaveBeenCalledWith(doc.baseURI, "rednblue.png");
-
-            image = doc.getElementsByTagName("img")[0];
-            expect(image.attributes.src.nodeValue).toMatch(/^data:image\/png;base64,/);
-            rasterizeHTMLTestHelper.compareImageToReference(image, "referenceImage1");
         });
     });
 
@@ -112,31 +109,32 @@ describe("Image inline", function () {
         var inlineFinished = false;
 
         doc = rasterizeHTMLTestHelper.readDocumentFixtureWithoutBaseURI("image.html");
+        getDataURIForImageURLSpy.andCallFake(function (url, successCallback, errorCallback) {
+            successCallback();
+        });
 
-        joinUrlSpy.andCallThrough();
-
-        rasterizeHTML.loadAndInlineImages(doc, jasmine.getFixtures().fixturesPath, function () { inlineFinished = true; });
+        rasterizeHTML.loadAndInlineImages(doc, "aBaseUrl", function () { inlineFinished = true; });
 
         waitsFor(function () {
             return inlineFinished;
         }, "rasterizeHTML.loadAndInlineImages", 2000);
 
         runs(function () {
-            expect(joinUrlSpy).toHaveBeenCalled();
-            expect(joinUrlSpy).toHaveBeenCalledWith(jasmine.getFixtures().fixturesPath, "rednblue.png");
+            expect(joinUrlSpy).toHaveBeenCalledWith("aBaseUrl", "rednblue.png");
         });
     });
 
     it("should favour explicit baseUrl over document.baseURI when loading the image", function () {
         var inlineFinished = false,
-            baseUrl = jasmine.getFixtures().fixturesPath;
+            baseUrl = "aBaseUrl";
+        getDataURIForImageURLSpy.andCallFake(function (url, successCallback, errorCallback) {
+            successCallback();
+        });
 
         doc = rasterizeHTMLTestHelper.readDocumentFixture("image.html");
         expect(doc.baseURI).not.toBeNull();
         expect(doc.baseURI).not.toEqual("about:blank");
         expect(doc.baseURI).not.toEqual(baseUrl);
-
-        joinUrlSpy.andCallThrough();
 
         rasterizeHTML.loadAndInlineImages(doc, baseUrl, function () { inlineFinished = true; });
 
@@ -145,17 +143,25 @@ describe("Image inline", function () {
         }, "rasterizeHTML.loadAndInlineImages", 2000);
 
         runs(function () {
-            expect(joinUrlSpy).toHaveBeenCalledWith(jasmine.getFixtures().fixturesPath, "rednblue.png");
+            expect(joinUrlSpy).toHaveBeenCalledWith(baseUrl, "rednblue.png");
         });
     });
 
     describe("Image inline error handling", function () {
-        var callback;
+        var callback,
+            imageThatDoesExist = "image_that_does_exist.png";
 
         beforeEach(function () {
             callback = jasmine.createSpy("callback");
 
             joinUrlSpy.andCallThrough();
+            getDataURIForImageURLSpy.andCallFake(function (url, successCallback, errorCallback) {
+                if (url === imageThatDoesExist) {
+                    successCallback("theDataUri");
+                } else {
+                    errorCallback();
+                }
+            });
         });
 
         it("should report an error if an image could not be loaded", function () {
@@ -178,7 +184,7 @@ describe("Image inline", function () {
         it("should only report a failing image as error", function () {
             doc.body.innerHTML = (
                 '<img src="image_that_doesnt_exist.png" alt="test image"/>' +
-                '<img src="' + jasmine.getFixtures().fixturesPath + 'green.png" alt="test image"/>'
+                '<img src="' + imageThatDoesExist + '" alt="test image"/>'
             );
 
             rasterizeHTML.loadAndInlineImages(doc, callback);
@@ -214,7 +220,7 @@ describe("Image inline", function () {
         });
 
         it("should report an empty list for a successful image", function () {
-            doc.body.innerHTML = ('<img src="' + jasmine.getFixtures().fixturesPath + 'green.png" alt="test image"/>');
+            doc.body.innerHTML = ('<img src="' + imageThatDoesExist + '" alt="test image"/>');
 
             rasterizeHTML.loadAndInlineImages(doc, callback);
 
