@@ -132,8 +132,6 @@ var rasterizeHTML = (function () {
         return unquoteUrl(quotedUrl);
     };
 
-    /* Inlining */
-
     var getDataURIForImage = function (image) {
         var canvas = window.document.createElement("canvas"),
             context = canvas.getContext("2d");
@@ -146,12 +144,19 @@ var rasterizeHTML = (function () {
         return canvas.toDataURL("image/png");
     };
 
-    var getDataURIForImageURL = function (url, successCallback, errorCallback) {
+    module.util.getDataURIForImageURL = function (url, successCallback, errorCallback) {
         var img = new window.Image(),
             dataURI;
 
         img.onload = function () {
-            dataURI = getDataURIForImage(img);
+            try {
+                dataURI = getDataURIForImage(img);
+            } catch (err) {
+                // Only here is it visible, when we are violating the same-origin policy.
+                errorCallback();
+
+                return;
+            }
 
             successCallback(dataURI);
         };
@@ -160,6 +165,8 @@ var rasterizeHTML = (function () {
         }
         img.src = url;
     };
+
+    /* Inlining */
 
     var getUrlRelativeToDocumentBase = function (url, baseUrl) {
         if (baseUrl && baseUrl !== "about:blank") {
@@ -247,7 +254,7 @@ var rasterizeHTML = (function () {
 
         url = getUrlRelativeToDocumentBase(url, base);
 
-        getDataURIForImageURL(url, function (dataURI) {
+        module.util.getDataURIForImageURL(url, function (dataURI) {
             image.attributes.src.nodeValue = dataURI;
             successCallback();
         }, function () {
@@ -398,7 +405,7 @@ var rasterizeHTML = (function () {
 
         url = getUrlRelativeToDocumentBase(url, baseUri);
 
-        getDataURIForImageURL(url, function (dataURI) {
+        module.util.getDataURIForImageURL(url, function (dataURI) {
             cssDeclaration.values[0].setCssText('url("' + dataURI + '")');
 
             successCallback(true);

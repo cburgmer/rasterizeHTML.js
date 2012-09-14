@@ -221,6 +221,80 @@ describe("Utilities", function () {
         });
     });
 
+    describe("Retrieving images as data: URIs", function () {
+        beforeEach(function () {
+            this.addMatchers(imagediff.jasmine);
+        });
+
+        it("should return an image as data: URI", function () {
+            var returnedDataURI = null;
+
+            setFixtures('<img id="referenceImage" src="' + jasmine.getFixtures().fixturesPath + 'green.png"/>');
+
+            rasterizeHTML.util.getDataURIForImageURL(jasmine.getFixtures().fixturesPath + "green.png", function (dataURI) {
+                returnedDataURI = dataURI;
+            });
+
+            waitsFor(function () {
+                return returnedDataURI != null;
+            });
+
+            runs(function () {
+                expect(returnedDataURI).toMatch(/^data:image\/png;base64,/);
+                rasterizeHTMLTestHelper.compareDataUriToReferenceImage(returnedDataURI, 'referenceImage');
+            });
+        });
+
+        it("should return an error if the image could not be located due to a REST error", function () {
+            var finished = false,
+                errorCallback = jasmine.createSpy("errorCallback").andCallFake(function () {
+                    finished = true;
+                }),
+                successCallback = jasmine.createSpy("successCallback");
+
+            rasterizeHTML.util.getDataURIForImageURL("image_does_not_exist.png", successCallback, errorCallback);
+
+            waitsFor(function () {
+                return finished;
+            });
+
+            runs(function () {
+                expect(errorCallback).toHaveBeenCalled();
+                expect(successCallback).not.toHaveBeenCalled();
+            });
+        });
+
+        it("should return an error if the image can not be read due to a same-origin violation", function () {
+            var finished = false,
+                canvas = jasmine.createSpyObj("canvas", ["getContext", "toDataURL"]),
+                context = jasmine.createSpyObj("context", ["drawImage"]),
+                errorCallback = jasmine.createSpy("errorCallback").andCallFake(function () {
+                    finished = true;
+                }),
+                successCallback = jasmine.createSpy("successCallback");
+
+            canvas.getContext.andReturn(context);
+            canvas.toDataURL.andThrow("exception");
+
+            spyOn(window.document, "createElement").andCallFake(function (tag) {
+                if (tag === "canvas") {
+                    return canvas;
+                }
+            });
+
+            rasterizeHTML.util.getDataURIForImageURL(jasmine.getFixtures().fixturesPath + "green.png", successCallback, errorCallback);
+
+            waitsFor(function () {
+                return finished;
+            });
+
+            runs(function () {
+                expect(errorCallback).toHaveBeenCalled();
+                expect(successCallback).not.toHaveBeenCalled();
+            });
+        });
+    });
+
     describe("CSS URL extraction", function () {
         it("should extract a CSS URL", function () {
             var url = rasterizeHTML.util.extractCssUrl('url(path/file.png)');
