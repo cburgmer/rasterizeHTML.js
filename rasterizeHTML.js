@@ -1,4 +1,4 @@
-var rasterizeHTML = (function () {
+var rasterizeHTML = (function (window, URI, CSSParser) {
     "use strict";
 
     var module = {};
@@ -758,4 +758,4 @@ var rasterizeHTML = (function () {
     };
 
     return module;
-}());
+}(window, URI, CSSParser));

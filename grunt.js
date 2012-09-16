@@ -17,9 +17,9 @@ module.exports = function (grunt) {
             test:'test/*Spec.js'
         },
         jasmine:{
-            src:'<%= pkg.name %>',
+            src:['lib/*.js', '<%= pkg.name %>'],
             specs:'test/*Spec.js',
-            helpers:['test/helpers.js', 'lib/*.js', 'test/lib/*.js', 'test/gruntpath.js'],
+            helpers:['test/helpers.js', 'test/lib/*.js', 'test/gruntpath.js'],
             timeout:10000
         },
         concat:{
