@@ -2,7 +2,6 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <title>rasterizeHTML.js by cburgmer</title>
 
     <link rel="stylesheet" href="stylesheets/styles.css">
@@ -11,6 +10,19 @@
     <!--[if lt IE 9]>
     <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
+    <script type="text/javascript" src="lib/htmlparser.js"></script> <!-- Only needed for Chrome & Safari -->
+    <script type="text/javascript" src="lib/cssParser.js"></script>
+    <script type="text/javascript" src="lib/URI.js"></script>
+    <script type="text/javascript" src="rasterizeHTML.js"></script>
+    <style type="text/css">
+        #pageInPageCanvas {
+            display: block;
+            border:1px solid black;
+            margin-bottom: 20px;
+            width: 500px;
+            height: 300px;
+        }
+    </style>
   </head>
   <body>
     <div class="wrapper">
@@ -39,6 +51,18 @@
 <p>As described in <a href="http://robert.ocallahan.org/2011/11/drawing-dom-content-to-canvas.html">http://robert.ocallahan.org/2011/11/drawing-dom-content-to-canvas.html</a> and <a href="https://developer.mozilla.org/en/HTML/Canvas/Drawing_DOM_objects_into_a_canvas">https://developer.mozilla.org/en/HTML/Canvas/Drawing_DOM_objects_into_a_canvas</a> however it is possible by embedding the HTML into an SVG image as a &lt;foreignObject&gt; and then drawing the resulting image via ctx.drawImage().</p>
 
 <p>To cope with the existing limitations, rasterizeHTML.js will load external images and stylesheets and store them inline via data: URIs or inline style elements respectively.</p>
+
+<h2>Demo</h2>
+
+<canvas id="pageInPageCanvas" width="1000" height="600"></canvas>
+
+<script type="text/javascript">
+  var canvas = document.getElementById("pageInPageCanvas");
+
+  document.getElementsByTagName("body")[0].onload = function () {
+      rasterizeHTML.drawURL("index.html", canvas);
+  };
+</script>
 
 <h2>Limitations</h2>
 
