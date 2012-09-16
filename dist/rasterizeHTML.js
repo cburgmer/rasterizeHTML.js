@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.1.0 - 2012-09-14
+/*! rasterizeHTML.js - v0.1.0 - 2012-09-16
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2012 Christoph Burgmer; Licensed MIT */
 
@@ -466,16 +466,21 @@ var rasterizeHTML = (function () {
 
     var iterateOverRulesAndInlineFontFace = function (parsedCss, baseUri, callback) {
         var descriptorsToInline = findFontFaceDescriptors(parsedCss),
+            errors = [],
             cssHasChanges;
 
         rasterizeHTML.util.map(descriptorsToInline, function (declaration, finish) {
-            loadAndInlineFontFace(declaration, baseUri, finish, function () {
+            loadAndInlineFontFace(declaration, baseUri, finish, function (url) {
+                errors.push({
+                    resourceType: "fontFace",
+                    url: url
+                });
                 finish();
             });
 
         }, function (changedStates) {
             cssHasChanges = changedStates.indexOf(true) >= 0;
-            callback(cssHasChanges);
+            callback(cssHasChanges, errors);
         });
     };
 
@@ -497,8 +502,8 @@ var rasterizeHTML = (function () {
             base = baseUrl || style.ownerDocument.baseURI,
             parsedCss = parseCss(cssContent);
 
-        iterateOverRulesAndInlineBackgroundImage(parsedCss, base, function (bgImagesHaveChanges, errors) {
-            iterateOverRulesAndInlineFontFace(parsedCss, base, function (fontsHaveChanges) {
+        iterateOverRulesAndInlineBackgroundImage(parsedCss, base, function (bgImagesHaveChanges, bgImageErrors) {
+            iterateOverRulesAndInlineFontFace(parsedCss, base, function (fontsHaveChanges, fontFaceErrors) {
                 // CSSParser is invasive, if no changes are needed, we leave the text as it is
                 if (bgImagesHaveChanges || fontsHaveChanges) {
                     cssContent = parsedCss.cssText();
@@ -506,7 +511,7 @@ var rasterizeHTML = (function () {
                 cssContent = workAroundWebkitBugIgnoringTheFirstRuleInCSS(cssContent, parsedCss);
                 style.childNodes[0].nodeValue = cssContent;
 
-                callback(errors);
+                callback(bgImageErrors.concat(fontFaceErrors));
             });
         });
     };
