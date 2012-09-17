@@ -169,10 +169,10 @@ describe("Utilities function", function () {
             var finished = false,
                 loadedContent;
 
-            rasterizeHTML.util.ajax(jasmine.getFixtures().fixturesPath + "some.css", function (content) {
+            rasterizeHTML.util.ajax(jasmine.getFixtures().fixturesPath + "some.css", {}, function (content) {
                 loadedContent = content;
                 finished = true;
-            });
+            }, function () {});
 
             waitsFor(function () {
                 return finished;
@@ -190,7 +190,7 @@ describe("Utilities function", function () {
                     finished = true;
                 });
 
-            rasterizeHTML.util.ajax("non_existing_url.html", successCallback, errorCallback);
+            rasterizeHTML.util.ajax("non_existing_url.html", {}, successCallback, errorCallback);
 
             waitsFor(function () {
                 return finished;
@@ -206,9 +206,7 @@ describe("Utilities function", function () {
             var ajaxRequest = jasmine.createSpyObj("ajaxRequest", ["open", "addEventListener", "overrideMimeType", "send"]),
                 xmlHttpRequestSpy = spyOn(window, "XMLHttpRequest").andReturn(ajaxRequest);
 
-            rasterizeHTML.util.ajax("non_existing_url.html", function () {}, function () {}, {
-                cache: false
-            });
+            rasterizeHTML.util.ajax("non_existing_url.html", {cache: false}, function () {}, function () {});
 
             expect(ajaxRequest.open).toHaveBeenCalledWith('GET', jasmine.any(String), true);
             expect(ajaxRequest.open.mostRecentCall.args[1]).toMatch(/^non_existing_url.html\?_[0123456789]+$/);
@@ -218,7 +216,7 @@ describe("Utilities function", function () {
             var ajaxRequest = jasmine.createSpyObj("ajaxRequest", ["open", "addEventListener", "overrideMimeType", "send"]),
                 xmlHttpRequestSpy = spyOn(window, "XMLHttpRequest").andReturn(ajaxRequest);
 
-            rasterizeHTML.util.ajax("non_existing_url.html", function () {}, function () {});
+            rasterizeHTML.util.ajax("non_existing_url.html", {}, function () {}, function () {});
 
             expect(ajaxRequest.open).toHaveBeenCalledWith('GET', "non_existing_url.html", true);
         });
@@ -227,9 +225,7 @@ describe("Utilities function", function () {
             var ajaxRequest = jasmine.createSpyObj("ajaxRequest", ["open", "addEventListener", "overrideMimeType", "send"]),
                 xmlHttpRequestSpy = spyOn(window, "XMLHttpRequest").andReturn(ajaxRequest);
 
-            rasterizeHTML.util.ajax("non_existing_url.html", function () {}, function () {}, {
-                mimeType: "42"
-            });
+            rasterizeHTML.util.ajax("non_existing_url.html", {mimeType: "42"}, function () {}, function () {});
 
             expect(ajaxRequest.overrideMimeType).toHaveBeenCalledWith('42');
         });
@@ -240,10 +236,10 @@ describe("Utilities function", function () {
             var finished = false,
                 loadedContent;
 
-            rasterizeHTML.util.binaryAjax(jasmine.getFixtures().fixturesPath + "green.png", function (content) {
+            rasterizeHTML.util.binaryAjax(jasmine.getFixtures().fixturesPath + "green.png", {}, function (content) {
                 loadedContent = content;
                 finished = true;
-            });
+            }, function () {});
 
             waitsFor(function () {
                 return finished;
@@ -255,26 +251,24 @@ describe("Utilities function", function () {
         });
 
         it("should handle error", function () {
-            var ajaxSpy = spyOn(rasterizeHTML.util, "ajax").andCallFake(function (url, success, error) {
+            var ajaxSpy = spyOn(rasterizeHTML.util, "ajax").andCallFake(function (url, options, success, error) {
                     error();
                 }),
                 errorCallback = jasmine.createSpy("errorCallback"),
                 successCallback = jasmine.createSpy("successCallback");
 
-            rasterizeHTML.util.binaryAjax("url", successCallback, errorCallback);
+            rasterizeHTML.util.binaryAjax("url", {}, successCallback, errorCallback);
         });
 
         it("should circumvent caching if requested", function () {
             var ajaxSpy = spyOn(rasterizeHTML.util, "ajax");
 
-            rasterizeHTML.util.binaryAjax("url", function () {}, function () {}, {
-                cache: false
-            });
+            rasterizeHTML.util.binaryAjax("url", {cache: false}, function () {}, function () {});
 
-            expect(ajaxSpy).toHaveBeenCalledWith("url", jasmine.any(Function), jasmine.any(Function), {
+            expect(ajaxSpy).toHaveBeenCalledWith("url", {
                 mimeType : jasmine.any(String),
                 cache: false
-            });
+            }, jasmine.any(Function), jasmine.any(Function));
         });
 
     });
@@ -289,9 +283,9 @@ describe("Utilities function", function () {
 
             setFixtures('<img id="referenceImage" src="' + jasmine.getFixtures().fixturesPath + 'green.png"/>');
 
-            rasterizeHTML.util.getDataURIForImageURL(jasmine.getFixtures().fixturesPath + "green.png", function (dataURI) {
+            rasterizeHTML.util.getDataURIForImageURL(jasmine.getFixtures().fixturesPath + "green.png", {}, function (dataURI) {
                 returnedDataURI = dataURI;
-            });
+            }, function () {});
 
             waitsFor(function () {
                 return returnedDataURI != null;
@@ -310,7 +304,7 @@ describe("Utilities function", function () {
                 }),
                 successCallback = jasmine.createSpy("successCallback");
 
-            rasterizeHTML.util.getDataURIForImageURL("image_does_not_exist.png", successCallback, errorCallback);
+            rasterizeHTML.util.getDataURIForImageURL("image_does_not_exist.png", {}, successCallback, errorCallback);
 
             waitsFor(function () {
                 return finished;
@@ -340,7 +334,7 @@ describe("Utilities function", function () {
                 }
             });
 
-            rasterizeHTML.util.getDataURIForImageURL(jasmine.getFixtures().fixturesPath + "green.png", successCallback, errorCallback);
+            rasterizeHTML.util.getDataURIForImageURL(jasmine.getFixtures().fixturesPath + "green.png", {}, successCallback, errorCallback);
 
             waitsFor(function () {
                 return finished;
@@ -356,9 +350,7 @@ describe("Utilities function", function () {
             var image = {},
                 imageSpy = spyOn(window, "Image").andReturn(image);
 
-            rasterizeHTML.util.getDataURIForImageURL("image.png", function () {}, function () {}, {
-                cache: false
-            });
+            rasterizeHTML.util.getDataURIForImageURL("image.png", {cache: false}, function () {}, function () {});
 
             expect(image.src).toMatch(/^image.png\?_[0123456789]+$/);
         });
@@ -367,7 +359,7 @@ describe("Utilities function", function () {
             var image = {},
                 imageSpy = spyOn(window, "Image").andReturn(image);
 
-            rasterizeHTML.util.getDataURIForImageURL("image.png", function () {}, function () {});
+            rasterizeHTML.util.getDataURIForImageURL("image.png", {}, function () {}, function () {});
 
             expect(image.src).toEqual("image.png");
         });

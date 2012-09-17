@@ -6,7 +6,7 @@ describe("Image inline", function () {
         joinUrlSpy, getDataURIForImageURLSpy, doc;
 
     var setUpGetDataURIForImageURLSpyToRouteFirstAndSecondImage = function() {
-        getDataURIForImageURLSpy.andCallFake(function (url, successCallback, errorCallback) {
+        getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback, errorCallback) {
             if (url === firstImage) {
                 successCallback(firstImageDataURI);
             } else if (url === secondImage) {
@@ -90,7 +90,7 @@ describe("Image inline", function () {
         var inlineFinished = false;
 
         doc = rasterizeHTMLTestHelper.readDocumentFixture("image.html");
-        getDataURIForImageURLSpy.andCallFake(function (url, successCallback, errorCallback) {
+        getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback, errorCallback) {
             successCallback();
         });
 
@@ -109,7 +109,7 @@ describe("Image inline", function () {
         var inlineFinished = false;
 
         doc = rasterizeHTMLTestHelper.readDocumentFixtureWithoutBaseURI("image.html");
-        getDataURIForImageURLSpy.andCallFake(function (url, successCallback, errorCallback) {
+        getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback, errorCallback) {
             successCallback();
         });
 
@@ -127,7 +127,7 @@ describe("Image inline", function () {
     it("should favour explicit baseUrl over document.baseURI when loading the image", function () {
         var inlineFinished = false,
             baseUrl = "aBaseUrl";
-        getDataURIForImageURLSpy.andCallFake(function (url, successCallback, errorCallback) {
+        getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback, errorCallback) {
             successCallback();
         });
 
@@ -160,9 +160,7 @@ describe("Image inline", function () {
         }, "rasterizeHTML.loadAndInlineImages", 2000);
 
         runs(function () {
-            expect(getDataURIForImageURLSpy).toHaveBeenCalledWith(jasmine.any(String), jasmine.any(Function), jasmine.any(Function), {
-                cache: false
-            });
+            expect(getDataURIForImageURLSpy).toHaveBeenCalledWith(jasmine.any(String), {cache: false}, jasmine.any(Function), jasmine.any(Function));
         });
     });
 
@@ -179,9 +177,7 @@ describe("Image inline", function () {
         }, "rasterizeHTML.loadAndInlineImages", 2000);
 
         runs(function () {
-            expect(getDataURIForImageURLSpy).toHaveBeenCalledWith(jasmine.any(String), jasmine.any(Function), jasmine.any(Function), {
-                cache: true
-            });
+            expect(getDataURIForImageURLSpy).toHaveBeenCalledWith(jasmine.any(String), {cache: true}, jasmine.any(Function), jasmine.any(Function));
         });
     });
 
@@ -193,7 +189,7 @@ describe("Image inline", function () {
             callback = jasmine.createSpy("callback");
 
             joinUrlSpy.andCallThrough();
-            getDataURIForImageURLSpy.andCallFake(function (url, successCallback, errorCallback) {
+            getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback, errorCallback) {
                 if (url === imageThatDoesExist) {
                     successCallback("theDataUri");
                 } else {

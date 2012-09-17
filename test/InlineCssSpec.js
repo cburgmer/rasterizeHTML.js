@@ -3,7 +3,7 @@ describe("CSS inline", function () {
         extractCssUrlSpy, joinUrlSpy, ajaxSpy, callback;
 
     var setUpAjaxSpyToLoadFixturesThroughTestSetup = function () {
-        ajaxSpy.andCallFake(function (url, success, error) {
+        ajaxSpy.andCallFake(function (url, options, success, error) {
             var fixturesUrl = url.replace(rasterizeHTMLTestHelper.getBaseUri(), "").replace(jasmine.getFixtures().fixturesPath, "");
 
             try {
@@ -106,7 +106,7 @@ describe("CSS inline", function () {
         doc.head.appendChild(emptyCssLink);
 
         // Circumvent Firefox having an issue locally loading empty files and returning a "404" instead.
-        ajaxSpy.andCallFake(function (url, success, error) {
+        ajaxSpy.andCallFake(function (url, options, success, error) {
             success("");
         });
 
@@ -199,9 +199,9 @@ describe("CSS inline", function () {
 
         rasterizeHTML.loadAndInlineCSS(doc, {cache: false}, callback);
 
-        expect(ajaxSpy).toHaveBeenCalledWith(cssLink.href, jasmine.any(Function), jasmine.any(Function), {
+        expect(ajaxSpy).toHaveBeenCalledWith(cssLink.href, {
             cache: false
-        });
+        }, jasmine.any(Function), jasmine.any(Function));
         expect(callback).toHaveBeenCalled();
     });
 
@@ -211,9 +211,9 @@ describe("CSS inline", function () {
 
         rasterizeHTML.loadAndInlineCSS(doc, callback);
 
-        expect(ajaxSpy).toHaveBeenCalledWith(cssLink.href, jasmine.any(Function), jasmine.any(Function), {
+        expect(ajaxSpy).toHaveBeenCalledWith(cssLink.href, {
             cache: true
-        });
+        }, jasmine.any(Function), jasmine.any(Function));
         expect(callback).toHaveBeenCalled();
     });
 

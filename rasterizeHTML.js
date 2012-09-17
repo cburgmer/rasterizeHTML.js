@@ -74,7 +74,7 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
         return url + "?_" + Date.now();
     };
 
-    module.util.ajax = function (url, successCallback, errorCallback, options) {
+    module.util.ajax = function (url, options, successCallback, errorCallback) {
         var ajaxRequest = new window.XMLHttpRequest(),
             augmentedUrl;
 
@@ -102,20 +102,20 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
         }
     };
 
-    module.util.binaryAjax = function (url, successCallback, errorCallback, options) {
+    module.util.binaryAjax = function (url, options, successCallback, errorCallback) {
         var binaryContent = "";
 
         options = options || {};
 
-        module.util.ajax(url, function (content) {
+        module.util.ajax(url, {
+            mimeType: 'text/plain; charset=x-user-defined',
+            cache: options.cache
+        }, function (content) {
             for (var i = 0; i < content.length; i++) {
                 binaryContent += String.fromCharCode(content.charCodeAt(i) & 0xFF);
             }
             successCallback(binaryContent);
-        }, errorCallback, {
-            mimeType: 'text/plain; charset=x-user-defined',
-            cache: options.cache
-        });
+        }, errorCallback);
     };
 
     var unquoteUrl = function (quotedUrl) {
@@ -157,7 +157,7 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
         return canvas.toDataURL("image/png");
     };
 
-    module.util.getDataURIForImageURL = function (url, successCallback, errorCallback, options) {
+    module.util.getDataURIForImageURL = function (url, options, successCallback, errorCallback) {
         var img = new window.Image(),
             dataURI, augmentedUrl;
 
@@ -278,13 +278,13 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
 
         url = getUrlRelativeToDocumentBase(url, base);
 
-        module.util.getDataURIForImageURL(url, function (dataURI) {
+        module.util.getDataURIForImageURL(url, {
+            cache: cache
+        }, function (dataURI) {
             image.attributes.src.nodeValue = dataURI;
             successCallback();
         }, function () {
             errorCallback(url);
-        }, {
-            cache: cache
         });
     };
 
@@ -362,15 +362,15 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
             cssHrefRelativeToDoc = getUrlRelativeToDocumentBase(cssHref, documentBaseUrl),
             cssContent;
 
-        module.util.ajax(cssHrefRelativeToDoc, function (content) {
+        module.util.ajax(cssHrefRelativeToDoc, {
+            cache: cache
+        }, function (content) {
             cssContent = adjustPathsOfCssResources(cssHref, content);
 
             link.parentNode.removeChild(link);
             successCallback(cssContent);
         }, function () {
             errorCallback(cssHrefRelativeToDoc);
-        }, {
-            cache: cache
         });
     };
 
@@ -435,14 +435,14 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
 
         url = getUrlRelativeToDocumentBase(url, baseUri);
 
-        module.util.getDataURIForImageURL(url, function (dataURI) {
+        module.util.getDataURIForImageURL(url, {
+            cache: cache
+        }, function (dataURI) {
             cssDeclaration.values[0].setCssText('url("' + dataURI + '")');
 
             successCallback(true);
         }, function () {
             errorCallback(url);
-        }, {
-            cache: cache
         });
     };
 
@@ -482,15 +482,15 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
 
         url = getUrlRelativeToDocumentBase(url, baseUri);
 
-        module.util.binaryAjax(url, function (content) {
+        module.util.binaryAjax(url, {
+            cache: cache
+        }, function (content) {
             base64Content = btoa(content);
             cssDeclaration.values[0].setCssText('url("data:font/woff;base64,' + base64Content + '")');
 
             successCallback(true);
         }, function () {
             errorCallback(url);
-        }, {
-            cache: cache
         });
     };
 
@@ -783,7 +783,9 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
         var myCallback = typeof options === "object" ? callback : options,
             myOptions = typeof options === "object" ? options : {};
 
-        module.util.ajax(url, function (html) {
+        module.util.ajax(url, {
+            cache: myOptions.cache
+        }, function (html) {
             module.drawHTML(html, canvas, url, myOptions, myCallback);
         }, function () {
             if (myCallback) {
@@ -792,8 +794,6 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
                     url: url
                 }]);
             }
-        }, {
-            cache: myOptions.cache
         });
     };
 

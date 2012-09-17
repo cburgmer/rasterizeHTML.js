@@ -111,7 +111,7 @@ describe("CSS references inline", function () {
                 anImagesDataUri = "data:image/png;base64,someDataUri",
                 url, styleContent;
 
-            getDataURIForImageURLSpy.andCallFake(function (url, successCallback, errorCallback) {
+            getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback, errorCallback) {
                 if (url === anImage) {
                     successCallback(anImagesDataUri);
                 }
@@ -141,7 +141,7 @@ describe("CSS references inline", function () {
                 inlineFinished = false,
                 url, styleContent;
 
-            getDataURIForImageURLSpy.andCallFake(function (url, successCallback, errorCallback) {
+            getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback, errorCallback) {
                 successCallback("aDataUri");
             });
             joinUrlSpy.andCallThrough();
@@ -163,7 +163,7 @@ describe("CSS references inline", function () {
         it("should respect optional baseUrl when loading the background-image", function () {
             var inlineFinished = false;
 
-            getDataURIForImageURLSpy.andCallFake(function (url, successCallback, errorCallback) {
+            getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback, errorCallback) {
                 successCallback("aDataUri");
             });
             joinUrlSpy.andCallThrough();
@@ -185,7 +185,7 @@ describe("CSS references inline", function () {
             var inlineFinished = false,
                 baseUrl = "aBaseURI";
 
-            getDataURIForImageURLSpy.andCallFake(function (url, successCallback, errorCallback) {
+            getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback, errorCallback) {
                 successCallback("aDataUri");
             });
             joinUrlSpy.andCallThrough();
@@ -210,7 +210,7 @@ describe("CSS references inline", function () {
             var callback = jasmine.createSpy("callback"),
                 anImage = "anImage.png";
 
-            getDataURIForImageURLSpy.andCallFake(function (url, successCallback, errorCallback) {
+            getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback, errorCallback) {
                 successCallback("uri");
             });
 
@@ -218,9 +218,7 @@ describe("CSS references inline", function () {
 
             rasterizeHTML.loadAndInlineCSSReferences(doc, {cache: false}, callback);
 
-            expect(getDataURIForImageURLSpy).toHaveBeenCalledWith(anImage, jasmine.any(Function), jasmine.any(Function), {
-                cache: false
-            });
+            expect(getDataURIForImageURLSpy).toHaveBeenCalledWith(anImage, {cache: false}, jasmine.any(Function), jasmine.any(Function));
             expect(callback).toHaveBeenCalled();
         });
 
@@ -228,7 +226,7 @@ describe("CSS references inline", function () {
             var callback = jasmine.createSpy("callback"),
                 anImage = "anImage.png";
 
-            getDataURIForImageURLSpy.andCallFake(function (url, successCallback, errorCallback) {
+            getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback, errorCallback) {
                 successCallback("uri");
             });
 
@@ -236,9 +234,7 @@ describe("CSS references inline", function () {
 
             rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
 
-            expect(getDataURIForImageURLSpy).toHaveBeenCalledWith(anImage, jasmine.any(Function), jasmine.any(Function), {
-                cache: true
-            });
+            expect(getDataURIForImageURLSpy).toHaveBeenCalledWith(anImage, {cache: true}, jasmine.any(Function), jasmine.any(Function));
             expect(callback).toHaveBeenCalled();
         });
 
@@ -251,7 +247,7 @@ describe("CSS references inline", function () {
         beforeEach(function () {
             callback = jasmine.createSpy("callback");
 
-            getDataURIForImageURLSpy.andCallFake(function (url, successCallback, errorCallback) {
+            getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback, errorCallback) {
                 if (url === aBackgroundImageThatDoesExist) {
                     successCallback();
                 } else {
@@ -368,7 +364,7 @@ describe("CSS references inline", function () {
         });
 
         it("should inline a font", function () {
-            binaryAjaxSpy.andCallFake(function (url, success, error) {
+            binaryAjaxSpy.andCallFake(function (url, options, success, error) {
                 success("this is not a font");
             });
 
@@ -386,7 +382,7 @@ describe("CSS references inline", function () {
         it("should respect the document's baseURI when loading the font", function () {
             joinUrlSpy.andCallThrough();
 
-            binaryAjaxSpy.andCallFake(function (url, success, error) {
+            binaryAjaxSpy.andCallFake(function (url, options, success, error) {
                 success("this is not a font");
             });
 
@@ -399,7 +395,7 @@ describe("CSS references inline", function () {
             expect(extractCssUrlSpy).toHaveBeenCalledWith('url("raphaelicons-webfont.woff")');
             expect(joinUrlSpy).toHaveBeenCalledWith(doc.baseURI, "raphaelicons-webfont.woff");
             expect(binaryAjaxSpy).toHaveBeenCalledWith(rasterizeHTMLTestHelper.getBaseUri() + jasmine.getFixtures().fixturesPath + "raphaelicons-webfont.woff",
-                jasmine.any(Function), jasmine.any(Function), jasmine.any(Object));
+                jasmine.any(Object), jasmine.any(Function), jasmine.any(Function));
 
             expectFontFaceUrlToMatch("data:font/woff;base64,dGhpcyBpcyBub3QgYSBmb250");
         });
@@ -407,7 +403,7 @@ describe("CSS references inline", function () {
         it("should circumvent caching if requested", function () {
             var fontUrl = "fake.woff";
 
-            binaryAjaxSpy.andCallFake(function (url, success, error) {
+            binaryAjaxSpy.andCallFake(function (url, options, success, error) {
                 success("this is not a font");
             });
 
@@ -416,15 +412,13 @@ describe("CSS references inline", function () {
             rasterizeHTML.loadAndInlineCSSReferences(doc, {cache: false}, callback);
 
             expect(callback).toHaveBeenCalled();
-            expect(binaryAjaxSpy).toHaveBeenCalledWith(fontUrl, jasmine.any(Function), jasmine.any(Function), {
-                cache: false
-            });
+            expect(binaryAjaxSpy).toHaveBeenCalledWith(fontUrl, {cache: false}, jasmine.any(Function), jasmine.any(Function));
         });
 
         it("should not circumvent caching by default", function () {
             var fontUrl = "fake.woff";
 
-            binaryAjaxSpy.andCallFake(function (url, success, error) {
+            binaryAjaxSpy.andCallFake(function (url, options, success, error) {
                 success("this is not a font");
             });
 
@@ -433,9 +427,7 @@ describe("CSS references inline", function () {
             rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
 
             expect(callback).toHaveBeenCalled();
-            expect(binaryAjaxSpy).toHaveBeenCalledWith(fontUrl, jasmine.any(Function), jasmine.any(Function), {
-                cache: true
-            });
+            expect(binaryAjaxSpy).toHaveBeenCalledWith(fontUrl, {cache: true}, jasmine.any(Function), jasmine.any(Function));
         });
 
     });
@@ -447,7 +439,7 @@ describe("CSS references inline", function () {
         beforeEach(function () {
             callback = jasmine.createSpy("callback");
 
-            binaryAjaxSpy.andCallFake(function (url, successCallback, errorCallback) {
+            binaryAjaxSpy.andCallFake(function (url, options, successCallback, errorCallback) {
                 if (url === aFontReferenceThatDoesExist) {
                     successCallback();
                 } else {

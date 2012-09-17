@@ -120,7 +120,7 @@ describe("Main interface of rasterizeHTML.js", function () {
                     callback(canvas, []);
                 });
 
-            ajaxSpy.andCallFake(function (url, success, error) {
+            ajaxSpy.andCallFake(function (url, options, success, error) {
                 success("some html");
             });
 
@@ -136,20 +136,20 @@ describe("Main interface of rasterizeHTML.js", function () {
                     callback(canvas, []);
                 });
 
-            ajaxSpy.andCallFake(function (url, success, error) {
+            ajaxSpy.andCallFake(function (url, options, success, error) {
                 error();
             });
 
             rasterizeHTML.drawURL("fixtures/image.html", canvas, {cache: false}, callback);
 
-            expect(ajaxSpy).toHaveBeenCalledWith("fixtures/image.html", jasmine.any(Function), jasmine.any(Function), {
+            expect(ajaxSpy).toHaveBeenCalledWith("fixtures/image.html", {
                 cache: false
-            });
+            }, jasmine.any(Function), jasmine.any(Function));
             expect(callback).toHaveBeenCalled();
         });
 
         it("should make callback optional for drawURL", function () {
-            ajaxSpy.andCallFake(function (url, success, error) {
+            ajaxSpy.andCallFake(function (url, options, success, error) {
                 success("some html");
             });
 
@@ -222,7 +222,7 @@ describe("Main interface of rasterizeHTML.js", function () {
                     callback(canvas, ["some error"]);
                 });
 
-            ajaxSpy.andCallFake(function (url, success, error) {
+            ajaxSpy.andCallFake(function (url, options, success, error) {
                 success();
             });
 
@@ -235,7 +235,7 @@ describe("Main interface of rasterizeHTML.js", function () {
         it("should report an error on loading a broken URL", function () {
             var drawHtmlSpy = spyOn(rasterizeHTML, "drawHTML");
 
-            ajaxSpy.andCallFake(function (url, success, error) {
+            ajaxSpy.andCallFake(function (url, options, success, error) {
                 error();
             });
 
@@ -252,7 +252,7 @@ describe("Main interface of rasterizeHTML.js", function () {
         it("should deal with a missing callback when loading a broken URL", function () {
             var drawHtmlSpy = spyOn(rasterizeHTML, "drawHTML");
 
-            ajaxSpy.andCallFake(function (url, success, error) {
+            ajaxSpy.andCallFake(function (url, options, success, error) {
                 error();
             });
 
