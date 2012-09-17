@@ -1,5 +1,5 @@
-describe("Utilities", function () {
-    describe("Clone list", function () {
+describe("Utilities function", function () {
+    describe("cloneArray", function () {
         it("should create a copy of the given list", function () {
             var input = [1, 2, 3],
                 output;
@@ -11,7 +11,7 @@ describe("Utilities", function () {
         });
     });
 
-    describe("Join URL", function () {
+    describe("joinUrl", function () {
         it("should append the url to a directory-only base", function () {
             var url = rasterizeHTML.util.joinUrl("rel/path/", "the_relative_url");
             expect(url).toEqual("rel/path/the_relative_url");
@@ -48,7 +48,7 @@ describe("Utilities", function () {
         });
     });
 
-    describe("Data URI handling", function () {
+    describe("isDataUri", function () {
         it("should report data URI", function () {
             expect(rasterizeHTML.util.isDataUri('data:image/png;base64,soMEfAkebASE64=')).toBeTruthy();
         });
@@ -58,7 +58,7 @@ describe("Utilities", function () {
         });
     });
 
-    describe("Mapping", function () {
+    describe("map", function () {
         it("should map each value to one function call and then call complete function", function () {
             var completedValues = [],
                 completed = false;
@@ -164,7 +164,7 @@ describe("Utilities", function () {
 
     });
 
-    describe("Ajax", function () {
+    describe("ajax", function () {
         it("should load content from a URL", function () {
             var finished = false,
                 loadedContent;
@@ -202,6 +202,40 @@ describe("Utilities", function () {
             });
         });
 
+        it("should attach an unique parameter to the given URL to circumvent caching if requested", function () {
+            var ajaxRequest = jasmine.createSpyObj("ajaxRequest", ["open", "addEventListener", "overrideMimeType", "send"]),
+                xmlHttpRequestSpy = spyOn(window, "XMLHttpRequest").andReturn(ajaxRequest);
+
+            rasterizeHTML.util.ajax("non_existing_url.html", function () {}, function () {}, {
+                cache: false
+            });
+
+            expect(ajaxRequest.open).toHaveBeenCalledWith('GET', jasmine.any(String), true);
+            expect(ajaxRequest.open.mostRecentCall.args[1]).toMatch(/^non_existing_url.html\?_[0123456789]+$/);
+        });
+
+        it("should not attach an unique parameter to the given URL by default", function () {
+            var ajaxRequest = jasmine.createSpyObj("ajaxRequest", ["open", "addEventListener", "overrideMimeType", "send"]),
+                xmlHttpRequestSpy = spyOn(window, "XMLHttpRequest").andReturn(ajaxRequest);
+
+            rasterizeHTML.util.ajax("non_existing_url.html", function () {}, function () {});
+
+            expect(ajaxRequest.open).toHaveBeenCalledWith('GET', "non_existing_url.html", true);
+        });
+
+        it("should force mime type if requested", function () {
+            var ajaxRequest = jasmine.createSpyObj("ajaxRequest", ["open", "addEventListener", "overrideMimeType", "send"]),
+                xmlHttpRequestSpy = spyOn(window, "XMLHttpRequest").andReturn(ajaxRequest);
+
+            rasterizeHTML.util.ajax("non_existing_url.html", function () {}, function () {}, {
+                mimeType: "42"
+            });
+
+            expect(ajaxRequest.overrideMimeType).toHaveBeenCalledWith('42');
+        });
+    });
+
+    describe("binaryAjax", function () {
         it("should load binary data", function () {
             var finished = false,
                 loadedContent;
@@ -219,9 +253,33 @@ describe("Utilities", function () {
                 expect(btoa(loadedContent)).toEqual("iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAABFElEQVR4nO3OMQ0AAAjAMPybhnsKxrHUQGc2r+iBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YHAAV821mT1w27RAAAAAElFTkSuQmCC");
             });
         });
+
+        it("should handle error", function () {
+            var ajaxSpy = spyOn(rasterizeHTML.util, "ajax").andCallFake(function (url, success, error) {
+                    error();
+                }),
+                errorCallback = jasmine.createSpy("errorCallback"),
+                successCallback = jasmine.createSpy("successCallback");
+
+            rasterizeHTML.util.binaryAjax("url", successCallback, errorCallback);
+        });
+
+        it("should circumvent caching if requested", function () {
+            var ajaxSpy = spyOn(rasterizeHTML.util, "ajax");
+
+            rasterizeHTML.util.binaryAjax("url", function () {}, function () {}, {
+                cache: false
+            });
+
+            expect(ajaxSpy).toHaveBeenCalledWith("url", jasmine.any(Function), jasmine.any(Function), {
+                mimeType : jasmine.any(String),
+                cache: false
+            });
+        });
+
     });
 
-    describe("Retrieving images as data: URIs", function () {
+    describe("getDataURIForImageURL", function () {
         beforeEach(function () {
             this.addMatchers(imagediff.jasmine);
         });
@@ -293,9 +351,30 @@ describe("Utilities", function () {
                 expect(successCallback).not.toHaveBeenCalled();
             });
         });
+
+        it("should attach an unique parameter to the given URL to circumvent caching if requested", function () {
+            var image = {},
+                imageSpy = spyOn(window, "Image").andReturn(image);
+
+            rasterizeHTML.util.getDataURIForImageURL("image.png", function () {}, function () {}, {
+                cache: false
+            });
+
+            expect(image.src).toMatch(/^image.png\?_[0123456789]+$/);
+        });
+
+        it("should not attach an unique parameter to the given URL by default", function () {
+            var image = {},
+                imageSpy = spyOn(window, "Image").andReturn(image);
+
+            rasterizeHTML.util.getDataURIForImageURL("image.png", function () {}, function () {});
+
+            expect(image.src).toEqual("image.png");
+        });
+
     });
 
-    describe("CSS URL extraction", function () {
+    describe("extractCssUrl", function () {
         it("should extract a CSS URL", function () {
             var url = rasterizeHTML.util.extractCssUrl('url(path/file.png)');
             expect(url).toEqual("path/file.png");

@@ -147,7 +147,45 @@ describe("Image inline", function () {
         });
     });
 
-    describe("Image inline error handling", function () {
+    it("should circumvent caching if requested", function () {
+        var inlineFinished = false;
+        setUpGetDataURIForImageURLSpyToRouteFirstAndSecondImage();
+
+        doc.body.innerHTML = '<img id="image" src="' + firstImage + '" alt="test image"/>';
+
+        rasterizeHTML.loadAndInlineImages(doc, {cache: false}, function () { inlineFinished = true; });
+
+        waitsFor(function () {
+            return inlineFinished;
+        }, "rasterizeHTML.loadAndInlineImages", 2000);
+
+        runs(function () {
+            expect(getDataURIForImageURLSpy).toHaveBeenCalledWith(jasmine.any(String), jasmine.any(Function), jasmine.any(Function), {
+                cache: false
+            });
+        });
+    });
+
+    it("should not circumvent caching by default", function () {
+        var inlineFinished = false;
+        setUpGetDataURIForImageURLSpyToRouteFirstAndSecondImage();
+
+        doc.body.innerHTML = '<img id="image" src="' + firstImage + '" alt="test image"/>';
+
+        rasterizeHTML.loadAndInlineImages(doc, function () { inlineFinished = true; });
+
+        waitsFor(function () {
+            return inlineFinished;
+        }, "rasterizeHTML.loadAndInlineImages", 2000);
+
+        runs(function () {
+            expect(getDataURIForImageURLSpy).toHaveBeenCalledWith(jasmine.any(String), jasmine.any(Function), jasmine.any(Function), {
+                cache: true
+            });
+        });
+    });
+
+    describe("on errors", function () {
         var callback,
             imageThatDoesExist = "image_that_does_exist.png";
 

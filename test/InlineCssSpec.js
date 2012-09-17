@@ -193,6 +193,30 @@ describe("CSS inline", function () {
         expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/url\(\"green\.png\"\)/);
     });
 
+    it("should circumvent caching if requested", function () {
+        doc.head.appendChild(cssLink);
+        setUpAjaxSpyToLoadFixturesThroughTestSetup();
+
+        rasterizeHTML.loadAndInlineCSS(doc, {cache: false}, callback);
+
+        expect(ajaxSpy).toHaveBeenCalledWith(cssLink.href, jasmine.any(Function), jasmine.any(Function), {
+            cache: false
+        });
+        expect(callback).toHaveBeenCalled();
+    });
+
+    it("should not circumvent caching by default", function () {
+        doc.head.appendChild(cssLink);
+        setUpAjaxSpyToLoadFixturesThroughTestSetup();
+
+        rasterizeHTML.loadAndInlineCSS(doc, callback);
+
+        expect(ajaxSpy).toHaveBeenCalledWith(cssLink.href, jasmine.any(Function), jasmine.any(Function), {
+            cache: true
+        });
+        expect(callback).toHaveBeenCalled();
+    });
+
     describe("CSS inline error handling", function () {
         var callback, brokenCssLink, anotherBrokenCssLink;
 

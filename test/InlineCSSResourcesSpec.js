@@ -69,7 +69,7 @@ describe("CSS references inline", function () {
         });
     });
 
-    describe("CSS background-image inline", function () {
+    describe("on background-image", function () {
         it("should not touch an already inlined background-image", function () {
             var inlineFinished = false;
 
@@ -205,9 +205,46 @@ describe("CSS references inline", function () {
                 expect(joinUrlSpy).toHaveBeenCalledWith(baseUrl, "rednblue.png");
             });
         });
+
+        it("should circumvent caching if requested", function () {
+            var callback = jasmine.createSpy("callback"),
+                anImage = "anImage.png";
+
+            getDataURIForImageURLSpy.andCallFake(function (url, successCallback, errorCallback) {
+                successCallback("uri");
+            });
+
+            rasterizeHTMLTestHelper.addStyleToDocument(doc, 'span { background-image: url("' + anImage + '"); }');
+
+            rasterizeHTML.loadAndInlineCSSReferences(doc, {cache: false}, callback);
+
+            expect(getDataURIForImageURLSpy).toHaveBeenCalledWith(anImage, jasmine.any(Function), jasmine.any(Function), {
+                cache: false
+            });
+            expect(callback).toHaveBeenCalled();
+        });
+
+        it("should not circumvent caching by default", function () {
+            var callback = jasmine.createSpy("callback"),
+                anImage = "anImage.png";
+
+            getDataURIForImageURLSpy.andCallFake(function (url, successCallback, errorCallback) {
+                successCallback("uri");
+            });
+
+            rasterizeHTMLTestHelper.addStyleToDocument(doc, 'span { background-image: url("' + anImage + '"); }');
+
+            rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
+
+            expect(getDataURIForImageURLSpy).toHaveBeenCalledWith(anImage, jasmine.any(Function), jasmine.any(Function), {
+                cache: true
+            });
+            expect(callback).toHaveBeenCalled();
+        });
+
     });
 
-    describe("backgroundImage inline error handling", function () {
+    describe("on background-image with errors", function () {
         var aBackgroundImageThatDoesExist = "a_backgroundImage_that_does_exist.png",
             callback;
 
@@ -290,7 +327,7 @@ describe("CSS references inline", function () {
         });
     });
 
-    describe("CSS font-style inline", function () {
+    describe("on font-face", function () {
         var fontFaceRegex = /\s*@font-face\s*\{\s*font-family\s*:\s*"([^\"]+)";\s*src:\s*url\("([^\)]+)"\);\s*\}/,
             callback;
 
@@ -342,7 +379,6 @@ describe("CSS references inline", function () {
             expect(callback).toHaveBeenCalled();
 
             expect(extractCssUrlSpy).toHaveBeenCalledWith('url("fake.woff")');
-            expect(binaryAjaxSpy).toHaveBeenCalledWith("fake.woff", jasmine.any(Function), jasmine.any(Function));
 
             expectFontFaceUrlToMatch("data:font/woff;base64,dGhpcyBpcyBub3QgYSBmb250");
         });
@@ -363,14 +399,48 @@ describe("CSS references inline", function () {
             expect(extractCssUrlSpy).toHaveBeenCalledWith('url("raphaelicons-webfont.woff")');
             expect(joinUrlSpy).toHaveBeenCalledWith(doc.baseURI, "raphaelicons-webfont.woff");
             expect(binaryAjaxSpy).toHaveBeenCalledWith(rasterizeHTMLTestHelper.getBaseUri() + jasmine.getFixtures().fixturesPath + "raphaelicons-webfont.woff",
-                jasmine.any(Function), jasmine.any(Function));
+                jasmine.any(Function), jasmine.any(Function), jasmine.any(Object));
 
             expectFontFaceUrlToMatch("data:font/woff;base64,dGhpcyBpcyBub3QgYSBmb250");
         });
 
+        it("should circumvent caching if requested", function () {
+            var fontUrl = "fake.woff";
+
+            binaryAjaxSpy.andCallFake(function (url, success, error) {
+                success("this is not a font");
+            });
+
+            rasterizeHTMLTestHelper.addStyleToDocument(doc, '@font-face { font-family: "test font"; src: url("' + fontUrl + '"); }');
+
+            rasterizeHTML.loadAndInlineCSSReferences(doc, {cache: false}, callback);
+
+            expect(callback).toHaveBeenCalled();
+            expect(binaryAjaxSpy).toHaveBeenCalledWith(fontUrl, jasmine.any(Function), jasmine.any(Function), {
+                cache: false
+            });
+        });
+
+        it("should not circumvent caching by default", function () {
+            var fontUrl = "fake.woff";
+
+            binaryAjaxSpy.andCallFake(function (url, success, error) {
+                success("this is not a font");
+            });
+
+            rasterizeHTMLTestHelper.addStyleToDocument(doc, '@font-face { font-family: "test font"; src: url("' + fontUrl + '"); }');
+
+            rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
+
+            expect(callback).toHaveBeenCalled();
+            expect(binaryAjaxSpy).toHaveBeenCalledWith(fontUrl, jasmine.any(Function), jasmine.any(Function), {
+                cache: true
+            });
+        });
+
     });
 
-    describe("CSS font-style inline error handling", function () {
+    describe("on font-face with errors", function () {
         var aFontReferenceThatDoesExist = "a_font_that_does_exist.woff",
             callback;
 

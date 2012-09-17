@@ -70,8 +70,16 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
         }
     };
 
-    module.util.ajax = function (url, successCallback, errorCallback, mimeType) {
-        var ajaxRequest = new window.XMLHttpRequest();
+    var getUncachableURL = function (url) {
+        return url + "?_" + Date.now();
+    };
+
+    module.util.ajax = function (url, successCallback, errorCallback, options) {
+        var ajaxRequest = new window.XMLHttpRequest(),
+            augmentedUrl;
+
+        options = options || {};
+        augmentedUrl = options.cache === false ? getUncachableURL(url) : url;
 
         ajaxRequest.addEventListener("load", function (e) {
             if (ajaxRequest.status === 200 || ajaxRequest.status === 0) {
@@ -85,8 +93,8 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
             errorCallback();
         }, false);
 
-        ajaxRequest.open('GET', url, true);
-        ajaxRequest.overrideMimeType(mimeType);
+        ajaxRequest.open('GET', augmentedUrl, true);
+        ajaxRequest.overrideMimeType(options.mimeType);
         try {
             ajaxRequest.send(null);
         } catch (err) {
@@ -94,15 +102,20 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
         }
     };
 
-    module.util.binaryAjax = function (url, successCallback, errorCallback) {
+    module.util.binaryAjax = function (url, successCallback, errorCallback, options) {
         var binaryContent = "";
+
+        options = options || {};
 
         module.util.ajax(url, function (content) {
             for (var i = 0; i < content.length; i++) {
                 binaryContent += String.fromCharCode(content.charCodeAt(i) & 0xFF);
             }
             successCallback(binaryContent);
-        }, errorCallback, 'text/plain; charset=x-user-defined');
+        }, errorCallback, {
+            mimeType: 'text/plain; charset=x-user-defined',
+            cache: options.cache
+        });
     };
 
     var unquoteUrl = function (quotedUrl) {
@@ -144,9 +157,12 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
         return canvas.toDataURL("image/png");
     };
 
-    module.util.getDataURIForImageURL = function (url, successCallback, errorCallback) {
+    module.util.getDataURIForImageURL = function (url, successCallback, errorCallback, options) {
         var img = new window.Image(),
-            dataURI;
+            dataURI, augmentedUrl;
+
+        options = options || {};
+        augmentedUrl = options.cache === false ? getUncachableURL(url) : url;
 
         img.onload = function () {
             try {
@@ -163,7 +179,7 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
         if (errorCallback) {
             img.onerror = errorCallback;
         }
-        img.src = url;
+        img.src = augmentedUrl;
     };
 
     /* Inlining */
@@ -223,28 +239,36 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
         return descriptorsToInline;
     };
 
-    var parseOptionalParameters = function (baseUrl, callback) {
+    var parseOptionalParameters = function () {
         var parameters = {
             baseUrl: null,
+            options: {},
             callback: null
         };
 
-        if (typeof callback === "undefined" && typeof baseUrl === "function") {
-            parameters.callback = baseUrl;
+        if (typeof arguments[0] === "function") {
+            parameters.callback = arguments[0];
         } else {
-            if (typeof baseUrl !== "undefined") {
-                parameters.baseUrl = baseUrl;
-            }
-            if (typeof callback !== "undefined") {
-                parameters.callback = callback;
+            if (typeof arguments[0] === "object" && arguments[0] !== null) {
+                parameters.options = arguments[0];
+                parameters.callback = arguments[1];
+            } else {
+                parameters.baseUrl = arguments[0];
+                if (typeof arguments[1] === "object" && arguments[1] !== null) {
+                    parameters.options = arguments[1];
+                    parameters.callback = arguments[2];
+                } else {
+                    parameters.callback = arguments[1];
+                }
             }
         }
+
         return parameters;
     };
 
     /* Img Inlining */
 
-    var encodeImageAsDataURI = function (image, baseUrl, successCallback, errorCallback) {
+    var encodeImageAsDataURI = function (image, baseUrl, cache, successCallback, errorCallback) {
         var url = image.attributes.src.nodeValue,  // Chrome 19 sets image.src to ""
             base = baseUrl || image.ownerDocument.baseURI;
 
@@ -259,16 +283,19 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
             successCallback();
         }, function () {
             errorCallback(url);
+        }, {
+            cache: cache
         });
     };
 
-    module.loadAndInlineImages = function (doc, baseUrl, callback) {
-        var params = parseOptionalParameters(baseUrl, callback),
+    module.loadAndInlineImages = function (doc, baseUrl, options, callback) {
+        var params = parseOptionalParameters(baseUrl, options, callback),
             images = doc.getElementsByTagName("img"),
+            cache = params.options.cache !== false,
             errors = [];
 
         module.util.map(images, function (image, finish) {
-            encodeImageAsDataURI(image, params.baseUrl, finish, function (url) {
+            encodeImageAsDataURI(image, params.baseUrl, cache, finish, function (url) {
                 errors.push({
                     resourceType: "image",
                     url: url
@@ -329,7 +356,7 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
         head.appendChild(styleNode);
     };
 
-    var loadLinkedCSSAndRemoveNode = function (link, baseUrl, successCallback, errorCallback) {
+    var loadLinkedCSSAndRemoveNode = function (link, baseUrl, cache, successCallback, errorCallback) {
         var cssHref = link.attributes.href.nodeValue, // Chrome 19 sets link.href to ""
             documentBaseUrl = baseUrl || link.ownerDocument.baseURI,
             cssHrefRelativeToDoc = getUrlRelativeToDocumentBase(cssHref, documentBaseUrl),
@@ -342,6 +369,8 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
             successCallback(cssContent);
         }, function () {
             errorCallback(cssHrefRelativeToDoc);
+        }, {
+            cache: cache
         });
     };
 
@@ -352,15 +381,16 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
         }
     };
 
-    module.loadAndInlineCSS = function (doc, baseUrl, callback) {
-        var params = parseOptionalParameters(baseUrl, callback),
+    module.loadAndInlineCSS = function (doc, baseUrl, options, callback) {
+        var params = parseOptionalParameters(baseUrl, options, callback),
             links = doc.getElementsByTagName("link"),
+            cache = params.options.cache !== false,
             errors = [];
 
         module.util.map(links, function (link, finish) {
             if (link.attributes.rel && link.attributes.rel.nodeValue === "stylesheet" &&
                 (!link.attributes.type || link.attributes.type.nodeValue === "text/css")) {
-                loadLinkedCSSAndRemoveNode(link, params.baseUrl, function(css) {
+                loadLinkedCSSAndRemoveNode(link, params.baseUrl, cache, function(css) {
                     if (css.trim()) {
                         finish(css + "\n");
                     } else {
@@ -389,7 +419,7 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
 
     /* CSS linked resource inlining */
 
-    var loadAndInlineBackgroundImage = function (cssDeclaration, baseUri, successCallback, errorCallback) {
+    var loadAndInlineBackgroundImage = function (cssDeclaration, baseUri, cache, successCallback, errorCallback) {
         var url;
         try {
             url = module.util.extractCssUrl(cssDeclaration.values[0].cssText());
@@ -411,16 +441,18 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
             successCallback(true);
         }, function () {
             errorCallback(url);
+        }, {
+            cache: cache
         });
     };
 
-    var iterateOverRulesAndInlineBackgroundImage = function (parsedCss, baseUri, callback) {
+    var iterateOverRulesAndInlineBackgroundImage = function (parsedCss, baseUri, cache, callback) {
         var declarationsToInline = findBackgroundImageDeclarations(parsedCss),
             errors = [],
             cssHasChanges;
 
         rasterizeHTML.util.map(declarationsToInline, function (declaration, finish) {
-            loadAndInlineBackgroundImage(declaration, baseUri, finish, function (url) {
+            loadAndInlineBackgroundImage(declaration, baseUri, cache, finish, function (url) {
                 errors.push({
                     resourceType: "backgroundImage",
                     url: url
@@ -434,7 +466,7 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
         });
     };
 
-    var loadAndInlineFontFace = function (cssDeclaration, baseUri, successCallback, errorCallback) {
+    var loadAndInlineFontFace = function (cssDeclaration, baseUri, cache, successCallback, errorCallback) {
         var url, base64Content;
         try {
             url = module.util.extractCssUrl(cssDeclaration.values[0].cssText());
@@ -457,16 +489,18 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
             successCallback(true);
         }, function () {
             errorCallback(url);
+        }, {
+            cache: cache
         });
     };
 
-    var iterateOverRulesAndInlineFontFace = function (parsedCss, baseUri, callback) {
+    var iterateOverRulesAndInlineFontFace = function (parsedCss, baseUri, cache, callback) {
         var descriptorsToInline = findFontFaceDescriptors(parsedCss),
             errors = [],
             cssHasChanges;
 
         rasterizeHTML.util.map(descriptorsToInline, function (declaration, finish) {
-            loadAndInlineFontFace(declaration, baseUri, finish, function (url) {
+            loadAndInlineFontFace(declaration, baseUri, cache, finish, function (url) {
                 errors.push({
                     resourceType: "fontFace",
                     url: url
@@ -493,13 +527,13 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
         }
     };
 
-    var loadAndInlineCSSResourcesForStyle = function (style, baseUrl, callback) {
+    var loadAndInlineCSSResourcesForStyle = function (style, baseUrl, cache, callback) {
         var cssContent = style.textContent,
             base = baseUrl || style.ownerDocument.baseURI,
             parsedCss = parseCss(cssContent);
 
-        iterateOverRulesAndInlineBackgroundImage(parsedCss, base, function (bgImagesHaveChanges, bgImageErrors) {
-            iterateOverRulesAndInlineFontFace(parsedCss, base, function (fontsHaveChanges, fontFaceErrors) {
+        iterateOverRulesAndInlineBackgroundImage(parsedCss, base, cache, function (bgImagesHaveChanges, bgImageErrors) {
+            iterateOverRulesAndInlineFontFace(parsedCss, base, cache, function (fontsHaveChanges, fontFaceErrors) {
                 // CSSParser is invasive, if no changes are needed, we leave the text as it is
                 if (bgImagesHaveChanges || fontsHaveChanges) {
                     cssContent = parsedCss.cssText();
@@ -512,14 +546,15 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
         });
     };
 
-    module.loadAndInlineCSSReferences = function (doc, baseUrl, callback) {
-        var params = parseOptionalParameters(baseUrl, callback),
+    module.loadAndInlineCSSReferences = function (doc, baseUrl, options, callback) {
+        var params = parseOptionalParameters(baseUrl, options, callback),
             allErrors = [],
+            cache = params.options.cache !== false,
             styles = doc.getElementsByTagName("style");
 
         module.util.map(styles, function (style, finish) {
             if (style.attributes.type && style.attributes.type.nodeValue === "text/css") {
-                loadAndInlineCSSResourcesForStyle(style, params.baseUrl, function (errors) {
+                loadAndInlineCSSResourcesForStyle(style, params.baseUrl, cache, function (errors) {
                     allErrors = allErrors.concat(errors);
                     finish();
                 });
@@ -704,16 +739,16 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
 
     /* "Public" API */
 
-    module.drawDocument = function (doc, canvas, baseUrl, callback) {
-        var params = parseOptionalParameters(baseUrl, callback),
+    module.drawDocument = function (doc, canvas, baseUrl, options, callback) {
+        var params = parseOptionalParameters(baseUrl, options, callback),
             allErrors = [],
             svg;
 
-        module.loadAndInlineImages(doc, params.baseUrl, function (errors) {
+        module.loadAndInlineImages(doc, params.baseUrl, params.options, function (errors) {
             allErrors = allErrors.concat(errors);
-            module.loadAndInlineCSS(doc, params.baseUrl, function (errors) {
+            module.loadAndInlineCSS(doc, params.baseUrl, params.options, function (errors) {
                 allErrors = allErrors.concat(errors);
-                module.loadAndInlineCSSReferences(doc, params.baseUrl, function (errors) {
+                module.loadAndInlineCSSReferences(doc, params.baseUrl, params.options, function (errors) {
                     allErrors = allErrors.concat(errors);
 
                     svg = module.getSvgForDocument(doc, canvas.width, canvas.height);
@@ -736,24 +771,29 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
         });
     };
 
-    module.drawHTML = function (html, canvas, baseUrl, callback) {
-        var params = parseOptionalParameters(baseUrl, callback),
+    module.drawHTML = function (html, canvas, baseUrl, options, callback) {
+        var params = parseOptionalParameters(baseUrl, options, callback),
             doc = window.document.implementation.createHTMLDocument("");
 
         doc.documentElement.innerHTML = html;
-        module.drawDocument(doc, canvas, params.baseUrl, params.callback);
+        module.drawDocument(doc, canvas, params.baseUrl, params.options, params.callback);
     };
 
-    module.drawURL = function (url, canvas, callback) {
+    module.drawURL = function (url, canvas, options, callback) {
+        var myCallback = typeof options === "object" ? callback : options,
+            myOptions = typeof options === "object" ? options : {};
+
         module.util.ajax(url, function (html) {
-            module.drawHTML(html, canvas, url, callback);
+            module.drawHTML(html, canvas, url, myOptions, myCallback);
         }, function () {
-            if (callback) {
-                callback(canvas, [{
+            if (myCallback) {
+                myCallback(canvas, [{
                     resourceType: "page",
                     url: url
                 }]);
             }
+        }, {
+            cache: myOptions.cache
         });
     };
 
