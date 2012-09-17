@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.1.0 - 2012-09-17
+/*! rasterizeHTML.js - v0.1.0 - 2012-09-18
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2012 Christoph Burgmer; Licensed MIT */
 
@@ -75,7 +75,7 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
     };
 
     var getUncachableURL = function (url) {
-        return url + "?_" + Date.now();
+        return url + "?_=" + Date.now();
     };
 
     module.util.ajax = function (url, options, successCallback, errorCallback) {

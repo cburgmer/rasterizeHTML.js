@@ -209,7 +209,7 @@ describe("Utilities function", function () {
             rasterizeHTML.util.ajax("non_existing_url.html", {cache: false}, function () {}, function () {});
 
             expect(ajaxRequest.open).toHaveBeenCalledWith('GET', jasmine.any(String), true);
-            expect(ajaxRequest.open.mostRecentCall.args[1]).toMatch(/^non_existing_url.html\?_[0123456789]+$/);
+            expect(ajaxRequest.open.mostRecentCall.args[1]).toMatch(/^non_existing_url.html\?_=[0123456789]+$/);
         });
 
         it("should not attach an unique parameter to the given URL by default", function () {
@@ -352,7 +352,7 @@ describe("Utilities function", function () {
 
             rasterizeHTML.util.getDataURIForImageURL("image.png", {cache: false}, function () {}, function () {});
 
-            expect(image.src).toMatch(/^image.png\?_[0123456789]+$/);
+            expect(image.src).toMatch(/^image.png\?_=[0123456789]+$/);
         });
 
         it("should not attach an unique parameter to the given URL by default", function () {

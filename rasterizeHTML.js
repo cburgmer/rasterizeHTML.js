@@ -71,7 +71,7 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
     };
 
     var getUncachableURL = function (url) {
-        return url + "?_" + Date.now();
+        return url + "?_=" + Date.now();
     };
 
     module.util.ajax = function (url, options, successCallback, errorCallback) {
