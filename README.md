@@ -3,6 +3,8 @@ rasterizeHTML.js
 
 Renders HTML into the browser's canvas.
 
+See the [API](https://github.com/cburgmer/rasterizeHTML.js/wiki/API).
+
 How it works
 ------------
 
