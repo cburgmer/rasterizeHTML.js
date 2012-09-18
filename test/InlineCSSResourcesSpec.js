@@ -18,95 +18,75 @@ describe("CSS references inline", function () {
     });
 
     it("should do nothing if no CSS is found", function () {
-        var inlineFinished = false;
+        var callback = jasmine.createSpy("callback");
 
-        rasterizeHTML.loadAndInlineCSSReferences(doc, function () { inlineFinished = true; });
+        rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
 
-        waitsFor(function () {
-            return inlineFinished;
-        }, "rasterizeHTML.loadAndInlineCSSReferences", 2000);
+        expect(callback).toHaveBeenCalled();
 
-        runs(function () {
-            expect(doc.head.getElementsByTagName("style").length).toEqual(0);
-        });
+        expect(doc.head.getElementsByTagName("style").length).toEqual(0);
     });
 
     it("should not touch unrelated CSS", function () {
-        var inlineFinished = false;
+        var callback = jasmine.createSpy("callback");
 
         rasterizeHTMLTestHelper.addStyleToDocument(doc, "span { padding-left: 0; }");
 
-        rasterizeHTML.loadAndInlineCSSReferences(doc, function () { inlineFinished = true; });
+        rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
 
-        waitsFor(function () {
-            return inlineFinished;
-        }, "rasterizeHTML.loadAndInlineCSSReferences", 2000);
+        expect(callback).toHaveBeenCalled();
 
-        runs(function () {
-            expect(doc.head.getElementsByTagName("style").length).toEqual(1);
-            expect(doc.head.getElementsByTagName("style")[0].textContent).toEqual("span { padding-left: 0; }");
-        });
+        expect(doc.head.getElementsByTagName("style").length).toEqual(1);
+        expect(doc.head.getElementsByTagName("style")[0].textContent).toEqual("span { padding-left: 0; }");
     });
 
     it("should add a workaround for Webkit to account for first CSS rules being ignored", function () {
-        var inlineFinished = false;
+        var callback = jasmine.createSpy("callback");
 
         rasterizeHTMLTestHelper.addStyleToDocument(doc, 'span { background-image: url("data:image/png;base64,soMEfAkebASE64="); }');
 
-        rasterizeHTML.loadAndInlineCSSReferences(doc, function () { inlineFinished = true; });
+        rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
 
-        waitsFor(function () {
-            return inlineFinished;
-        }, "rasterizeHTML.loadAndInlineCSSReferences", 2000);
+        expect(callback).toHaveBeenCalled();
 
-        runs(function () {
-            expect(doc.head.getElementsByTagName("style").length).toEqual(1);
-            if (window.navigator.userAgent.indexOf("WebKit") >= 0) {
-                expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/^span \{\}/);
-            } else {
-                expect(doc.head.getElementsByTagName("style")[0].textContent).not.toMatch(/^span \{\}/);
-            }
-        });
+        expect(doc.head.getElementsByTagName("style").length).toEqual(1);
+        if (window.navigator.userAgent.indexOf("WebKit") >= 0) {
+            expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/^span \{\}/);
+        } else {
+            expect(doc.head.getElementsByTagName("style")[0].textContent).not.toMatch(/^span \{\}/);
+        }
     });
 
     describe("on background-image", function () {
         it("should not touch an already inlined background-image", function () {
-            var inlineFinished = false;
+            var callback = jasmine.createSpy("callback");
 
             rasterizeHTMLTestHelper.addStyleToDocument(doc, 'span { background-image: url("data:image/png;base64,soMEfAkebASE64="); }');
 
-            rasterizeHTML.loadAndInlineCSSReferences(doc, function () { inlineFinished = true; });
+            rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
 
-            waitsFor(function () {
-                return inlineFinished;
-            }, "rasterizeHTML.loadAndInlineCSSReferences", 2000);
+            expect(callback).toHaveBeenCalled();
 
-            runs(function () {
-                expect(doc.head.getElementsByTagName("style").length).toEqual(1);
-                expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/span \{ background-image: url\("data:image\/png;base64,soMEfAkebASE64="\); \}/);
-            });
+            expect(doc.head.getElementsByTagName("style").length).toEqual(1);
+            expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/span \{ background-image: url\("data:image\/png;base64,soMEfAkebASE64="\); \}/);
         });
 
         it("should ignore invalid values", function () {
-            var inlineFinished = false;
+            var callback = jasmine.createSpy("callback");
 
             rasterizeHTMLTestHelper.addStyleToDocument(doc, 'span { background-image: "invalid url"; }');
 
-            rasterizeHTML.loadAndInlineCSSReferences(doc, function () { inlineFinished = true; });
+            rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
 
-            waitsFor(function () {
-                return inlineFinished;
-            }, "rasterizeHTML.loadAndInlineCSSReferences", 2000);
+            expect(callback).toHaveBeenCalled();
 
-            runs(function () {
-                expect(doc.head.getElementsByTagName("style").length).toEqual(1);
-                expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/span \{ background-image: "invalid url"; \}/);
-            });
+            expect(doc.head.getElementsByTagName("style").length).toEqual(1);
+            expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/span \{ background-image: "invalid url"; \}/);
         });
 
         it("should inline a background-image", function () {
             var backgroundImageRegex = /span\s*\{\s*background-image: url\("([^\)]+)"\);\s*\}/,
-                inlineFinished = false,
+                callback = jasmine.createSpy("callback"),
                 anImage = "anImage.png",
                 anImagesDataUri = "data:image/png;base64,someDataUri",
                 url, styleContent;
@@ -119,26 +99,21 @@ describe("CSS references inline", function () {
 
             rasterizeHTMLTestHelper.addStyleToDocument(doc, 'span { background-image: url("' + anImage + '"); }');
 
-            rasterizeHTML.loadAndInlineCSSReferences(doc, function () { inlineFinished = true; });
+            rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
 
-            waitsFor(function () {
-                return inlineFinished;
-            }, "rasterizeHTML.loadAndInlineCSSReferences", 2000);
+            expect(callback).toHaveBeenCalled();
+            expect(extractCssUrlSpy).toHaveBeenCalledWith('url("' + anImage + '")');
 
-            runs(function () {
-                expect(extractCssUrlSpy).toHaveBeenCalledWith('url("' + anImage + '")');
-
-                expect(doc.head.getElementsByTagName("style").length).toEqual(1);
-                styleContent = doc.head.getElementsByTagName("style")[0].textContent;
-                expect(styleContent).toMatch(backgroundImageRegex);
-                url = backgroundImageRegex.exec(styleContent)[1];
-                expect(url).toEqual(anImagesDataUri);
-            });
+            expect(doc.head.getElementsByTagName("style").length).toEqual(1);
+            styleContent = doc.head.getElementsByTagName("style")[0].textContent;
+            expect(styleContent).toMatch(backgroundImageRegex);
+            url = backgroundImageRegex.exec(styleContent)[1];
+            expect(url).toEqual(anImagesDataUri);
         });
 
         it("should respect the document's baseURI when loading the background-image", function () {
             var backgroundImageRegex = /background-image:\s*url\("([^\)]+)"\);/,
-                inlineFinished = false,
+                callback = jasmine.createSpy("callback"),
                 url, styleContent;
 
             getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback, errorCallback) {
@@ -148,20 +123,16 @@ describe("CSS references inline", function () {
 
             doc = rasterizeHTMLTestHelper.readDocumentFixture("backgroundImage.html");
 
-            rasterizeHTML.loadAndInlineCSSReferences(doc, function () { inlineFinished = true; });
+            rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
 
-            waitsFor(function () {
-                return inlineFinished;
-            }, "rasterizeHTML.loadAndInlineCSSReferences", 2000);
+            expect(callback).toHaveBeenCalled();
 
-            runs(function () {
-                expect(extractCssUrlSpy).toHaveBeenCalledWith('url("rednblue.png")');
-                expect(joinUrlSpy).toHaveBeenCalledWith(doc.baseURI, "rednblue.png");
-            });
+            expect(extractCssUrlSpy).toHaveBeenCalledWith('url("rednblue.png")');
+            expect(joinUrlSpy).toHaveBeenCalledWith(doc.baseURI, "rednblue.png");
         });
 
         it("should respect optional baseUrl when loading the background-image", function () {
-            var inlineFinished = false;
+            var callback = jasmine.createSpy("callback");
 
             getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback, errorCallback) {
                 successCallback("aDataUri");
@@ -170,19 +141,15 @@ describe("CSS references inline", function () {
 
             doc = rasterizeHTMLTestHelper.readDocumentFixtureWithoutBaseURI("backgroundImage.html");
 
-            rasterizeHTML.loadAndInlineCSSReferences(doc, {baseUrl: "aBaseURI"}, function () { inlineFinished = true; });
+            rasterizeHTML.loadAndInlineCSSReferences(doc, {baseUrl: "aBaseURI"}, callback);
 
-            waitsFor(function () {
-                return inlineFinished;
-            }, "rasterizeHTML.loadAndInlineCSSReferences", 2000);
+            expect(callback).toHaveBeenCalled();
 
-            runs(function () {
-                expect(joinUrlSpy).toHaveBeenCalledWith("aBaseURI", "rednblue.png");
-            });
+            expect(joinUrlSpy).toHaveBeenCalledWith("aBaseURI", "rednblue.png");
         });
 
         it("should favour explicit baseUrl over document.baseURI when loading the background-image", function () {
-            var inlineFinished = false,
+            var callback = jasmine.createSpy("callback"),
                 baseUrl = "aBaseURI";
 
             getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback, errorCallback) {
@@ -195,15 +162,11 @@ describe("CSS references inline", function () {
             expect(doc.baseURI).not.toEqual("about:blank");
             expect(doc.baseURI).not.toEqual(baseUrl);
 
-            rasterizeHTML.loadAndInlineCSSReferences(doc, {baseUrl: baseUrl}, function () { inlineFinished = true; });
+            rasterizeHTML.loadAndInlineCSSReferences(doc, {baseUrl: baseUrl}, callback);
 
-            waitsFor(function () {
-                return inlineFinished;
-            }, "rasterizeHTML.loadAndInlineCSSReferences", 2000);
+            expect(callback).toHaveBeenCalled();
 
-            runs(function () {
-                expect(joinUrlSpy).toHaveBeenCalledWith(baseUrl, "rednblue.png");
-            });
+            expect(joinUrlSpy).toHaveBeenCalledWith(baseUrl, "rednblue.png");
         });
 
         it("should circumvent caching if requested", function () {
@@ -262,16 +225,10 @@ describe("CSS references inline", function () {
 
             rasterizeHTML.loadAndInlineCSSReferences(doc, {baseUrl: "some_base_url/"}, callback);
 
-            waitsFor(function () {
-                return callback.wasCalled;
-            }, "rasterizeHTML.loadAndInlineCSSReferences");
-
-            runs(function () {
-                expect(callback).toHaveBeenCalledWith([{
-                    resourceType: "backgroundImage",
-                    url: "some_base_url/a_backgroundImage_that_doesnt_exist.png"
-                }]);
-            });
+            expect(callback).toHaveBeenCalledWith([{
+                resourceType: "backgroundImage",
+                url: "some_base_url/a_backgroundImage_that_doesnt_exist.png"
+            }]);
         });
 
         it("should only report a failing backgroundImage as error", function () {
@@ -280,16 +237,10 @@ describe("CSS references inline", function () {
 
             rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
 
-            waitsFor(function () {
-                return callback.wasCalled;
-            }, "rasterizeHTML.loadAndInlineCSSReferences");
-
-            runs(function () {
-                expect(callback).toHaveBeenCalledWith([{
-                    resourceType: "backgroundImage",
-                    url: "a_backgroundImage_that_doesnt_exist.png"
-                }]);
-            });
+            expect(callback).toHaveBeenCalledWith([{
+                resourceType: "backgroundImage",
+                url: "a_backgroundImage_that_doesnt_exist.png"
+            }]);
         });
 
         it("should report multiple failing backgroundImages as error", function () {
@@ -298,14 +249,8 @@ describe("CSS references inline", function () {
 
             rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
 
-            waitsFor(function () {
-                return callback.wasCalled;
-            }, "rasterizeHTML.loadAndInlineCSSReferences");
-
-            runs(function () {
-                expect(callback).toHaveBeenCalledWith([jasmine.any(Object), jasmine.any(Object)]);
-                expect(callback.mostRecentCall.args[0][0]).not.toEqual(callback.mostRecentCall.args[0][1]);
-            });
+            expect(callback).toHaveBeenCalledWith([jasmine.any(Object), jasmine.any(Object)]);
+            expect(callback.mostRecentCall.args[0][0]).not.toEqual(callback.mostRecentCall.args[0][1]);
         });
 
         it("should report an empty list for a successful backgroundImage", function () {
@@ -313,13 +258,7 @@ describe("CSS references inline", function () {
 
             rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
 
-            waitsFor(function () {
-                return callback.wasCalled;
-            }, "rasterizeHTML.loadAndInlineCSSReferences");
-
-            runs(function () {
-                expect(callback).toHaveBeenCalledWith([]);
-            });
+            expect(callback).toHaveBeenCalledWith([]);
         });
     });
 
@@ -454,16 +393,10 @@ describe("CSS references inline", function () {
 
             rasterizeHTML.loadAndInlineCSSReferences(doc, {baseUrl: "some_base_url/"}, callback);
 
-            waitsFor(function () {
-                return callback.wasCalled;
-            }, "rasterizeHTML.loadAndInlineCSSReferences");
-
-            runs(function () {
-                expect(callback).toHaveBeenCalledWith([{
-                    resourceType: "fontFace",
-                    url: "some_base_url/a_font_that_doesnt_exist.woff"
-                }]);
-            });
+            expect(callback).toHaveBeenCalledWith([{
+                resourceType: "fontFace",
+                url: "some_base_url/a_font_that_doesnt_exist.woff"
+            }]);
         });
 
         it("should only report a failing font as error", function () {
@@ -472,16 +405,10 @@ describe("CSS references inline", function () {
 
             rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
 
-            waitsFor(function () {
-                return callback.wasCalled;
-            }, "rasterizeHTML.loadAndInlineCSSReferences");
-
-            runs(function () {
-                expect(callback).toHaveBeenCalledWith([{
-                    resourceType: "fontFace",
-                    url: "a_font_that_doesnt_exist.woff"
-                }]);
-            });
+            expect(callback).toHaveBeenCalledWith([{
+                resourceType: "fontFace",
+                url: "a_font_that_doesnt_exist.woff"
+            }]);
         });
 
         it("should report multiple failing fonts as error", function () {
@@ -490,14 +417,8 @@ describe("CSS references inline", function () {
 
             rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
 
-            waitsFor(function () {
-                return callback.wasCalled;
-            }, "rasterizeHTML.loadAndInlineCSSReferences");
-
-            runs(function () {
-                expect(callback).toHaveBeenCalledWith([jasmine.any(Object), jasmine.any(Object)]);
-                expect(callback.mostRecentCall.args[0][0]).not.toEqual(callback.mostRecentCall.args[0][1]);
-            });
+            expect(callback).toHaveBeenCalledWith([jasmine.any(Object), jasmine.any(Object)]);
+            expect(callback.mostRecentCall.args[0][0]).not.toEqual(callback.mostRecentCall.args[0][1]);
         });
 
         it("should report an empty list for a successful backgroundImage", function () {
@@ -505,13 +426,7 @@ describe("CSS references inline", function () {
 
             rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
 
-            waitsFor(function () {
-                return callback.wasCalled;
-            }, "rasterizeHTML.loadAndInlineCSSReferences");
-
-            runs(function () {
-                expect(callback).toHaveBeenCalledWith([]);
-            });
+            expect(callback).toHaveBeenCalledWith([]);
         });
     });
 

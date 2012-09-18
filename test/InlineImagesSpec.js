@@ -23,24 +23,20 @@ describe("Image inline", function () {
     });
 
     it("should load external images", function () {
-        var inlineFinished = false;
+        var callback = jasmine.createSpy("callback");
         setUpGetDataURIForImageURLSpyToRouteFirstAndSecondImage();
 
         doc.body.innerHTML = '<img id="image" src="' + firstImage + '" alt="test image"/>';
 
-        rasterizeHTML.loadAndInlineImages(doc, function () { inlineFinished = true; });
+        rasterizeHTML.loadAndInlineImages(doc, callback);
 
-        waitsFor(function () {
-            return inlineFinished;
-        }, "rasterizeHTML.loadAndInlineImages", 2000);
+        expect(callback).toHaveBeenCalled();
 
-        runs(function () {
-            expect(doc.getElementById("image").attributes.src.nodeValue).toEqual(firstImageDataURI);
-        });
+        expect(doc.getElementById("image").attributes.src.nodeValue).toEqual(firstImageDataURI);
     });
 
     it("should load multiple external images", function () {
-        var inlineFinished = false;
+        var callback = jasmine.createSpy("callback");
         setUpGetDataURIForImageURLSpyToRouteFirstAndSecondImage();
 
         doc.body.innerHTML = (
@@ -48,84 +44,66 @@ describe("Image inline", function () {
             '<img id="image2" src="' + secondImage +'" alt="test image"/>'
         );
 
-        rasterizeHTML.loadAndInlineImages(doc, function () { inlineFinished = true; });
+        rasterizeHTML.loadAndInlineImages(doc, callback);
 
-        waitsFor(function () {
-            return inlineFinished;
-        }, "rasterizeHTML.loadAndInlineImages", 2000);
+        expect(callback).toHaveBeenCalled();
 
-        runs(function () {
-            expect(doc.getElementById("image1").attributes.src.nodeValue).toEqual(firstImageDataURI);
-            expect(doc.getElementById("image2").attributes.src.nodeValue).toEqual(secondImageDataURI);
-        });
+        expect(doc.getElementById("image1").attributes.src.nodeValue).toEqual(firstImageDataURI);
+        expect(doc.getElementById("image2").attributes.src.nodeValue).toEqual(secondImageDataURI);
     });
 
     it("should finish if no images found", function () {
-        var inlineFinished = false;
+        var callback = jasmine.createSpy("callback");
 
-        rasterizeHTML.loadAndInlineImages(doc, function () { inlineFinished = true; });
+        rasterizeHTML.loadAndInlineImages(doc, callback);
 
-        waitsFor(function () {
-            return inlineFinished;
-        }, "rasterizeHTML.loadAndInlineImages", 2000);
+        expect(callback).toHaveBeenCalled();
     });
 
     it("should not touch an already inlined image", function () {
-        var inlineFinished = false;
+        var callback = jasmine.createSpy("callback");
 
         doc.body.innerHTML = '<img id="image" src="data:image/png;base64,soMEfAkebASE64=" alt="test image"/>';
 
-        rasterizeHTML.loadAndInlineImages(doc, function () { inlineFinished = true; });
+        rasterizeHTML.loadAndInlineImages(doc, callback);
 
-        waitsFor(function () {
-            return inlineFinished;
-        }, "rasterizeHTML.loadAndInlineImages", 2000);
+        expect(callback).toHaveBeenCalled();
 
-        runs(function () {
-            expect(doc.getElementById("image").src).toEqual('data:image/png;base64,soMEfAkebASE64=');
-        });
+        expect(doc.getElementById("image").src).toEqual('data:image/png;base64,soMEfAkebASE64=');
     });
 
     it("should respect the document's baseURI when loading the image", function () {
-        var inlineFinished = false;
+        var callback = jasmine.createSpy("callback");
 
         doc = rasterizeHTMLTestHelper.readDocumentFixture("image.html");
         getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback, errorCallback) {
             successCallback();
         });
 
-        rasterizeHTML.loadAndInlineImages(doc, function () { inlineFinished = true; });
+        rasterizeHTML.loadAndInlineImages(doc, callback);
 
-        waitsFor(function () {
-            return inlineFinished;
-        }, "rasterizeHTML.loadAndInlineImages", 2000);
+        expect(callback).toHaveBeenCalled();
 
-        runs(function () {
-            expect(joinUrlSpy).toHaveBeenCalledWith(doc.baseURI, "rednblue.png");
-        });
+        expect(joinUrlSpy).toHaveBeenCalledWith(doc.baseURI, "rednblue.png");
     });
 
     it("should respect optional baseUrl when loading the image", function () {
-        var inlineFinished = false;
+        var callback = jasmine.createSpy("callback");
 
         doc = rasterizeHTMLTestHelper.readDocumentFixtureWithoutBaseURI("image.html");
         getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback, errorCallback) {
             successCallback();
         });
 
-        rasterizeHTML.loadAndInlineImages(doc, {baseUrl: "aBaseUrl"}, function () { inlineFinished = true; });
+        rasterizeHTML.loadAndInlineImages(doc, {baseUrl: "aBaseUrl"}, callback);
 
-        waitsFor(function () {
-            return inlineFinished;
-        }, "rasterizeHTML.loadAndInlineImages", 2000);
+        expect(callback).toHaveBeenCalled();
 
-        runs(function () {
-            expect(joinUrlSpy).toHaveBeenCalledWith("aBaseUrl", "rednblue.png");
-        });
+        expect(joinUrlSpy).toHaveBeenCalledWith("aBaseUrl", "rednblue.png");
     });
 
     it("should favour explicit baseUrl over document.baseURI when loading the image", function () {
-        var inlineFinished = false,
+        var callback = jasmine.createSpy("callback"),
             baseUrl = "aBaseUrl";
         getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback, errorCallback) {
             successCallback();
@@ -136,49 +114,37 @@ describe("Image inline", function () {
         expect(doc.baseURI).not.toEqual("about:blank");
         expect(doc.baseURI).not.toEqual(baseUrl);
 
-        rasterizeHTML.loadAndInlineImages(doc, {baseUrl: baseUrl}, function () { inlineFinished = true; });
+        rasterizeHTML.loadAndInlineImages(doc, {baseUrl: baseUrl}, callback);
 
-        waitsFor(function () {
-            return inlineFinished;
-        }, "rasterizeHTML.loadAndInlineImages", 2000);
+        expect(callback).toHaveBeenCalled();
 
-        runs(function () {
-            expect(joinUrlSpy).toHaveBeenCalledWith(baseUrl, "rednblue.png");
-        });
+        expect(joinUrlSpy).toHaveBeenCalledWith(baseUrl, "rednblue.png");
     });
 
     it("should circumvent caching if requested", function () {
-        var inlineFinished = false;
+        var callback = jasmine.createSpy("callback");
         setUpGetDataURIForImageURLSpyToRouteFirstAndSecondImage();
 
         doc.body.innerHTML = '<img id="image" src="' + firstImage + '" alt="test image"/>';
 
-        rasterizeHTML.loadAndInlineImages(doc, {cache: false}, function () { inlineFinished = true; });
+        rasterizeHTML.loadAndInlineImages(doc, {cache: false}, callback);
 
-        waitsFor(function () {
-            return inlineFinished;
-        }, "rasterizeHTML.loadAndInlineImages", 2000);
+        expect(callback).toHaveBeenCalled();
 
-        runs(function () {
-            expect(getDataURIForImageURLSpy).toHaveBeenCalledWith(jasmine.any(String), {cache: false}, jasmine.any(Function), jasmine.any(Function));
-        });
+        expect(getDataURIForImageURLSpy).toHaveBeenCalledWith(jasmine.any(String), {cache: false}, jasmine.any(Function), jasmine.any(Function));
     });
 
     it("should not circumvent caching by default", function () {
-        var inlineFinished = false;
+        var callback = jasmine.createSpy("callback");
         setUpGetDataURIForImageURLSpyToRouteFirstAndSecondImage();
 
         doc.body.innerHTML = '<img id="image" src="' + firstImage + '" alt="test image"/>';
 
-        rasterizeHTML.loadAndInlineImages(doc, function () { inlineFinished = true; });
+        rasterizeHTML.loadAndInlineImages(doc, callback);
 
-        waitsFor(function () {
-            return inlineFinished;
-        }, "rasterizeHTML.loadAndInlineImages", 2000);
+        expect(callback).toHaveBeenCalled();
 
-        runs(function () {
-            expect(getDataURIForImageURLSpy).toHaveBeenCalledWith(jasmine.any(String), {cache: true}, jasmine.any(Function), jasmine.any(Function));
-        });
+        expect(getDataURIForImageURLSpy).toHaveBeenCalledWith(jasmine.any(String), {cache: true}, jasmine.any(Function), jasmine.any(Function));
     });
 
     describe("on errors", function () {
@@ -203,16 +169,10 @@ describe("Image inline", function () {
 
             rasterizeHTML.loadAndInlineImages(doc, {baseUrl: "some_base_url/"}, callback);
 
-            waitsFor(function () {
-                return callback.wasCalled;
-            }, "rasterizeHTML.loadAndInlineImages");
-
-            runs(function () {
-                expect(callback).toHaveBeenCalledWith([{
-                    resourceType: "image",
-                    url: "some_base_url/image_that_doesnt_exist.png"
-                }]);
-            });
+            expect(callback).toHaveBeenCalledWith([{
+                resourceType: "image",
+                url: "some_base_url/image_that_doesnt_exist.png"
+            }]);
         });
 
         it("should only report a failing image as error", function () {
@@ -223,16 +183,10 @@ describe("Image inline", function () {
 
             rasterizeHTML.loadAndInlineImages(doc, callback);
 
-            waitsFor(function () {
-                return callback.wasCalled;
-            }, "rasterizeHTML.loadAndInlineImages");
-
-            runs(function () {
-                expect(callback).toHaveBeenCalledWith([{
-                    resourceType: "image",
-                    url: "image_that_doesnt_exist.png"
-                }]);
-            });
+            expect(callback).toHaveBeenCalledWith([{
+                resourceType: "image",
+                url: "image_that_doesnt_exist.png"
+            }]);
         });
 
         it("should report multiple failing images as error", function () {
@@ -243,14 +197,8 @@ describe("Image inline", function () {
 
             rasterizeHTML.loadAndInlineImages(doc, callback);
 
-            waitsFor(function () {
-                return callback.wasCalled;
-            }, "rasterizeHTML.loadAndInlineImages");
-
-            runs(function () {
-                expect(callback).toHaveBeenCalledWith([jasmine.any(Object), jasmine.any(Object)]);
-                expect(callback.mostRecentCall.args[0][0]).not.toEqual(callback.mostRecentCall.args[0][1]);
-            });
+            expect(callback).toHaveBeenCalledWith([jasmine.any(Object), jasmine.any(Object)]);
+            expect(callback.mostRecentCall.args[0][0]).not.toEqual(callback.mostRecentCall.args[0][1]);
         });
 
         it("should report an empty list for a successful image", function () {
@@ -258,13 +206,7 @@ describe("Image inline", function () {
 
             rasterizeHTML.loadAndInlineImages(doc, callback);
 
-            waitsFor(function () {
-                return callback.wasCalled;
-            }, "rasterizeHTML.loadAndInlineImages");
-
-            runs(function () {
-                expect(callback).toHaveBeenCalledWith([]);
-            });
+            expect(callback).toHaveBeenCalledWith([]);
         });
     });
 });
