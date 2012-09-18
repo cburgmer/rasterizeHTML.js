@@ -57,7 +57,7 @@ rasterizeHTML.drawDocument( document , canvas [, options] [, callback] )</pre>
 
 <p>As described in <a href="http://robert.ocallahan.org/2011/11/drawing-dom-content-to-canvas.html">http://robert.ocallahan.org/2011/11/drawing-dom-content-to-canvas.html</a> and <a href="https://developer.mozilla.org/en/HTML/Canvas/Drawing_DOM_objects_into_a_canvas">https://developer.mozilla.org/en/HTML/Canvas/Drawing_DOM_objects_into_a_canvas</a> however it is possible by embedding the HTML into an SVG image as a &lt;foreignObject&gt; and then drawing the resulting image via ctx.drawImage().</p>
 
-<p>To cope with the existing limitations, rasterizeHTML.js will load external images and stylesheets and store them inline via data: URIs or inline style elements respectively.</p>
+<p>To cope with the existing limitations, rasterizeHTML.js will load external images, fonts and stylesheets and store them inline via <a href="http://en.wikipedia.org/wiki/Data_URI_scheme">data: URIs</a> or inline style elements respectively.</p>
 
 <h2>Demo</h2>
 
@@ -75,7 +75,7 @@ rasterizeHTML.drawDocument( document , canvas [, options] [, callback] )</pre>
 
 <p>This code is experimental.</p>
 
-<p>SVG is not allowed to link to external resources, as such all used resources need to be embedded using data: URIs. However resources can only be loaded if from the same origin, unless CORS is used.</p>
+<p>SVG is not allowed to link to external resources, as such all used resources need to be embedded using data: URIs. However resources can only be loaded if from the same origin, unless <a href="http://en.wikipedia.org/wiki/Cross-origin_resource_sharing">CORS</a> is used.</p>
 
 <p>The code is tested under Firefox, Chrome &amp; Safari. However IE is not supported so far.</p>
 
