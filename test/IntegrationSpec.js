@@ -59,7 +59,7 @@ describe("Integration test", function () {
         html = readFixtures("test.html");
 
         runs(function () {
-            rasterizeHTML.drawHTML(html, canvas.get(0), jasmine.getFixtures().fixturesPath, callback);
+            rasterizeHTML.drawHTML(html, canvas.get(0), {baseUrl: jasmine.getFixtures().fixturesPath}, callback);
         });
 
         waitsFor(function () {

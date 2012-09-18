@@ -170,7 +170,7 @@ describe("CSS references inline", function () {
 
             doc = rasterizeHTMLTestHelper.readDocumentFixtureWithoutBaseURI("backgroundImage.html");
 
-            rasterizeHTML.loadAndInlineCSSReferences(doc, "aBaseURI", function () { inlineFinished = true; });
+            rasterizeHTML.loadAndInlineCSSReferences(doc, {baseUrl: "aBaseURI"}, function () { inlineFinished = true; });
 
             waitsFor(function () {
                 return inlineFinished;
@@ -195,7 +195,7 @@ describe("CSS references inline", function () {
             expect(doc.baseURI).not.toEqual("about:blank");
             expect(doc.baseURI).not.toEqual(baseUrl);
 
-            rasterizeHTML.loadAndInlineCSSReferences(doc, baseUrl, function () { inlineFinished = true; });
+            rasterizeHTML.loadAndInlineCSSReferences(doc, {baseUrl: baseUrl}, function () { inlineFinished = true; });
 
             waitsFor(function () {
                 return inlineFinished;
@@ -260,7 +260,7 @@ describe("CSS references inline", function () {
         it("should report an error if a backgroundImage could not be loaded", function () {
             rasterizeHTMLTestHelper.addStyleToDocument(doc, 'span { background-image: url("a_backgroundImage_that_doesnt_exist.png"); }');
 
-            rasterizeHTML.loadAndInlineCSSReferences(doc, "some_base_url/", callback);
+            rasterizeHTML.loadAndInlineCSSReferences(doc, {baseUrl: "some_base_url/"}, callback);
 
             waitsFor(function () {
                 return callback.wasCalled;
@@ -452,7 +452,7 @@ describe("CSS references inline", function () {
         it("should report an error if a font could not be loaded", function () {
             rasterizeHTMLTestHelper.addStyleToDocument(doc, '@font-face { font-family: "test font"; src: url("a_font_that_doesnt_exist.woff"); }');
 
-            rasterizeHTML.loadAndInlineCSSReferences(doc, "some_base_url/", callback);
+            rasterizeHTML.loadAndInlineCSSReferences(doc, {baseUrl: "some_base_url/"}, callback);
 
             waitsFor(function () {
                 return callback.wasCalled;

@@ -1,5 +1,5 @@
 describe("Main interface of rasterizeHTML.js", function () {
-    var callbackCaller = function (doc, baseUrl, options, callback) { callback([]); },
+    var callbackCaller = function (doc, options, callback) { callback([]); },
         svg = "the svg",
         canvas = document.createElement("canvas"),
         ajaxSpy,
@@ -30,9 +30,9 @@ describe("Main interface of rasterizeHTML.js", function () {
 
             rasterizeHTML.drawDocument(doc, canvas, callback);
 
-            expect(loadAndInlineImages).toHaveBeenCalledWith(doc, null, {}, jasmine.any(Function));
-            expect(loadAndInlineCSS).toHaveBeenCalledWith(doc, null, {}, jasmine.any(Function));
-            expect(loadAndInlineCSSReferences).toHaveBeenCalledWith(doc, null, {}, jasmine.any(Function));
+            expect(loadAndInlineImages).toHaveBeenCalledWith(doc, {}, jasmine.any(Function));
+            expect(loadAndInlineCSS).toHaveBeenCalledWith(doc, {}, jasmine.any(Function));
+            expect(loadAndInlineCSSReferences).toHaveBeenCalledWith(doc, {}, jasmine.any(Function));
             expect(getSvgForDocument).toHaveBeenCalledWith(doc, canvas.width, canvas.height);
             expect(drawSvgToCanvas).toHaveBeenCalledWith(svg, canvas, jasmine.any(Function), jasmine.any(Function));
 
@@ -42,11 +42,11 @@ describe("Main interface of rasterizeHTML.js", function () {
         it("should take a document with optional baseUrl, inline all displayable content and render to the given canvas", function () {
             var doc = "doc";
 
-            rasterizeHTML.drawDocument(doc, canvas, "a_baseUrl", callback);
+            rasterizeHTML.drawDocument(doc, canvas, {baseUrl: "a_baseUrl"}, callback);
 
-            expect(loadAndInlineImages).toHaveBeenCalledWith(doc, "a_baseUrl", {}, jasmine.any(Function));
-            expect(loadAndInlineCSS).toHaveBeenCalledWith(doc, "a_baseUrl", {}, jasmine.any(Function));
-            expect(loadAndInlineCSSReferences).toHaveBeenCalledWith(doc, "a_baseUrl", {}, jasmine.any(Function));
+            expect(loadAndInlineImages).toHaveBeenCalledWith(doc, {baseUrl: "a_baseUrl"}, jasmine.any(Function));
+            expect(loadAndInlineCSS).toHaveBeenCalledWith(doc, {baseUrl: "a_baseUrl"}, jasmine.any(Function));
+            expect(loadAndInlineCSSReferences).toHaveBeenCalledWith(doc, {baseUrl: "a_baseUrl"}, jasmine.any(Function));
             expect(getSvgForDocument).toHaveBeenCalledWith(doc, canvas.width, canvas.height);
             expect(drawSvgToCanvas).toHaveBeenCalledWith(svg, canvas, jasmine.any(Function), jasmine.any(Function));
 
@@ -58,26 +58,26 @@ describe("Main interface of rasterizeHTML.js", function () {
 
             rasterizeHTML.drawDocument(doc, canvas, {cache: false}, callback);
 
-            expect(loadAndInlineImages).toHaveBeenCalledWith(doc, null, {cache: false}, jasmine.any(Function));
-            expect(loadAndInlineCSS).toHaveBeenCalledWith(doc, null, {cache: false}, jasmine.any(Function));
-            expect(loadAndInlineCSSReferences).toHaveBeenCalledWith(doc, null, {cache: false}, jasmine.any(Function));
+            expect(loadAndInlineImages).toHaveBeenCalledWith(doc, {cache: false}, jasmine.any(Function));
+            expect(loadAndInlineCSS).toHaveBeenCalledWith(doc, {cache: false}, jasmine.any(Function));
+            expect(loadAndInlineCSSReferences).toHaveBeenCalledWith(doc, {cache: false}, jasmine.any(Function));
 
             expect(callback).toHaveBeenCalled();
         });
 
         it("should make callback optional for drawDocument", function () {
-            rasterizeHTML.drawDocument("doc", canvas, "a_baseUrl");
+            rasterizeHTML.drawDocument("doc", canvas, {baseUrl: "a_baseUrl"});
         });
 
         it("should take a HTML string, inline all displayable content and render to the given canvas", function () {
             var html = "<head><title>a title</title></head><body>some html</body>",
-                drawDocumentSpy = spyOn(rasterizeHTML, "drawDocument").andCallFake(function (doc, canvas, baseUrl, options, callback) {
+                drawDocumentSpy = spyOn(rasterizeHTML, "drawDocument").andCallFake(function (doc, canvas, options, callback) {
                     callback(canvas, []);
                 });
 
             rasterizeHTML.drawHTML(html, canvas, callback);
 
-            expect(drawDocumentSpy).toHaveBeenCalledWith(jasmine.any(Object), canvas, null, {}, callback);
+            expect(drawDocumentSpy).toHaveBeenCalledWith(jasmine.any(Object), canvas, {}, callback);
             expect(drawDocumentSpy.mostRecentCall.args[0].documentElement.innerHTML).toEqual(html);
 
             expect(callback).toHaveBeenCalledWith(canvas, []);
@@ -85,13 +85,13 @@ describe("Main interface of rasterizeHTML.js", function () {
 
         it("should take a HTML string with optional baseUrl, inline all displayable content and render to the given canvas", function () {
             var html = "<head><title>a title</title></head><body>some html</body>",
-                drawDocumentSpy = spyOn(rasterizeHTML, "drawDocument").andCallFake(function (doc, canvas, baseUrl, options, callback) {
+                drawDocumentSpy = spyOn(rasterizeHTML, "drawDocument").andCallFake(function (doc, canvas, options, callback) {
                     callback(canvas, []);
                 });
 
-            rasterizeHTML.drawHTML(html, canvas, "a_baseUrl", callback);
+            rasterizeHTML.drawHTML(html, canvas, {baseUrl: "a_baseUrl"}, callback);
 
-            expect(drawDocumentSpy).toHaveBeenCalledWith(jasmine.any(Object), canvas, "a_baseUrl", {}, callback);
+            expect(drawDocumentSpy).toHaveBeenCalledWith(jasmine.any(Object), canvas, {baseUrl: "a_baseUrl"}, callback);
             expect(drawDocumentSpy.mostRecentCall.args[0].documentElement.innerHTML).toEqual(html);
 
             expect(callback).toHaveBeenCalledWith(canvas, []);
@@ -99,24 +99,24 @@ describe("Main interface of rasterizeHTML.js", function () {
 
         it("should circumvent caching if requested for drawHTML", function () {
             var html = "<head><title>a title</title></head><body>some html</body>",
-                drawDocumentSpy = spyOn(rasterizeHTML, "drawDocument").andCallFake(function (doc, canvas, baseUrl, options, callback) {
+                drawDocumentSpy = spyOn(rasterizeHTML, "drawDocument").andCallFake(function (doc, canvas, options, callback) {
                     callback(canvas, []);
                 });
 
             rasterizeHTML.drawHTML(html, canvas, {cache: false}, callback);
 
-            expect(drawDocumentSpy).toHaveBeenCalledWith(jasmine.any(Object), canvas, null, {cache: false}, callback);
+            expect(drawDocumentSpy).toHaveBeenCalledWith(jasmine.any(Object), canvas, {cache: false}, callback);
 
             expect(callback).toHaveBeenCalled();
         });
 
         it("should make callback optional for drawHTML", function () {
-            rasterizeHTML.drawHTML("<html></html>", canvas, "a_baseUrl");
+            rasterizeHTML.drawHTML("<html></html>", canvas, {baseUrl: "a_baseUrl"});
         });
 
         it("should take a URL, inline all displayable content and render to the given canvas", function () {
             var finished = false,
-                drawHtmlSpy = spyOn(rasterizeHTML, "drawHTML").andCallFake(function (html, canvas, baseUrl, options, callback) {
+                drawHtmlSpy = spyOn(rasterizeHTML, "drawHTML").andCallFake(function (html, canvas, options, callback) {
                     callback(canvas, []);
                 });
 
@@ -127,12 +127,12 @@ describe("Main interface of rasterizeHTML.js", function () {
             rasterizeHTML.drawURL("fixtures/image.html", canvas, callback);
 
             expect(callback).toHaveBeenCalledWith(canvas, []);
-            expect(drawHtmlSpy).toHaveBeenCalledWith("some html", canvas, "fixtures/image.html", {}, callback);
+            expect(drawHtmlSpy).toHaveBeenCalledWith("some html", canvas, {baseUrl: "fixtures/image.html"}, callback);
         });
 
         it("should circumvent caching if requested for drawURL", function () {
             var finished = false,
-                drawHtmlSpy = spyOn(rasterizeHTML, "drawHTML").andCallFake(function (html, canvas, baseUrl, options, callback) {
+                drawHtmlSpy = spyOn(rasterizeHTML, "drawHTML").andCallFake(function (html, canvas, options, callback) {
                     callback(canvas, []);
                 });
 
@@ -173,7 +173,7 @@ describe("Main interface of rasterizeHTML.js", function () {
         it("should pass through an error from inlining on drawDocument", function () {
             var doc = "doc";
 
-            loadAndInlineImages = spyOn(rasterizeHTML, "loadAndInlineImages").andCallFake(function (doc, baseUrl, options, callback) {
+            loadAndInlineImages = spyOn(rasterizeHTML, "loadAndInlineImages").andCallFake(function (doc, options, callback) {
                 callback(["the error"]);
             });
             loadAndInlineCSS = spyOn(rasterizeHTML, "loadAndInlineCSS").andCallFake(callbackCaller);
@@ -189,13 +189,13 @@ describe("Main interface of rasterizeHTML.js", function () {
         it("should pass through multiple errors from inlining on drawDocument", function () {
             var doc = "doc";
 
-            loadAndInlineImages = spyOn(rasterizeHTML, "loadAndInlineImages").andCallFake(function (doc, baseUrl, options, callback) {
+            loadAndInlineImages = spyOn(rasterizeHTML, "loadAndInlineImages").andCallFake(function (doc, options, callback) {
                 callback(["the error"]);
             });
-            loadAndInlineCSS = spyOn(rasterizeHTML, "loadAndInlineCSS").andCallFake(function (doc, baseUrl, options, callback) {
+            loadAndInlineCSS = spyOn(rasterizeHTML, "loadAndInlineCSS").andCallFake(function (doc, options, callback) {
                 callback(["another error"]);
             });
-            loadAndInlineCSSReferences = spyOn(rasterizeHTML, "loadAndInlineCSSReferences").andCallFake(function (doc, baseUrl, options, callback) {
+            loadAndInlineCSSReferences = spyOn(rasterizeHTML, "loadAndInlineCSSReferences").andCallFake(function (doc, options, callback) {
                 callback(["yet another error", "and even more"]);
             });
 
@@ -207,7 +207,7 @@ describe("Main interface of rasterizeHTML.js", function () {
         });
 
         it("should pass through errors from drawHTML", function () {
-            var drawDocumentSpy = spyOn(rasterizeHTML, "drawDocument").andCallFake(function (doc, canvas, baseUrl, options, callback) {
+            var drawDocumentSpy = spyOn(rasterizeHTML, "drawDocument").andCallFake(function (doc, canvas, options, callback) {
                     callback(canvas, ["an error"]);
                 });
 
@@ -218,7 +218,7 @@ describe("Main interface of rasterizeHTML.js", function () {
         });
 
         it("should pass through errors from drawURL", function () {
-            var drawHtmlSpy = spyOn(rasterizeHTML, "drawHTML").andCallFake(function (html, canvas, baseUrl, options, callback) {
+            var drawHtmlSpy = spyOn(rasterizeHTML, "drawHTML").andCallFake(function (html, canvas, options, callback) {
                     callback(canvas, ["some error"]);
                 });
 

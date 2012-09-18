@@ -113,7 +113,7 @@ describe("Image inline", function () {
             successCallback();
         });
 
-        rasterizeHTML.loadAndInlineImages(doc, "aBaseUrl", function () { inlineFinished = true; });
+        rasterizeHTML.loadAndInlineImages(doc, {baseUrl: "aBaseUrl"}, function () { inlineFinished = true; });
 
         waitsFor(function () {
             return inlineFinished;
@@ -136,7 +136,7 @@ describe("Image inline", function () {
         expect(doc.baseURI).not.toEqual("about:blank");
         expect(doc.baseURI).not.toEqual(baseUrl);
 
-        rasterizeHTML.loadAndInlineImages(doc, baseUrl, function () { inlineFinished = true; });
+        rasterizeHTML.loadAndInlineImages(doc, {baseUrl: baseUrl}, function () { inlineFinished = true; });
 
         waitsFor(function () {
             return inlineFinished;
@@ -201,7 +201,7 @@ describe("Image inline", function () {
         it("should report an error if an image could not be loaded", function () {
             doc.body.innerHTML = '<img src="image_that_doesnt_exist.png" alt="test image"/>';
 
-            rasterizeHTML.loadAndInlineImages(doc, "some_base_url/", callback);
+            rasterizeHTML.loadAndInlineImages(doc, {baseUrl: "some_base_url/"}, callback);
 
             waitsFor(function () {
                 return callback.wasCalled;

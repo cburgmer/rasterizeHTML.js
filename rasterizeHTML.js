@@ -239,9 +239,19 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
         return descriptorsToInline;
     };
 
+    var cloneObject = function(object) {
+        var newObject = {},
+            i;
+        for (i in object) {
+            if (object.hasOwnProperty(i)) {
+                newObject[i] = object[i];
+            }
+        }
+        return newObject;
+    };
+
     var parseOptionalParameters = function () {
         var parameters = {
-            baseUrl: null,
             options: {},
             callback: null
         };
@@ -250,17 +260,9 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
             parameters.callback = arguments[0];
         } else {
             if (typeof arguments[0] === "object" && arguments[0] !== null) {
-                parameters.options = arguments[0];
-                parameters.callback = arguments[1];
-            } else {
-                parameters.baseUrl = arguments[0];
-                if (typeof arguments[1] === "object" && arguments[1] !== null) {
-                    parameters.options = arguments[1];
-                    parameters.callback = arguments[2];
-                } else {
-                    parameters.callback = arguments[1];
-                }
+                parameters.options = cloneObject(arguments[0]);
             }
+            parameters.callback = arguments[1];
         }
 
         return parameters;
@@ -288,14 +290,15 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
         });
     };
 
-    module.loadAndInlineImages = function (doc, baseUrl, options, callback) {
-        var params = parseOptionalParameters(baseUrl, options, callback),
+    module.loadAndInlineImages = function (doc, options, callback) {
+        var params = parseOptionalParameters(options, callback),
             images = doc.getElementsByTagName("img"),
+            baseUrl = params.options.baseUrl,
             cache = params.options.cache !== false,
             errors = [];
 
         module.util.map(images, function (image, finish) {
-            encodeImageAsDataURI(image, params.baseUrl, cache, finish, function (url) {
+            encodeImageAsDataURI(image, baseUrl, cache, finish, function (url) {
                 errors.push({
                     resourceType: "image",
                     url: url
@@ -381,16 +384,17 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
         }
     };
 
-    module.loadAndInlineCSS = function (doc, baseUrl, options, callback) {
-        var params = parseOptionalParameters(baseUrl, options, callback),
+    module.loadAndInlineCSS = function (doc, options, callback) {
+        var params = parseOptionalParameters(options, callback),
             links = doc.getElementsByTagName("link"),
+            baseUrl = params.options.baseUrl,
             cache = params.options.cache !== false,
             errors = [];
 
         module.util.map(links, function (link, finish) {
             if (link.attributes.rel && link.attributes.rel.nodeValue === "stylesheet" &&
                 (!link.attributes.type || link.attributes.type.nodeValue === "text/css")) {
-                loadLinkedCSSAndRemoveNode(link, params.baseUrl, cache, function(css) {
+                loadLinkedCSSAndRemoveNode(link, baseUrl, cache, function(css) {
                     if (css.trim()) {
                         finish(css + "\n");
                     } else {
@@ -546,15 +550,16 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
         });
     };
 
-    module.loadAndInlineCSSReferences = function (doc, baseUrl, options, callback) {
-        var params = parseOptionalParameters(baseUrl, options, callback),
+    module.loadAndInlineCSSReferences = function (doc, options, callback) {
+        var params = parseOptionalParameters(options, callback),
             allErrors = [],
+            baseUrl = params.options.baseUrl,
             cache = params.options.cache !== false,
             styles = doc.getElementsByTagName("style");
 
         module.util.map(styles, function (style, finish) {
             if (style.attributes.type && style.attributes.type.nodeValue === "text/css") {
-                loadAndInlineCSSResourcesForStyle(style, params.baseUrl, cache, function (errors) {
+                loadAndInlineCSSResourcesForStyle(style, baseUrl, cache, function (errors) {
                     allErrors = allErrors.concat(errors);
                     finish();
                 });
@@ -739,16 +744,16 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
 
     /* "Public" API */
 
-    module.drawDocument = function (doc, canvas, baseUrl, options, callback) {
-        var params = parseOptionalParameters(baseUrl, options, callback),
+    module.drawDocument = function (doc, canvas, options, callback) {
+        var params = parseOptionalParameters(options, callback),
             allErrors = [],
             svg;
 
-        module.loadAndInlineImages(doc, params.baseUrl, params.options, function (errors) {
+        module.loadAndInlineImages(doc, params.options, function (errors) {
             allErrors = allErrors.concat(errors);
-            module.loadAndInlineCSS(doc, params.baseUrl, params.options, function (errors) {
+            module.loadAndInlineCSS(doc, params.options, function (errors) {
                 allErrors = allErrors.concat(errors);
-                module.loadAndInlineCSSReferences(doc, params.baseUrl, params.options, function (errors) {
+                module.loadAndInlineCSSReferences(doc, params.options, function (errors) {
                     allErrors = allErrors.concat(errors);
 
                     svg = module.getSvgForDocument(doc, canvas.width, canvas.height);
@@ -771,25 +776,27 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
         });
     };
 
-    module.drawHTML = function (html, canvas, baseUrl, options, callback) {
-        var params = parseOptionalParameters(baseUrl, options, callback),
+    module.drawHTML = function (html, canvas, options, callback) {
+        var params = parseOptionalParameters(options, callback),
             doc = window.document.implementation.createHTMLDocument("");
 
         doc.documentElement.innerHTML = html;
-        module.drawDocument(doc, canvas, params.baseUrl, params.options, params.callback);
+        module.drawDocument(doc, canvas, params.options, params.callback);
     };
 
     module.drawURL = function (url, canvas, options, callback) {
-        var myCallback = typeof options === "object" ? callback : options,
-            myOptions = typeof options === "object" ? options : {};
+        var params = parseOptionalParameters(options, callback),
+            cache = params.options.cache;
+
+        params.options.baseUrl = url;
 
         module.util.ajax(url, {
-            cache: myOptions.cache
+            cache: cache
         }, function (html) {
-            module.drawHTML(html, canvas, url, myOptions, myCallback);
+            module.drawHTML(html, canvas, params.options, params.callback);
         }, function () {
-            if (myCallback) {
-                myCallback(canvas, [{
+            if (params.callback) {
+                params.callback(canvas, [{
                     resourceType: "page",
                     url: url
                 }]);

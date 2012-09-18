@@ -40,7 +40,7 @@
 
             htmlRequest.onreadystatechange = function () {
                 if (htmlRequest.readyState == 4) {
-                    rasterizeHTML.drawHTML(htmlRequest.responseText, htmlCanvas, "fixtures/");
+                    rasterizeHTML.drawHTML(htmlRequest.responseText, htmlCanvas, {baseUrl: "fixtures/"});
                 }
             };
             htmlRequest.open('GET', "fixtures/test.html", true);

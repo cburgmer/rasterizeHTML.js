@@ -139,7 +139,7 @@ describe("CSS inline", function () {
 
         doc = rasterizeHTMLTestHelper.readDocumentFixtureWithoutBaseURI("externalCSS.html");
 
-        rasterizeHTML.loadAndInlineCSS(doc, jasmine.getFixtures().fixturesPath, callback);
+        rasterizeHTML.loadAndInlineCSS(doc, {baseUrl: jasmine.getFixtures().fixturesPath}, callback);
 
         expect(callback).toHaveBeenCalled();
         expect(joinUrlSpy).toHaveBeenCalledWith(jasmine.getFixtures().fixturesPath, "some.css");
@@ -156,7 +156,7 @@ describe("CSS inline", function () {
         expect(doc.baseURI).not.toEqual("about:blank");
         expect(doc.baseURI).not.toEqual(baseUrl);
 
-        rasterizeHTML.loadAndInlineCSS(doc, jasmine.getFixtures().fixturesPath, callback);
+        rasterizeHTML.loadAndInlineCSS(doc, {baseUrl: jasmine.getFixtures().fixturesPath}, callback);
 
         expect(callback).toHaveBeenCalled();
         expect(joinUrlSpy).toHaveBeenCalledWith(jasmine.getFixtures().fixturesPath, "some.css");
@@ -183,7 +183,7 @@ describe("CSS inline", function () {
         doc.head.appendChild(cssWithRelativeResource);
 
         // Let's assume the doc's baseURI is under "the_fixtures/"
-        rasterizeHTML.loadAndInlineCSS(doc, "the_fixtures/", callback);
+        rasterizeHTML.loadAndInlineCSS(doc, {baseUrl: "the_fixtures/"}, callback);
 
         expect(callback).toHaveBeenCalled();
         // Chrome 19 sets cssWithRelativeResource.href to ""
@@ -240,7 +240,7 @@ describe("CSS inline", function () {
             doc.head.appendChild(brokenCssLink);
             setUpAjaxSpyToLoadFixturesThroughTestSetup();
 
-            rasterizeHTML.loadAndInlineCSS(doc, "some_base_url/", callback);
+            rasterizeHTML.loadAndInlineCSS(doc, {baseUrl: "some_base_url/"}, callback);
 
             expect(callback).toHaveBeenCalledWith([{
                 resourceType: "stylesheet",
