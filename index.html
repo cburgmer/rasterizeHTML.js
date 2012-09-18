@@ -41,6 +41,16 @@
       </header>
       <section>
 
+<h2>API</h2>
+
+<p>Draw a page/an HTML string/a Document to the canvas.</p>
+
+<pre>rasterizeHTML.drawURL( url , canvas [, options] [, callback] )
+rasterizeHTML.drawHTML( html , canvas [, baseUrl] [, options] [, callback] )
+rasterizeHTML.drawDocument( document , canvas [, baseUrl] [, options] [, callback] )</pre>
+
+<p>See the <a href="https://github.com/cburgmer/rasterizeHTML.js/wiki/API">full documentation here</a>.</p>
+
 <h2>How it works</h2>
 
 <p>For security reasons rendering HTML into a canvas is severly limited. Firefox offers such a function via ctx.drawWindow(), but only with Chrome privileges (see <a href="https://developer.mozilla.org/en/Drawing_Graphics_with_Canvas">https://developer.mozilla.org/en/Drawing_Graphics_with_Canvas</a>).</p>
