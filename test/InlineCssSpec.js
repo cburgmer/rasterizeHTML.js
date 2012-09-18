@@ -199,7 +199,7 @@ describe("CSS inline", function () {
 
         rasterizeHTML.loadAndInlineCSS(doc, {cache: false}, callback);
 
-        expect(ajaxSpy).toHaveBeenCalledWith(cssLink.href, {
+        expect(ajaxSpy).toHaveBeenCalledWith(cssLink.attributes.href.nodeValue, {
             cache: false
         }, jasmine.any(Function), jasmine.any(Function));
         expect(callback).toHaveBeenCalled();
@@ -211,7 +211,7 @@ describe("CSS inline", function () {
 
         rasterizeHTML.loadAndInlineCSS(doc, callback);
 
-        expect(ajaxSpy).toHaveBeenCalledWith(cssLink.href, {
+        expect(ajaxSpy).toHaveBeenCalledWith(cssLink.attributes.href.nodeValue, {
             cache: true
         }, jasmine.any(Function), jasmine.any(Function));
         expect(callback).toHaveBeenCalled();

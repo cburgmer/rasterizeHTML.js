@@ -1,8 +1,8 @@
 describe("Image inline", function () {
     var firstImage = "firstImage.png",
         secondImage = "secondImage.png",
-        firstImageDataURI = "mock data URI of the first image",
-        secondImageDataURI = "mock data URI of the second image",
+        firstImageDataURI = "mock_data_URI_of_the_first_image",
+        secondImageDataURI = "mock_data_URI_of_the_second_image",
         joinUrlSpy, getDataURIForImageURLSpy, doc;
 
     var setUpGetDataURIForImageURLSpyToRouteFirstAndSecondImage = function() {
@@ -35,7 +35,7 @@ describe("Image inline", function () {
         }, "rasterizeHTML.loadAndInlineImages", 2000);
 
         runs(function () {
-            expect(doc.getElementById("image").src).toEqual(firstImageDataURI);
+            expect(doc.getElementById("image").attributes.src.nodeValue).toEqual(firstImageDataURI);
         });
     });
 
@@ -55,8 +55,8 @@ describe("Image inline", function () {
         }, "rasterizeHTML.loadAndInlineImages", 2000);
 
         runs(function () {
-            expect(doc.getElementById("image1").src).toEqual(firstImageDataURI);
-            expect(doc.getElementById("image2").src).toEqual(secondImageDataURI);
+            expect(doc.getElementById("image1").attributes.src.nodeValue).toEqual(firstImageDataURI);
+            expect(doc.getElementById("image2").attributes.src.nodeValue).toEqual(secondImageDataURI);
         });
     });
 
