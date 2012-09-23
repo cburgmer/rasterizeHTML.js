@@ -21,7 +21,7 @@
 
             documentRequest.onreadystatechange = function () {
                 if (documentRequest.readyState == 4) {
-                    rasterizeHTML.drawDocument(documentRequest.responseXML, documentCanvas);
+                    rasterizeHTML.drawDocument(documentRequest.responseXML, documentCanvas, {cache: false});
                 }
             };
             documentRequest.open('GET', "fixtures/test.html", true);
@@ -40,7 +40,7 @@
 
             htmlRequest.onreadystatechange = function () {
                 if (htmlRequest.readyState == 4) {
-                    rasterizeHTML.drawHTML(htmlRequest.responseText, htmlCanvas, {baseUrl: "fixtures/"});
+                    rasterizeHTML.drawHTML(htmlRequest.responseText, htmlCanvas, {baseUrl: "fixtures/", cache: false});
                 }
             };
             htmlRequest.open('GET', "fixtures/test.html", true);
@@ -54,7 +54,7 @@
         <script type="text/javascript">
             var urlCanvas = document.getElementById("urlCanvas");
 
-            rasterizeHTML.drawURL("fixtures/test.html", urlCanvas);
+            rasterizeHTML.drawURL("fixtures/test.html", urlCanvas, {cache: false});
         </script>
     </div>
 </body>
