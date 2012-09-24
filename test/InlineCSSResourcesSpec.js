@@ -339,6 +339,27 @@ describe("CSS references inline", function () {
             expectFontFaceUrlToMatch("data:font/woff;base64,dGhpcyBpcyBub3QgYSBmb250");
         });
 
+        it("should favour explicit baseUrl over document.baseURI when loading the font", function () {
+            var callback = jasmine.createSpy("callback"),
+                baseUrl = "aBaseURI";
+
+            binaryAjaxSpy.andCallFake(function (url, options, success, error) {
+                success("this is not a font");
+            });
+            joinUrlSpy.andCallThrough();
+
+            doc = rasterizeHTMLTestHelper.readDocumentFixture("fontFace.html");
+            expect(doc.baseURI).not.toBeNull();
+            expect(doc.baseURI).not.toEqual("about:blank");
+            expect(doc.baseURI).not.toEqual(baseUrl);
+
+            rasterizeHTML.loadAndInlineCSSReferences(doc, {baseUrl: baseUrl}, callback);
+
+            expect(callback).toHaveBeenCalled();
+
+            expect(joinUrlSpy).toHaveBeenCalledWith(baseUrl, "raphaelicons-webfont.woff");
+        });
+
         it("should circumvent caching if requested", function () {
             var fontUrl = "fake.woff";
 

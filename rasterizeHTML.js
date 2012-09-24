@@ -414,6 +414,91 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
         });
     };
 
+    /* CSS import inlining */
+
+    var findCSSImportDeclarations = function (parsedCSS) {
+        var rulesToInline = [],
+            i, j, rule;
+
+        for (i = 0; i < parsedCSS.cssRules.length; i++) {
+            rule = parsedCSS.cssRules[i];
+            if (rule.type === window.kJscsspIMPORT_RULE) {
+                rulesToInline.push(rule);
+            }
+        }
+
+        return rulesToInline;
+    };
+
+    var fakeCssParserRule = function (cssText) {
+        return {
+            cssText: function () {
+                return cssText;
+            }
+        };
+    };
+
+    var substituteRuleWithText = function (rule, cssText) {
+        var newRule = fakeCssParserRule(cssText),
+            stylesheet = rule.parentStyleSheet,
+            position = stylesheet.cssRules.indexOf(rule);
+
+        stylesheet.cssRules.splice(position, 1, newRule);
+    };
+
+    var loadAndInlineCSSImport = function (declaration, baseUri, callback) {
+        var url;
+        try {
+            url = module.util.extractCssUrl(declaration.href);
+        } catch (e) {
+            callback(false);
+            return;
+        }
+
+        url = getUrlRelativeToDocumentBase(url, baseUri);
+
+        module.util.ajax(url, function (cssText) {
+            substituteRuleWithText(declaration, cssText);
+
+            callback(true);
+        });
+    };
+
+    var loadAndInlineCSSImportsForStyle = function (style, baseUrl, callback) {
+        var cssContent = style.textContent,
+            parsedCss = parseCss(cssContent),
+            declarationsToInline = findCSSImportDeclarations(parsedCss);
+
+        rasterizeHTML.util.map(declarationsToInline, function (declaration, finish) {
+            loadAndInlineCSSImport(declaration, baseUrl, finish);
+        }, function (changedStates) {
+            // CSSParser is invasive, if no changes are needed, we leave the text as it is
+            if (changedStates.indexOf(true) >= 0) {
+                cssContent = parsedCss.cssText();
+                style.childNodes[0].nodeValue = cssContent.trim();
+            }
+
+            callback();
+        });
+    };
+
+    module.loadAndInlineCSSImports = function (doc, options, callback) {
+        var params = parseOptionalParameters(options, callback),
+            styles = doc.getElementsByTagName("style"),
+            base = params.options.baseUrl || doc.baseURI;
+
+        module.util.map(styles, function (style, finish) {
+            if (style.attributes.type && style.attributes.type.nodeValue === "text/css") {
+                loadAndInlineCSSImportsForStyle(style, base, finish);
+            } else {
+                // We need to properly deal with non-css in this concurrent context
+                finish();
+            }
+        }, function () {
+            params.callback();
+        });
+    };
+
     /* CSS linked resource inlining */
 
     var loadAndInlineBackgroundImage = function (cssDeclaration, baseUri, cache, successCallback, errorCallback) {
