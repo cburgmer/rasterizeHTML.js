@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.1.0 - 2012-09-18
+/*! rasterizeHTML.js - v0.1.0 - 2012-09-24
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2012 Christoph Burgmer; Licensed MIT */
 
@@ -353,17 +353,23 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
         }
     };
 
-    var addInlineCSSToDocument = function (doc, styleContent) {
-        var styleNode = doc.createElement("style"),
-            head = doc.getElementsByTagName("head")[0];
+    var substituteLinkWithInlineStyle = function (oldLinkNode, styleContent) {
+        var parent = oldLinkNode.parentNode,
+            styleNode;
 
-        styleNode.type = "text/css";
-        styleNode.appendChild(doc.createTextNode(styleContent));
+        styleContent = styleContent.trim();
+        if (styleContent) {
+            styleNode = oldLinkNode.ownerDocument.createElement("style");
+            styleNode.type = "text/css";
+            styleNode.appendChild(oldLinkNode.ownerDocument.createTextNode(styleContent));
 
-        head.appendChild(styleNode);
+            parent.insertBefore(styleNode, oldLinkNode);
+        }
+
+        parent.removeChild(oldLinkNode);
     };
 
-    var loadLinkedCSSAndRemoveNode = function (link, baseUrl, cache, successCallback, errorCallback) {
+    var loadLinkedCSS = function (link, baseUrl, cache, successCallback, errorCallback) {
         var cssHref = link.attributes.href.nodeValue, // Chrome 19 sets link.href to ""
             documentBaseUrl = baseUrl || link.ownerDocument.baseURI,
             cssHrefRelativeToDoc = getUrlRelativeToDocumentBase(cssHref, documentBaseUrl),
@@ -374,18 +380,10 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
         }, function (content) {
             cssContent = adjustPathsOfCssResources(cssHref, content);
 
-            link.parentNode.removeChild(link);
             successCallback(cssContent);
         }, function () {
             errorCallback(cssHrefRelativeToDoc);
         });
-    };
-
-    var mergeAndAddInlineStyle = function (doc, styles) {
-        var aggregatedStyleContent = styles.join("").trim();
-        if (aggregatedStyleContent) {
-            addInlineCSSToDocument(doc, aggregatedStyleContent);
-        }
     };
 
     module.loadAndInlineCSS = function (doc, options, callback) {
@@ -398,27 +396,22 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
         module.util.map(links, function (link, finish) {
             if (link.attributes.rel && link.attributes.rel.nodeValue === "stylesheet" &&
                 (!link.attributes.type || link.attributes.type.nodeValue === "text/css")) {
-                loadLinkedCSSAndRemoveNode(link, baseUrl, cache, function(css) {
-                    if (css.trim()) {
-                        finish(css + "\n");
-                    } else {
-                        finish('');
-                    }
+                loadLinkedCSS(link, baseUrl, cache, function(css) {
+                    substituteLinkWithInlineStyle(link, css + "\n");
+                    finish();
                 }, function (url) {
                     errors.push({
                         resourceType: "stylesheet",
                         url: url
                     });
 
-                    finish('');
+                    finish();
                 });
             } else {
                 // We need to properly deal with non-stylesheet in this concurrent context
-                finish('');
+                finish();
             }
-        }, function (styles) {
-            mergeAndAddInlineStyle(doc, styles);
-
+        }, function () {
             if (params.callback) {
                 params.callback(errors);
             }

@@ -78,22 +78,29 @@ describe("CSS inline", function () {
         expect(doc.head.getElementsByTagName("link").length).toEqual(0);
     });
 
-    it("should inline multiple linked CSS", function () {
-        var anotherCssLink = window.document.createElement("link");
+    it("should inline multiple linked CSS and keep order", function () {
+        var anotherCssLink = window.document.createElement("link"),
+            inlineCss = window.document.createElement("style");
+
         anotherCssLink.href = jasmine.getFixtures().fixturesPath + "another.css";
         anotherCssLink.rel = "stylesheet";
         anotherCssLink.type = "text/css";
 
+        inlineCss.type = "text/css";
+        inlineCss.textContent = "span { margin: 0; }";
+
         doc.head.appendChild(cssLink);
+        doc.head.appendChild(inlineCss);
         doc.head.appendChild(anotherCssLink);
         setUpAjaxSpyToLoadFixturesThroughTestSetup();
 
         rasterizeHTML.loadAndInlineCSS(doc, callback);
 
         expect(callback).toHaveBeenCalled();
-        expect(doc.head.getElementsByTagName("style").length).toEqual(1);
-        expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/(^|\n)p \{ font-size: 14px; \}($|\n)/);
-        expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/(^|\n)a \{ text-decoration: none; \}($|\n)/);
+        expect(doc.head.getElementsByTagName("style").length).toEqual(3);
+        expect(doc.head.getElementsByTagName("style")[0].textContent.trim()).toEqual("p { font-size: 14px; }");
+        expect(doc.head.getElementsByTagName("style")[1].textContent.trim()).toEqual("span { margin: 0; }");
+        expect(doc.head.getElementsByTagName("style")[2].textContent.trim()).toEqual("a { text-decoration: none; }");
         expect(doc.head.getElementsByTagName("link").length).toEqual(0);
     });
 
