@@ -444,39 +444,50 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
         };
     };
 
-    var substituteRuleWithText = function (rule, cssText) {
-        var newRule = fakeCssParserRule(cssText),
+    var substituteRuleWithText = function (rule, cssHref, cssText) {
+        var cssContent = adjustPathsOfCssResources(cssHref, cssText),
+            newRule = fakeCssParserRule(cssContent),
             stylesheet = rule.parentStyleSheet,
             position = stylesheet.cssRules.indexOf(rule);
 
         stylesheet.cssRules.splice(position, 1, newRule);
     };
 
-    var loadAndInlineCSSImport = function (declaration, baseUri, callback) {
+    var loadAndInlineCSSImport = function (declaration, baseUri, cache, successCallback, errorCallback) {
         var url;
         try {
             url = module.util.extractCssUrl(declaration.href);
         } catch (e) {
-            callback(false);
+            successCallback(false);
             return;
         }
 
         url = getUrlRelativeToDocumentBase(url, baseUri);
 
-        module.util.ajax(url, function (cssText) {
-            substituteRuleWithText(declaration, cssText);
+        module.util.ajax(url, {cache: cache}, function (cssText) {
+            substituteRuleWithText(declaration, url, cssText);
 
-            callback(true);
+            successCallback(true);
+        }, function () {
+            errorCallback(url);
         });
     };
 
-    var loadAndInlineCSSImportsForStyle = function (style, baseUrl, callback) {
+    var loadAndInlineCSSImportsForStyle = function (style, baseUrl, cache, callback) {
         var cssContent = style.textContent,
             parsedCss = parseCss(cssContent),
-            declarationsToInline = findCSSImportDeclarations(parsedCss);
+            declarationsToInline = findCSSImportDeclarations(parsedCss),
+            errors = [];
 
         rasterizeHTML.util.map(declarationsToInline, function (declaration, finish) {
-            loadAndInlineCSSImport(declaration, baseUrl, finish);
+            loadAndInlineCSSImport(declaration, baseUrl, cache, finish, function (url) {
+                errors.push({
+                    resourceType: "stylesheet",
+                    url: url
+                });
+
+                finish();
+            });
         }, function (changedStates) {
             // CSSParser is invasive, if no changes are needed, we leave the text as it is
             if (changedStates.indexOf(true) >= 0) {
@@ -484,24 +495,30 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
                 style.childNodes[0].nodeValue = cssContent.trim();
             }
 
-            callback();
+            callback(errors);
         });
     };
 
     module.loadAndInlineCSSImports = function (doc, options, callback) {
         var params = parseOptionalParameters(options, callback),
             styles = doc.getElementsByTagName("style"),
-            base = params.options.baseUrl || doc.baseURI;
+            base = params.options.baseUrl || doc.baseURI,
+            cache = params.options.cache !== false,
+            allErrors = [];
 
         module.util.map(styles, function (style, finish) {
             if (style.attributes.type && style.attributes.type.nodeValue === "text/css") {
-                loadAndInlineCSSImportsForStyle(style, base, finish);
+                loadAndInlineCSSImportsForStyle(style, base, cache, function (errors) {
+                    allErrors = allErrors.concat(errors);
+
+                    finish();
+                });
             } else {
                 // We need to properly deal with non-css in this concurrent context
                 finish();
             }
         }, function () {
-            params.callback();
+            params.callback(allErrors);
         });
     };
 

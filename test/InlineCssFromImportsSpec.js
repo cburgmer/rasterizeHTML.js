@@ -1,5 +1,5 @@
 describe("CSS import inline", function () {
-    var doc, extractCssUrlSpy, joinUrlSpy, ajaxSpy;
+    var doc, extractCssUrlSpy, joinUrlSpy, ajaxSpy, callback;
 
     beforeEach(function () {
         doc = document.implementation.createHTMLDocument("");
@@ -14,11 +14,10 @@ describe("CSS import inline", function () {
         joinUrlSpy = spyOn(rasterizeHTML.util, "joinUrl");
         ajaxSpy = spyOn(rasterizeHTML.util, "ajax");
 
+        callback = jasmine.createSpy("callback");
     });
 
     it("should do nothing if no CSS is found", function () {
-        var callback = jasmine.createSpy("callback");
-
         rasterizeHTML.loadAndInlineCSSImports(doc, callback);
 
         expect(callback).toHaveBeenCalled();
@@ -27,8 +26,6 @@ describe("CSS import inline", function () {
     });
 
     it("should not touch unrelated CSS", function () {
-        var callback = jasmine.createSpy("callback");
-
         rasterizeHTMLTestHelper.addStyleToDocument(doc, "span {   padding-left: 0; }");
 
         rasterizeHTML.loadAndInlineCSSImports(doc, callback);
@@ -40,9 +37,7 @@ describe("CSS import inline", function () {
     });
 
     it("should replace an import with the content of the given URL", function () {
-        var callback = jasmine.createSpy("callback");
-
-        ajaxSpy.andCallFake(function (url, callback) {
+        ajaxSpy.andCallFake(function (url, options, callback) {
             if (url === 'that.css') {
                 callback("p { font-size: 10px; }");
             }
@@ -58,27 +53,64 @@ describe("CSS import inline", function () {
         expect(doc.head.getElementsByTagName("style")[0].textContent).toEqual("p { font-size: 10px; }");
     });
 
-    it("should ignore invalid values", function () {
-        var callback = jasmine.createSpy("callback");
+    it("should inline multiple imported CSS and keep order", function () {
+        ajaxSpy.andCallFake(function (url, options, callback) {
+            if (url === 'that.css') {
+                callback("p { font-size: 10px; }");
+            } else if (url === 'this.css') {
+                callback("span { font-weight: bold; }");
+            }
+        });
 
-        rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import   "invalid url";');
+        rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import url("that.css");\n' +
+            '@import url("this.css");');
 
         rasterizeHTML.loadAndInlineCSSImports(doc, callback);
 
         expect(callback).toHaveBeenCalled();
 
         expect(doc.head.getElementsByTagName("style").length).toEqual(1);
-        expect(doc.head.getElementsByTagName("style")[0].textContent).toEqual('@import   "invalid url";');
+        expect(doc.head.getElementsByTagName("style")[0].textContent).toEqual("p { font-size: 10px; }\n" +
+            "span { font-weight: bold; }");
+    });
+
+    it("should not add CSS if no content is given", function () {
+        ajaxSpy.andCallFake(function (url, options, callback) {
+            if (url === 'that.css') {
+                callback("");
+            } else if (url === 'this.css') {
+                callback("span { font-weight: bold; }");
+            }
+        });
+
+        rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import url("that.css");\n' +
+            '@import url("this.css");');
+
+        rasterizeHTML.loadAndInlineCSSImports(doc, callback);
+
+        expect(callback).toHaveBeenCalled();
+
+        expect(doc.head.getElementsByTagName("style").length).toEqual(1);
+        expect(doc.head.getElementsByTagName("style")[0].textContent).toEqual("span { font-weight: bold; }");
+    });
+
+    it("should ignore invalid values", function () {
+        rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import   invalid url;');
+
+        rasterizeHTML.loadAndInlineCSSImports(doc, callback);
+
+        expect(callback).toHaveBeenCalled();
+
+        expect(doc.head.getElementsByTagName("style").length).toEqual(1);
+        expect(doc.head.getElementsByTagName("style")[0].textContent).toEqual('@import   invalid url;');
     });
 
     it("should respect the document's baseURI", function () {
-        var callback = jasmine.createSpy("callback");
-
         joinUrlSpy.andCallFake(function (base, rel) {
             return "fake_url/" + rel;
         });
 
-        ajaxSpy.andCallFake(function (url, callback) {
+        ajaxSpy.andCallFake(function (url, options, callback) {
             if (url === 'fake_url/some.css') {
                 callback("p { font-size: 14px; }");
             }
@@ -96,10 +128,9 @@ describe("CSS import inline", function () {
     });
 
     it("should favour explicit baseUrl over document.baseURI", function () {
-        var callback = jasmine.createSpy("callback"),
-            baseUrl = "aBaseURI";
+        var baseUrl = "aBaseURI";
 
-        ajaxSpy.andCallFake(function (url, callback) {
+        ajaxSpy.andCallFake(function (url, options, callback) {
             callback("p { font-size: 10px; }");
         });
         joinUrlSpy.andCallThrough();
@@ -117,4 +148,131 @@ describe("CSS import inline", function () {
         expect(joinUrlSpy).toHaveBeenCalledWith(baseUrl, "some.css");
     });
 
+    it("should map resource paths relative to the stylesheet", function () {
+        ajaxSpy.andCallFake(function (url, options, callback) {
+            if (url === 'this_url/that.css') {
+                callback('div { background-image: url("the_image.png"); }');
+            }
+        });
+        joinUrlSpy.andCallFake(function (base, url) {
+            if (base === "this_url/that.css" && url === "the_image.png") {
+                return "this_url/the_image.png";
+            }
+        });
+
+        rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import url("this_url/that.css");');
+
+        rasterizeHTML.loadAndInlineCSSImports(doc, callback);
+
+        expect(callback).toHaveBeenCalled();
+
+        expect(doc.head.getElementsByTagName("style").length).toEqual(1);
+        expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/div\s+\{\s+background-image: url\("this_url\/the_image.png"\);\s+\}\s*$/);
+    });
+
+    it("should circumvent caching if requested", function () {
+        ajaxSpy.andCallFake(function (url, options, callback) {
+            callback('');
+        });
+
+        rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import url("that.css");');
+
+        rasterizeHTML.loadAndInlineCSSImports(doc, {cache: false}, callback);
+
+        expect(callback).toHaveBeenCalled();
+
+        expect(ajaxSpy).toHaveBeenCalledWith("that.css", {cache: false}, jasmine.any(Function), jasmine.any(Function));
+    });
+
+    it("should not circumvent caching by default", function () {
+        ajaxSpy.andCallFake(function (url, options, callback) {
+            callback('');
+        });
+
+        rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import url("that.css");');
+
+        rasterizeHTML.loadAndInlineCSSImports(doc, callback);
+
+        expect(callback).toHaveBeenCalled();
+
+        expect(ajaxSpy).toHaveBeenCalledWith("that.css", {cache: true}, jasmine.any(Function), jasmine.any(Function));
+    });
+
+    describe("on errors", function () {
+        it("should report an error if a stylesheet could not be loaded", function () {
+            ajaxSpy.andCallFake(function (url, options, successCallback, errorCallback) {
+                errorCallback();
+            });
+
+            rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import url("missing.css");');
+
+            rasterizeHTML.loadAndInlineCSSImports(doc, callback);
+
+            expect(callback).toHaveBeenCalledWith([{
+                resourceType: "stylesheet",
+                url: "missing.css"
+            }]);
+        });
+
+        it("should only report a failing stylesheet as error", function () {
+            ajaxSpy.andCallFake(function (url, options, successCallback, errorCallback) {
+                if (url === 'existing.css') {
+                    successCallback("");
+                } else {
+                    errorCallback();
+                }
+            });
+
+            rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import url("missing.css");\n' +
+                '@import url("existing.css");');
+
+            rasterizeHTML.loadAndInlineCSSImports(doc, callback);
+
+            expect(callback).toHaveBeenCalledWith([{
+                resourceType: "stylesheet",
+                url: "missing.css"
+            }]);
+        });
+
+        it("should report multiple failing stylesheet as error", function () {
+            ajaxSpy.andCallFake(function (url, options, successCallback, errorCallback) {
+                errorCallback();
+            });
+
+            rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import url("missing.css");\n' +
+                '@import url("another_missing.css");');
+            rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import url("and_a_third_missing.css");');
+
+            rasterizeHTML.loadAndInlineCSSImports(doc, callback);
+
+            expect(callback).toHaveBeenCalledWith([
+                {
+                    resourceType: "stylesheet",
+                    url: "missing.css"
+                },
+                {
+                    resourceType: "stylesheet",
+                    url: "another_missing.css"
+                },
+                {
+                    resourceType: "stylesheet",
+                    url: "and_a_third_missing.css"
+                }
+            ]);
+        });
+
+        it("should report an empty list for a successful stylesheet", function () {
+            ajaxSpy.andCallFake(function (url, options, callback) {
+                if (url === 'that.css') {
+                    callback("");
+                }
+            });
+
+            rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import url("that.css");');
+
+            rasterizeHTML.loadAndInlineCSSImports(doc, callback);
+
+            expect(callback).toHaveBeenCalledWith([]);
+        });
+    });
 });
