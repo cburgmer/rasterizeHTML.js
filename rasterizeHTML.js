@@ -119,8 +119,8 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
     };
 
     var unquoteUrl = function (quotedUrl) {
-        var doubleQuoteRegex = /^"(.+)*"$/,
-            singleQuoteRegex = /^'(.+)*'$/;
+        var doubleQuoteRegex = /^"(.*)"$/,
+            singleQuoteRegex = /^'(.*)'$/;
 
         if (doubleQuoteRegex.test(quotedUrl)) {
             return quotedUrl.replace(doubleQuoteRegex, "$1");
@@ -133,6 +133,12 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
         }
     };
 
+    var trimCSSWhitespace = function (url) {
+        var whitespaceRegex = /^[\t\r\f\n ]*(.+?)[\t\r\f\n ]*$/;
+
+        return url.replace(whitespaceRegex, "$1");
+    };
+
     module.util.extractCssUrl = function (cssUrl) {
         var urlRegex = /^url\(([^\)]+)\)/,
             quotedUrl;
@@ -142,7 +148,7 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
         }
 
         quotedUrl = urlRegex.exec(cssUrl)[1];
-        return unquoteUrl(quotedUrl);
+        return unquoteUrl(trimCSSWhitespace(quotedUrl));
     };
 
     var getDataURIForImage = function (image) {
