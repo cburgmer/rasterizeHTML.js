@@ -173,7 +173,8 @@ describe("CSS import inline", function () {
     it("should map resources relative to the document base URI", function () {
         ajaxSpy.andCallFake(function (url, options, callback) {
             if (url === 'this_url/that.css') {
-                callback('div { background-image: url("the_image.png"); }');
+                callback('div { background-image: url("the_image.png"); }\n' +
+                    '@font-face { font-family: "test font"; src: url("fake.woff"); }');
             }
         });
         joinUrlSpy.andCallFake(function (base, url) {
@@ -181,6 +182,8 @@ describe("CSS import inline", function () {
                 return "this_url/that.css";
             } else if (base === "this_url/that.css" && url === "the_image.png") {
                 return "this_url/the_image.png";
+            } else if (base === "this_url/that.css" && url === "fake.woff") {
+                return "this_url/fake.woff";
             }
         });
 
@@ -192,6 +195,7 @@ describe("CSS import inline", function () {
 
         expect(joinUrlSpy).toHaveBeenCalledWith("this_url/", "that.css");
         expect(joinUrlSpy).toHaveBeenCalledWith("that.css", "the_image.png");
+        expect(joinUrlSpy).toHaveBeenCalledWith("that.css", "fake.woff");
      });
 
     it("should circumvent caching if requested", function () {

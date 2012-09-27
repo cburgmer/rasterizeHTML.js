@@ -235,6 +235,10 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
         var descriptorsToInline = [],
             i, j, rule;
 
+        if (! parsedCSS) {
+            return [];
+        }
+
         for (i = 0; i < parsedCSS.cssRules.length; i++) {
             rule = parsedCSS.cssRules[i];
             if (rule.type === window.kJscsspFONT_FACE_RULE) {
@@ -344,9 +348,12 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
 
     var adjustPathsOfCssResources = function (baseUrl, styleContent) {
         var parsedCss = parseCss(styleContent),
-            declarationsToInline = findBackgroundImageDeclarations(parsedCss),
+            declarationsToInline = [],
             change = false,
             i;
+
+        declarationsToInline = declarationsToInline.concat(findBackgroundImageDeclarations(parsedCss));
+        declarationsToInline = declarationsToInline.concat(findFontFaceDescriptors(parsedCss));
 
         for(i = 0; i < declarationsToInline.length; i++) {
             change = adjustPathOfDeclarationAndReportChange(baseUrl, declarationsToInline[i]) || change;

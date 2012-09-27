@@ -173,28 +173,39 @@ describe("CSS inline", function () {
         var cssWithRelativeResource;
 
         cssWithRelativeResource = window.document.createElement("link");
-        cssWithRelativeResource.href = "below/backgroundImage.css";
+        cssWithRelativeResource.href = "below/some.css";
         cssWithRelativeResource.rel = "stylesheet";
         cssWithRelativeResource.type = "text/css";
 
-        extractCssUrlSpy.andReturn("../green.png");
+        extractCssUrlSpy.andCallFake(function (cssUrl) {
+            if (/^url/.test(cssUrl)) {
+                return cssUrl.replace(/^url\("/, '').replace(/"\)$/, '');
+            } else {
+                throw "error";
+            }
+        });
         joinUrlSpy.andCallFake(function (base, url) {
-            if (url === "below/backgroundImage.css" && base === "the_fixtures/") {
-                return jasmine.getFixtures().fixturesPath + "below/backgroundImage.css";
-            } else if (url === "../green.png" && base === "below/backgroundImage.css") {
+            if (url === "below/some.css" && base === "some_url/") {
+                return "some_url/below/some.css";
+            } else if (url === "../green.png" && base === "below/some.css") {
                 return "green.png";
             }
         });
-        setUpAjaxSpyToLoadFixturesThroughTestSetup();
+        ajaxSpy.andCallFake(function (url, options, success, error) {
+            if (url === "some_url/below/some.css") {
+                success('div { background-image: url("../green.png"); }\n' +
+                    '@font-face { font-family: "test font"; src: url("fake.woff"); }');
+            }
+        });
+
 
         doc.head.appendChild(cssWithRelativeResource);
 
-        // Let's assume the doc's baseURI is under "the_fixtures/"
-        rasterizeHTML.loadAndInlineCSS(doc, {baseUrl: "the_fixtures/"}, callback);
+        rasterizeHTML.loadAndInlineCSS(doc, {baseUrl: "some_url/"}, callback);
 
         expect(callback).toHaveBeenCalled();
-        // Chrome 19 sets cssWithRelativeResource.href to ""
-        expect(joinUrlSpy).toHaveBeenCalledWith("below/backgroundImage.css", "../green.png");
+        expect(joinUrlSpy).toHaveBeenCalledWith("below/some.css", "../green.png");
+        expect(joinUrlSpy).toHaveBeenCalledWith("below/some.css", "fake.woff");
 
         expect(doc.head.getElementsByTagName("style").length).toEqual(1);
         expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/url\(\"green\.png\"\)/);

@@ -57,6 +57,16 @@ describe("CSS references inline", function () {
         }
     });
 
+    it("should work with empty content", function () {
+        var callback = jasmine.createSpy("callback");
+
+        rasterizeHTMLTestHelper.addStyleToDocument(doc, '');
+
+        rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
+
+        expect(callback).toHaveBeenCalled();
+    });
+
     describe("on background-image", function () {
         it("should not touch an already inlined background-image", function () {
             var callback = jasmine.createSpy("callback");
