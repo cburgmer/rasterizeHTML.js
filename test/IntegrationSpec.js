@@ -1,8 +1,5 @@
 describe("Integration test", function () {
-    var canvas = $('<canvas width="204" height="100"></canvas>'), // Firefox adds a space between the divs and needs the canvas to fit horizontally for all content to be rendered
-        finished = false,
-        callback = function () { finished = true; },
-        referenceImg;
+    var canvas, finished, callback, referenceImg;
 
     var loadDocFixture = function (url, callback) {
         var request = new window.XMLHttpRequest(),
@@ -24,9 +21,12 @@ describe("Integration test", function () {
 
     beforeEach(function () {
         this.addMatchers(imagediff.jasmine);
+        canvas = $('<canvas width="204" height="100"></canvas>'); // Firefox adds a space between the divs and needs the canvas to fit horizontally for all content to be rendered
 
         referenceImg = $('<img src="'+ jasmine.getFixtures().fixturesPath + '/testResult.png" alt="test image"/>');
+
         finished = false;
+        callback = jasmine.createSpy("callback").andCallFake(function () { finished = true; });
     });
 
     ifNotInWebkitIt("should take a document, inline all displayable content and render to the given canvas (flaky in Firefox)", function () {
@@ -41,7 +41,7 @@ describe("Integration test", function () {
         });
 
         runs(function () {
-            rasterizeHTML.drawDocument(doc, canvas.get(0), callback);
+            rasterizeHTML.drawDocument(doc, canvas.get(0), {cache: false}, callback);
         });
 
         waitsFor(function () {
@@ -49,7 +49,8 @@ describe("Integration test", function () {
         });
 
         runs(function () {
-            expect(canvas.get(0)).toImageDiffEqual(referenceImg.get(0), 50);
+            expect(callback).toHaveBeenCalledWith(canvas.get(0), []);
+            expect(canvas.get(0)).toImageDiffEqual(referenceImg.get(0), 10);
         });
     });
 
@@ -59,7 +60,7 @@ describe("Integration test", function () {
         html = readFixtures("test.html");
 
         runs(function () {
-            rasterizeHTML.drawHTML(html, canvas.get(0), {baseUrl: jasmine.getFixtures().fixturesPath}, callback);
+            rasterizeHTML.drawHTML(html, canvas.get(0), {baseUrl: jasmine.getFixtures().fixturesPath, cache: false}, callback);
         });
 
         waitsFor(function () {
@@ -67,13 +68,14 @@ describe("Integration test", function () {
         });
 
         runs(function () {
+            expect(callback).toHaveBeenCalledWith(canvas.get(0), []);
             expect(canvas.get(0)).toImageDiffEqual(referenceImg.get(0), 70);
         });
     });
 
     ifNotInWebkitIt("should take a URL, inline all displayable content and render to the given canvas (flaky in Firefox)", function () {
         runs(function () {
-            rasterizeHTML.drawURL(jasmine.getFixtures().fixturesPath + "test.html", canvas.get(0), callback);
+            rasterizeHTML.drawURL(jasmine.getFixtures().fixturesPath + "test.html", canvas.get(0), {cache: false}, callback);
         });
 
         waitsFor(function () {
@@ -81,6 +83,7 @@ describe("Integration test", function () {
         });
 
         runs(function () {
+            expect(callback).toHaveBeenCalledWith(canvas.get(0), []);
             expect(canvas.get(0)).toImageDiffEqual(referenceImg.get(0), 90);
         });
     });
