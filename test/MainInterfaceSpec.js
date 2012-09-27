@@ -3,7 +3,7 @@ describe("Main interface of rasterizeHTML.js", function () {
         svg = "the svg",
         canvas = document.createElement("canvas"),
         ajaxSpy,
-        loadAndInlineImages, loadAndInlineCSS, loadAndInlineCSSReferences,
+        loadAndInlineImages, loadAndInlineCSS, loadAndInlineCSSImports, loadAndInlineCSSReferences,
         getSvgForDocument, drawSvgToCanvas;
 
     beforeEach(function () {
@@ -18,6 +18,7 @@ describe("Main interface of rasterizeHTML.js", function () {
 
             loadAndInlineImages = spyOn(rasterizeHTML, "loadAndInlineImages").andCallFake(callbackCaller);
             loadAndInlineCSS = spyOn(rasterizeHTML, "loadAndInlineCSS").andCallFake(callbackCaller);
+            loadAndInlineCSSImports = spyOn(rasterizeHTML, "loadAndInlineCSSImports").andCallFake(callbackCaller);
             loadAndInlineCSSReferences = spyOn(rasterizeHTML, "loadAndInlineCSSReferences").andCallFake(callbackCaller);
             getSvgForDocument = spyOn(rasterizeHTML, "getSvgForDocument").andReturn(svg);
             drawSvgToCanvas = spyOn(rasterizeHTML, "drawSvgToCanvas").andCallFake(function (svg, canvas, callback) {
@@ -32,6 +33,7 @@ describe("Main interface of rasterizeHTML.js", function () {
 
             expect(loadAndInlineImages).toHaveBeenCalledWith(doc, {}, jasmine.any(Function));
             expect(loadAndInlineCSS).toHaveBeenCalledWith(doc, {}, jasmine.any(Function));
+            expect(loadAndInlineCSSImports).toHaveBeenCalledWith(doc, {}, jasmine.any(Function));
             expect(loadAndInlineCSSReferences).toHaveBeenCalledWith(doc, {}, jasmine.any(Function));
             expect(getSvgForDocument).toHaveBeenCalledWith(doc, canvas.width, canvas.height);
             expect(drawSvgToCanvas).toHaveBeenCalledWith(svg, canvas, jasmine.any(Function), jasmine.any(Function));
@@ -46,6 +48,7 @@ describe("Main interface of rasterizeHTML.js", function () {
 
             expect(loadAndInlineImages).toHaveBeenCalledWith(doc, {baseUrl: "a_baseUrl"}, jasmine.any(Function));
             expect(loadAndInlineCSS).toHaveBeenCalledWith(doc, {baseUrl: "a_baseUrl"}, jasmine.any(Function));
+            expect(loadAndInlineCSSImports).toHaveBeenCalledWith(doc, {baseUrl: "a_baseUrl"}, jasmine.any(Function));
             expect(loadAndInlineCSSReferences).toHaveBeenCalledWith(doc, {baseUrl: "a_baseUrl"}, jasmine.any(Function));
             expect(getSvgForDocument).toHaveBeenCalledWith(doc, canvas.width, canvas.height);
             expect(drawSvgToCanvas).toHaveBeenCalledWith(svg, canvas, jasmine.any(Function), jasmine.any(Function));
@@ -60,6 +63,7 @@ describe("Main interface of rasterizeHTML.js", function () {
 
             expect(loadAndInlineImages).toHaveBeenCalledWith(doc, {cache: false}, jasmine.any(Function));
             expect(loadAndInlineCSS).toHaveBeenCalledWith(doc, {cache: false}, jasmine.any(Function));
+            expect(loadAndInlineCSSImports).toHaveBeenCalledWith(doc, {cache: false}, jasmine.any(Function));
             expect(loadAndInlineCSSReferences).toHaveBeenCalledWith(doc, {cache: false}, jasmine.any(Function));
 
             expect(callback).toHaveBeenCalled();
@@ -177,6 +181,7 @@ describe("Main interface of rasterizeHTML.js", function () {
                 callback(["the error"]);
             });
             loadAndInlineCSS = spyOn(rasterizeHTML, "loadAndInlineCSS").andCallFake(callbackCaller);
+            loadAndInlineCSSImports = spyOn(rasterizeHTML, "loadAndInlineCSSImports").andCallFake(callbackCaller);
             loadAndInlineCSSReferences = spyOn(rasterizeHTML, "loadAndInlineCSSReferences").andCallFake(callbackCaller);
 
             rasterizeHTML.drawDocument(doc, canvas, callback);
@@ -195,6 +200,9 @@ describe("Main interface of rasterizeHTML.js", function () {
             loadAndInlineCSS = spyOn(rasterizeHTML, "loadAndInlineCSS").andCallFake(function (doc, options, callback) {
                 callback(["another error"]);
             });
+            loadAndInlineCSSImports = spyOn(rasterizeHTML, "loadAndInlineCSSImports").andCallFake(function (doc, options, callback) {
+                callback(["more error"]);
+            });
             loadAndInlineCSSReferences = spyOn(rasterizeHTML, "loadAndInlineCSSReferences").andCallFake(function (doc, options, callback) {
                 callback(["yet another error", "and even more"]);
             });
@@ -203,7 +211,7 @@ describe("Main interface of rasterizeHTML.js", function () {
 
             expect(loadAndInlineImages).toHaveBeenCalled();
 
-            expect(callback).toHaveBeenCalledWith(canvas, ["the error", "another error", "yet another error", "and even more"]);
+            expect(callback).toHaveBeenCalledWith(canvas, ["the error", "another error", "more error", "yet another error", "and even more"]);
         });
 
         it("should pass through errors from drawHTML", function () {
@@ -269,6 +277,7 @@ describe("Main interface of rasterizeHTML.js", function () {
 
             loadAndInlineImages = spyOn(rasterizeHTML, "loadAndInlineImages").andCallFake(callbackCaller);
             loadAndInlineCSS = spyOn(rasterizeHTML, "loadAndInlineCSS").andCallFake(callbackCaller);
+            loadAndInlineCSSImports = spyOn(rasterizeHTML, "loadAndInlineCSSImports").andCallFake(callbackCaller);
             loadAndInlineCSSReferences = spyOn(rasterizeHTML, "loadAndInlineCSSReferences").andCallFake(callbackCaller);
 
             getSvgForDocument = spyOn(rasterizeHTML, "getSvgForDocument").andReturn(svg);

@@ -854,23 +854,26 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
             allErrors = allErrors.concat(errors);
             module.loadAndInlineCSS(doc, params.options, function (errors) {
                 allErrors = allErrors.concat(errors);
-                module.loadAndInlineCSSReferences(doc, params.options, function (errors) {
+                module.loadAndInlineCSSImports(doc, params.options, function (errors) {
                     allErrors = allErrors.concat(errors);
+                    module.loadAndInlineCSSReferences(doc, params.options, function (errors) {
+                        allErrors = allErrors.concat(errors);
 
-                    svg = module.getSvgForDocument(doc, canvas.width, canvas.height);
+                        svg = module.getSvgForDocument(doc, canvas.width, canvas.height);
 
-                    module.drawSvgToCanvas(svg, canvas, function () {
-                        if (params.callback) {
-                            params.callback(canvas, allErrors);
-                        }
-                    }, function () {
-                        allErrors.push({
-                            resourceType: "document"
+                        module.drawSvgToCanvas(svg, canvas, function () {
+                            if (params.callback) {
+                                params.callback(canvas, allErrors);
+                            }
+                        }, function () {
+                            allErrors.push({
+                                resourceType: "document"
+                            });
+
+                            if (params.callback) {
+                                params.callback(canvas, allErrors);
+                            }
                         });
-
-                        if (params.callback) {
-                            params.callback(canvas, allErrors);
-                        }
                     });
                 });
             });
