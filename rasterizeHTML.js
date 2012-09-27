@@ -453,8 +453,8 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
         stylesheet.cssRules.splice(position, 1, newRule);
     };
 
-    var loadAndInlineCSSImport = function (declaration, baseUri, cache, successCallback, errorCallback) {
-        var url;
+    var loadAndInlineCSSImport = function (declaration, documentBaseUrl, cache, successCallback, errorCallback) {
+        var cssHrefRelativeToDoc, url;
         try {
             url = module.util.extractCssUrl(declaration.href);
         } catch (e) {
@@ -462,14 +462,14 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
             return;
         }
 
-        url = getUrlRelativeToDocumentBase(url, baseUri);
+        cssHrefRelativeToDoc = getUrlRelativeToDocumentBase(url, documentBaseUrl);
 
-        module.util.ajax(url, {cache: cache}, function (cssText) {
+        module.util.ajax(cssHrefRelativeToDoc, {cache: cache}, function (cssText) {
             substituteRuleWithText(declaration, url, cssText);
 
             successCallback(true);
         }, function () {
-            errorCallback(url);
+            errorCallback(cssHrefRelativeToDoc);
         });
     };
 

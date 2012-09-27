@@ -170,6 +170,30 @@ describe("CSS import inline", function () {
         expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/div\s+\{\s+background-image: url\("this_url\/the_image.png"\);\s+\}\s*$/);
     });
 
+    it("should map resources relative to the document base URI", function () {
+        ajaxSpy.andCallFake(function (url, options, callback) {
+            if (url === 'this_url/that.css') {
+                callback('div { background-image: url("the_image.png"); }');
+            }
+        });
+        joinUrlSpy.andCallFake(function (base, url) {
+            if (base === "this_url/" && url === "that.css") {
+                return "this_url/that.css";
+            } else if (base === "this_url/that.css" && url === "the_image.png") {
+                return "this_url/the_image.png";
+            }
+        });
+
+        rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import url("that.css");');
+
+        rasterizeHTML.loadAndInlineCSSImports(doc, {baseUrl: 'this_url/'}, callback);
+
+        expect(callback).toHaveBeenCalled();
+
+        expect(joinUrlSpy).toHaveBeenCalledWith("this_url/", "that.css");
+        expect(joinUrlSpy).toHaveBeenCalledWith("that.css", "the_image.png");
+     });
+
     it("should circumvent caching if requested", function () {
         ajaxSpy.andCallFake(function (url, options, callback) {
             callback('');
@@ -211,6 +235,24 @@ describe("CSS import inline", function () {
             expect(callback).toHaveBeenCalledWith([{
                 resourceType: "stylesheet",
                 url: "missing.css"
+            }]);
+        });
+
+        it("should include the base URI in the reported url", function () {
+            ajaxSpy.andCallFake(function (url, options, successCallback, errorCallback) {
+                errorCallback();
+            });
+            joinUrlSpy.andCallFake(function (base, rel) {
+                return base + rel;
+            });
+
+            rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import url("missing.css");');
+
+            rasterizeHTML.loadAndInlineCSSImports(doc, {baseUrl: 'some_url/'}, callback);
+
+            expect(callback).toHaveBeenCalledWith([{
+                resourceType: "stylesheet",
+                url: "some_url/missing.css"
             }]);
         });
 
