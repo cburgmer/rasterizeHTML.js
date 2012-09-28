@@ -471,7 +471,7 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
         return doubleQuoteRegex.test(string) || singleQuoteRegex.test(string);
     };
 
-    var loadAndInlineCSSImport = function (declaration, documentBaseUrl, cache, successCallback, errorCallback) {
+    var loadAndInlineCSSImport = function (declaration, documentBaseUrl, cache, alreadyLoadedCssUrls, successCallback, errorCallback) {
         var href = declaration.href,
             cssHrefRelativeToDoc, url;
 
@@ -488,23 +488,45 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
 
         cssHrefRelativeToDoc = getUrlRelativeToDocumentBase(url, documentBaseUrl);
 
-        module.util.ajax(cssHrefRelativeToDoc, {cache: cache}, function (cssText) {
-            substituteRuleWithText(declaration, url, cssText);
+        if (alreadyLoadedCssUrls.indexOf(cssHrefRelativeToDoc) >= 0) {
+            // Remove URL by adding empty string
+            substituteRuleWithText(declaration, url, "");
+            successCallback(true, []);
+            return;
+        } else {
+            alreadyLoadedCssUrls.push(cssHrefRelativeToDoc);
+        }
 
-            successCallback(true);
+        module.util.ajax(cssHrefRelativeToDoc, {cache: cache}, function (cssText) {
+            // Recursively follow @import statements
+            loadCSSImportsForString(cssText, documentBaseUrl, cache, alreadyLoadedCssUrls, function (newCssText, errors) {
+                substituteRuleWithText(declaration, url, newCssText);
+
+                successCallback(true, errors);
+            });
         }, function () {
             errorCallback(cssHrefRelativeToDoc);
         });
     };
 
-    var loadAndInlineCSSImportsForStyle = function (style, baseUrl, cache, callback) {
-        var cssContent = style.textContent,
-            parsedCss = parseCss(cssContent),
-            declarationsToInline = findCSSImportDeclarations(parsedCss),
-            errors = [];
+    var loadCSSImportsForString = function (cssContent, baseUrl, cache, alreadyLoadedCssUrls, callback) {
+        var parsedCss = parseCss(cssContent),
+            errors = [],
+            declarationsToInline;
+
+        if (!parsedCss) {
+            callback(cssContent, errors);
+            return;
+        }
+
+        declarationsToInline = findCSSImportDeclarations(parsedCss);
 
         rasterizeHTML.util.map(declarationsToInline, function (declaration, finish) {
-            loadAndInlineCSSImport(declaration, baseUrl, cache, finish, function (url) {
+            loadAndInlineCSSImport(declaration, baseUrl, cache, alreadyLoadedCssUrls, function (changed, moreErrors) {
+                errors = errors.concat(moreErrors);
+
+                finish(changed);
+            }, function (url) {
                 errors.push({
                     resourceType: "stylesheet",
                     url: url
@@ -515,8 +537,17 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
         }, function (changedStates) {
             // CSSParser is invasive, if no changes are needed, we leave the text as it is
             if (changedStates.indexOf(true) >= 0) {
-                cssContent = parsedCss.cssText();
-                style.childNodes[0].nodeValue = cssContent.trim();
+                cssContent = parsedCss.cssText().trim();
+            }
+
+            callback(cssContent, errors);
+        });
+    };
+
+    var loadAndInlineCSSImportsForStyle = function (style, baseUrl, cache, alreadyLoadedCssUrls, callback) {
+        loadCSSImportsForString(style.textContent, baseUrl, cache, alreadyLoadedCssUrls, function (newCssContent, errors) {
+            if (style.textContent !== newCssContent) {
+                style.childNodes[0].nodeValue = newCssContent;
             }
 
             callback(errors);
@@ -528,11 +559,12 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
             styles = doc.getElementsByTagName("style"),
             base = params.options.baseUrl || doc.baseURI,
             cache = params.options.cache !== false,
-            allErrors = [];
+            allErrors = [],
+            alreadyLoadedCssUrls = [];
 
         module.util.map(styles, function (style, finish) {
             if (style.attributes.type && style.attributes.type.nodeValue === "text/css") {
-                loadAndInlineCSSImportsForStyle(style, base, cache, function (errors) {
+                loadAndInlineCSSImportsForStyle(style, base, cache, alreadyLoadedCssUrls, function (errors) {
                     allErrors = allErrors.concat(errors);
 
                     finish();

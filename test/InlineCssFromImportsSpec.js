@@ -239,6 +239,85 @@ describe("CSS import inline", function () {
         expect(ajaxSpy).toHaveBeenCalledWith("that.css", {cache: true}, jasmine.any(Function), jasmine.any(Function));
     });
 
+    it("should not include a document more than once", function () {
+        ajaxSpy.andCallFake(function (url, options, callback) {
+            callback('p { padding: 0; }');
+        });
+
+        rasterizeHTMLTestHelper.addStyleToDocument(doc,
+            '@import url("that.css");\n' +
+            '@import url("that.css");');
+        rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import url("that.css");');
+
+        rasterizeHTML.loadAndInlineCSSImports(doc, callback);
+
+        expect(callback).toHaveBeenCalled();
+        expect(ajaxSpy).toHaveBeenCalledWith("that.css", jasmine.any(Object), jasmine.any(Function), jasmine.any(Function));
+        expect(ajaxSpy.callCount).toEqual(1);
+        expect(doc.head.getElementsByTagName("style").length).toEqual(2);
+        expect(doc.head.getElementsByTagName("style")[0].textContent).toEqual('p { padding: 0; }');
+        expect(doc.head.getElementsByTagName("style")[1].textContent).toEqual('');
+    });
+
+    it("should handle import in an import", function () {
+        ajaxSpy.andCallFake(function (url, options, callback) {
+            if (url === "this.css") {
+                callback('@import url("that.css");');
+            } else if (url === "that.css") {
+                callback('p { font-weight: bold; }');
+            }
+        });
+
+        rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import url("this.css");');
+
+        rasterizeHTML.loadAndInlineCSSImports(doc, callback);
+
+        expect(callback).toHaveBeenCalled();
+        expect(doc.head.getElementsByTagName("style").length).toEqual(1);
+        expect(doc.head.getElementsByTagName("style")[0].textContent).toEqual('p { font-weight: bold; }');
+    });
+
+    it("should handle cyclic imports", function () {
+        ajaxSpy.andCallFake(function (url, options, callback) {
+            if (url === "this.css") {
+                callback('@import url("that.css");\n' +
+                    'span { line-break: none; }');
+            } else if (url === "that.css") {
+                callback('@import url("this.css");\n' +
+                    'p { font-weight: bold; }');
+            }
+        });
+
+        rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import url("this.css");');
+
+        rasterizeHTML.loadAndInlineCSSImports(doc, callback);
+
+        expect(callback).toHaveBeenCalled();
+        expect(ajaxSpy).toHaveBeenCalledWith("this.css", jasmine.any(Object), jasmine.any(Function), jasmine.any(Function));
+        expect(ajaxSpy).toHaveBeenCalledWith("that.css", jasmine.any(Object), jasmine.any(Function), jasmine.any(Function));
+        expect(ajaxSpy.callCount).toEqual(2);
+        expect(doc.head.getElementsByTagName("style").length).toEqual(1);
+        expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/^p\s+\{\s+font-weight: bold;\s+\}\s+span\s+\{\s+line-break: none;\s+\}\s*$/);
+    });
+
+    it("should handle recursive imports", function () {
+        ajaxSpy.andCallFake(function (url, options, callback) {
+            if (url === "this.css") {
+                callback('@import url("this.css");');
+            }
+        });
+
+        rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import url("this.css");');
+
+        rasterizeHTML.loadAndInlineCSSImports(doc, callback);
+
+        expect(callback).toHaveBeenCalled();
+        expect(ajaxSpy).toHaveBeenCalledWith("this.css", jasmine.any(Object), jasmine.any(Function), jasmine.any(Function));
+        expect(ajaxSpy.callCount).toEqual(1);
+        expect(doc.head.getElementsByTagName("style").length).toEqual(1);
+        expect(doc.head.getElementsByTagName("style")[0].textContent).toEqual('');
+    });
+
     describe("on errors", function () {
         it("should report an error if a stylesheet could not be loaded", function () {
             ajaxSpy.andCallFake(function (url, options, successCallback, errorCallback) {
@@ -316,6 +395,32 @@ describe("CSS import inline", function () {
                 {
                     resourceType: "stylesheet",
                     url: "and_a_third_missing.css"
+                }
+            ]);
+        });
+
+        it("should report errors from second level @imports", function () {
+            ajaxSpy.andCallFake(function (url, options, successCallback, errorCallback) {
+                if (url === "this.css") {
+                    successCallback('@import url("that.css");\n' +
+                        '@import url("and_also_that.css");');
+                } else {
+                    errorCallback();
+                }
+            });
+
+            rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import url("this.css");');
+
+            rasterizeHTML.loadAndInlineCSSImports(doc, callback);
+
+            expect(callback).toHaveBeenCalledWith([
+                {
+                    resourceType: "stylesheet",
+                    url: "that.css"
+                },
+                {
+                    resourceType: "stylesheet",
+                    url: "and_also_that.css"
                 }
             ]);
         });
