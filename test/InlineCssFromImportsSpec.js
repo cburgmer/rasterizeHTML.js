@@ -53,6 +53,19 @@ describe("CSS import inline", function () {
         expect(doc.head.getElementsByTagName("style")[0].textContent).toEqual("p { font-size: 10px; }");
     });
 
+    it("should support an import without the functional url() form", function () {
+        ajaxSpy.andCallFake(function (url, options, callback) {
+            callback("");
+        });
+
+        rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import "that.css";');
+
+        rasterizeHTML.loadAndInlineCSSImports(doc, callback);
+
+        expect(callback).toHaveBeenCalled();
+        expect(ajaxSpy).toHaveBeenCalledWith("that.css", jasmine.any(Object), jasmine.any(Function), jasmine.any(Function));
+    });
+
     it("should inline multiple imported CSS and keep order", function () {
         ajaxSpy.andCallFake(function (url, options, callback) {
             if (url === 'that.css') {

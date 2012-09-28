@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.1.0 - 2012-09-27
+/*! rasterizeHTML.js - v0.1.0 - 2012-09-28
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2012 Christoph Burgmer; Licensed MIT */
 
@@ -464,13 +464,26 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
         stylesheet.cssRules.splice(position, 1, newRule);
     };
 
+    var isQuotedString = function (string) {
+        var doubleQuoteRegex = /^"(.*)"$/,
+            singleQuoteRegex = /^'(.*)'$/;
+
+        return doubleQuoteRegex.test(string) || singleQuoteRegex.test(string);
+    };
+
     var loadAndInlineCSSImport = function (declaration, documentBaseUrl, cache, successCallback, errorCallback) {
-        var cssHrefRelativeToDoc, url;
-        try {
-            url = module.util.extractCssUrl(declaration.href);
-        } catch (e) {
-            successCallback(false);
-            return;
+        var href = declaration.href,
+            cssHrefRelativeToDoc, url;
+
+        if (isQuotedString(href)) {
+            url = unquoteUrl(href);
+        } else {
+            try {
+                url = module.util.extractCssUrl(href);
+            } catch (e) {
+                successCallback(false);
+                return;
+            }
         }
 
         cssHrefRelativeToDoc = getUrlRelativeToDocumentBase(url, documentBaseUrl);
