@@ -1,5 +1,5 @@
 describe("CSS references inline", function () {
-    var doc, extractCssUrlSpy, joinUrlSpy, getDataURIForImageURLSpy, binaryAjaxSpy;
+    var doc, extractCssUrlSpy, joinUrlSpy, getDataURIForImageURLSpy, binaryAjaxSpy, callback;
 
     beforeEach(function () {
         doc = document.implementation.createHTMLDocument("");
@@ -15,11 +15,10 @@ describe("CSS references inline", function () {
         getDataURIForImageURLSpy = spyOn(rasterizeHTML.util, "getDataURIForImageURL");
         binaryAjaxSpy = spyOn(rasterizeHTML.util, "binaryAjax");
 
+        callback = jasmine.createSpy("callback");
     });
 
     it("should do nothing if no CSS is found", function () {
-        var callback = jasmine.createSpy("callback");
-
         rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
 
         expect(callback).toHaveBeenCalled();
@@ -28,8 +27,6 @@ describe("CSS references inline", function () {
     });
 
     it("should not touch unrelated CSS", function () {
-        var callback = jasmine.createSpy("callback");
-
         rasterizeHTMLTestHelper.addStyleToDocument(doc, "span { padding-left: 0; }");
 
         rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
@@ -40,9 +37,7 @@ describe("CSS references inline", function () {
         expect(doc.head.getElementsByTagName("style")[0].textContent).toEqual("span { padding-left: 0; }");
     });
 
-    it("should add a workaround for Webkit to account for first CSS rules being ignored", function () {
-        var callback = jasmine.createSpy("callback");
-
+    it("should add a workaround for Webkit to account for first CSS rules being ignored on background-images", function () {
         rasterizeHTMLTestHelper.addStyleToDocument(doc, 'span { background-image: url("data:image/png;base64,soMEfAkebASE64="); }');
 
         rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
@@ -57,9 +52,22 @@ describe("CSS references inline", function () {
         }
     });
 
-    it("should work with empty content", function () {
-        var callback = jasmine.createSpy("callback");
+    it("should add a workaround for Webkit to account for first CSS rules being ignored on font face", function () {
+        rasterizeHTMLTestHelper.addStyleToDocument(doc, '@font-face { font-family: "RaphaelIcons"; src: url("data:font/woff;base64,soMEfAkebASE64="); }');
 
+        rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
+
+        expect(callback).toHaveBeenCalled();
+
+        expect(doc.head.getElementsByTagName("style").length).toEqual(1);
+        if (window.navigator.userAgent.indexOf("WebKit") >= 0) {
+            expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/^span \{\}/);
+        } else {
+            expect(doc.head.getElementsByTagName("style")[0].textContent).not.toMatch(/^span \{\}/);
+        }
+    });
+
+    it("should work with empty content", function () {
         rasterizeHTMLTestHelper.addStyleToDocument(doc, '');
 
         rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
@@ -69,8 +77,6 @@ describe("CSS references inline", function () {
 
     describe("on background-image", function () {
         it("should not touch an already inlined background-image", function () {
-            var callback = jasmine.createSpy("callback");
-
             rasterizeHTMLTestHelper.addStyleToDocument(doc, 'span { background-image: url("data:image/png;base64,soMEfAkebASE64="); }');
 
             rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
@@ -82,8 +88,6 @@ describe("CSS references inline", function () {
         });
 
         it("should ignore invalid values", function () {
-            var callback = jasmine.createSpy("callback");
-
             rasterizeHTMLTestHelper.addStyleToDocument(doc, 'span { background-image: "invalid url"; }');
 
             rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
@@ -96,7 +100,6 @@ describe("CSS references inline", function () {
 
         it("should inline a background-image", function () {
             var backgroundImageRegex = /span\s*\{\s*background-image: url\("([^\)]+)"\);\s*\}/,
-                callback = jasmine.createSpy("callback"),
                 anImage = "anImage.png",
                 anImagesDataUri = "data:image/png;base64,someDataUri",
                 url, styleContent;
@@ -123,7 +126,6 @@ describe("CSS references inline", function () {
 
         it("should respect the document's baseURI when loading the background-image", function () {
             var backgroundImageRegex = /background-image:\s*url\("([^\)]+)"\);/,
-                callback = jasmine.createSpy("callback"),
                 url, styleContent;
 
             getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback, errorCallback) {
@@ -159,8 +161,7 @@ describe("CSS references inline", function () {
         });
 
         it("should favour explicit baseUrl over document.baseURI when loading the background-image", function () {
-            var callback = jasmine.createSpy("callback"),
-                baseUrl = "aBaseURI";
+            var baseUrl = "aBaseURI";
 
             getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback, errorCallback) {
                 successCallback("aDataUri");
@@ -180,8 +181,7 @@ describe("CSS references inline", function () {
         });
 
         it("should circumvent caching if requested", function () {
-            var callback = jasmine.createSpy("callback"),
-                anImage = "anImage.png";
+            var anImage = "anImage.png";
 
             getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback, errorCallback) {
                 successCallback("uri");
@@ -196,8 +196,7 @@ describe("CSS references inline", function () {
         });
 
         it("should not circumvent caching by default", function () {
-            var callback = jasmine.createSpy("callback"),
-                anImage = "anImage.png";
+            var anImage = "anImage.png";
 
             getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback, errorCallback) {
                 successCallback("uri");
@@ -214,12 +213,9 @@ describe("CSS references inline", function () {
     });
 
     describe("on background-image with errors", function () {
-        var aBackgroundImageThatDoesExist = "a_backgroundImage_that_does_exist.png",
-            callback;
+        var aBackgroundImageThatDoesExist = "a_backgroundImage_that_does_exist.png";
 
         beforeEach(function () {
-            callback = jasmine.createSpy("callback");
-
             getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback, errorCallback) {
                 if (url === aBackgroundImageThatDoesExist) {
                     successCallback();
@@ -309,7 +305,7 @@ describe("CSS references inline", function () {
             expect(binaryAjaxSpy).not.toHaveBeenCalled();
 
             expect(doc.head.getElementsByTagName("style").length).toEqual(1);
-            expect(doc.head.getElementsByTagName("style")[0].textContent).toEqual('@font-face { font-family: "test font"; src: "invalid url"; }');
+            expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/@font-face \{ font-family: "test font"; src: "invalid url"; \}/);
         });
 
         it("should inline a font", function () {

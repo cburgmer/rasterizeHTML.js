@@ -675,7 +675,8 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
         // Works around bug with webkit ignoring the first rule in each style declaration when rendering the SVG to the
         // DOM. While this does not directly affect the process when rastering to canvas, this is needed for the
         // workaround found in workAroundBrowserBugForBackgroundImages();
-        var hasBackgroundImageDeclarations = findBackgroundImageDeclarations(parsedCss).length > 0;
+        var hasBackgroundImageDeclarations = (findBackgroundImageDeclarations(parsedCss).length +
+                findFontFaceDescriptors(parsedCss).length) > 0;
 
         if (hasBackgroundImageDeclarations && window.navigator.userAgent.indexOf("WebKit") >= 0) {
             return "span {}\n" + cssContent;

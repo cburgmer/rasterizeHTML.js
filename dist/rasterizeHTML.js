@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.1.0 - 2012-09-28
+/*! rasterizeHTML.js - v0.1.0 - 2012-10-01
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2012 Christoph Burgmer; Licensed MIT */
 
@@ -679,7 +679,8 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
         // Works around bug with webkit ignoring the first rule in each style declaration when rendering the SVG to the
         // DOM. While this does not directly affect the process when rastering to canvas, this is needed for the
         // workaround found in workAroundBrowserBugForBackgroundImages();
-        var hasBackgroundImageDeclarations = findBackgroundImageDeclarations(parsedCss).length > 0;
+        var hasBackgroundImageDeclarations = (findBackgroundImageDeclarations(parsedCss).length +
+                findFontFaceDescriptors(parsedCss).length) > 0;
 
         if (hasBackgroundImageDeclarations && window.navigator.userAgent.indexOf("WebKit") >= 0) {
             return "span {}\n" + cssContent;
