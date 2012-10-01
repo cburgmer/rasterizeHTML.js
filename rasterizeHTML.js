@@ -896,39 +896,46 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
         image.src = url;
     };
 
+    var inlineReferences = function (doc, options, callback) {
+        var allErrors = [];
+
+        module.loadAndInlineImages(doc, options, function (errors) {
+            allErrors = allErrors.concat(errors);
+            module.loadAndInlineCSS(doc, options, function (errors) {
+                allErrors = allErrors.concat(errors);
+                module.loadAndInlineCSSImports(doc, options, function (errors) {
+                    allErrors = allErrors.concat(errors);
+                    module.loadAndInlineCSSReferences(doc, options, function (errors) {
+                        allErrors = allErrors.concat(errors);
+
+                        callback(allErrors);
+                    });
+                });
+            });
+        });
+    };
+
     /* "Public" API */
 
     module.drawDocument = function (doc, canvas, options, callback) {
         var params = parseOptionalParameters(options, callback),
-            allErrors = [],
             svg;
 
-        module.loadAndInlineImages(doc, params.options, function (errors) {
-            allErrors = allErrors.concat(errors);
-            module.loadAndInlineCSS(doc, params.options, function (errors) {
-                allErrors = allErrors.concat(errors);
-                module.loadAndInlineCSSImports(doc, params.options, function (errors) {
-                    allErrors = allErrors.concat(errors);
-                    module.loadAndInlineCSSReferences(doc, params.options, function (errors) {
-                        allErrors = allErrors.concat(errors);
+        inlineReferences(doc, params.options, function (allErrors) {
+            svg = module.getSvgForDocument(doc, canvas.width, canvas.height);
 
-                        svg = module.getSvgForDocument(doc, canvas.width, canvas.height);
-
-                        module.drawSvgToCanvas(svg, canvas, function () {
-                            if (params.callback) {
-                                params.callback(canvas, allErrors);
-                            }
-                        }, function () {
-                            allErrors.push({
-                                resourceType: "document"
-                            });
-
-                            if (params.callback) {
-                                params.callback(canvas, allErrors);
-                            }
-                        });
-                    });
+            module.drawSvgToCanvas(svg, canvas, function () {
+                if (params.callback) {
+                    params.callback(canvas, allErrors);
+                }
+            }, function () {
+                allErrors.push({
+                    resourceType: "document"
                 });
+
+                if (params.callback) {
+                    params.callback(canvas, allErrors);
+                }
             });
         });
     };
