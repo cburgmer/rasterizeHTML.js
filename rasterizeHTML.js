@@ -823,21 +823,23 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
 
     var WORKAROUND_ID = "rasterizeHTML_js_FirefoxWorkaround";
 
-    var workAroundBrowserBugForBackgroundImages = function (canvas, svg) {
+    var workAroundBrowserBugForBackgroundImages = function (svg, canvas) {
         // Firefox, Chrome & Safari will (sometimes) not show an inlined background-image until the svg is connected to
         // the DOM it seems.
-        var uniqueId = module.util.getConstantUniqueIdFor(canvas),
-            doNotGarbageCollect = getOrCreateHiddenDivWithId(canvas.ownerDocument, WORKAROUND_ID + uniqueId);
+        var uniqueId = module.util.getConstantUniqueIdFor(svg),
+            doc = canvas ? canvas.ownerDocument : window.document,
+            doNotGarbageCollect = getOrCreateHiddenDivWithId(doc, WORKAROUND_ID + uniqueId);
 
         doNotGarbageCollect.innerHTML = svg;
         doNotGarbageCollect.className = WORKAROUND_ID; // Make if findable for debugging & testing purposes
     };
 
-    var cleanUpAfterWorkAroundForBackgroundImages = function (canvas) {
-        var uniqueId = module.util.getConstantUniqueIdFor(canvas),
-            div = canvas.ownerDocument.getElementById(WORKAROUND_ID + uniqueId);
+    var cleanUpAfterWorkAroundForBackgroundImages = function (svg, canvas) {
+        var uniqueId = module.util.getConstantUniqueIdFor(svg),
+            doc = canvas ? canvas.ownerDocument : window.document,
+            div = doc.getElementById(WORKAROUND_ID + uniqueId);
         if (div) {
-            canvas.ownerDocument.getElementsByTagName("body")[0].removeChild(div);
+            div.parentNode.removeChild(div);
         }
     };
 
@@ -855,36 +857,25 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
         );
     };
 
-    module.drawSvgToCanvas = function (svg, canvas, successCallback, errorCallback) {
-        var context, DOMURL, url, image,
+    var renderSvg = function (svg, canvas, successCallback, errorCallback) {
+        var url, image,
             cleanUp = function () {
                 if (url) {
                     cleanUpUrl(url);
                 }
-                cleanUpAfterWorkAroundForBackgroundImages(canvas);
+                cleanUpAfterWorkAroundForBackgroundImages(svg, canvas);
             };
 
-        workAroundBrowserBugForBackgroundImages(canvas, svg);
-
-        context = canvas.getContext("2d");
+        workAroundBrowserBugForBackgroundImages(svg, canvas);
 
         url = buildImageUrl(svg);
 
         image = new window.Image();
         image.onload = function() {
             try {
-                context.drawImage(image, 0, 0);
-            } catch (e) {
-                // Firefox throws a 'NS_ERROR_NOT_AVAILABLE' if the SVG is faulty
-                errorCallback();
-
-                return;
+                successCallback(image);
             } finally {
                 cleanUp();
-            }
-
-            if (successCallback) {
-                successCallback(canvas);
             }
         };
         image.onerror = function () {
@@ -894,6 +885,27 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
             errorCallback();
         };
         image.src = url;
+    };
+
+    module.drawSvgToCanvas = function (svg, canvas, successCallback, errorCallback) {
+        var context;
+
+        context = canvas.getContext("2d");
+
+        renderSvg(svg, canvas, function (image) {
+
+            try {
+                context.drawImage(image, 0, 0);
+            } catch (e) {
+                // Firefox throws a 'NS_ERROR_NOT_AVAILABLE' if the SVG is faulty
+                errorCallback();
+
+                return;
+            }
+
+            successCallback(canvas);
+
+        }, errorCallback);
     };
 
     var inlineReferences = function (doc, options, callback) {

@@ -220,13 +220,14 @@ describe("Rendering the Canvas", function () {
             it("should add the workaround for each canvas", function () {
                 var canvas1 = document.createElement("canvas"),
                     canvas2 = document.createElement("canvas"),
-                    svg = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"></svg>';
+                    svg1 = '<svg xmlns="http://www.w3.org/2000/svg" width="101" height="101"></svg>',
+                    svg2 = '<svg xmlns="http://www.w3.org/2000/svg" width="102" height="102"></svg>';
 
                 // Stop method of finishing and removing div
                 spyOn(window, "Image").andReturn({});
 
-                rasterizeHTML.drawSvgToCanvas(svg, canvas1);
-                rasterizeHTML.drawSvgToCanvas(svg, canvas2);
+                rasterizeHTML.drawSvgToCanvas(svg1, canvas1);
+                rasterizeHTML.drawSvgToCanvas(svg2, canvas2);
 
                 expect($(".rasterizeHTML_js_FirefoxWorkaround").length).toEqual(2);
             });
