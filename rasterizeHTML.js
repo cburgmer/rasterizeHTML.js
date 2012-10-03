@@ -857,7 +857,7 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
         );
     };
 
-    var renderSvg = function (svg, canvas, successCallback, errorCallback) {
+    module.renderSvg = function (svg, canvas, successCallback, errorCallback) {
         var url, image,
             cleanUp = function () {
                 if (url) {
@@ -887,25 +887,15 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
         image.src = url;
     };
 
-    module.drawSvgToCanvas = function (svg, canvas, successCallback, errorCallback) {
-        var context;
+    module.drawImageOnCanvas = function (image, canvas, successCallback, errorCallback) {
+        try {
+            canvas.getContext("2d").drawImage(image, 0, 0);
+        } catch (e) {
+            // Firefox throws a 'NS_ERROR_NOT_AVAILABLE' if the SVG is faulty
+            return false;
+        }
 
-        context = canvas.getContext("2d");
-
-        renderSvg(svg, canvas, function (image) {
-
-            try {
-                context.drawImage(image, 0, 0);
-            } catch (e) {
-                // Firefox throws a 'NS_ERROR_NOT_AVAILABLE' if the SVG is faulty
-                errorCallback();
-
-                return;
-            }
-
-            successCallback(canvas);
-
-        }, errorCallback);
+        return true;
     };
 
     var inlineReferences = function (doc, options, callback) {
@@ -930,25 +920,33 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
     /* "Public" API */
 
     module.drawDocument = function (doc, canvas, options, callback) {
-        var params = parseOptionalParameters(options, callback),
-            svg;
+        var params = parseOptionalParameters(options, callback);
 
         inlineReferences(doc, params.options, function (allErrors) {
-            svg = module.getSvgForDocument(doc, canvas.width, canvas.height);
 
-            module.drawSvgToCanvas(svg, canvas, function () {
-                if (params.callback) {
-                    params.callback(canvas, allErrors);
-                }
-            }, function () {
-                allErrors.push({
-                    resourceType: "document"
-                });
+            var handleInternalError = function () {
+                    allErrors.push({
+                        resourceType: "document"
+                    });
 
-                if (params.callback) {
-                    params.callback(canvas, allErrors);
+                    if (params.callback) {
+                        params.callback(canvas, allErrors);
+                    }
+                },
+                svg = module.getSvgForDocument(doc, canvas.width, canvas.height),
+                successful;
+
+            module.renderSvg(svg, canvas, function (image) {
+                successful = module.drawImageOnCanvas(image, canvas);
+
+                if (successful) {
+                    if (params.callback) {
+                        params.callback(canvas, allErrors);
+                    }
+                } else {
+                    handleInternalError();
                 }
-            });
+            }, handleInternalError);
         });
     };
 

@@ -1,10 +1,11 @@
 describe("Main interface of rasterizeHTML.js", function () {
     var callbackCaller = function (doc, options, callback) { callback([]); },
         svg = "the svg",
+        svgImage = "svg image",
         canvas = document.createElement("canvas"),
         ajaxSpy,
         loadAndInlineImages, loadAndInlineCSS, loadAndInlineCSSImports, loadAndInlineCSSReferences,
-        getSvgForDocument, drawSvgToCanvas;
+        getSvgForDocument, renderSvg, drawImageOnCanvas;
 
     beforeEach(function () {
         ajaxSpy = spyOn(rasterizeHTML.util, "ajax");
@@ -21,9 +22,10 @@ describe("Main interface of rasterizeHTML.js", function () {
             loadAndInlineCSSImports = spyOn(rasterizeHTML, "loadAndInlineCSSImports").andCallFake(callbackCaller);
             loadAndInlineCSSReferences = spyOn(rasterizeHTML, "loadAndInlineCSSReferences").andCallFake(callbackCaller);
             getSvgForDocument = spyOn(rasterizeHTML, "getSvgForDocument").andReturn(svg);
-            drawSvgToCanvas = spyOn(rasterizeHTML, "drawSvgToCanvas").andCallFake(function (svg, canvas, callback) {
-                callback(canvas);
+            renderSvg = spyOn(rasterizeHTML, "renderSvg").andCallFake(function (svg, canvas, callback) {
+                callback(svgImage);
             });
+            drawImageOnCanvas = spyOn(rasterizeHTML, "drawImageOnCanvas").andReturn(true);
         });
 
         it("should take a document, inline all displayable content and render to the given canvas", function () {
@@ -36,12 +38,13 @@ describe("Main interface of rasterizeHTML.js", function () {
             expect(loadAndInlineCSSImports).toHaveBeenCalledWith(doc, {}, jasmine.any(Function));
             expect(loadAndInlineCSSReferences).toHaveBeenCalledWith(doc, {}, jasmine.any(Function));
             expect(getSvgForDocument).toHaveBeenCalledWith(doc, canvas.width, canvas.height);
-            expect(drawSvgToCanvas).toHaveBeenCalledWith(svg, canvas, jasmine.any(Function), jasmine.any(Function));
+            expect(renderSvg).toHaveBeenCalledWith(svg, canvas, jasmine.any(Function), jasmine.any(Function));
+            expect(drawImageOnCanvas).toHaveBeenCalledWith(svgImage, canvas);
 
             expect(callback).toHaveBeenCalledWith(canvas, []);
         });
 
-        it("should take a document with optional baseUrl, inline all displayable content and render to the given canvas", function () {
+        it("should take a document with optional baseUrl and inline all displayable content", function () {
             var doc = "doc";
 
             rasterizeHTML.drawDocument(doc, canvas, {baseUrl: "a_baseUrl"}, callback);
@@ -50,8 +53,6 @@ describe("Main interface of rasterizeHTML.js", function () {
             expect(loadAndInlineCSS).toHaveBeenCalledWith(doc, {baseUrl: "a_baseUrl"}, jasmine.any(Function));
             expect(loadAndInlineCSSImports).toHaveBeenCalledWith(doc, {baseUrl: "a_baseUrl"}, jasmine.any(Function));
             expect(loadAndInlineCSSReferences).toHaveBeenCalledWith(doc, {baseUrl: "a_baseUrl"}, jasmine.any(Function));
-            expect(getSvgForDocument).toHaveBeenCalledWith(doc, canvas.width, canvas.height);
-            expect(drawSvgToCanvas).toHaveBeenCalledWith(svg, canvas, jasmine.any(Function), jasmine.any(Function));
 
             expect(callback).toHaveBeenCalledWith(canvas, []);
         });
@@ -169,9 +170,10 @@ describe("Main interface of rasterizeHTML.js", function () {
             callback = jasmine.createSpy("drawCallback");
 
             getSvgForDocument = spyOn(rasterizeHTML, "getSvgForDocument").andReturn(svg);
-            drawSvgToCanvas = spyOn(rasterizeHTML, "drawSvgToCanvas").andCallFake(function (svg, canvas, callback) {
-                callback(canvas);
+            renderSvg = spyOn(rasterizeHTML, "renderSvg").andCallFake(function (svg, canvas, callback) {
+                callback(svgImage);
             });
+            drawImageOnCanvas = spyOn(rasterizeHTML, "drawImageOnCanvas").andReturn(true);
         });
 
         it("should pass through an error from inlining on drawDocument", function () {
@@ -281,33 +283,64 @@ describe("Main interface of rasterizeHTML.js", function () {
             loadAndInlineCSSReferences = spyOn(rasterizeHTML, "loadAndInlineCSSReferences").andCallFake(callbackCaller);
 
             getSvgForDocument = spyOn(rasterizeHTML, "getSvgForDocument").andReturn(svg);
+            renderSvg = spyOn(rasterizeHTML, "renderSvg");
+            drawImageOnCanvas = spyOn(rasterizeHTML, "drawImageOnCanvas");
         });
 
-        it("should pass through an error from inlining on drawDocument", function () {
+        it("should pass through an error from inlining when rendering the SVG on drawDocument", function () {
             var doc = "doc";
 
-            drawSvgToCanvas = spyOn(rasterizeHTML, "drawSvgToCanvas").andCallFake(function (svg, canvas, successCallback, errorCallback) {
+            renderSvg.andCallFake(function (svg, canvas, successCallback, errorCallback) {
                 errorCallback();
             });
+            drawImageOnCanvas.andReturn(true);
 
             rasterizeHTML.drawDocument(doc, canvas, callback);
 
-            expect(drawSvgToCanvas).toHaveBeenCalled();
+            expect(renderSvg).toHaveBeenCalled();
+            expect(drawImageOnCanvas).not.toHaveBeenCalled();
             expect(callback).toHaveBeenCalledWith(canvas, [{
                 resourceType: "document"
             }]);
         });
 
-        it("should work without a callback specified on error in drawDocument", function () {
+        it("should pass through an error from inlining when drawing the image on the canvas on drawDocument", function () {
             var doc = "doc";
 
-            drawSvgToCanvas = spyOn(rasterizeHTML, "drawSvgToCanvas").andCallFake(function (svg, canvas, successCallback, errorCallback) {
+            renderSvg.andCallFake(function (svg, canvas, successCallback, errorCallback) {
+                successCallback(svgImage);
+            });
+            drawImageOnCanvas.andReturn(false);
+
+            rasterizeHTML.drawDocument(doc, canvas, callback);
+
+            expect(renderSvg).toHaveBeenCalled();
+            expect(drawImageOnCanvas).toHaveBeenCalled();
+            expect(callback).toHaveBeenCalledWith(canvas, [{
+                resourceType: "document"
+            }]);
+        });
+
+        it("should work without a callback specified on error when rendering the SVG in drawDocument", function () {
+            var doc = "doc";
+
+            renderSvg.andCallFake(function (svg, canvas, successCallback, errorCallback) {
                 errorCallback();
             });
+            drawImageOnCanvas.andReturn(true);
 
             rasterizeHTML.drawDocument(doc, canvas);
+        });
 
-            expect(drawSvgToCanvas).toHaveBeenCalled();
+        it("should work without a callback specified on error when drawing the image on the canvas in drawDocument", function () {
+            var doc = "doc";
+
+            renderSvg.andCallFake(function (svg, canvas, successCallback, errorCallback) {
+                successCallback(svgImage);
+            });
+            drawImageOnCanvas.andReturn(false);
+
+            rasterizeHTML.drawDocument(doc, canvas);
         });
 
     });
