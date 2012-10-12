@@ -54,4 +54,4 @@ See example.html
 
 Author
 ------
-Christoph Burgmer christoph.burgmer@gmail.com
+Christoph Burgmer christoph.burgmer@gmail.com. Licensed under MIT. Reach out [on Twitter](https://twitter.com/cburgmer)
