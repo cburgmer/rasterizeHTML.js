@@ -937,15 +937,16 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
 
                 if (!successful) {
                     handleInternalError(allErrors);
+                    image = null;   // Set image to null so that Firefox behaves similar to Webkit
                 }
                 if (params.callback) {
-                    params.callback(canvas, allErrors);
+                    params.callback(image, allErrors);
                 }
             }, function () {
                 handleInternalError(allErrors);
 
                 if (params.callback) {
-                    params.callback(canvas, allErrors);
+                    params.callback(null, allErrors);
                 }
 
             });
@@ -972,7 +973,7 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
             module.drawHTML(html, canvas, params.options, params.callback);
         }, function () {
             if (params.callback) {
-                params.callback(canvas, [{
+                params.callback(null, [{
                     resourceType: "page",
                     url: url
                 }]);

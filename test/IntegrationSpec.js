@@ -49,7 +49,7 @@ describe("Integration test", function () {
         });
 
         runs(function () {
-            expect(callback).toHaveBeenCalledWith(canvas.get(0), []);
+            expect(callback).toHaveBeenCalledWith(jasmine.any(Object), []);
             expect(canvas.get(0)).toImageDiffEqual(referenceImg.get(0), 10);
         });
     });
@@ -68,7 +68,7 @@ describe("Integration test", function () {
         });
 
         runs(function () {
-            expect(callback).toHaveBeenCalledWith(canvas.get(0), []);
+            expect(callback).toHaveBeenCalledWith(jasmine.any(Object), []);
             expect(canvas.get(0)).toImageDiffEqual(referenceImg.get(0), 70);
         });
     });
@@ -83,7 +83,7 @@ describe("Integration test", function () {
         });
 
         runs(function () {
-            expect(callback).toHaveBeenCalledWith(canvas.get(0), []);
+            expect(callback).toHaveBeenCalledWith(jasmine.any(Object), []);
             expect(canvas.get(0)).toImageDiffEqual(referenceImg.get(0), 90);
         });
     });
