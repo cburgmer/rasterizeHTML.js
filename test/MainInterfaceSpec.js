@@ -3,12 +3,14 @@ describe("Main interface of rasterizeHTML.js", function () {
         svg = "the svg",
         svgImage = "svg image",
         canvas = document.createElement("canvas"),
-        ajaxSpy,
+        ajaxSpy, parseOptionalParametersSpy,
         loadAndInlineImages, loadAndInlineCSS, loadAndInlineCSSImports, loadAndInlineCSSReferences,
         getSvgForDocument, renderSvg, drawImageOnCanvas;
 
     beforeEach(function () {
         ajaxSpy = spyOn(rasterizeHTML.util, "ajax");
+
+        parseOptionalParametersSpy = spyOn(rasterizeHTML.util, "parseOptionalParameters").andCallThrough();
     });
 
     describe("Rendering", function () {
@@ -42,6 +44,7 @@ describe("Main interface of rasterizeHTML.js", function () {
             expect(drawImageOnCanvas).toHaveBeenCalledWith(svgImage, canvas);
 
             expect(callback).toHaveBeenCalledWith(svgImage, []);
+            expect(parseOptionalParametersSpy).toHaveBeenCalled();
         });
 
         it("should take a document with optional baseUrl and inline all displayable content", function () {

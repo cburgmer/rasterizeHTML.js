@@ -264,19 +264,43 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
         return newObject;
     };
 
-    var parseOptionalParameters = function () {
+    var isObject = function (obj) {
+        return typeof obj === "object" && arguments[1] !== null;
+    };
+
+    var isCanvas = function (obj) {
+        return isObject(obj) &&
+            Object.prototype.toString.apply(obj).match(/\[object (Canvas|HTMLCanvasElement)\]/i);
+    };
+
+    var isFunction = function (func) {
+        return typeof func === "function";
+    };
+
+    module.util.parseOptionalParameters = function () { // args: canvas, options, callback
         var parameters = {
+            canvas: null,
             options: {},
             callback: null
         };
 
-        if (typeof arguments[0] === "function") {
+        if (isFunction(arguments[0])) {
             parameters.callback = arguments[0];
         } else {
-            if (typeof arguments[0] === "object" && arguments[0] !== null) {
+            if (isCanvas(arguments[0])) {
+                parameters.canvas = arguments[0];
+
+                if (isFunction(arguments[1])) {
+                    parameters.callback = arguments[1];
+                } else {
+                    parameters.options = cloneObject(arguments[1]);
+                    parameters.callback = arguments[2] || null;
+                }
+
+            } else {
                 parameters.options = cloneObject(arguments[0]);
+                parameters.callback = arguments[1] || null;
             }
-            parameters.callback = arguments[1];
         }
 
         return parameters;
@@ -305,7 +329,7 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
     };
 
     module.loadAndInlineImages = function (doc, options, callback) {
-        var params = parseOptionalParameters(options, callback),
+        var params = module.util.parseOptionalParameters(options, callback),
             images = doc.getElementsByTagName("img"),
             baseUrl = params.options.baseUrl,
             cache = params.options.cache !== false,
@@ -400,7 +424,7 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
     };
 
     module.loadAndInlineCSS = function (doc, options, callback) {
-        var params = parseOptionalParameters(options, callback),
+        var params = module.util.parseOptionalParameters(options, callback),
             links = doc.getElementsByTagName("link"),
             baseUrl = params.options.baseUrl,
             cache = params.options.cache !== false,
@@ -555,7 +579,7 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
     };
 
     module.loadAndInlineCSSImports = function (doc, options, callback) {
-        var params = parseOptionalParameters(options, callback),
+        var params = module.util.parseOptionalParameters(options, callback),
             styles = doc.getElementsByTagName("style"),
             base = params.options.baseUrl || doc.baseURI,
             cache = params.options.cache !== false,
@@ -709,7 +733,7 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
     };
 
     module.loadAndInlineCSSReferences = function (doc, options, callback) {
-        var params = parseOptionalParameters(options, callback),
+        var params = module.util.parseOptionalParameters(options, callback),
             allErrors = [],
             baseUrl = params.options.baseUrl,
             cache = params.options.cache !== false,
@@ -924,7 +948,7 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
     /* "Public" API */
 
     module.drawDocument = function (doc, canvas, options, callback) {
-        var params = parseOptionalParameters(options, callback),
+        var params = module.util.parseOptionalParameters(options, callback),
             handleInternalError = function (errors) {
                 errors.push({
                     resourceType: "document"
@@ -958,7 +982,7 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
     };
 
     module.drawHTML = function (html, canvas, options, callback) {
-        var params = parseOptionalParameters(options, callback),
+        var params = module.util.parseOptionalParameters(options, callback),
             doc = window.document.implementation.createHTMLDocument("");
 
         doc.documentElement.innerHTML = html;
@@ -966,7 +990,7 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
     };
 
     module.drawURL = function (url, canvas, options, callback) {
-        var params = parseOptionalParameters(options, callback),
+        var params = module.util.parseOptionalParameters(options, callback),
             cache = params.options.cache;
 
         params.options.baseUrl = url;
