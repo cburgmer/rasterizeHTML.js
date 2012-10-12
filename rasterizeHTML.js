@@ -920,33 +920,35 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
     /* "Public" API */
 
     module.drawDocument = function (doc, canvas, options, callback) {
-        var params = parseOptionalParameters(options, callback);
+        var params = parseOptionalParameters(options, callback),
+            handleInternalError = function (errors) {
+                errors.push({
+                    resourceType: "document"
+                });
+            };
 
         inlineReferences(doc, params.options, function (allErrors) {
 
-            var handleInternalError = function () {
-                    allErrors.push({
-                        resourceType: "document"
-                    });
-
-                    if (params.callback) {
-                        params.callback(canvas, allErrors);
-                    }
-                },
-                svg = module.getSvgForDocument(doc, canvas.width, canvas.height),
+            var svg = module.getSvgForDocument(doc, canvas.width, canvas.height),
                 successful;
 
             module.renderSvg(svg, canvas, function (image) {
                 successful = module.drawImageOnCanvas(image, canvas);
 
-                if (successful) {
-                    if (params.callback) {
-                        params.callback(canvas, allErrors);
-                    }
-                } else {
-                    handleInternalError();
+                if (!successful) {
+                    handleInternalError(allErrors);
                 }
-            }, handleInternalError);
+                if (params.callback) {
+                    params.callback(canvas, allErrors);
+                }
+            }, function () {
+                handleInternalError(allErrors);
+
+                if (params.callback) {
+                    params.callback(canvas, allErrors);
+                }
+
+            });
         });
     };
 
