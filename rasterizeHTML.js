@@ -261,7 +261,7 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
     };
 
     var isObject = function (obj) {
-        return typeof obj === "object" && arguments[1] !== null;
+        return typeof obj === "object" && obj !== null;
     };
 
     var isCanvas = function (obj) {
@@ -283,7 +283,7 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
         if (isFunction(arguments[0])) {
             parameters.callback = arguments[0];
         } else {
-            if (isCanvas(arguments[0])) {
+            if (arguments[0] == null || isCanvas(arguments[0])) {
                 parameters.canvas = arguments[0];
 
                 if (isFunction(arguments[1])) {
@@ -944,25 +944,30 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
     /* "Public" API */
 
     module.drawDocument = function (doc, canvas, options, callback) {
-        var params = module.util.parseOptionalParameters(options, callback),
+        var params = module.util.parseOptionalParameters(canvas, options, callback),
             handleInternalError = function (errors) {
                 errors.push({
                     resourceType: "document"
                 });
-            };
+            },
+            width = params.canvas ? params.canvas.width : 300,
+            height = params.canvas ? params.canvas.height : 200;
 
         inlineReferences(doc, params.options, function (allErrors) {
 
-            var svg = module.getSvgForDocument(doc, canvas.width, canvas.height),
+            var svg = module.getSvgForDocument(doc, width, height),
                 successful;
 
-            module.renderSvg(svg, canvas, function (image) {
-                successful = module.drawImageOnCanvas(image, canvas);
+            module.renderSvg(svg, params.canvas, function (image) {
+                if (params.canvas) {
+                    successful = module.drawImageOnCanvas(image, params.canvas);
 
-                if (!successful) {
-                    handleInternalError(allErrors);
-                    image = null;   // Set image to null so that Firefox behaves similar to Webkit
+                    if (!successful) {
+                        handleInternalError(allErrors);
+                        image = null;   // Set image to null so that Firefox behaves similar to Webkit
+                    }
                 }
+
                 if (params.callback) {
                     params.callback(image, allErrors);
                 }
@@ -978,15 +983,15 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
     };
 
     module.drawHTML = function (html, canvas, options, callback) {
-        var params = module.util.parseOptionalParameters(options, callback),
+        var params = module.util.parseOptionalParameters(canvas, options, callback),
             doc = window.document.implementation.createHTMLDocument("");
 
         doc.documentElement.innerHTML = html;
-        module.drawDocument(doc, canvas, params.options, params.callback);
+        module.drawDocument(doc, params.canvas, params.options, params.callback);
     };
 
     module.drawURL = function (url, canvas, options, callback) {
-        var params = module.util.parseOptionalParameters(options, callback),
+        var params = module.util.parseOptionalParameters(canvas, options, callback),
             cache = params.options.cache;
 
         params.options.baseUrl = url;
@@ -994,7 +999,7 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
         module.util.ajax(url, {
             cache: cache
         }, function (html) {
-            module.drawHTML(html, canvas, params.options, params.callback);
+            module.drawHTML(html, params.canvas, params.options, params.callback);
         }, function () {
             if (params.callback) {
                 params.callback(null, [{

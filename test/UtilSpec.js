@@ -441,6 +441,13 @@ describe("Utilities function", function () {
             expect(params.callback).toBe(callback);
         });
 
+        it("should deal with a null canvas", function () {
+            var params = rasterizeHTML.util.parseOptionalParameters(null, options, callback);
+            expect(params.canvas).toBe(null);
+            expect(params.options).toEqual(options);
+            expect(params.callback).toBe(callback);
+        });
+
         it("should make canvas optional", function () {
             var params = rasterizeHTML.util.parseOptionalParameters(options, callback);
             expect(params.canvas).toBe(null);

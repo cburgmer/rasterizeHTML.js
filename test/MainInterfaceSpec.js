@@ -47,6 +47,23 @@ describe("Main interface of rasterizeHTML.js", function () {
             expect(parseOptionalParametersSpy).toHaveBeenCalled();
         });
 
+        it("should make the canvas optional when drawing a document", function () {
+            var doc = "doc";
+
+            rasterizeHTML.drawDocument(doc, callback);
+
+            expect(loadAndInlineImages).toHaveBeenCalledWith(doc, {}, jasmine.any(Function));
+            expect(loadAndInlineCSS).toHaveBeenCalledWith(doc, {}, jasmine.any(Function));
+            expect(loadAndInlineCSSImports).toHaveBeenCalledWith(doc, {}, jasmine.any(Function));
+            expect(loadAndInlineCSSReferences).toHaveBeenCalledWith(doc, {}, jasmine.any(Function));
+            expect(getSvgForDocument).toHaveBeenCalledWith(doc, 300, 200);
+            expect(renderSvg).toHaveBeenCalledWith(svg, null, jasmine.any(Function), jasmine.any(Function));
+            expect(drawImageOnCanvas).not.toHaveBeenCalled();
+
+            expect(callback).toHaveBeenCalledWith(svgImage, []);
+            expect(parseOptionalParametersSpy).toHaveBeenCalled();
+        });
+
         it("should take a document with optional baseUrl and inline all displayable content", function () {
             var doc = "doc";
 
@@ -86,6 +103,20 @@ describe("Main interface of rasterizeHTML.js", function () {
             rasterizeHTML.drawHTML(html, canvas, callback);
 
             expect(drawDocumentSpy).toHaveBeenCalledWith(jasmine.any(Object), canvas, {}, callback);
+            expect(drawDocumentSpy.mostRecentCall.args[0].documentElement.innerHTML).toEqual(html);
+
+            expect(callback).toHaveBeenCalledWith(svgImage, []);
+        });
+
+        it("should make the canvas optional when drawing a HTML string", function () {
+            var html = "<head><title>a title</title></head><body>some html</body>",
+                drawDocumentSpy = spyOn(rasterizeHTML, "drawDocument").andCallFake(function (doc, canvas, options, callback) {
+                callback(svgImage, []);
+            });
+
+            rasterizeHTML.drawHTML(html, callback);
+
+            expect(drawDocumentSpy).toHaveBeenCalledWith(jasmine.any(Object), null, {}, callback);
             expect(drawDocumentSpy.mostRecentCall.args[0].documentElement.innerHTML).toEqual(html);
 
             expect(callback).toHaveBeenCalledWith(svgImage, []);
@@ -136,6 +167,22 @@ describe("Main interface of rasterizeHTML.js", function () {
 
             expect(callback).toHaveBeenCalledWith(svgImage, []);
             expect(drawHtmlSpy).toHaveBeenCalledWith("some html", canvas, {baseUrl: "fixtures/image.html"}, callback);
+        });
+
+        it("should make the canvas optional when drawing an URL", function () {
+            var finished = false,
+                drawHtmlSpy = spyOn(rasterizeHTML, "drawHTML").andCallFake(function (html, canvas, options, callback) {
+                    callback(svgImage, []);
+                });
+
+            ajaxSpy.andCallFake(function (url, options, success, error) {
+                success("some html");
+            });
+
+            rasterizeHTML.drawURL("fixtures/image.html", callback);
+
+            expect(callback).toHaveBeenCalledWith(svgImage, []);
+            expect(drawHtmlSpy).toHaveBeenCalledWith("some html", null, {baseUrl: "fixtures/image.html"}, callback);
         });
 
         it("should circumvent caching if requested for drawURL", function () {
