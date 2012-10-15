@@ -2,13 +2,16 @@ describe("Main interface of rasterizeHTML.js", function () {
     var callbackCaller = function (doc, options, callback) { callback([]); },
         svg = "the svg",
         svgImage = "svg image",
-        canvas = document.createElement("canvas"),
-        ajaxSpy, parseOptionalParametersSpy,
+        canvas, ajaxSpy, parseOptionalParametersSpy,
         loadAndInlineImages, loadAndInlineCSS, loadAndInlineCSSImports, loadAndInlineCSSReferences,
         getSvgForDocument, renderSvg, drawImageOnCanvas;
 
     beforeEach(function () {
         ajaxSpy = spyOn(rasterizeHTML.util, "ajax");
+
+        canvas = document.createElement("canvas");
+        canvas.width = 123;
+        canvas.height = 456;
 
         parseOptionalParametersSpy = spyOn(rasterizeHTML.util, "parseOptionalParameters").andCallThrough();
     });
@@ -47,7 +50,7 @@ describe("Main interface of rasterizeHTML.js", function () {
             expect(parseOptionalParametersSpy).toHaveBeenCalled();
         });
 
-        it("should make the canvas optional when drawing a document", function () {
+        it("should make the canvas optional when drawing a document and apply default width and height", function () {
             var doc = "doc";
 
             rasterizeHTML.drawDocument(doc, callback);
@@ -62,6 +65,16 @@ describe("Main interface of rasterizeHTML.js", function () {
 
             expect(callback).toHaveBeenCalledWith(svgImage, []);
             expect(parseOptionalParametersSpy).toHaveBeenCalled();
+        });
+
+        it("should take a document with optional width and height", function () {
+            var doc = "doc";
+
+            rasterizeHTML.drawDocument(doc, canvas, {width: 42, height: 4711}, callback);
+
+            expect(getSvgForDocument).toHaveBeenCalledWith(doc, 42, 4711);
+
+            expect(callback).toHaveBeenCalledWith(svgImage, []);
         });
 
         it("should take a document with optional baseUrl and inline all displayable content", function () {
@@ -114,9 +127,9 @@ describe("Main interface of rasterizeHTML.js", function () {
                 callback(svgImage, []);
             });
 
-            rasterizeHTML.drawHTML(html, callback);
+            rasterizeHTML.drawHTML(html, {width: 999, height: 987}, callback);
 
-            expect(drawDocumentSpy).toHaveBeenCalledWith(jasmine.any(Object), null, {}, callback);
+            expect(drawDocumentSpy).toHaveBeenCalledWith(jasmine.any(Object), null, {width: 999, height: 987}, callback);
             expect(drawDocumentSpy.mostRecentCall.args[0].documentElement.innerHTML).toEqual(html);
 
             expect(callback).toHaveBeenCalledWith(svgImage, []);
@@ -179,10 +192,10 @@ describe("Main interface of rasterizeHTML.js", function () {
                 success("some html");
             });
 
-            rasterizeHTML.drawURL("fixtures/image.html", callback);
+            rasterizeHTML.drawURL("fixtures/image.html", {width: 999, height: 987}, callback);
 
             expect(callback).toHaveBeenCalledWith(svgImage, []);
-            expect(drawHtmlSpy).toHaveBeenCalledWith("some html", null, {baseUrl: "fixtures/image.html"}, callback);
+            expect(drawHtmlSpy).toHaveBeenCalledWith("some html", null, {baseUrl: "fixtures/image.html", width: 999, height: 987}, callback);
         });
 
         it("should circumvent caching if requested for drawURL", function () {

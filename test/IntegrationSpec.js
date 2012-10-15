@@ -1,5 +1,7 @@
 describe("Integration test", function () {
-    var canvas, finished, callback, referenceImg;
+    var canvas, finished, callback, referenceImg,
+        width = 204,
+        height = 100;
 
     var loadDocFixture = function (url, callback) {
         var request = new window.XMLHttpRequest(),
@@ -21,7 +23,7 @@ describe("Integration test", function () {
 
     beforeEach(function () {
         this.addMatchers(imagediff.jasmine);
-        canvas = $('<canvas width="204" height="100"></canvas>'); // Firefox adds a space between the divs and needs the canvas to fit horizontally for all content to be rendered
+        canvas = $('<canvas width="' + width + '" height="' + height + '"></canvas>'); // Firefox adds a space between the divs and needs the canvas to fit horizontally for all content to be rendered
 
         referenceImg = $('<img src="'+ jasmine.getFixtures().fixturesPath + '/testResult.png" alt="test image"/>');
 
@@ -88,4 +90,18 @@ describe("Integration test", function () {
         });
     });
 
+    ifNotInWebkitIt("should take a URL, inline all displayable content and return the image (flaky in Firefox)", function () {
+        runs(function () {
+            rasterizeHTML.drawURL(jasmine.getFixtures().fixturesPath + "test.html", {cache: false, width: width, height: height}, callback);
+        });
+
+        waitsFor(function () {
+            return finished;
+        });
+
+        runs(function () {
+            expect(callback).toHaveBeenCalledWith(jasmine.any(Object), []);
+            expect(callback.mostRecentCall.args[0]).toImageDiffEqual(referenceImg.get(0), 90);
+        });
+    });
 });
