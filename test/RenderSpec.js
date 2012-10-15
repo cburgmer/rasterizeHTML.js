@@ -4,10 +4,10 @@ describe("The rendering process", function () {
             var doc = document.implementation.createHTMLDocument("");
             doc.body.innerHTML = "Test content";
 
-            var svgCode = rasterizeHTML.getSvgForDocument(doc);
+            var svgCode = rasterizeHTML.getSvgForDocument(doc, 123, 456);
 
             expect(svgCode).toEqual(
-                '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">' +
+                '<svg xmlns="http://www.w3.org/2000/svg" width="123" height="456">' +
                     '<foreignObject width="100%" height="100%">' +
                         '<html xmlns="http://www.w3.org/1999/xhtml">' +
                             '<head>' +
@@ -28,12 +28,12 @@ describe("The rendering process", function () {
                 canonicalXML;
             doc.body.innerHTML = '<img src="data:image/png;base64,sOmeFAKeBasE64="/>';
 
-            var svgCode = rasterizeHTML.getSvgForDocument(doc);
+            var svgCode = rasterizeHTML.getSvgForDocument(doc, 123, 456);
 
             expect(svgCode).not.toBeNull();
             canonicalXML = svgCode.replace(/ +\/>/, '/>');
             expect(canonicalXML).toEqual(
-                '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">' +
+                '<svg xmlns="http://www.w3.org/2000/svg" width="123" height="456">' +
                     '<foreignObject width="100%" height="100%">' +
                         '<html xmlns="http://www.w3.org/1999/xhtml">' +
                             '<head>' +

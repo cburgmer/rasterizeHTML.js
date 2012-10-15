@@ -868,12 +868,10 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
     };
 
     module.getSvgForDocument = function (doc, width, height) {
-        var html = serializeToXML(doc),
-            imgWidth = width || 100,
-            imgHeight = height || 100;
+        var html = serializeToXML(doc);
 
         return (
-            '<svg xmlns="http://www.w3.org/2000/svg" width="' + imgWidth + '" height="' + imgHeight + '">' +
+            '<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height + '">' +
                 '<foreignObject width="100%" height="100%">' +
                     html +
                 '</foreignObject>' +
