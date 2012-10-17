@@ -948,10 +948,10 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
                     resourceType: "document"
                 });
             },
-            width = params.options.width !== undefined ? params.options.width :
-                params.canvas ? params.canvas.width : 300,
-            height = params.options.height !== undefined ? params.options.height :
-                params.canvas ? params.canvas.height : 200;
+            fallbackWidth = params.canvas ? params.canvas.width : 300,
+            fallbackHeight = params.canvas ? params.canvas.height : 200,
+            width = params.options.width !== undefined ? params.options.width : fallbackWidth,
+            height = params.options.height !== undefined ? params.options.height : fallbackHeight;
 
         inlineReferences(doc, params.options, function (allErrors) {
 
