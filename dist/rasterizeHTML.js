@@ -85,7 +85,7 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
         options = options || {};
         augmentedUrl = options.cache === false ? getUncachableURL(url) : url;
 
-        ajaxRequest.addEventListener("load", function (e) {
+        ajaxRequest.addEventListener("load", function () {
             if (ajaxRequest.status === 200 || ajaxRequest.status === 0) {
                 successCallback(ajaxRequest.response);
             } else {
@@ -459,7 +459,7 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
 
     var findCSSImportDeclarations = function (parsedCSS) {
         var rulesToInline = [],
-            i, j, rule;
+            i, rule;
 
         for (i = 0; i < parsedCSS.cssRules.length; i++) {
             rule = parsedCSS.cssRules[i];
@@ -913,7 +913,7 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
         image.src = url;
     };
 
-    module.drawImageOnCanvas = function (image, canvas, successCallback, errorCallback) {
+    module.drawImageOnCanvas = function (image, canvas) {
         try {
             canvas.getContext("2d").drawImage(image, 0, 0);
         } catch (e) {

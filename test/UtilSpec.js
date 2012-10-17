@@ -111,7 +111,7 @@ describe("Utilities function", function () {
             var completed = false,
                 computedResults = null;
 
-            rasterizeHTML.util.map([], function (val, callback) {}, function (results) {
+            rasterizeHTML.util.map([], function () {}, function (results) {
                 completed = true;
                 computedResults = results;
             });
@@ -203,8 +203,8 @@ describe("Utilities function", function () {
         });
 
         it("should attach an unique parameter to the given URL to circumvent caching if requested", function () {
-            var ajaxRequest = jasmine.createSpyObj("ajaxRequest", ["open", "addEventListener", "overrideMimeType", "send"]),
-                xmlHttpRequestSpy = spyOn(window, "XMLHttpRequest").andReturn(ajaxRequest);
+            var ajaxRequest = jasmine.createSpyObj("ajaxRequest", ["open", "addEventListener", "overrideMimeType", "send"]);
+            spyOn(window, "XMLHttpRequest").andReturn(ajaxRequest);
 
             rasterizeHTML.util.ajax("non_existing_url.html", {cache: false}, function () {}, function () {});
 
@@ -213,8 +213,8 @@ describe("Utilities function", function () {
         });
 
         it("should not attach an unique parameter to the given URL by default", function () {
-            var ajaxRequest = jasmine.createSpyObj("ajaxRequest", ["open", "addEventListener", "overrideMimeType", "send"]),
-                xmlHttpRequestSpy = spyOn(window, "XMLHttpRequest").andReturn(ajaxRequest);
+            var ajaxRequest = jasmine.createSpyObj("ajaxRequest", ["open", "addEventListener", "overrideMimeType", "send"]);
+            spyOn(window, "XMLHttpRequest").andReturn(ajaxRequest);
 
             rasterizeHTML.util.ajax("non_existing_url.html", {}, function () {}, function () {});
 
@@ -222,8 +222,8 @@ describe("Utilities function", function () {
         });
 
         it("should force mime type if requested", function () {
-            var ajaxRequest = jasmine.createSpyObj("ajaxRequest", ["open", "addEventListener", "overrideMimeType", "send"]),
-                xmlHttpRequestSpy = spyOn(window, "XMLHttpRequest").andReturn(ajaxRequest);
+            var ajaxRequest = jasmine.createSpyObj("ajaxRequest", ["open", "addEventListener", "overrideMimeType", "send"]);
+            spyOn(window, "XMLHttpRequest").andReturn(ajaxRequest);
 
             rasterizeHTML.util.ajax("non_existing_url.html", {mimeType: "42"}, function () {}, function () {});
 
@@ -251,12 +251,11 @@ describe("Utilities function", function () {
         });
 
         it("should handle error", function () {
-            var ajaxSpy = spyOn(rasterizeHTML.util, "ajax").andCallFake(function (url, options, success, error) {
-                    error();
-                }),
-                errorCallback = jasmine.createSpy("errorCallback"),
+            var errorCallback = jasmine.createSpy("errorCallback"),
                 successCallback = jasmine.createSpy("successCallback");
-
+            spyOn(rasterizeHTML.util, "ajax").andCallFake(function (url, options, success, error) {
+                error();
+            });
             rasterizeHTML.util.binaryAjax("url", {}, successCallback, errorCallback);
         });
 
@@ -347,8 +346,8 @@ describe("Utilities function", function () {
         });
 
         it("should attach an unique parameter to the given URL to circumvent caching if requested", function () {
-            var image = {},
-                imageSpy = spyOn(window, "Image").andReturn(image);
+            var image = {};
+            spyOn(window, "Image").andReturn(image);
 
             rasterizeHTML.util.getDataURIForImageURL("image.png", {cache: false}, function () {}, function () {});
 
@@ -356,8 +355,8 @@ describe("Utilities function", function () {
         });
 
         it("should not attach an unique parameter to the given URL by default", function () {
-            var image = {},
-                imageSpy = spyOn(window, "Image").andReturn(image);
+            var image = {};
+            spyOn(window, "Image").andReturn(image);
 
             rasterizeHTML.util.getDataURIForImageURL("image.png", {}, function () {}, function () {});
 

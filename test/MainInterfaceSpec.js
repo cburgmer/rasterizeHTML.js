@@ -167,12 +167,11 @@ describe("Main interface of rasterizeHTML.js", function () {
         });
 
         it("should take a URL, inline all displayable content and render to the given canvas", function () {
-            var finished = false,
-                drawHtmlSpy = spyOn(rasterizeHTML, "drawHTML").andCallFake(function (html, canvas, options, callback) {
+            var drawHtmlSpy = spyOn(rasterizeHTML, "drawHTML").andCallFake(function (html, canvas, options, callback) {
                     callback(svgImage, []);
                 });
 
-            ajaxSpy.andCallFake(function (url, options, success, error) {
+            ajaxSpy.andCallFake(function (url, options, success) {
                 success("some html");
             });
 
@@ -183,12 +182,11 @@ describe("Main interface of rasterizeHTML.js", function () {
         });
 
         it("should make the canvas optional when drawing an URL", function () {
-            var finished = false,
-                drawHtmlSpy = spyOn(rasterizeHTML, "drawHTML").andCallFake(function (html, canvas, options, callback) {
+            var drawHtmlSpy = spyOn(rasterizeHTML, "drawHTML").andCallFake(function (html, canvas, options, callback) {
                     callback(svgImage, []);
                 });
 
-            ajaxSpy.andCallFake(function (url, options, success, error) {
+            ajaxSpy.andCallFake(function (url, options, success) {
                 success("some html");
             });
 
@@ -199,10 +197,9 @@ describe("Main interface of rasterizeHTML.js", function () {
         });
 
         it("should circumvent caching if requested for drawURL", function () {
-            var finished = false,
-                drawHtmlSpy = spyOn(rasterizeHTML, "drawHTML").andCallFake(function (html, canvas, options, callback) {
-                    callback(svgImage, []);
-                });
+            spyOn(rasterizeHTML, "drawHTML").andCallFake(function (html, canvas, options, callback) {
+                callback(svgImage, []);
+            });
 
             ajaxSpy.andCallFake(function (url, options, success, error) {
                 error();
@@ -217,7 +214,7 @@ describe("Main interface of rasterizeHTML.js", function () {
         });
 
         it("should make callback optional for drawURL", function () {
-            ajaxSpy.andCallFake(function (url, options, success, error) {
+            ajaxSpy.andCallFake(function (url, options, success) {
                 success("some html");
             });
 
@@ -295,7 +292,7 @@ describe("Main interface of rasterizeHTML.js", function () {
                     callback(svgImage, ["some error"]);
                 });
 
-            ajaxSpy.andCallFake(function (url, options, success, error) {
+            ajaxSpy.andCallFake(function (url, options, success) {
                 success();
             });
 
@@ -323,7 +320,7 @@ describe("Main interface of rasterizeHTML.js", function () {
         });
 
         it("should deal with a missing callback when loading a broken URL", function () {
-            var drawHtmlSpy = spyOn(rasterizeHTML, "drawHTML");
+            spyOn(rasterizeHTML, "drawHTML");
 
             ajaxSpy.andCallFake(function (url, options, success, error) {
                 error();
@@ -370,7 +367,7 @@ describe("Main interface of rasterizeHTML.js", function () {
         it("should pass through an error from inlining when drawing the image on the canvas on drawDocument", function () {
             var doc = "doc";
 
-            renderSvg.andCallFake(function (svg, canvas, successCallback, errorCallback) {
+            renderSvg.andCallFake(function (svg, canvas, successCallback) {
                 successCallback(svgImage);
             });
             drawImageOnCanvas.andReturn(false);
@@ -398,7 +395,7 @@ describe("Main interface of rasterizeHTML.js", function () {
         it("should work without a callback specified on error when drawing the image on the canvas in drawDocument", function () {
             var doc = "doc";
 
-            renderSvg.andCallFake(function (svg, canvas, successCallback, errorCallback) {
+            renderSvg.andCallFake(function (svg, canvas, successCallback) {
                 successCallback(svgImage);
             });
             drawImageOnCanvas.andReturn(false);

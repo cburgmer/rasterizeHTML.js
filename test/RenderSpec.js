@@ -283,8 +283,8 @@ describe("The rendering process", function () {
             var renderFinished = false,
                 canvas = document.createElement("canvas"),
                 svg = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"></svg>',
-                imageInstance = {},
-                windowImageSpy = spyOn(window, "Image").andReturn(imageInstance);
+                imageInstance = {};
+            spyOn(window, "Image").andReturn(imageInstance);
 
             rasterizeHTML.renderSvg(svg, canvas, function () {}, function () { renderFinished = true; });
 

@@ -104,7 +104,7 @@ describe("CSS references inline", function () {
                 anImagesDataUri = "data:image/png;base64,someDataUri",
                 url, styleContent;
 
-            getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback, errorCallback) {
+            getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback) {
                 if (url === anImage) {
                     successCallback(anImagesDataUri);
                 }
@@ -125,10 +125,7 @@ describe("CSS references inline", function () {
         });
 
         it("should respect the document's baseURI when loading the background-image", function () {
-            var backgroundImageRegex = /background-image:\s*url\("([^\)]+)"\);/,
-                url, styleContent;
-
-            getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback, errorCallback) {
+            getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback) {
                 successCallback("aDataUri");
             });
             joinUrlSpy.andCallThrough();
@@ -146,7 +143,7 @@ describe("CSS references inline", function () {
         it("should respect optional baseUrl when loading the background-image", function () {
             var callback = jasmine.createSpy("callback");
 
-            getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback, errorCallback) {
+            getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback) {
                 successCallback("aDataUri");
             });
             joinUrlSpy.andCallThrough();
@@ -163,7 +160,7 @@ describe("CSS references inline", function () {
         it("should favour explicit baseUrl over document.baseURI when loading the background-image", function () {
             var baseUrl = "aBaseURI";
 
-            getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback, errorCallback) {
+            getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback) {
                 successCallback("aDataUri");
             });
             joinUrlSpy.andCallThrough();
@@ -183,7 +180,7 @@ describe("CSS references inline", function () {
         it("should circumvent caching if requested", function () {
             var anImage = "anImage.png";
 
-            getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback, errorCallback) {
+            getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback) {
                 successCallback("uri");
             });
 
@@ -198,7 +195,7 @@ describe("CSS references inline", function () {
         it("should not circumvent caching by default", function () {
             var anImage = "anImage.png";
 
-            getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback, errorCallback) {
+            getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback) {
                 successCallback("uri");
             });
 
@@ -309,7 +306,7 @@ describe("CSS references inline", function () {
         });
 
         it("should inline a font", function () {
-            binaryAjaxSpy.andCallFake(function (url, options, success, error) {
+            binaryAjaxSpy.andCallFake(function (url, options, success) {
                 success("this is not a font");
             });
 
@@ -327,7 +324,7 @@ describe("CSS references inline", function () {
         it("should respect the document's baseURI when loading the font", function () {
             joinUrlSpy.andCallThrough();
 
-            binaryAjaxSpy.andCallFake(function (url, options, success, error) {
+            binaryAjaxSpy.andCallFake(function (url, options, success) {
                 success("this is not a font");
             });
 
@@ -349,7 +346,7 @@ describe("CSS references inline", function () {
             var callback = jasmine.createSpy("callback"),
                 baseUrl = "aBaseURI";
 
-            binaryAjaxSpy.andCallFake(function (url, options, success, error) {
+            binaryAjaxSpy.andCallFake(function (url, options, success) {
                 success("this is not a font");
             });
             joinUrlSpy.andCallThrough();
@@ -369,7 +366,7 @@ describe("CSS references inline", function () {
         it("should circumvent caching if requested", function () {
             var fontUrl = "fake.woff";
 
-            binaryAjaxSpy.andCallFake(function (url, options, success, error) {
+            binaryAjaxSpy.andCallFake(function (url, options, success) {
                 success("this is not a font");
             });
 
@@ -384,7 +381,7 @@ describe("CSS references inline", function () {
         it("should not circumvent caching by default", function () {
             var fontUrl = "fake.woff";
 
-            binaryAjaxSpy.andCallFake(function (url, options, success, error) {
+            binaryAjaxSpy.andCallFake(function (url, options, success) {
                 success("this is not a font");
             });
 

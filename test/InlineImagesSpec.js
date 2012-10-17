@@ -6,7 +6,7 @@ describe("Image inline", function () {
         joinUrlSpy, getDataURIForImageURLSpy, doc;
 
     var setUpGetDataURIForImageURLSpyToRouteFirstAndSecondImage = function() {
-        getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback, errorCallback) {
+        getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback) {
             if (url === firstImage) {
                 successCallback(firstImageDataURI);
             } else if (url === secondImage) {
@@ -76,7 +76,7 @@ describe("Image inline", function () {
         var callback = jasmine.createSpy("callback");
 
         doc = rasterizeHTMLTestHelper.readDocumentFixture("image.html");
-        getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback, errorCallback) {
+        getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback) {
             successCallback();
         });
 
@@ -91,7 +91,7 @@ describe("Image inline", function () {
         var callback = jasmine.createSpy("callback");
 
         doc = rasterizeHTMLTestHelper.readDocumentFixtureWithoutBaseURI("image.html");
-        getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback, errorCallback) {
+        getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback) {
             successCallback();
         });
 
@@ -105,7 +105,7 @@ describe("Image inline", function () {
     it("should favour explicit baseUrl over document.baseURI when loading the image", function () {
         var callback = jasmine.createSpy("callback"),
             baseUrl = "aBaseUrl";
-        getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback, errorCallback) {
+        getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback) {
             successCallback();
         });
 

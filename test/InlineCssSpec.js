@@ -113,7 +113,7 @@ describe("CSS inline", function () {
         doc.head.appendChild(emptyCssLink);
 
         // Circumvent Firefox having an issue locally loading empty files and returning a "404" instead.
-        ajaxSpy.andCallFake(function (url, options, success, error) {
+        ajaxSpy.andCallFake(function (url, options, success) {
             success("");
         });
 
@@ -187,7 +187,7 @@ describe("CSS inline", function () {
                 return "green.png";
             }
         });
-        ajaxSpy.andCallFake(function (url, options, success, error) {
+        ajaxSpy.andCallFake(function (url, options, success) {
             if (url === "some_url/below/some.css") {
                 success('div { background-image: url("../green.png"); }\n' +
                     '@font-face { font-family: "test font"; src: url("fake.woff"); }');
