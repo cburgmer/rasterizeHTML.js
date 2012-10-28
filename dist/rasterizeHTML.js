@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.1.0 - 2012-10-17
+/*! rasterizeHTML.js - v0.1.0 - 2012-10-28
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2012 Christoph Burgmer; Licensed MIT */
 
@@ -885,6 +885,10 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
 
     module.renderSvg = function (svg, canvas, successCallback, errorCallback) {
         var url, image,
+            resetEventHandlers = function () {
+                image.onload = null;
+                image.onerror = null;
+            },
             cleanUp = function () {
                 if (url) {
                     cleanUpUrl(url);
@@ -898,6 +902,7 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
 
         image = new window.Image();
         image.onload = function() {
+            resetEventHandlers();
             try {
                 successCallback(image);
             } finally {

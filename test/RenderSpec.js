@@ -167,6 +167,25 @@ describe("The rendering process", function () {
             expect(errorCallback).toHaveBeenCalled();
             expect(successCallback).not.toHaveBeenCalled(); // Quite possibly depends on the underlying JS implementation to actually work :{
         });
+
+        it("should return an image without event listeners attached", function () {
+            var image = null,
+                anSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"></svg>';
+
+            rasterizeHTML.renderSvg(anSvg, null, function (the_image) {
+                image = the_image;
+            });
+
+            waitsFor(function () {
+                return image != null;
+            }, "rasterizeHTML.renderSvg", 2000);
+
+            runs(function () {
+                expect(image.onerror).toBeNull();
+                expect(image.onload).toBeNull();
+            });
+        });
+
     });
 
     describe("on drawing the image on the canvas", function () {
