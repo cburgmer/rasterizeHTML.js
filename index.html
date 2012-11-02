@@ -10,10 +10,7 @@
     <!--[if lt IE 9]>
     <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
-    <script type="text/javascript" src="lib/htmlparser.js"></script> <!-- Only needed for Chrome & Safari -->
-    <script type="text/javascript" src="lib/cssParser.js"></script>
-    <script type="text/javascript" src="lib/URI.js"></script>
-    <script type="text/javascript" src="rasterizeHTML.js"></script>
+    <script type="text/javascript" src="rasterizeHTML.allinone.js"></script>
     <style type="text/css">
         #pageInPageCanvas {
             display: block;
@@ -88,10 +85,7 @@ rasterizeHTML.drawDocument( document [, canvas] [, options] [, callback] )</pre>
 <span class="nt">&lt;html&gt;</span>
 <span class="nt">&lt;head&gt;</span>
     <span class="nt">&lt;title&gt;</span>rasterizeHTML.js example<span class="nt">&lt;/title&gt;</span>
-    <span class="nt">&lt;script </span><span class="na">type=</span><span class="s">"text/javascript"</span> <span class="na">src=</span><span class="s">"lib/htmlparser.js"</span><span class="nt">&gt;&lt;/script&gt;</span> <span class="c">&lt;!-- Needed for Chrome &amp; Safari to work around buggy XMLSerializer --&gt;</span>
-    <span class="nt">&lt;script </span><span class="na">type=</span><span class="s">"text/javascript"</span> <span class="na">src=</span><span class="s">"lib/cssParser.js"</span><span class="nt">&gt;&lt;/script&gt;</span> <span class="c">&lt;!-- Needed to embed backgroundImages --&gt;</span>
-    <span class="nt">&lt;script </span><span class="na">type=</span><span class="s">"text/javascript"</span> <span class="na">src=</span><span class="s">"lib/URI.js"</span><span class="nt">&gt;&lt;/script&gt;</span> <span class="c">&lt;!-- Needed to calculate paths when embedding stuff --&gt;</span>
-    <span class="nt">&lt;script </span><span class="na">type=</span><span class="s">"text/javascript"</span> <span class="na">src=</span><span class="s">"rasterizeHTML.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">type=</span><span class="s">"text/javascript"</span> <span class="na">src=</span><span class="s">"rasterizeHTML.allinone.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
 <span class="nt">&lt;/head&gt;</span>
 <span class="nt">&lt;body&gt;</span>
     <span class="nt">&lt;canvas</span> <span class="na">id=</span><span class="s">"canvas"</span> <span class="na">width=</span><span class="s">"400"</span> <span class="na">height=</span><span class="s">"200"</span><span class="nt">&gt;&lt;/canvas&gt;</span>
