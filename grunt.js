@@ -9,7 +9,15 @@ module.exports = function (grunt) {
                 '<%= grunt.template.today("yyyy-mm-dd") %>\n' +
                 '<%= pkg.homepage ? "* " + pkg.homepage + "\n" : "" %>' +
                 '* Copyright (c) <%= grunt.template.today("yyyy") %> <%= pkg.author.name %>;' +
-                ' Licensed <%= _.pluck(pkg.licenses, "type").join(", ") %> */'
+                ' Licensed <%= _.pluck(pkg.licenses, "type").join(", ") %> */',
+            bannerAllInOne:'/*! <%= pkg.title || pkg.name %> - v<%= pkg.version %> - ' +
+                '<%= grunt.template.today("yyyy-mm-dd") %>\n' +
+                '<%= pkg.homepage ? "* " + pkg.homepage + "\n" : "" %>' +
+                '* Copyright (c) <%= grunt.template.today("yyyy") %> <%= pkg.author.name %>;' +
+                '\n/* Integrated dependencies:\n' +
+                ' * URI.js (MIT License/GPL v3),\n' +
+                ' * cssParser.js (MPL 1.1/GPL 2.0/LGPL 2.1),\n' +
+                ' * htmlparser.js */'
         },
         lint:{
             src:'<%= pkg.name %>',
@@ -32,6 +40,10 @@ module.exports = function (grunt) {
             dist:{
                 src:['<banner:meta.banner>', '<config:concat.dist.dest>'],
                 dest:'dist/rasterizeHTML.min.js'
+            },
+            allinone:{
+                src:['<banner:meta.bannerAllInOne>', 'lib/*.js', '<config:concat.dist.dest>'],
+                dest:'dist/rasterizeHTML.allinone.js'
             }
         },
         watch:{

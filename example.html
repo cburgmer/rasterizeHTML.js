@@ -3,10 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <title>rasterizeHTML.js example</title>
-    <script type="text/javascript" src="lib/htmlparser.js"></script> <!-- Only needed for Chrome & Safari -->
-    <script type="text/javascript" src="lib/cssParser.js"></script>
-    <script type="text/javascript" src="lib/URI.js"></script>
-    <script type="text/javascript" src="rasterizeHTML.js"></script>
+    <script type="text/javascript" src="dist/rasterizeHTML.allinone.js"></script>
 </head>
 <body>
     <canvas id="canvas" style="border:2px solid black;" width="550" height="200"></canvas>
@@ -29,12 +26,16 @@ body {
     </div>
     <script type="text/javascript">
         var input = document.getElementById("input"),
-            canvas = document.getElementById("canvas");
+            canvas = document.getElementById("canvas"),
+            oldText = input.value;
 
         input.onkeyup = function () {
-            canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+            if (input.value !== oldText) {
+                oldText = input.value;
+                canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 
-            rasterizeHTML.drawHTML(input.value, canvas);
+                rasterizeHTML.drawHTML(input.value, canvas);
+            }
         };
 
         rasterizeHTML.drawHTML(input.value, canvas);
