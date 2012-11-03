@@ -64,6 +64,20 @@ describe("working around on Firefox and Webkit to fix resources not being render
         });
     });
 
+    it("should remove the workaround div before the callback has been called", function () {
+        var renderFinished = false,
+            svg = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"></svg>';
+
+        rasterizeHTML.renderSvg(svg, null, function () {
+            expect($(".rasterizeHTML_js_FirefoxWorkaround")).not.toExist();
+            renderFinished = true;
+        });
+
+        waitsFor(function () {
+            return renderFinished;
+        }, "rasterizeHTML.renderSvg", 2000);
+    });
+
     it("should remove the workaround div once the canvas has been rendered even if an error occurs when drawing on the canvas", function () {
         var canvas = jasmine.createSpyObj("canvas", ["getContext"]),
             context = jasmine.createSpyObj("context", ["drawImage"]);
