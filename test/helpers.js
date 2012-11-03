@@ -3,11 +3,7 @@ var isWebkit = navigator.userAgent.indexOf("WebKit") >= 0,
         if (! isWebkit) {
             return it(text, functionHandle);
         } else {
-            safeLog(
-                "***************************************************************************\n" +
-                'Warning: "' + text + '" is disabled on this platform\n' +
-                "***************************************************************************\n"
-                )
+            safeLog('Warning: "' + text + '" is disabled on this platform');
         }
     },
     safeLog = function (msg) {
