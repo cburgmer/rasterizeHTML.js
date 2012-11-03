@@ -899,11 +899,8 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
         image = new window.Image();
         image.onload = function() {
             resetEventHandlers();
-            try {
-                successCallback(image);
-            } finally {
-                cleanUp();
-            }
+            cleanUp();
+            successCallback(image);
         };
         image.onerror = function () {
             cleanUp();
