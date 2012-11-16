@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.1.0 - 2012-11-03
+/*! rasterizeHTML.js - v0.1.0 - 2012-11-16
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2012 Christoph Burgmer; Licensed MIT */
 
@@ -328,14 +328,29 @@ var rasterizeHTML = (function (window, URI, CSSParser) {
         });
     };
 
+    var filterInputsForImageType = function (inputs) {
+        var imageTypeInputs = [];
+        Array.prototype.forEach.call(inputs, function (input) {
+            if (input.type === "image") {
+                imageTypeInputs.push(input);
+            }
+        });
+        return imageTypeInputs;
+    };
+
     module.loadAndInlineImages = function (doc, options, callback) {
         var params = module.util.parseOptionalParameters(options, callback),
             images = doc.getElementsByTagName("img"),
+            inputs = doc.getElementsByTagName("input"),
             baseUrl = params.options.baseUrl,
             cache = params.options.cache !== false,
+            imageLike = [],
             errors = [];
 
-        module.util.map(images, function (image, finish) {
+        imageLike = Array.prototype.slice.call(images);
+        imageLike = imageLike.concat(filterInputsForImageType(inputs));
+
+        module.util.map(imageLike, function (image, finish) {
             encodeImageAsDataURI(image, baseUrl, cache, finish, function (url) {
                 errors.push({
                     resourceType: "image",

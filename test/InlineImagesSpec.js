@@ -1,4 +1,4 @@
-describe("Image inline", function () {
+describe("Image and image input inline", function () {
     var firstImage = "firstImage.png",
         secondImage = "secondImage.png",
         firstImageDataURI = "mock_data_URI_of_the_first_image",
@@ -22,7 +22,7 @@ describe("Image inline", function () {
         doc = document.implementation.createHTMLDocument("");
     });
 
-    it("should load external images", function () {
+    it("should load an external image", function () {
         var callback = jasmine.createSpy("callback");
         setUpGetDataURIForImageURLSpyToRouteFirstAndSecondImage();
 
@@ -33,6 +33,19 @@ describe("Image inline", function () {
         expect(callback).toHaveBeenCalled();
 
         expect(doc.getElementById("image").attributes.src.nodeValue).toEqual(firstImageDataURI);
+    });
+
+    it("should load an input with type image", function () {
+        var callback = jasmine.createSpy("callback");
+        setUpGetDataURIForImageURLSpyToRouteFirstAndSecondImage();
+
+        doc.body.innerHTML = '<input type="image" id="input" src="' + firstImage + '" alt="test image"/>';
+
+        rasterizeHTML.loadAndInlineImages(doc, callback);
+
+        expect(callback).toHaveBeenCalled();
+
+        expect(doc.getElementById("input").attributes.src.nodeValue).toEqual(firstImageDataURI);
     });
 
     it("should load multiple external images", function () {
