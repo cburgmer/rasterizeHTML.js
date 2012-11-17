@@ -185,6 +185,8 @@ describe("CSS inline", function () {
                 return "some_url/below/some.css";
             } else if (url === "../green.png" && base === "below/some.css") {
                 return "green.png";
+            } else if (url === "fake.woff" && base === "below/some.css") {
+                return "below/fake.woff";
             }
         });
         ajaxSpy.andCallFake(function (url, options, success) {
@@ -200,11 +202,10 @@ describe("CSS inline", function () {
         rasterizeHTML.loadAndInlineCSS(doc, {baseUrl: "some_url/"}, callback);
 
         expect(callback).toHaveBeenCalled();
-        expect(joinUrlSpy).toHaveBeenCalledWith("below/some.css", "../green.png");
-        expect(joinUrlSpy).toHaveBeenCalledWith("below/some.css", "fake.woff");
 
         expect(doc.head.getElementsByTagName("style").length).toEqual(1);
         expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/url\(\"green\.png\"\)/);
+        expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/url\(\"below\/fake\.woff\"\)/);
     });
 
     it("should circumvent caching if requested", function () {

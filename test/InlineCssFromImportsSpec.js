@@ -183,20 +183,17 @@ describe("CSS import inline", function () {
         expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/div\s+\{\s+background-image: url\("this_url\/the_image.png"\);\s+\}\s*$/);
     });
 
-    it("should map resources relative to the document base URI", function () {
+    it("should map resources independent of the document base URI", function () {
         ajaxSpy.andCallFake(function (url, options, callback) {
             if (url === 'this_url/that.css') {
-                callback('div { background-image: url("the_image.png"); }\n' +
-                    '@font-face { font-family: "test font"; src: url("fake.woff"); }');
+                callback('div { background-image: url("the_image.png"); }');
             }
         });
         joinUrlSpy.andCallFake(function (base, url) {
             if (base === "this_url/" && url === "that.css") {
                 return "this_url/that.css";
-            } else if (base === "this_url/that.css" && url === "the_image.png") {
-                return "this_url/the_image.png";
-            } else if (base === "this_url/that.css" && url === "fake.woff") {
-                return "this_url/fake.woff";
+            } else if (base === "that.css") {
+                return url;
             }
         });
 
@@ -207,8 +204,8 @@ describe("CSS import inline", function () {
         expect(callback).toHaveBeenCalled();
 
         expect(joinUrlSpy).toHaveBeenCalledWith("this_url/", "that.css");
-        expect(joinUrlSpy).toHaveBeenCalledWith("that.css", "the_image.png");
-        expect(joinUrlSpy).toHaveBeenCalledWith("that.css", "fake.woff");
+        expect(doc.head.getElementsByTagName("style").length).toEqual(1);
+        expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/div\s+\{\s+background-image: url\("the_image.png"\);\s+\}/);
      });
 
     it("should circumvent caching if requested", function () {
