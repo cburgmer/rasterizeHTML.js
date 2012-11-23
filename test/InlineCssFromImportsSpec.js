@@ -4,21 +4,21 @@ describe("CSS import inline", function () {
     beforeEach(function () {
         doc = document.implementation.createHTMLDocument("");
 
-        extractCssUrlSpy = spyOn(rasterizeHTML.util, "extractCssUrl").andCallFake(function (cssUrl) {
+        extractCssUrlSpy = spyOn(rasterizeHTMLInline.util, "extractCssUrl").andCallFake(function (cssUrl) {
             if (/^url/.test(cssUrl)) {
                 return cssUrl.replace(/^url\("/, '').replace(/"\)$/, '');
             } else {
                 throw "error";
             }
         });
-        joinUrlSpy = spyOn(rasterizeHTML.util, "joinUrl");
-        ajaxSpy = spyOn(rasterizeHTML.util, "ajax");
+        joinUrlSpy = spyOn(rasterizeHTMLInline.util, "joinUrl");
+        ajaxSpy = spyOn(rasterizeHTMLInline.util, "ajax");
 
         callback = jasmine.createSpy("callback");
     });
 
     it("should do nothing if no CSS is found", function () {
-        rasterizeHTML.loadAndInlineCSSImports(doc, callback);
+        rasterizeHTMLInline.loadAndInlineCSSImports(doc, callback);
 
         expect(callback).toHaveBeenCalled();
 
@@ -28,7 +28,7 @@ describe("CSS import inline", function () {
     it("should not touch unrelated CSS", function () {
         rasterizeHTMLTestHelper.addStyleToDocument(doc, "span {   padding-left: 0; }");
 
-        rasterizeHTML.loadAndInlineCSSImports(doc, callback);
+        rasterizeHTMLInline.loadAndInlineCSSImports(doc, callback);
 
         expect(callback).toHaveBeenCalled();
 
@@ -45,7 +45,7 @@ describe("CSS import inline", function () {
 
         rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import url("that.css");');
 
-        rasterizeHTML.loadAndInlineCSSImports(doc, callback);
+        rasterizeHTMLInline.loadAndInlineCSSImports(doc, callback);
 
         expect(callback).toHaveBeenCalled();
 
@@ -60,7 +60,7 @@ describe("CSS import inline", function () {
 
         rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import "that.css";');
 
-        rasterizeHTML.loadAndInlineCSSImports(doc, callback);
+        rasterizeHTMLInline.loadAndInlineCSSImports(doc, callback);
 
         expect(callback).toHaveBeenCalled();
         expect(ajaxSpy).toHaveBeenCalledWith("that.css", jasmine.any(Object), jasmine.any(Function), jasmine.any(Function));
@@ -78,7 +78,7 @@ describe("CSS import inline", function () {
         rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import url("that.css");\n' +
             '@import url("this.css");');
 
-        rasterizeHTML.loadAndInlineCSSImports(doc, callback);
+        rasterizeHTMLInline.loadAndInlineCSSImports(doc, callback);
 
         expect(callback).toHaveBeenCalled();
 
@@ -99,7 +99,7 @@ describe("CSS import inline", function () {
         rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import url("that.css");\n' +
             '@import url("this.css");');
 
-        rasterizeHTML.loadAndInlineCSSImports(doc, callback);
+        rasterizeHTMLInline.loadAndInlineCSSImports(doc, callback);
 
         expect(callback).toHaveBeenCalled();
 
@@ -110,7 +110,7 @@ describe("CSS import inline", function () {
     it("should ignore invalid values", function () {
         rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import   invalid url;');
 
-        rasterizeHTML.loadAndInlineCSSImports(doc, callback);
+        rasterizeHTMLInline.loadAndInlineCSSImports(doc, callback);
 
         expect(callback).toHaveBeenCalled();
 
@@ -131,7 +131,7 @@ describe("CSS import inline", function () {
 
         doc = rasterizeHTMLTestHelper.readDocumentFixture("importCss.html");
 
-        rasterizeHTML.loadAndInlineCSSImports(doc, callback);
+        rasterizeHTMLInline.loadAndInlineCSSImports(doc, callback);
 
         expect(callback).toHaveBeenCalled();
 
@@ -154,7 +154,7 @@ describe("CSS import inline", function () {
         expect(doc.baseURI).not.toEqual("about:blank");
         expect(doc.baseURI).not.toEqual(baseUrl);
 
-        rasterizeHTML.loadAndInlineCSSImports(doc, {baseUrl: baseUrl}, callback);
+        rasterizeHTMLInline.loadAndInlineCSSImports(doc, {baseUrl: baseUrl}, callback);
 
         expect(callback).toHaveBeenCalled();
 
@@ -175,7 +175,7 @@ describe("CSS import inline", function () {
 
         rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import url("this_url/that.css");');
 
-        rasterizeHTML.loadAndInlineCSSImports(doc, callback);
+        rasterizeHTMLInline.loadAndInlineCSSImports(doc, callback);
 
         expect(callback).toHaveBeenCalled();
 
@@ -199,7 +199,7 @@ describe("CSS import inline", function () {
 
         rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import url("that.css");');
 
-        rasterizeHTML.loadAndInlineCSSImports(doc, {baseUrl: 'this_url/'}, callback);
+        rasterizeHTMLInline.loadAndInlineCSSImports(doc, {baseUrl: 'this_url/'}, callback);
 
         expect(callback).toHaveBeenCalled();
 
@@ -215,7 +215,7 @@ describe("CSS import inline", function () {
 
         rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import url("that.css");');
 
-        rasterizeHTML.loadAndInlineCSSImports(doc, {cache: false}, callback);
+        rasterizeHTMLInline.loadAndInlineCSSImports(doc, {cache: false}, callback);
 
         expect(callback).toHaveBeenCalled();
 
@@ -229,7 +229,7 @@ describe("CSS import inline", function () {
 
         rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import url("that.css");');
 
-        rasterizeHTML.loadAndInlineCSSImports(doc, callback);
+        rasterizeHTMLInline.loadAndInlineCSSImports(doc, callback);
 
         expect(callback).toHaveBeenCalled();
 
@@ -246,7 +246,7 @@ describe("CSS import inline", function () {
             '@import url("that.css");');
         rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import url("that.css");');
 
-        rasterizeHTML.loadAndInlineCSSImports(doc, callback);
+        rasterizeHTMLInline.loadAndInlineCSSImports(doc, callback);
 
         expect(callback).toHaveBeenCalled();
         expect(ajaxSpy).toHaveBeenCalledWith("that.css", jasmine.any(Object), jasmine.any(Function), jasmine.any(Function));
@@ -267,7 +267,7 @@ describe("CSS import inline", function () {
 
         rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import url("this.css");');
 
-        rasterizeHTML.loadAndInlineCSSImports(doc, callback);
+        rasterizeHTMLInline.loadAndInlineCSSImports(doc, callback);
 
         expect(callback).toHaveBeenCalled();
         expect(doc.head.getElementsByTagName("style").length).toEqual(1);
@@ -287,7 +287,7 @@ describe("CSS import inline", function () {
 
         rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import url("this.css");');
 
-        rasterizeHTML.loadAndInlineCSSImports(doc, callback);
+        rasterizeHTMLInline.loadAndInlineCSSImports(doc, callback);
 
         expect(callback).toHaveBeenCalled();
         expect(ajaxSpy).toHaveBeenCalledWith("this.css", jasmine.any(Object), jasmine.any(Function), jasmine.any(Function));
@@ -306,7 +306,7 @@ describe("CSS import inline", function () {
 
         rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import url("this.css");');
 
-        rasterizeHTML.loadAndInlineCSSImports(doc, callback);
+        rasterizeHTMLInline.loadAndInlineCSSImports(doc, callback);
 
         expect(callback).toHaveBeenCalled();
         expect(ajaxSpy).toHaveBeenCalledWith("this.css", jasmine.any(Object), jasmine.any(Function), jasmine.any(Function));
@@ -323,7 +323,7 @@ describe("CSS import inline", function () {
 
             rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import url("missing.css");');
 
-            rasterizeHTML.loadAndInlineCSSImports(doc, callback);
+            rasterizeHTMLInline.loadAndInlineCSSImports(doc, callback);
 
             expect(callback).toHaveBeenCalledWith([{
                 resourceType: "stylesheet",
@@ -341,7 +341,7 @@ describe("CSS import inline", function () {
 
             rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import url("missing.css");');
 
-            rasterizeHTML.loadAndInlineCSSImports(doc, {baseUrl: 'some_url/'}, callback);
+            rasterizeHTMLInline.loadAndInlineCSSImports(doc, {baseUrl: 'some_url/'}, callback);
 
             expect(callback).toHaveBeenCalledWith([{
                 resourceType: "stylesheet",
@@ -361,7 +361,7 @@ describe("CSS import inline", function () {
             rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import url("missing.css");\n' +
                 '@import url("existing.css");');
 
-            rasterizeHTML.loadAndInlineCSSImports(doc, callback);
+            rasterizeHTMLInline.loadAndInlineCSSImports(doc, callback);
 
             expect(callback).toHaveBeenCalledWith([{
                 resourceType: "stylesheet",
@@ -378,7 +378,7 @@ describe("CSS import inline", function () {
                 '@import url("another_missing.css");');
             rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import url("and_a_third_missing.css");');
 
-            rasterizeHTML.loadAndInlineCSSImports(doc, callback);
+            rasterizeHTMLInline.loadAndInlineCSSImports(doc, callback);
 
             expect(callback).toHaveBeenCalledWith([
                 {
@@ -408,7 +408,7 @@ describe("CSS import inline", function () {
 
             rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import url("this.css");');
 
-            rasterizeHTML.loadAndInlineCSSImports(doc, callback);
+            rasterizeHTMLInline.loadAndInlineCSSImports(doc, callback);
 
             expect(callback).toHaveBeenCalledWith([
                 {
@@ -431,7 +431,7 @@ describe("CSS import inline", function () {
 
             rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import url("that.css");');
 
-            rasterizeHTML.loadAndInlineCSSImports(doc, callback);
+            rasterizeHTMLInline.loadAndInlineCSSImports(doc, callback);
 
             expect(callback).toHaveBeenCalledWith([]);
         });

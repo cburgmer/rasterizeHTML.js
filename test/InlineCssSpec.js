@@ -4,15 +4,15 @@ describe("CSS inline", function () {
     beforeEach(function () {
         doc = document.implementation.createHTMLDocument("");
 
-        extractCssUrlSpy = spyOn(rasterizeHTML.util, "extractCssUrl").andCallFake(function (cssUrl) {
+        extractCssUrlSpy = spyOn(rasterizeHTMLInline.util, "extractCssUrl").andCallFake(function (cssUrl) {
             if (/^url/.test(cssUrl)) {
                 return cssUrl.replace(/^url\("/, '').replace(/"\)$/, '');
             } else {
                 throw "error";
             }
         });
-        joinUrlSpy = spyOn(rasterizeHTML.util, "joinUrl");
-        ajaxSpy = spyOn(rasterizeHTML.util, "ajax");
+        joinUrlSpy = spyOn(rasterizeHTMLInline.util, "joinUrl");
+        ajaxSpy = spyOn(rasterizeHTMLInline.util, "ajax");
         callback = jasmine.createSpy("loadAndInlineCssCallback");
 
         cssLink = window.document.createElement("link");
@@ -38,7 +38,7 @@ describe("CSS inline", function () {
     });
 
     it("should do nothing if no linked CSS is found", function () {
-        rasterizeHTML.loadAndInlineCSS(doc, callback);
+        rasterizeHTMLInline.loadAndInlineCSS(doc, callback);
 
         expect(callback).toHaveBeenCalled();
         expect(doc.head.getElementsByTagName("style").length).toEqual(0);
@@ -51,7 +51,7 @@ describe("CSS inline", function () {
 
         doc.head.appendChild(faviconLink);
 
-        rasterizeHTML.loadAndInlineCSS(doc, callback);
+        rasterizeHTMLInline.loadAndInlineCSS(doc, callback);
 
         expect(callback).toHaveBeenCalled();
         expect(doc.head.getElementsByTagName("style").length).toEqual(0);
@@ -61,7 +61,7 @@ describe("CSS inline", function () {
     it("should inline linked CSS", function () {
         doc.head.appendChild(cssLink);
 
-        rasterizeHTML.loadAndInlineCSS(doc, callback);
+        rasterizeHTMLInline.loadAndInlineCSS(doc, callback);
 
         expect(callback).toHaveBeenCalled();
         expect(doc.head.getElementsByTagName("style").length).toEqual(1);
@@ -76,7 +76,7 @@ describe("CSS inline", function () {
 
         doc.head.appendChild(noTypeCssLink);
 
-        rasterizeHTML.loadAndInlineCSS(doc, callback);
+        rasterizeHTMLInline.loadAndInlineCSS(doc, callback);
 
         expect(callback).toHaveBeenCalled();
         expect(doc.head.getElementsByTagName("style").length).toEqual(1);
@@ -94,7 +94,7 @@ describe("CSS inline", function () {
         doc.head.appendChild(inlineCss);
         doc.head.appendChild(anotherCssLink);
 
-        rasterizeHTML.loadAndInlineCSS(doc, callback);
+        rasterizeHTMLInline.loadAndInlineCSS(doc, callback);
 
         expect(callback).toHaveBeenCalled();
         expect(doc.head.getElementsByTagName("style").length).toEqual(3);
@@ -117,7 +117,7 @@ describe("CSS inline", function () {
             success("");
         });
 
-        rasterizeHTML.loadAndInlineCSS(doc, callback());
+        rasterizeHTMLInline.loadAndInlineCSS(doc, callback());
 
         expect(callback).toHaveBeenCalled();
         expect(doc.head.getElementsByTagName("style").length).toEqual(0);
@@ -131,7 +131,7 @@ describe("CSS inline", function () {
 
         doc = rasterizeHTMLTestHelper.readDocumentFixture("externalCSS.html");
 
-        rasterizeHTML.loadAndInlineCSS(doc, callback);
+        rasterizeHTMLInline.loadAndInlineCSS(doc, callback);
 
         expect(callback).toHaveBeenCalled();
         expect(joinUrlSpy).toHaveBeenCalledWith(doc.baseURI, "some.css");
@@ -148,7 +148,7 @@ describe("CSS inline", function () {
 
         doc = rasterizeHTMLTestHelper.readDocumentFixtureWithoutBaseURI("externalCSS.html");
 
-        rasterizeHTML.loadAndInlineCSS(doc, {baseUrl: jasmine.getFixtures().fixturesPath}, callback);
+        rasterizeHTMLInline.loadAndInlineCSS(doc, {baseUrl: jasmine.getFixtures().fixturesPath}, callback);
 
         expect(callback).toHaveBeenCalled();
         expect(joinUrlSpy).toHaveBeenCalledWith(jasmine.getFixtures().fixturesPath, "some.css");
@@ -166,7 +166,7 @@ describe("CSS inline", function () {
         expect(doc.baseURI).not.toEqual("about:blank");
         expect(doc.baseURI).not.toEqual(baseUrl);
 
-        rasterizeHTML.loadAndInlineCSS(doc, {baseUrl: jasmine.getFixtures().fixturesPath}, callback);
+        rasterizeHTMLInline.loadAndInlineCSS(doc, {baseUrl: jasmine.getFixtures().fixturesPath}, callback);
 
         expect(callback).toHaveBeenCalled();
         expect(joinUrlSpy).toHaveBeenCalledWith(jasmine.getFixtures().fixturesPath, "some.css");
@@ -199,7 +199,7 @@ describe("CSS inline", function () {
 
         doc.head.appendChild(cssWithRelativeResource);
 
-        rasterizeHTML.loadAndInlineCSS(doc, {baseUrl: "some_url/"}, callback);
+        rasterizeHTMLInline.loadAndInlineCSS(doc, {baseUrl: "some_url/"}, callback);
 
         expect(callback).toHaveBeenCalled();
 
@@ -211,7 +211,7 @@ describe("CSS inline", function () {
     it("should circumvent caching if requested", function () {
         doc.head.appendChild(cssLink);
 
-        rasterizeHTML.loadAndInlineCSS(doc, {cache: false}, callback);
+        rasterizeHTMLInline.loadAndInlineCSS(doc, {cache: false}, callback);
 
         expect(ajaxSpy).toHaveBeenCalledWith(cssLink.attributes.href.nodeValue, {
             cache: false
@@ -222,7 +222,7 @@ describe("CSS inline", function () {
     it("should not circumvent caching by default", function () {
         doc.head.appendChild(cssLink);
 
-        rasterizeHTML.loadAndInlineCSS(doc, callback);
+        rasterizeHTMLInline.loadAndInlineCSS(doc, callback);
 
         expect(ajaxSpy).toHaveBeenCalledWith(cssLink.attributes.href.nodeValue, {
             cache: true
@@ -252,7 +252,7 @@ describe("CSS inline", function () {
         it("should report an error if a stylesheet could not be loaded", function () {
             doc.head.appendChild(brokenCssLink);
 
-            rasterizeHTML.loadAndInlineCSS(doc, {baseUrl: "some_base_url/"}, callback);
+            rasterizeHTMLInline.loadAndInlineCSS(doc, {baseUrl: "some_base_url/"}, callback);
 
             expect(callback).toHaveBeenCalledWith([{
                 resourceType: "stylesheet",
@@ -264,7 +264,7 @@ describe("CSS inline", function () {
             doc.head.appendChild(brokenCssLink);
             doc.head.appendChild(cssLink);
 
-            rasterizeHTML.loadAndInlineCSS(doc, callback);
+            rasterizeHTMLInline.loadAndInlineCSS(doc, callback);
 
             expect(callback).toHaveBeenCalledWith([{
                 resourceType: "stylesheet",
@@ -276,7 +276,7 @@ describe("CSS inline", function () {
             doc.head.appendChild(brokenCssLink);
             doc.head.appendChild(anotherBrokenCssLink);
 
-            rasterizeHTML.loadAndInlineCSS(doc, callback);
+            rasterizeHTMLInline.loadAndInlineCSS(doc, callback);
 
             expect(callback).toHaveBeenCalledWith([jasmine.any(Object), jasmine.any(Object)]);
             expect(callback.mostRecentCall.args[0][0]).not.toEqual(callback.mostRecentCall.args[0][1]);
@@ -285,7 +285,7 @@ describe("CSS inline", function () {
         it("should report an empty list for a successful stylesheet", function () {
             doc.head.appendChild(cssLink);
 
-            rasterizeHTML.loadAndInlineCSS(doc, callback);
+            rasterizeHTMLInline.loadAndInlineCSS(doc, callback);
 
             expect(callback).toHaveBeenCalledWith([]);
         });

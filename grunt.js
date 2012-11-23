@@ -32,7 +32,7 @@ module.exports = function (grunt) {
         },
         concat:{
             dist:{
-                src:['<banner:meta.banner>', '<file_strip_banner:src/<%= pkg.name %>>'],
+                src:['<banner:meta.banner>', 'src/inline.js','<file_strip_banner:src/<%= pkg.name %>>'],
                 dest:'dist/<%= pkg.name %>'
             }
         },
@@ -91,6 +91,7 @@ module.exports = function (grunt) {
                     URI:true,
                     imagediff:true,
                     rasterizeHTML:true,
+                    rasterizeHTMLInline:true,
                     rasterizeHTMLTestHelper:true
                 }
             }

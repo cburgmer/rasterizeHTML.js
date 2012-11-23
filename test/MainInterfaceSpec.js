@@ -7,13 +7,13 @@ describe("Main interface of rasterizeHTML.js", function () {
         getSvgForDocument, renderSvg, drawImageOnCanvas;
 
     beforeEach(function () {
-        ajaxSpy = spyOn(rasterizeHTML.util, "ajax");
+        ajaxSpy = spyOn(rasterizeHTMLInline.util, "ajax");
 
         canvas = document.createElement("canvas");
         canvas.width = 123;
         canvas.height = 456;
 
-        parseOptionalParametersSpy = spyOn(rasterizeHTML.util, "parseOptionalParameters").andCallThrough();
+        parseOptionalParametersSpy = spyOn(rasterizeHTMLInline.util, "parseOptionalParameters").andCallThrough();
     });
 
     describe("Rendering", function () {
@@ -22,10 +22,10 @@ describe("Main interface of rasterizeHTML.js", function () {
         beforeEach(function () {
             callback = jasmine.createSpy("drawCallback");
 
-            loadAndInlineImages = spyOn(rasterizeHTML, "loadAndInlineImages").andCallFake(callbackCaller);
-            loadAndInlineCSS = spyOn(rasterizeHTML, "loadAndInlineCSS").andCallFake(callbackCaller);
-            loadAndInlineCSSImports = spyOn(rasterizeHTML, "loadAndInlineCSSImports").andCallFake(callbackCaller);
-            loadAndInlineCSSReferences = spyOn(rasterizeHTML, "loadAndInlineCSSReferences").andCallFake(callbackCaller);
+            loadAndInlineImages = spyOn(rasterizeHTMLInline, "loadAndInlineImages").andCallFake(callbackCaller);
+            loadAndInlineCSS = spyOn(rasterizeHTMLInline, "loadAndInlineCSS").andCallFake(callbackCaller);
+            loadAndInlineCSSImports = spyOn(rasterizeHTMLInline, "loadAndInlineCSSImports").andCallFake(callbackCaller);
+            loadAndInlineCSSReferences = spyOn(rasterizeHTMLInline, "loadAndInlineCSSReferences").andCallFake(callbackCaller);
             getSvgForDocument = spyOn(rasterizeHTML, "getSvgForDocument").andReturn(svg);
             renderSvg = spyOn(rasterizeHTML, "renderSvg").andCallFake(function (svg, canvas, callback) {
                 callback(svgImage);
@@ -239,12 +239,12 @@ describe("Main interface of rasterizeHTML.js", function () {
         it("should pass through an error from inlining on drawDocument", function () {
             var doc = "doc";
 
-            loadAndInlineImages = spyOn(rasterizeHTML, "loadAndInlineImages").andCallFake(function (doc, options, callback) {
+            loadAndInlineImages = spyOn(rasterizeHTMLInline, "loadAndInlineImages").andCallFake(function (doc, options, callback) {
                 callback(["the error"]);
             });
-            loadAndInlineCSS = spyOn(rasterizeHTML, "loadAndInlineCSS").andCallFake(callbackCaller);
-            loadAndInlineCSSImports = spyOn(rasterizeHTML, "loadAndInlineCSSImports").andCallFake(callbackCaller);
-            loadAndInlineCSSReferences = spyOn(rasterizeHTML, "loadAndInlineCSSReferences").andCallFake(callbackCaller);
+            loadAndInlineCSS = spyOn(rasterizeHTMLInline, "loadAndInlineCSS").andCallFake(callbackCaller);
+            loadAndInlineCSSImports = spyOn(rasterizeHTMLInline, "loadAndInlineCSSImports").andCallFake(callbackCaller);
+            loadAndInlineCSSReferences = spyOn(rasterizeHTMLInline, "loadAndInlineCSSReferences").andCallFake(callbackCaller);
 
             rasterizeHTML.drawDocument(doc, canvas, callback);
 
@@ -256,16 +256,16 @@ describe("Main interface of rasterizeHTML.js", function () {
         it("should pass through multiple errors from inlining on drawDocument", function () {
             var doc = "doc";
 
-            loadAndInlineImages = spyOn(rasterizeHTML, "loadAndInlineImages").andCallFake(function (doc, options, callback) {
+            loadAndInlineImages = spyOn(rasterizeHTMLInline, "loadAndInlineImages").andCallFake(function (doc, options, callback) {
                 callback(["the error"]);
             });
-            loadAndInlineCSS = spyOn(rasterizeHTML, "loadAndInlineCSS").andCallFake(function (doc, options, callback) {
+            loadAndInlineCSS = spyOn(rasterizeHTMLInline, "loadAndInlineCSS").andCallFake(function (doc, options, callback) {
                 callback(["another error"]);
             });
-            loadAndInlineCSSImports = spyOn(rasterizeHTML, "loadAndInlineCSSImports").andCallFake(function (doc, options, callback) {
+            loadAndInlineCSSImports = spyOn(rasterizeHTMLInline, "loadAndInlineCSSImports").andCallFake(function (doc, options, callback) {
                 callback(["more error"]);
             });
-            loadAndInlineCSSReferences = spyOn(rasterizeHTML, "loadAndInlineCSSReferences").andCallFake(function (doc, options, callback) {
+            loadAndInlineCSSReferences = spyOn(rasterizeHTMLInline, "loadAndInlineCSSReferences").andCallFake(function (doc, options, callback) {
                 callback(["yet another error", "and even more"]);
             });
 
@@ -337,10 +337,10 @@ describe("Main interface of rasterizeHTML.js", function () {
         beforeEach(function () {
             callback = jasmine.createSpy("drawCallback");
 
-            loadAndInlineImages = spyOn(rasterizeHTML, "loadAndInlineImages").andCallFake(callbackCaller);
-            loadAndInlineCSS = spyOn(rasterizeHTML, "loadAndInlineCSS").andCallFake(callbackCaller);
-            loadAndInlineCSSImports = spyOn(rasterizeHTML, "loadAndInlineCSSImports").andCallFake(callbackCaller);
-            loadAndInlineCSSReferences = spyOn(rasterizeHTML, "loadAndInlineCSSReferences").andCallFake(callbackCaller);
+            loadAndInlineImages = spyOn(rasterizeHTMLInline, "loadAndInlineImages").andCallFake(callbackCaller);
+            loadAndInlineCSS = spyOn(rasterizeHTMLInline, "loadAndInlineCSS").andCallFake(callbackCaller);
+            loadAndInlineCSSImports = spyOn(rasterizeHTMLInline, "loadAndInlineCSSImports").andCallFake(callbackCaller);
+            loadAndInlineCSSReferences = spyOn(rasterizeHTMLInline, "loadAndInlineCSSReferences").andCallFake(callbackCaller);
 
             getSvgForDocument = spyOn(rasterizeHTML, "getSvgForDocument").andReturn(svg);
             renderSvg = spyOn(rasterizeHTML, "renderSvg");

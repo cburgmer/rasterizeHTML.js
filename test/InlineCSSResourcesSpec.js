@@ -4,22 +4,22 @@ describe("CSS references inline", function () {
     beforeEach(function () {
         doc = document.implementation.createHTMLDocument("");
 
-        extractCssUrlSpy = spyOn(rasterizeHTML.util, "extractCssUrl").andCallFake(function (cssUrl) {
+        extractCssUrlSpy = spyOn(rasterizeHTMLInline.util, "extractCssUrl").andCallFake(function (cssUrl) {
             if (/^url/.test(cssUrl)) {
                 return cssUrl.replace(/^url\("/, '').replace(/"\)$/, '');
             } else {
                 throw "error";
             }
         });
-        joinUrlSpy = spyOn(rasterizeHTML.util, "joinUrl");
-        getDataURIForImageURLSpy = spyOn(rasterizeHTML.util, "getDataURIForImageURL");
-        binaryAjaxSpy = spyOn(rasterizeHTML.util, "binaryAjax");
+        joinUrlSpy = spyOn(rasterizeHTMLInline.util, "joinUrl");
+        getDataURIForImageURLSpy = spyOn(rasterizeHTMLInline.util, "getDataURIForImageURL");
+        binaryAjaxSpy = spyOn(rasterizeHTMLInline.util, "binaryAjax");
 
         callback = jasmine.createSpy("callback");
     });
 
     it("should do nothing if no CSS is found", function () {
-        rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
+        rasterizeHTMLInline.loadAndInlineCSSReferences(doc, callback);
 
         expect(callback).toHaveBeenCalled();
 
@@ -29,7 +29,7 @@ describe("CSS references inline", function () {
     it("should not touch unrelated CSS", function () {
         rasterizeHTMLTestHelper.addStyleToDocument(doc, "span { padding-left: 0; }");
 
-        rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
+        rasterizeHTMLInline.loadAndInlineCSSReferences(doc, callback);
 
         expect(callback).toHaveBeenCalled();
 
@@ -40,7 +40,7 @@ describe("CSS references inline", function () {
     it("should add a workaround for Webkit to account for first CSS rules being ignored on background-images", function () {
         rasterizeHTMLTestHelper.addStyleToDocument(doc, 'span { background-image: url("data:image/png;base64,soMEfAkebASE64="); }');
 
-        rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
+        rasterizeHTMLInline.loadAndInlineCSSReferences(doc, callback);
 
         expect(callback).toHaveBeenCalled();
 
@@ -55,7 +55,7 @@ describe("CSS references inline", function () {
     it("should add a workaround for Webkit to account for first CSS rules being ignored on font face", function () {
         rasterizeHTMLTestHelper.addStyleToDocument(doc, '@font-face { font-family: "RaphaelIcons"; src: url("data:font/woff;base64,soMEfAkebASE64="); }');
 
-        rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
+        rasterizeHTMLInline.loadAndInlineCSSReferences(doc, callback);
 
         expect(callback).toHaveBeenCalled();
 
@@ -70,7 +70,7 @@ describe("CSS references inline", function () {
     it("should work with empty content", function () {
         rasterizeHTMLTestHelper.addStyleToDocument(doc, '');
 
-        rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
+        rasterizeHTMLInline.loadAndInlineCSSReferences(doc, callback);
 
         expect(callback).toHaveBeenCalled();
     });
@@ -79,7 +79,7 @@ describe("CSS references inline", function () {
         it("should not touch an already inlined background-image", function () {
             rasterizeHTMLTestHelper.addStyleToDocument(doc, 'span { background-image: url("data:image/png;base64,soMEfAkebASE64="); }');
 
-            rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
+            rasterizeHTMLInline.loadAndInlineCSSReferences(doc, callback);
 
             expect(callback).toHaveBeenCalled();
 
@@ -90,7 +90,7 @@ describe("CSS references inline", function () {
         it("should ignore invalid values", function () {
             rasterizeHTMLTestHelper.addStyleToDocument(doc, 'span { background-image: "invalid url"; }');
 
-            rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
+            rasterizeHTMLInline.loadAndInlineCSSReferences(doc, callback);
 
             expect(callback).toHaveBeenCalled();
 
@@ -112,7 +112,7 @@ describe("CSS references inline", function () {
 
             rasterizeHTMLTestHelper.addStyleToDocument(doc, 'span { background-image: url("' + anImage + '"); }');
 
-            rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
+            rasterizeHTMLInline.loadAndInlineCSSReferences(doc, callback);
 
             expect(callback).toHaveBeenCalled();
             expect(extractCssUrlSpy).toHaveBeenCalledWith('url("' + anImage + '")');
@@ -132,7 +132,7 @@ describe("CSS references inline", function () {
 
             doc = rasterizeHTMLTestHelper.readDocumentFixture("backgroundImage.html");
 
-            rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
+            rasterizeHTMLInline.loadAndInlineCSSReferences(doc, callback);
 
             expect(callback).toHaveBeenCalled();
 
@@ -150,7 +150,7 @@ describe("CSS references inline", function () {
 
             doc = rasterizeHTMLTestHelper.readDocumentFixtureWithoutBaseURI("backgroundImage.html");
 
-            rasterizeHTML.loadAndInlineCSSReferences(doc, {baseUrl: "aBaseURI"}, callback);
+            rasterizeHTMLInline.loadAndInlineCSSReferences(doc, {baseUrl: "aBaseURI"}, callback);
 
             expect(callback).toHaveBeenCalled();
 
@@ -170,7 +170,7 @@ describe("CSS references inline", function () {
             expect(doc.baseURI).not.toEqual("about:blank");
             expect(doc.baseURI).not.toEqual(baseUrl);
 
-            rasterizeHTML.loadAndInlineCSSReferences(doc, {baseUrl: baseUrl}, callback);
+            rasterizeHTMLInline.loadAndInlineCSSReferences(doc, {baseUrl: baseUrl}, callback);
 
             expect(callback).toHaveBeenCalled();
 
@@ -186,7 +186,7 @@ describe("CSS references inline", function () {
 
             rasterizeHTMLTestHelper.addStyleToDocument(doc, 'span { background-image: url("' + anImage + '"); }');
 
-            rasterizeHTML.loadAndInlineCSSReferences(doc, {cache: false}, callback);
+            rasterizeHTMLInline.loadAndInlineCSSReferences(doc, {cache: false}, callback);
 
             expect(getDataURIForImageURLSpy).toHaveBeenCalledWith(anImage, {cache: false}, jasmine.any(Function), jasmine.any(Function));
             expect(callback).toHaveBeenCalled();
@@ -201,7 +201,7 @@ describe("CSS references inline", function () {
 
             rasterizeHTMLTestHelper.addStyleToDocument(doc, 'span { background-image: url("' + anImage + '"); }');
 
-            rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
+            rasterizeHTMLInline.loadAndInlineCSSReferences(doc, callback);
 
             expect(getDataURIForImageURLSpy).toHaveBeenCalledWith(anImage, {cache: true}, jasmine.any(Function), jasmine.any(Function));
             expect(callback).toHaveBeenCalled();
@@ -226,7 +226,7 @@ describe("CSS references inline", function () {
         it("should report an error if a backgroundImage could not be loaded", function () {
             rasterizeHTMLTestHelper.addStyleToDocument(doc, 'span { background-image: url("a_backgroundImage_that_doesnt_exist.png"); }');
 
-            rasterizeHTML.loadAndInlineCSSReferences(doc, {baseUrl: "some_base_url/"}, callback);
+            rasterizeHTMLInline.loadAndInlineCSSReferences(doc, {baseUrl: "some_base_url/"}, callback);
 
             expect(callback).toHaveBeenCalledWith([{
                 resourceType: "backgroundImage",
@@ -238,7 +238,7 @@ describe("CSS references inline", function () {
             rasterizeHTMLTestHelper.addStyleToDocument(doc, 'span { background-image: url("a_backgroundImage_that_doesnt_exist.png"); }');
             rasterizeHTMLTestHelper.addStyleToDocument(doc, 'span { background-image: url("' + aBackgroundImageThatDoesExist + '"); }');
 
-            rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
+            rasterizeHTMLInline.loadAndInlineCSSReferences(doc, callback);
 
             expect(callback).toHaveBeenCalledWith([{
                 resourceType: "backgroundImage",
@@ -250,7 +250,7 @@ describe("CSS references inline", function () {
             rasterizeHTMLTestHelper.addStyleToDocument(doc, 'span { background-image: url("a_backgroundImage_that_doesnt_exist.png"); }');
             rasterizeHTMLTestHelper.addStyleToDocument(doc, 'span { background-image: url("another_backgroundImage_that_doesnt_exist.png"); }');
 
-            rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
+            rasterizeHTMLInline.loadAndInlineCSSReferences(doc, callback);
 
             expect(callback).toHaveBeenCalledWith([jasmine.any(Object), jasmine.any(Object)]);
             expect(callback.mostRecentCall.args[0][0]).not.toEqual(callback.mostRecentCall.args[0][1]);
@@ -259,7 +259,7 @@ describe("CSS references inline", function () {
         it("should report an empty list for a successful backgroundImage", function () {
             rasterizeHTMLTestHelper.addStyleToDocument(doc, 'span { background-image: url("' + aBackgroundImageThatDoesExist + '"); }');
 
-            rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
+            rasterizeHTMLInline.loadAndInlineCSSReferences(doc, callback);
 
             expect(callback).toHaveBeenCalledWith([]);
         });
@@ -286,7 +286,7 @@ describe("CSS references inline", function () {
         it("should not touch an already inlined font", function () {
             rasterizeHTMLTestHelper.addStyleToDocument(doc, '@font-face { font-family: "test font"; src: url("data:font/woff;base64,soMEfAkebASE64="); }');
 
-            rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
+            rasterizeHTMLInline.loadAndInlineCSSReferences(doc, callback);
 
             expect(callback).toHaveBeenCalled();
 
@@ -296,7 +296,7 @@ describe("CSS references inline", function () {
         it("should ignore invalid values", function () {
             rasterizeHTMLTestHelper.addStyleToDocument(doc, '@font-face { font-family: "test font"; src: "invalid url"; }');
 
-            rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
+            rasterizeHTMLInline.loadAndInlineCSSReferences(doc, callback);
 
             expect(callback).toHaveBeenCalled();
             expect(binaryAjaxSpy).not.toHaveBeenCalled();
@@ -312,7 +312,7 @@ describe("CSS references inline", function () {
 
             rasterizeHTMLTestHelper.addStyleToDocument(doc, '@font-face { font-family: "test font"; src: url("fake.woff"); }');
 
-            rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
+            rasterizeHTMLInline.loadAndInlineCSSReferences(doc, callback);
 
             expect(callback).toHaveBeenCalled();
 
@@ -330,7 +330,7 @@ describe("CSS references inline", function () {
 
             doc = rasterizeHTMLTestHelper.readDocumentFixture("fontFace.html");
 
-            rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
+            rasterizeHTMLInline.loadAndInlineCSSReferences(doc, callback);
 
             expect(callback).toHaveBeenCalled();
 
@@ -356,7 +356,7 @@ describe("CSS references inline", function () {
             expect(doc.baseURI).not.toEqual("about:blank");
             expect(doc.baseURI).not.toEqual(baseUrl);
 
-            rasterizeHTML.loadAndInlineCSSReferences(doc, {baseUrl: baseUrl}, callback);
+            rasterizeHTMLInline.loadAndInlineCSSReferences(doc, {baseUrl: baseUrl}, callback);
 
             expect(callback).toHaveBeenCalled();
 
@@ -372,7 +372,7 @@ describe("CSS references inline", function () {
 
             rasterizeHTMLTestHelper.addStyleToDocument(doc, '@font-face { font-family: "test font"; src: url("' + fontUrl + '"); }');
 
-            rasterizeHTML.loadAndInlineCSSReferences(doc, {cache: false}, callback);
+            rasterizeHTMLInline.loadAndInlineCSSReferences(doc, {cache: false}, callback);
 
             expect(callback).toHaveBeenCalled();
             expect(binaryAjaxSpy).toHaveBeenCalledWith(fontUrl, {cache: false}, jasmine.any(Function), jasmine.any(Function));
@@ -387,7 +387,7 @@ describe("CSS references inline", function () {
 
             rasterizeHTMLTestHelper.addStyleToDocument(doc, '@font-face { font-family: "test font"; src: url("' + fontUrl + '"); }');
 
-            rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
+            rasterizeHTMLInline.loadAndInlineCSSReferences(doc, callback);
 
             expect(callback).toHaveBeenCalled();
             expect(binaryAjaxSpy).toHaveBeenCalledWith(fontUrl, {cache: true}, jasmine.any(Function), jasmine.any(Function));
@@ -415,7 +415,7 @@ describe("CSS references inline", function () {
         it("should report an error if a font could not be loaded", function () {
             rasterizeHTMLTestHelper.addStyleToDocument(doc, '@font-face { font-family: "test font"; src: url("a_font_that_doesnt_exist.woff"); }');
 
-            rasterizeHTML.loadAndInlineCSSReferences(doc, {baseUrl: "some_base_url/"}, callback);
+            rasterizeHTMLInline.loadAndInlineCSSReferences(doc, {baseUrl: "some_base_url/"}, callback);
 
             expect(callback).toHaveBeenCalledWith([{
                 resourceType: "fontFace",
@@ -427,7 +427,7 @@ describe("CSS references inline", function () {
             rasterizeHTMLTestHelper.addStyleToDocument(doc, '@font-face { font-family: "test font1"; src: url("a_font_that_doesnt_exist.woff"); }');
             rasterizeHTMLTestHelper.addStyleToDocument(doc, '@font-face { font-family: "test font2"; src: url("' + aFontReferenceThatDoesExist + '"); }');
 
-            rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
+            rasterizeHTMLInline.loadAndInlineCSSReferences(doc, callback);
 
             expect(callback).toHaveBeenCalledWith([{
                 resourceType: "fontFace",
@@ -439,7 +439,7 @@ describe("CSS references inline", function () {
             rasterizeHTMLTestHelper.addStyleToDocument(doc, '@font-face { font-family: "test font1"; src: url("a_font_that_doesnt_exist.woff"); }');
             rasterizeHTMLTestHelper.addStyleToDocument(doc, '@font-face { font-family: "test font2"; src: url("another_font_that_doesnt_exist.woff"); }');
 
-            rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
+            rasterizeHTMLInline.loadAndInlineCSSReferences(doc, callback);
 
             expect(callback).toHaveBeenCalledWith([jasmine.any(Object), jasmine.any(Object)]);
             expect(callback.mostRecentCall.args[0][0]).not.toEqual(callback.mostRecentCall.args[0][1]);
@@ -448,7 +448,7 @@ describe("CSS references inline", function () {
         it("should report an empty list for a successful backgroundImage", function () {
             rasterizeHTMLTestHelper.addStyleToDocument(doc, '@font-face { font-family: "test font2"; src: url("' + aFontReferenceThatDoesExist + '"); }');
 
-            rasterizeHTML.loadAndInlineCSSReferences(doc, callback);
+            rasterizeHTMLInline.loadAndInlineCSSReferences(doc, callback);
 
             expect(callback).toHaveBeenCalledWith([]);
         });
