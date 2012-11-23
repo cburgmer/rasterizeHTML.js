@@ -20,19 +20,19 @@ module.exports = function (grunt) {
                 ' * htmlparser.js */'
         },
         lint:{
-            src:'<%= pkg.name %>',
+            src:'src/*.js',
             grunt:'grunt.js',
             test:'test/*Spec.js'
         },
         jasmine:{
-            src:['lib/*.js', '<%= pkg.name %>'],
+            src:['lib/*.js', 'src/*.js'],
             specs:'test/*Spec.js',
             helpers:['test/helpers.js', 'test/lib/*.js', 'test/gruntpath.js'],
             timeout:10000
         },
         concat:{
             dist:{
-                src:['<banner:meta.banner>', '<file_strip_banner:<%= pkg.name %>>'],
+                src:['<banner:meta.banner>', '<file_strip_banner:src/<%= pkg.name %>>'],
                 dest:'dist/<%= pkg.name %>'
             }
         },
