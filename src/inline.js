@@ -244,22 +244,12 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
         return newObject;
     };
 
-    var isObject = function (obj) {
-        return typeof obj === "object" && obj !== null;
-    };
-
-    var isCanvas = function (obj) {
-        return isObject(obj) &&
-            Object.prototype.toString.apply(obj).match(/\[object (Canvas|HTMLCanvasElement)\]/i);
-    };
-
     var isFunction = function (func) {
         return typeof func === "function";
     };
 
-    module.util.parseOptionalParameters = function () { // args: canvas, options, callback
+    module.util.parseOptionalParameters = function () { // args: options, callback
         var parameters = {
-            canvas: null,
             options: {},
             callback: null
         };
@@ -267,20 +257,8 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
         if (isFunction(arguments[0])) {
             parameters.callback = arguments[0];
         } else {
-            if (arguments[0] == null || isCanvas(arguments[0])) {
-                parameters.canvas = arguments[0];
-
-                if (isFunction(arguments[1])) {
-                    parameters.callback = arguments[1];
-                } else {
-                    parameters.options = cloneObject(arguments[1]);
-                    parameters.callback = arguments[2] || null;
-                }
-
-            } else {
-                parameters.options = cloneObject(arguments[0]);
-                parameters.callback = arguments[1] || null;
-            }
+            parameters.options = cloneObject(arguments[0]);
+            parameters.callback = arguments[1] || null;
         }
 
         return parameters;

@@ -13,7 +13,7 @@ describe("Main interface of rasterizeHTML.js", function () {
         canvas.width = 123;
         canvas.height = 456;
 
-        parseOptionalParametersSpy = spyOn(rasterizeHTMLInline.util, "parseOptionalParameters").andCallThrough();
+        parseOptionalParametersSpy = spyOn(rasterizeHTML.util, "parseOptionalParameters").andCallThrough();
     });
 
     describe("Rendering", function () {

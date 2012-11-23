@@ -23,6 +23,59 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, window) {
         }
     };
 
+    var cloneObject = function(object) {
+        var newObject = {},
+            i;
+        for (i in object) {
+            if (object.hasOwnProperty(i)) {
+                newObject[i] = object[i];
+            }
+        }
+        return newObject;
+    };
+
+    var isObject = function (obj) {
+        return typeof obj === "object" && obj !== null;
+    };
+
+    var isCanvas = function (obj) {
+        return isObject(obj) &&
+            Object.prototype.toString.apply(obj).match(/\[object (Canvas|HTMLCanvasElement)\]/i);
+    };
+
+    var isFunction = function (func) {
+        return typeof func === "function";
+    };
+
+    module.util.parseOptionalParameters = function () { // args: canvas, options, callback
+        var parameters = {
+            canvas: null,
+            options: {},
+            callback: null
+        };
+
+        if (isFunction(arguments[0])) {
+            parameters.callback = arguments[0];
+        } else {
+            if (arguments[0] == null || isCanvas(arguments[0])) {
+                parameters.canvas = arguments[0] || null;
+
+                if (isFunction(arguments[1])) {
+                    parameters.callback = arguments[1];
+                } else {
+                    parameters.options = cloneObject(arguments[1]);
+                    parameters.callback = arguments[2] || null;
+                }
+
+            } else {
+                parameters.options = cloneObject(arguments[0]);
+                parameters.callback = arguments[1] || null;
+            }
+        }
+
+        return parameters;
+    };
+
     /* Rendering */
 
     var needsXMLParserWorkaround = function() {
@@ -215,8 +268,7 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, window) {
     /* "Public" API */
 
     module.drawDocument = function (doc, canvas, options, callback) {
-        // TODO remove reference to rasterizeHTMLInline.util
-        var params = rasterizeHTMLInline.util.parseOptionalParameters(canvas, options, callback),
+        var params = module.util.parseOptionalParameters(canvas, options, callback),
             handleInternalError = function (errors) {
                 errors.push({
                     resourceType: "document"
@@ -258,7 +310,7 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, window) {
 
     module.drawHTML = function (html, canvas, options, callback) {
         // TODO remove reference to rasterizeHTMLInline.util
-        var params = rasterizeHTMLInline.util.parseOptionalParameters(canvas, options, callback),
+        var params = module.util.parseOptionalParameters(canvas, options, callback),
             doc = window.document.implementation.createHTMLDocument("");
 
         doc.documentElement.innerHTML = html;
@@ -266,7 +318,7 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, window) {
     };
 
     module.drawURL = function (url, canvas, options, callback) {
-        var params = rasterizeHTMLInline.util.parseOptionalParameters(canvas, options, callback),
+        var params = module.util.parseOptionalParameters(canvas, options, callback),
             cache = params.options.cache;
 
         params.options.baseUrl = url;
