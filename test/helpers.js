@@ -110,19 +110,5 @@ var rasterizeHTMLTestHelper = (function () {
         img.src = url;
     };
 
-    module.compareDataUriToReferenceImage = function (uri, referenceImageId) {
-        var resultImage = null;
-
-        getImageForURL(uri, function (img) { resultImage = img; });
-
-        waitsFor(function () {
-            return resultImage !== null;
-        }, "getting result image", 2000);
-
-        runs(function () {
-            expect(resultImage).toImageDiffEqual(window.document.getElementById(referenceImageId));
-        });
-    };
-
     return module;
 }());

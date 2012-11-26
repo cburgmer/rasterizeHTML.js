@@ -135,41 +135,16 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
         return unquoteUrl(trimCSSWhitespace(quotedUrl));
     };
 
-    var getDataURIForImage = function (image) {
-        var canvas = window.document.createElement("canvas"),
-            context = canvas.getContext("2d");
-
-        canvas.width = image.width;
-        canvas.height = image.height;
-
-        context.drawImage(image, 0, 0);
-
-        return canvas.toDataURL("image/png");
-    };
-
     module.util.getDataURIForImageURL = function (url, options, successCallback, errorCallback) {
-        var img = new window.Image(),
-            dataURI, augmentedUrl;
+        var base64Content;
 
-        options = options || {};
-        augmentedUrl = options.cache === false ? getUncachableURL(url) : url;
+        module.util.binaryAjax(url, options, function (content) {
+            base64Content = btoa(content);
 
-        img.onload = function () {
-            try {
-                dataURI = getDataURIForImage(img);
-            } catch (err) {
-                // Only here is it visible, when we are violating the same-origin policy.
-                errorCallback();
-
-                return;
-            }
-
-            successCallback(dataURI);
-        };
-        if (errorCallback) {
-            img.onerror = errorCallback;
-        }
-        img.src = augmentedUrl;
+            successCallback('data:image/png;base64,' + base64Content);
+        }, function () {
+            errorCallback();
+        });
     };
 
     /* Inlining */

@@ -273,94 +273,47 @@ describe("Inline utilities function", function () {
     });
 
     describe("getDataURIForImageURL", function () {
+        var binaryAjaxSpy;
+
         beforeEach(function () {
-            this.addMatchers(imagediff.jasmine);
+            binaryAjaxSpy = spyOn(rasterizeHTMLInline.util, "binaryAjax");
         });
 
         it("should return an image as data: URI", function () {
             var returnedDataURI = null;
 
-            setFixtures('<img id="referenceImage" src="' + jasmine.getFixtures().fixturesPath + 'green.png"/>');
-
-            rasterizeHTMLInline.util.getDataURIForImageURL(jasmine.getFixtures().fixturesPath + "green.png", {}, function (dataURI) {
-                returnedDataURI = dataURI;
-            }, function () {});
-
-            waitsFor(function () {
-                return returnedDataURI != null;
-            });
-
-            runs(function () {
-                expect(returnedDataURI).toMatch(/^data:image\/png;base64,/);
-                rasterizeHTMLTestHelper.compareDataUriToReferenceImage(returnedDataURI, 'referenceImage');
-            });
-        });
-
-        it("should return an error if the image could not be located due to a REST error", function () {
-            var finished = false,
-                errorCallback = jasmine.createSpy("errorCallback").andCallFake(function () {
-                    finished = true;
-                }),
-                successCallback = jasmine.createSpy("successCallback");
-
-            rasterizeHTMLInline.util.getDataURIForImageURL("image_does_not_exist.png", {}, successCallback, errorCallback);
-
-            waitsFor(function () {
-                return finished;
-            });
-
-            runs(function () {
-                expect(errorCallback).toHaveBeenCalled();
-                expect(successCallback).not.toHaveBeenCalled();
-            });
-        });
-
-        it("should return an error if the image can not be read due to a same-origin violation", function () {
-            var finished = false,
-                canvas = jasmine.createSpyObj("canvas", ["getContext", "toDataURL"]),
-                context = jasmine.createSpyObj("context", ["drawImage"]),
-                errorCallback = jasmine.createSpy("errorCallback").andCallFake(function () {
-                    finished = true;
-                }),
-                successCallback = jasmine.createSpy("successCallback");
-
-            canvas.getContext.andReturn(context);
-            canvas.toDataURL.andThrow("exception");
-
-            spyOn(window.document, "createElement").andCallFake(function (tag) {
-                if (tag === "canvas") {
-                    return canvas;
+            binaryAjaxSpy.andCallFake(function (url, options, successCallback) {
+                if (url === 'green.png') {
+                    successCallback("fakeImageContent");
                 }
             });
 
-            rasterizeHTMLInline.util.getDataURIForImageURL(jasmine.getFixtures().fixturesPath + "green.png", {}, successCallback, errorCallback);
+            rasterizeHTMLInline.util.getDataURIForImageURL("green.png", {}, function (dataURI) {
+                returnedDataURI = dataURI;
+            }, function () {});
 
-            waitsFor(function () {
-                return finished;
-            });
-
-            runs(function () {
-                expect(errorCallback).toHaveBeenCalled();
-                expect(successCallback).not.toHaveBeenCalled();
-            });
+            expect(returnedDataURI).toEqual('data:image/png;base64,' + btoa('fakeImageContent'));
+            expect(binaryAjaxSpy).toHaveBeenCalledWith('green.png', {}, jasmine.any(Function), jasmine.any(Function));
         });
 
-        it("should attach an unique parameter to the given URL to circumvent caching if requested", function () {
-            var image = {};
-            spyOn(window, "Image").andReturn(image);
+        it("should return an error if the image could not be located due to a REST error", function () {
+            var errorCallback = jasmine.createSpy("errorCallback"),
+                successCallback = jasmine.createSpy("successCallback");
 
+            binaryAjaxSpy.andCallFake(function (url, options, successCallback, errorCallback) {
+                errorCallback();
+            });
+
+            rasterizeHTMLInline.util.getDataURIForImageURL("image_does_not_exist.png", {}, successCallback, errorCallback);
+
+            expect(errorCallback).toHaveBeenCalled();
+            expect(successCallback).not.toHaveBeenCalled();
+        });
+
+        it("should circumvent caching if requested", function () {
             rasterizeHTMLInline.util.getDataURIForImageURL("image.png", {cache: false}, function () {}, function () {});
 
-            expect(image.src).toMatch(/^image.png\?_=[0123456789]+$/);
-        });
-
-        it("should not attach an unique parameter to the given URL by default", function () {
-            var image = {};
-            spyOn(window, "Image").andReturn(image);
-
-            rasterizeHTMLInline.util.getDataURIForImageURL("image.png", {}, function () {}, function () {});
-
-            expect(image.src).toEqual("image.png");
+            expect(binaryAjaxSpy).toHaveBeenCalledWith('image.png', {cache: false}, jasmine.any(Function), jasmine.any(Function));
         });
 
     });
