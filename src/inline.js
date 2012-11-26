@@ -272,6 +272,7 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
 
         if (module.util.isDataUri(url)) {
             successCallback();
+            return;
         }
 
         url = getUrlRelativeToDocumentBase(url, base);

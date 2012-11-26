@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.1.0 - 2012-11-23
+/*! rasterizeHTML.js - v0.1.0 - 2012-11-26
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2012 Christoph Burgmer; Licensed MIT */
 
@@ -276,6 +276,7 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
 
         if (module.util.isDataUri(url)) {
             successCallback();
+            return;
         }
 
         url = getUrlRelativeToDocumentBase(url, base);

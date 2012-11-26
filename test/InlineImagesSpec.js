@@ -5,26 +5,23 @@ describe("Image and image input inline", function () {
         secondImageDataURI = "mock_data_URI_of_the_second_image",
         joinUrlSpy, getDataURIForImageURLSpy, doc;
 
-    var setUpGetDataURIForImageURLSpyToRouteFirstAndSecondImage = function() {
-        getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback) {
+    beforeEach(function () {
+        joinUrlSpy = spyOn(rasterizeHTMLInline.util, "joinUrl");
+        getDataURIForImageURLSpy = spyOn(rasterizeHTMLInline.util, "getDataURIForImageURL").andCallFake(function (url, options, successCallback) {
             if (url === firstImage) {
                 successCallback(firstImageDataURI);
             } else if (url === secondImage) {
                 successCallback(secondImageDataURI);
+            } else {
+                successCallback();
             }
         });
-    };
-
-    beforeEach(function () {
-        joinUrlSpy = spyOn(rasterizeHTMLInline.util, "joinUrl");
-        getDataURIForImageURLSpy = spyOn(rasterizeHTMLInline.util, "getDataURIForImageURL");
 
         doc = document.implementation.createHTMLDocument("");
     });
 
     it("should load an external image", function () {
         var callback = jasmine.createSpy("callback");
-        setUpGetDataURIForImageURLSpyToRouteFirstAndSecondImage();
 
         doc.body.innerHTML = '<img id="image" src="' + firstImage + '" alt="test image"/>';
 
@@ -37,7 +34,6 @@ describe("Image and image input inline", function () {
 
     it("should load an input with type image", function () {
         var callback = jasmine.createSpy("callback");
-        setUpGetDataURIForImageURLSpyToRouteFirstAndSecondImage();
 
         doc.body.innerHTML = '<input type="image" id="input" src="' + firstImage + '" alt="test image"/>';
 
@@ -50,7 +46,6 @@ describe("Image and image input inline", function () {
 
     it("should load multiple external images", function () {
         var callback = jasmine.createSpy("callback");
-        setUpGetDataURIForImageURLSpyToRouteFirstAndSecondImage();
 
         doc.body.innerHTML = (
             '<img id="image1" src="' + firstImage + '" alt="test image"/>' +
@@ -89,9 +84,6 @@ describe("Image and image input inline", function () {
         var callback = jasmine.createSpy("callback");
 
         doc = rasterizeHTMLTestHelper.readDocumentFixture("image.html");
-        getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback) {
-            successCallback();
-        });
 
         rasterizeHTMLInline.loadAndInlineImages(doc, callback);
 
@@ -104,9 +96,6 @@ describe("Image and image input inline", function () {
         var callback = jasmine.createSpy("callback");
 
         doc = rasterizeHTMLTestHelper.readDocumentFixtureWithoutBaseURI("image.html");
-        getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback) {
-            successCallback();
-        });
 
         rasterizeHTMLInline.loadAndInlineImages(doc, {baseUrl: "aBaseUrl"}, callback);
 
@@ -118,9 +107,6 @@ describe("Image and image input inline", function () {
     it("should favour explicit baseUrl over document.baseURI when loading the image", function () {
         var callback = jasmine.createSpy("callback"),
             baseUrl = "aBaseUrl";
-        getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback) {
-            successCallback();
-        });
 
         doc = rasterizeHTMLTestHelper.readDocumentFixture("image.html");
         expect(doc.baseURI).not.toBeNull();
@@ -136,7 +122,6 @@ describe("Image and image input inline", function () {
 
     it("should circumvent caching if requested", function () {
         var callback = jasmine.createSpy("callback");
-        setUpGetDataURIForImageURLSpyToRouteFirstAndSecondImage();
 
         doc.body.innerHTML = '<img id="image" src="' + firstImage + '" alt="test image"/>';
 
@@ -149,7 +134,6 @@ describe("Image and image input inline", function () {
 
     it("should not circumvent caching by default", function () {
         var callback = jasmine.createSpy("callback");
-        setUpGetDataURIForImageURLSpyToRouteFirstAndSecondImage();
 
         doc.body.innerHTML = '<img id="image" src="' + firstImage + '" alt="test image"/>';
 
