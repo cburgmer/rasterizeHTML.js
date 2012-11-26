@@ -705,5 +705,26 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
         });
     };
 
+    /* Main */
+
+    module.inlineReferences = function (doc, options, callback) {
+        var allErrors = [];
+
+        module.loadAndInlineImages(doc, options, function (errors) {
+            allErrors = allErrors.concat(errors);
+            module.loadAndInlineCSS(doc, options, function (errors) {
+                allErrors = allErrors.concat(errors);
+                module.loadAndInlineCSSImports(doc, options, function (errors) {
+                    allErrors = allErrors.concat(errors);
+                    module.loadAndInlineCSSReferences(doc, options, function (errors) {
+                        allErrors = allErrors.concat(errors);
+
+                        callback(allErrors);
+                    });
+                });
+            });
+        });
+    };
+
     return module;
 }(window, URI, CSSParser));

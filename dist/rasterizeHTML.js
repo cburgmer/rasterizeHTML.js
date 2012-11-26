@@ -709,6 +709,27 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
         });
     };
 
+    /* Main */
+
+    module.inlineReferences = function (doc, options, callback) {
+        var allErrors = [];
+
+        module.loadAndInlineImages(doc, options, function (errors) {
+            allErrors = allErrors.concat(errors);
+            module.loadAndInlineCSS(doc, options, function (errors) {
+                allErrors = allErrors.concat(errors);
+                module.loadAndInlineCSSImports(doc, options, function (errors) {
+                    allErrors = allErrors.concat(errors);
+                    module.loadAndInlineCSSReferences(doc, options, function (errors) {
+                        allErrors = allErrors.concat(errors);
+
+                        callback(allErrors);
+                    });
+                });
+            });
+        });
+    };
+
     return module;
 }(window, URI, CSSParser));
 
@@ -960,25 +981,6 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, window) {
         return true;
     };
 
-    var inlineReferences = function (doc, options, callback) {
-        var allErrors = [];
-
-        rasterizeHTMLInline.loadAndInlineImages(doc, options, function (errors) {
-            allErrors = allErrors.concat(errors);
-            rasterizeHTMLInline.loadAndInlineCSS(doc, options, function (errors) {
-                allErrors = allErrors.concat(errors);
-                rasterizeHTMLInline.loadAndInlineCSSImports(doc, options, function (errors) {
-                    allErrors = allErrors.concat(errors);
-                    rasterizeHTMLInline.loadAndInlineCSSReferences(doc, options, function (errors) {
-                        allErrors = allErrors.concat(errors);
-
-                        callback(allErrors);
-                    });
-                });
-            });
-        });
-    };
-
     /* "Public" API */
 
     module.drawDocument = function (doc, canvas, options, callback) {
@@ -993,7 +995,7 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, window) {
             width = params.options.width !== undefined ? params.options.width : fallbackWidth,
             height = params.options.height !== undefined ? params.options.height : fallbackHeight;
 
-        inlineReferences(doc, params.options, function (allErrors) {
+        rasterizeHTMLInline.inlineReferences(doc, params.options, function (allErrors) {
 
             var svg = module.getSvgForDocument(doc, width, height),
                 successful;
