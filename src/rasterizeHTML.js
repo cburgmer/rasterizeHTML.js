@@ -171,15 +171,23 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, window) {
 
     var WORKAROUND_ID = "rasterizeHTML_js_FirefoxWorkaround";
 
+    var needsBackgroundImageWorkaround = function () {
+        var firefoxMatch = window.navigator.userAgent.match(/Firefox\/(\d+).0/);
+        return !firefoxMatch || !firefoxMatch[1] || parseInt(firefoxMatch[1], 10) < 17;
+    };
+
     var workAroundBrowserBugForBackgroundImages = function (svg, canvas) {
-        // Firefox, Chrome & Safari will (sometimes) not show an inlined background-image until the svg is connected to
-        // the DOM it seems.
+        // Firefox < 17, Chrome & Safari will (sometimes) not show an inlined background-image until the svg is
+        // connected to the DOM it seems.
         var uniqueId = module.util.getConstantUniqueIdFor(svg),
             doc = canvas ? canvas.ownerDocument : window.document,
-            doNotGarbageCollect = getOrCreateHiddenDivWithId(doc, WORKAROUND_ID + uniqueId);
+            workaroundDiv;
 
-        doNotGarbageCollect.innerHTML = svg;
-        doNotGarbageCollect.className = WORKAROUND_ID; // Make if findable for debugging & testing purposes
+        if (needsBackgroundImageWorkaround()) {
+            workaroundDiv = getOrCreateHiddenDivWithId(doc, WORKAROUND_ID + uniqueId);
+            workaroundDiv.innerHTML = svg;
+            workaroundDiv.className = WORKAROUND_ID; // Make if findable for debugging & testing purposes
+        }
     };
 
     var cleanUpAfterWorkAroundForBackgroundImages = function (svg, canvas) {

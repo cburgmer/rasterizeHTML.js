@@ -710,6 +710,7 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
     module.inlineReferences = function (doc, options, callback) {
         var allErrors = [];
 
+        // TODO introduce parseOptionalParameters
         module.loadAndInlineImages(doc, options, function (errors) {
             allErrors = allErrors.concat(errors);
             module.loadAndInlineCSS(doc, options, function (errors) {
