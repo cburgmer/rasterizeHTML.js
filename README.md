@@ -17,8 +17,6 @@ To cope with the existing limitations, rasterizeHTML.js will load external image
 Limitations
 -----------
 
-This code is experimental.
-
 SVG is not allowed to link to external resources, as such all used resources need to be embedded using data: URIs. While the solution to that is loading and inlining external resources those can only be loaded if from the same origin (unless CORS is used).
 
 The code is tested under Firefox, Chrome & Safari. However IE is not supported so far.
