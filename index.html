@@ -70,11 +70,9 @@ rasterizeHTML.drawDocument( document [, canvas] [, options] [, callback] )</pre>
 
 <h2>Limitations</h2>
 
-<p>This code is experimental.</p>
-
 <p>SVG is not allowed to link to external resources, as such all used resources need to be embedded using data: URIs. However resources can only be loaded if from the same origin, unless <a href="http://en.wikipedia.org/wiki/Cross-origin_resource_sharing">CORS</a> is used.</p>
 
-<p>The code is tested under Firefox, Chrome &amp; Safari. However IE is not supported so far.</p>
+<p>The code is tested under Firefox, Chrome &amp; Safari. However IE is not supported so far (IE10 doesn't load HTML inside an SVG).</p>
 
 <p>At the time of writing it seems that the individual browsers still have some issues with rendering SVGs with embedded HTML to the canvas. See the <a href="https://github.com/cburgmer/rasterizeHTML.js/wiki/Browser-issues">wiki for a list of known issues</a> and do add your findings there.</p>
 
