@@ -1,6 +1,6 @@
-/*! rasterizeHTML.js - v0.1.0 - 2012-12-10
+/*! rasterizeHTML.js - v0.1.0 - 2013-01-25
 * http://www.github.com/cburgmer/rasterizeHTML.js
-* Copyright (c) 2012 Christoph Burgmer; Licensed MIT */
+* Copyright (c) 2013 Christoph Burgmer; Licensed MIT */
 
 window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
     "use strict";
@@ -877,7 +877,7 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, window) {
         if (supportsBlobBuilding()) {
             return DOMURL.createObjectURL(getBlob(svg));
         } else {
-            return "data:image/svg+xml;charset=utf-8," + svg;
+            return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
         }
     };
 
@@ -974,7 +974,6 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, window) {
             cleanUp();
 
             // Webkit calls the onerror handler if the SVG is faulty
-            window.console.log("ERROR", svg);
             errorCallback();
         };
         image.src = url;

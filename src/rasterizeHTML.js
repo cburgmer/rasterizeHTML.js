@@ -141,7 +141,7 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, window) {
         if (supportsBlobBuilding()) {
             return DOMURL.createObjectURL(getBlob(svg));
         } else {
-            return "data:image/svg+xml;charset=utf-8," + svg;
+            return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
         }
     };
 
