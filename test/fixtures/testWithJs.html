@@ -1,0 +1,31 @@
+<html>
+<head>
+    <title>Test page with full resource includes</title>
+    <link rel="stylesheet" type="text/css" href="import_test.css"/>
+    <style type="text/css">
+        .test {
+            margin: 0;
+            padding: 0;
+            vertical-align: top;
+        }
+        div.test {
+            display: inline-block;
+            width: 100px;
+            height: 100px;
+        }
+    </style>
+</head>
+<body class="test">
+    <div class="test">
+        <img class="test" src="green.png" width="100" height="100" alt="green image"/>
+    </div>
+    <script>
+        (function () {
+            var div = document.createElement("div");
+            div.className = "bgimage webfont test";
+            div.innerHTML = "A";
+            document.getElementsByTagName("body")[0].appendChild(div);
+        }())
+    </script>
+</body>
+</html>

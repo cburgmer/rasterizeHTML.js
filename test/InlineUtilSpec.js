@@ -272,6 +272,24 @@ describe("Inline utilities function", function () {
 
     });
 
+    describe("loadUrlAndExecuteJavascript", function () {
+        it("should load an URL and execute the included JS", function () {
+            var the_result = null;
+
+            rasterizeHTMLInline.util.loadUrlAndExecuteJavascript(jasmine.getFixtures().fixturesPath + "pageWithJS.html", function (result) {
+                the_result = result;
+            });
+
+            waitsFor(function () {
+                return the_result !== null;
+            });
+
+            runs(function () {
+                expect(the_result.body.innerHTML.trim()).toEqual('Some HTML<script>document.write("with JS");</script>with JS');
+            });
+        });
+    });
+
     describe("getDataURIForImageURL", function () {
         var binaryAjaxSpy;
 

@@ -312,18 +312,24 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, window) {
 
         params.options.baseUrl = url;
 
-        rasterizeHTMLInline.util.ajax(url, {
-            cache: cache
-        }, function (html) {
-            module.drawHTML(html, params.canvas, params.options, params.callback);
-        }, function () {
-            if (params.callback) {
-                params.callback(null, [{
-                    resourceType: "page",
-                    url: url
-                }]);
-            }
-        });
+        if (params.options.executeJs) {
+            rasterizeHTMLInline.util.loadUrlAndExecuteJavascript(url, function (doc) {
+                module.drawDocument(doc, params.canvas, params.options, params.callback);
+            });
+        } else {
+            rasterizeHTMLInline.util.ajax(url, {
+                cache: cache
+            }, function (html) {
+                module.drawHTML(html, params.canvas, params.options, params.callback);
+            }, function () {
+                if (params.callback) {
+                    params.callback(null, [{
+                        resourceType: "page",
+                        url: url
+                    }]);
+                }
+            });
+        }
     };
 
     return module;

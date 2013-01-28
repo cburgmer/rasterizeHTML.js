@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.1.0 - 2013-01-25
+/*! rasterizeHTML.js - v0.1.0 - 2013-01-28
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2013 Christoph Burgmer; Licensed MIT */
 
@@ -104,6 +104,19 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
             }
             successCallback(binaryContent);
         }, errorCallback);
+    };
+
+    module.util.loadUrlAndExecuteJavascript = function (url, callback) {
+        var iframe = window.document.createElement("iframe");
+
+        iframe.style.display = "none";
+        window.document.getElementsByTagName("body")[0].appendChild(iframe);
+
+        iframe.onload = function () {
+            callback(iframe.contentDocument);
+        };
+
+        iframe.src = url;
     };
 
     var unquoteUrl = function (quotedUrl) {
@@ -1048,18 +1061,24 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, window) {
 
         params.options.baseUrl = url;
 
-        rasterizeHTMLInline.util.ajax(url, {
-            cache: cache
-        }, function (html) {
-            module.drawHTML(html, params.canvas, params.options, params.callback);
-        }, function () {
-            if (params.callback) {
-                params.callback(null, [{
-                    resourceType: "page",
-                    url: url
-                }]);
-            }
-        });
+        if (params.options.executeJs) {
+            rasterizeHTMLInline.util.loadUrlAndExecuteJavascript(url, function (doc) {
+                module.drawDocument(doc, params.canvas, params.options, params.callback);
+            });
+        } else {
+            rasterizeHTMLInline.util.ajax(url, {
+                cache: cache
+            }, function (html) {
+                module.drawHTML(html, params.canvas, params.options, params.callback);
+            }, function () {
+                if (params.callback) {
+                    params.callback(null, [{
+                        resourceType: "page",
+                        url: url
+                    }]);
+                }
+            });
+        }
     };
 
     return module;

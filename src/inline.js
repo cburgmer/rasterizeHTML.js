@@ -102,6 +102,19 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
         }, errorCallback);
     };
 
+    module.util.loadUrlAndExecuteJavascript = function (url, callback) {
+        var iframe = window.document.createElement("iframe");
+
+        iframe.style.display = "none";
+        window.document.getElementsByTagName("body")[0].appendChild(iframe);
+
+        iframe.onload = function () {
+            callback(iframe.contentDocument);
+        };
+
+        iframe.src = url;
+    };
+
     var unquoteUrl = function (quotedUrl) {
         var doubleQuoteRegex = /^"(.*)"$/,
             singleQuoteRegex = /^'(.*)'$/;

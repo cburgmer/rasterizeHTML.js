@@ -170,6 +170,22 @@ describe("Main interface of rasterizeHTML.js", function () {
             expect(drawHtmlSpy).toHaveBeenCalledWith("some html", null, {baseUrl: "fixtures/image.html", width: 999, height: 987}, callback);
         });
 
+        it("should optionally execute JavaScript in the page", function () {
+            var doc = "the document",
+                loadUrlAndExecuteJavascript = spyOn(rasterizeHTMLInline.util, "loadUrlAndExecuteJavascript").andCallFake(function (url, callback) {
+                    callback(doc);
+                }),
+                drawDocumentSpy = spyOn(rasterizeHTML, "drawDocument").andCallFake(function (doc, canvas, options, callback) {
+                    callback(svgImage, []);
+                });
+
+            rasterizeHTML.drawURL("some_image", {executeJs: true}, callback);
+
+            expect(loadUrlAndExecuteJavascript).toHaveBeenCalledWith("some_image", jasmine.any(Function));
+            expect(drawDocumentSpy).toHaveBeenCalledWith(doc, null, jasmine.any(Object), jasmine.any(Function));
+            expect(callback).toHaveBeenCalledWith(svgImage, []);
+        });
+
         it("should circumvent caching if requested for drawURL", function () {
             spyOn(rasterizeHTML, "drawHTML").andCallFake(function (html, canvas, options, callback) {
                 callback(svgImage, []);
