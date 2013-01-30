@@ -549,7 +549,7 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
             alreadyLoadedCssUrls = [];
 
         module.util.map(styles, function (style, finish) {
-            if (style.attributes.type && style.attributes.type.nodeValue === "text/css") {
+            if (!style.attributes.type || style.attributes.type.nodeValue === "text/css") {
                 loadAndInlineCSSImportsForStyle(style, base, cache, alreadyLoadedCssUrls, function (errors) {
                     allErrors = allErrors.concat(errors);
 
@@ -702,7 +702,7 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
             styles = doc.getElementsByTagName("style");
 
         module.util.map(styles, function (style, finish) {
-            if (style.attributes.type && style.attributes.type.nodeValue === "text/css") {
+            if (!style.attributes.type || style.attributes.type.nodeValue === "text/css") {
                 loadAndInlineCSSResourcesForStyle(style, baseUrl, cache, function (errors) {
                     allErrors = allErrors.concat(errors);
                     finish();

@@ -124,6 +124,18 @@ describe("CSS references inline", function () {
             expect(url).toEqual(anImagesDataUri);
         });
 
+        it("should inline a background-image on a style element without a type", function () {
+            var anImage = "anImage.png",
+                styleNode = doc.createElement("style");
+
+            styleNode.appendChild(doc.createTextNode('span { background-image: url("' + anImage + '"); }'));
+            doc.head.appendChild(styleNode);
+
+            rasterizeHTMLInline.loadAndInlineCSSReferences(doc, callback);
+
+            expect(getDataURIForImageURLSpy).toHaveBeenCalledWith(anImage, jasmine.any(Object), jasmine.any(Function), jasmine.any(Function));
+        });
+
         it("should respect the document's baseURI when loading the background-image", function () {
             getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback) {
                 successCallback("aDataUri");

@@ -53,6 +53,27 @@ describe("CSS import inline", function () {
         expect(doc.head.getElementsByTagName("style")[0].textContent).toEqual("p { font-size: 10px; }");
     });
 
+    it("should follow import on a style element without a type", function () {
+        var styleNode = doc.createElement("style");
+
+        styleNode.appendChild(doc.createTextNode('@import url("imported.css");'));
+        doc.head.appendChild(styleNode);
+
+        ajaxSpy.andCallFake(function (url, options, callback) {
+            if (url === 'imported.css') {
+                callback("p { font-size: 10px; }");
+            }
+        });
+
+        rasterizeHTMLInline.loadAndInlineCSSImports(doc, callback);
+
+        expect(callback).toHaveBeenCalled();
+
+        expect(doc.head.getElementsByTagName("style").length).toEqual(1);
+        expect(doc.head.getElementsByTagName("style")[0].textContent).toEqual("p { font-size: 10px; }");
+    });
+
+
     it("should support an import without the functional url() form", function () {
         ajaxSpy.andCallFake(function (url, options, callback) {
             callback("");
