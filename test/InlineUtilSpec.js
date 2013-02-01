@@ -289,6 +289,23 @@ describe("Inline utilities function", function () {
                 expect(the_result.body.innerHTML).toEqual('dynamic content');
             });
         });
+
+        it("should remove the iframe element when done", function () {
+            var html = "<html><body><script>document.body.innerHTML = 'dynamic content';</script></body></html>",
+                finished = false;
+
+            rasterizeHTMLInline.util.loadAndExecuteJavascript(html, function () {
+                finished = true;
+            });
+
+            waitsFor(function () {
+                return finished;
+            });
+
+            runs(function () {
+                expect($("iframe")).not.toExist();
+            });
+        });
     });
 
     describe("getDataURIForImageURL", function () {

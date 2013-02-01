@@ -110,7 +110,9 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
         window.document.getElementsByTagName("body")[0].appendChild(iframe);
 
         iframe.onload = function () {
-            callback(iframe.contentDocument);
+            var doc = iframe.contentDocument;
+            window.document.getElementsByTagName("body")[0].removeChild(iframe);
+            callback(doc);
         };
 
         iframe.contentDocument.open();
