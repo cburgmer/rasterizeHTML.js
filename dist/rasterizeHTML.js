@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.1.0 - 2013-01-30
+/*! rasterizeHTML.js - v0.1.0 - 2013-02-01
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2013 Christoph Burgmer; Licensed MIT */
 
@@ -106,9 +106,10 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
         }, errorCallback);
     };
 
-    module.util.loadUrlAndExecuteJavascript = function (url, callback) {
+    module.util.loadAndExecuteJavascript = function (html, callback) {
         var iframe = window.document.createElement("iframe");
 
+        // We need to add the iframe to the document so that it gets loaded
         iframe.style.display = "none";
         window.document.getElementsByTagName("body")[0].appendChild(iframe);
 
@@ -116,7 +117,9 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
             callback(iframe.contentDocument);
         };
 
-        iframe.src = url;
+        iframe.contentDocument.open();
+        iframe.contentDocument.write(html);
+        iframe.contentDocument.close();
     };
 
     var unquoteUrl = function (quotedUrl) {
@@ -1049,10 +1052,19 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, window) {
     module.drawHTML = function (html, canvas, options, callback) {
         // TODO remove reference to rasterizeHTMLInline.util
         var params = module.util.parseOptionalParameters(canvas, options, callback),
-            doc = window.document.implementation.createHTMLDocument("");
+            doc,
+            doDraw = function (doc) {
+                module.drawDocument(doc, params.canvas, params.options, params.callback);
+            };
 
-        doc.documentElement.innerHTML = html;
-        module.drawDocument(doc, params.canvas, params.options, params.callback);
+        if (params.options.executeJs) {
+            rasterizeHTMLInline.util.loadAndExecuteJavascript(html, doDraw);
+        } else {
+            doc = window.document.implementation.createHTMLDocument("");
+            doc.documentElement.innerHTML = html;
+            doDraw(doc);
+        }
+
     };
 
     module.drawURL = function (url, canvas, options, callback) {
@@ -1061,24 +1073,18 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, window) {
 
         params.options.baseUrl = url;
 
-        if (params.options.executeJs) {
-            rasterizeHTMLInline.util.loadUrlAndExecuteJavascript(url, function (doc) {
-                module.drawDocument(doc, params.canvas, params.options, params.callback);
-            });
-        } else {
-            rasterizeHTMLInline.util.ajax(url, {
-                cache: cache
-            }, function (html) {
-                module.drawHTML(html, params.canvas, params.options, params.callback);
-            }, function () {
-                if (params.callback) {
-                    params.callback(null, [{
-                        resourceType: "page",
-                        url: url
-                    }]);
-                }
-            });
-        }
+        rasterizeHTMLInline.util.ajax(url, {
+            cache: cache
+        }, function (html) {
+            module.drawHTML(html, params.canvas, params.options, params.callback);
+        }, function () {
+            if (params.callback) {
+                params.callback(null, [{
+                    resourceType: "page",
+                    url: url
+                }]);
+            }
+        });
     };
 
     return module;

@@ -300,10 +300,19 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, window) {
     module.drawHTML = function (html, canvas, options, callback) {
         // TODO remove reference to rasterizeHTMLInline.util
         var params = module.util.parseOptionalParameters(canvas, options, callback),
-            doc = window.document.implementation.createHTMLDocument("");
+            doc,
+            doDraw = function (doc) {
+                module.drawDocument(doc, params.canvas, params.options, params.callback);
+            };
 
-        doc.documentElement.innerHTML = html;
-        module.drawDocument(doc, params.canvas, params.options, params.callback);
+        if (params.options.executeJs) {
+            rasterizeHTMLInline.util.loadAndExecuteJavascript(html, doDraw);
+        } else {
+            doc = window.document.implementation.createHTMLDocument("");
+            doc.documentElement.innerHTML = html;
+            doDraw(doc);
+        }
+
     };
 
     module.drawURL = function (url, canvas, options, callback) {
@@ -312,24 +321,18 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, window) {
 
         params.options.baseUrl = url;
 
-        if (params.options.executeJs) {
-            rasterizeHTMLInline.util.loadUrlAndExecuteJavascript(url, function (doc) {
-                module.drawDocument(doc, params.canvas, params.options, params.callback);
-            });
-        } else {
-            rasterizeHTMLInline.util.ajax(url, {
-                cache: cache
-            }, function (html) {
-                module.drawHTML(html, params.canvas, params.options, params.callback);
-            }, function () {
-                if (params.callback) {
-                    params.callback(null, [{
-                        resourceType: "page",
-                        url: url
-                    }]);
-                }
-            });
-        }
+        rasterizeHTMLInline.util.ajax(url, {
+            cache: cache
+        }, function (html) {
+            module.drawHTML(html, params.canvas, params.options, params.callback);
+        }, function () {
+            if (params.callback) {
+                params.callback(null, [{
+                    resourceType: "page",
+                    url: url
+                }]);
+            }
+        });
     };
 
     return module;

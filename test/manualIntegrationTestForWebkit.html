@@ -42,10 +42,10 @@
 
             htmlRequest.onreadystatechange = function () {
                 if (htmlRequest.readyState == 4) {
-                    rasterizeHTML.drawHTML(htmlRequest.responseText, htmlCanvas, {baseUrl: "fixtures/", cache: false});
+                    rasterizeHTML.drawHTML(htmlRequest.responseText, htmlCanvas, {baseUrl: "fixtures/", cache: false, executeJs: true});
                 }
             };
-            htmlRequest.open('GET', "fixtures/test.html", true);
+            htmlRequest.open('GET', "fixtures/testWithJs.html", true);
             htmlRequest.overrideMimeType("text/html");
             htmlRequest.send(null);
         </script>

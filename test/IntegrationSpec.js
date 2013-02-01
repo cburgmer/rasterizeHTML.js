@@ -77,7 +77,7 @@ describe("Integration test", function () {
 
     ifNotInWebkitIt("should take a URL, inline all displayable content and render to the given canvas (flaky in Firefox)", function () {
         runs(function () {
-            rasterizeHTML.drawURL(jasmine.getFixtures().fixturesPath + "test.html", canvas.get(0), {cache: false}, callback);
+            rasterizeHTML.drawURL(jasmine.getFixtures().fixturesPath + "testWithJs.html", canvas.get(0), {cache: false, executeJs: true}, callback);
         });
 
         waitsFor(function () {
@@ -92,7 +92,7 @@ describe("Integration test", function () {
 
     ifNotInWebkitIt("should take a URL, inline all displayable content and return the image (flaky in Firefox)", function () {
         runs(function () {
-            rasterizeHTML.drawURL(jasmine.getFixtures().fixturesPath + "test.html", {cache: false, width: width, height: height}, callback);
+            rasterizeHTML.drawURL(jasmine.getFixtures().fixturesPath + "testWithJs.html", {cache: false, width: width, height: height, executeJs: true}, callback);
         });
 
         waitsFor(function () {

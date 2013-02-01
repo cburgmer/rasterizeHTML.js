@@ -102,9 +102,10 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
         }, errorCallback);
     };
 
-    module.util.loadUrlAndExecuteJavascript = function (url, callback) {
+    module.util.loadAndExecuteJavascript = function (html, callback) {
         var iframe = window.document.createElement("iframe");
 
+        // We need to add the iframe to the document so that it gets loaded
         iframe.style.display = "none";
         window.document.getElementsByTagName("body")[0].appendChild(iframe);
 
@@ -112,7 +113,9 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
             callback(iframe.contentDocument);
         };
 
-        iframe.src = url;
+        iframe.contentDocument.open();
+        iframe.contentDocument.write(html);
+        iframe.contentDocument.close();
     };
 
     var unquoteUrl = function (quotedUrl) {

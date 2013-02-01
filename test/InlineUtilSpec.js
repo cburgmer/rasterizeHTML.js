@@ -272,11 +272,12 @@ describe("Inline utilities function", function () {
 
     });
 
-    describe("loadUrlAndExecuteJavascript", function () {
+    describe("loadAndExecuteJavascript", function () {
         it("should load an URL and execute the included JS", function () {
-            var the_result = null;
+            var html = "<html><body><script>document.body.innerHTML = 'dynamic content';</script></body></html>",
+                the_result = null;
 
-            rasterizeHTMLInline.util.loadUrlAndExecuteJavascript(jasmine.getFixtures().fixturesPath + "pageWithJS.html", function (result) {
+            rasterizeHTMLInline.util.loadAndExecuteJavascript(html, function (result) {
                 the_result = result;
             });
 
@@ -285,7 +286,7 @@ describe("Inline utilities function", function () {
             });
 
             runs(function () {
-                expect(the_result.body.innerHTML.trim()).toEqual('Some HTML<script>document.write("with JS");</script>with JS');
+                expect(the_result.body.innerHTML).toEqual('dynamic content');
             });
         });
     });
