@@ -230,8 +230,8 @@ describe("CSS inline", function () {
         expect(callback).toHaveBeenCalled();
     });
 
-    describe("CSS inline error handling", function () {
-        var callback, brokenCssLink, anotherBrokenCssLink;
+    describe("error handling", function () {
+        var brokenCssLink, anotherBrokenCssLink;
 
         beforeEach(function () {
             brokenCssLink = window.document.createElement("link");
@@ -245,8 +245,6 @@ describe("CSS inline", function () {
             anotherBrokenCssLink.type = "text/css";
 
             joinUrlSpy.andCallThrough();
-
-            callback = jasmine.createSpy("callback");
         });
 
         it("should report an error if a stylesheet could not be loaded", function () {
@@ -272,7 +270,7 @@ describe("CSS inline", function () {
             }]);
         });
 
-        it("should report multiple failing stylesheet as error", function () {
+        it("should report multiple failing stylesheets as error", function () {
             doc.head.appendChild(brokenCssLink);
             doc.head.appendChild(anotherBrokenCssLink);
 

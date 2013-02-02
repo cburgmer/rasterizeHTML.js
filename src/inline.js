@@ -260,7 +260,7 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
     /* Img Inlining */
 
     var encodeImageAsDataURI = function (image, baseUrl, cache, successCallback, errorCallback) {
-        var url = image.attributes.src.nodeValue,  // Chrome 19 sets image.src to ""
+        var url = image.attributes.src.nodeValue,
             base = baseUrl || image.ownerDocument.baseURI;
 
         if (module.util.isDataUri(url)) {
@@ -374,7 +374,7 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
     };
 
     var loadLinkedCSS = function (link, baseUrl, cache, successCallback, errorCallback) {
-        var cssHref = link.attributes.href.nodeValue, // Chrome 19 sets link.href to ""
+        var cssHref = link.attributes.href.nodeValue,
             documentBaseUrl = baseUrl || link.ownerDocument.baseURI,
             cssHrefRelativeToDoc = getUrlRelativeToDocumentBase(cssHref, documentBaseUrl),
             cssContent;
@@ -723,6 +723,61 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
         });
     };
 
+    /* Script inlining */
+
+    var loadLinkedScript = function (script, baseUrl, cache, successCallback, errorCallback) {
+        var base = baseUrl || script.ownerDocument.baseURI,
+            scriptSrcRelativeToDoc = getUrlRelativeToDocumentBase(script.attributes.src.nodeValue, base);
+
+        module.util.ajax(scriptSrcRelativeToDoc, {cache: cache}, successCallback, function () {
+            errorCallback(scriptSrcRelativeToDoc);
+        });
+    };
+
+    var substituteExternalScriptWithInline = function (oldScriptNode, jsCode) {
+        var newScript = oldScriptNode.ownerDocument.createElement("script"),
+            parent = oldScriptNode.parentNode;
+
+        if (oldScriptNode.attributes.type) {
+            newScript.type = oldScriptNode.attributes.type.nodeValue;
+        }
+
+        newScript.appendChild(oldScriptNode.ownerDocument.createTextNode(jsCode));
+
+        parent.insertBefore(newScript, oldScriptNode);
+        parent.removeChild(oldScriptNode);
+    };
+
+    module.loadAndInlineScript = function (doc, options, callback) {
+        var params = module.util.parseOptionalParameters(options, callback),
+            scripts = doc.getElementsByTagName("script"),
+            cache = params.options.cache !== false,
+            errors = [];
+
+        module.util.map(scripts, function (script, finish) {
+            if (script.attributes.src) {
+                loadLinkedScript(script, params.options.baseUrl, cache, function (jsCode) {
+                    substituteExternalScriptWithInline(script, jsCode);
+
+                    finish();
+                }, function (url) {
+                    errors.push({
+                        resourceType: "script",
+                        url: url
+                    });
+
+                    finish();
+                });
+            } else {
+                finish();
+            }
+        }, function () {
+            if (params.callback) {
+                params.callback(errors);
+            }
+        });
+    };
+
     /* Main */
 
     module.inlineReferences = function (doc, options, callback) {
@@ -737,8 +792,11 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
                     allErrors = allErrors.concat(errors);
                     module.loadAndInlineCSSReferences(doc, options, function (errors) {
                         allErrors = allErrors.concat(errors);
+                        module.loadAndInlineScript(doc, options, function (errors) {
+                            allErrors = allErrors.concat(errors);
 
-                        callback(allErrors);
+                            callback(allErrors);
+                        });
                     });
                 });
             });

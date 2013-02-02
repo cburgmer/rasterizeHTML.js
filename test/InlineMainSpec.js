@@ -1,13 +1,14 @@
 describe("Inline main", function () {
     var callbackCaller = function (doc, options, callback) { callback([]); },
         callback = jasmine.createSpy("callback"),
-        loadAndInlineImages, loadAndInlineCSS, loadAndInlineCSSImports, loadAndInlineCSSReferences;
+        loadAndInlineImages, loadAndInlineCSS, loadAndInlineCSSImports, loadAndInlineCSSReferences, loadAndInlineScript;
 
     beforeEach(function () {
         loadAndInlineImages = spyOn(rasterizeHTMLInline, "loadAndInlineImages");
         loadAndInlineCSS = spyOn(rasterizeHTMLInline, "loadAndInlineCSS");
         loadAndInlineCSSImports = spyOn(rasterizeHTMLInline, "loadAndInlineCSSImports");
         loadAndInlineCSSReferences = spyOn(rasterizeHTMLInline, "loadAndInlineCSSReferences");
+        loadAndInlineScript = spyOn(rasterizeHTMLInline, "loadAndInlineScript");
     });
 
     it("should inline all resources", function () {
@@ -17,6 +18,7 @@ describe("Inline main", function () {
         loadAndInlineCSS.andCallFake(callbackCaller);
         loadAndInlineCSSImports.andCallFake(callbackCaller);
         loadAndInlineCSSReferences.andCallFake(callbackCaller);
+        loadAndInlineScript.andCallFake(callbackCaller);
 
         rasterizeHTMLInline.inlineReferences(doc, {}, callback);
 
@@ -24,6 +26,7 @@ describe("Inline main", function () {
         expect(loadAndInlineCSS).toHaveBeenCalledWith(doc, {}, jasmine.any(Function));
         expect(loadAndInlineCSSImports).toHaveBeenCalledWith(doc, {}, jasmine.any(Function));
         expect(loadAndInlineCSSReferences).toHaveBeenCalledWith(doc, {}, jasmine.any(Function));
+        expect(loadAndInlineScript).toHaveBeenCalledWith(doc, {}, jasmine.any(Function));
 
         expect(callback).toHaveBeenCalledWith([]);
     });
@@ -35,6 +38,7 @@ describe("Inline main", function () {
         loadAndInlineCSS.andCallFake(callbackCaller);
         loadAndInlineCSSImports.andCallFake(callbackCaller);
         loadAndInlineCSSReferences.andCallFake(callbackCaller);
+        loadAndInlineScript.andCallFake(callbackCaller);
 
         rasterizeHTMLInline.inlineReferences(doc, {baseUrl: "a_baseUrl", cache: false}, callback);
 
@@ -42,6 +46,7 @@ describe("Inline main", function () {
         expect(loadAndInlineCSS).toHaveBeenCalledWith(doc, {baseUrl: "a_baseUrl", cache: false}, jasmine.any(Function));
         expect(loadAndInlineCSSImports).toHaveBeenCalledWith(doc, {baseUrl: "a_baseUrl", cache: false}, jasmine.any(Function));
         expect(loadAndInlineCSSReferences).toHaveBeenCalledWith(doc, {baseUrl: "a_baseUrl", cache: false}, jasmine.any(Function));
+        expect(loadAndInlineScript).toHaveBeenCalledWith(doc, {baseUrl: "a_baseUrl", cache: false}, jasmine.any(Function));
 
         expect(callback).toHaveBeenCalledWith([]);
     });
@@ -55,6 +60,7 @@ describe("Inline main", function () {
         loadAndInlineCSS.andCallFake(callbackCaller);
         loadAndInlineCSSImports.andCallFake(callbackCaller);
         loadAndInlineCSSReferences.andCallFake(callbackCaller);
+        loadAndInlineScript.andCallFake(callbackCaller);
 
         rasterizeHTMLInline.inlineReferences(doc, {}, callback);
 
@@ -76,9 +82,12 @@ describe("Inline main", function () {
         loadAndInlineCSSReferences.andCallFake(function (doc, options, callback) {
             callback(["yet another error", "and even more"]);
         });
+        loadAndInlineScript.andCallFake(function (doc, options, callback) {
+            callback(["error from script"]);
+        });
 
         rasterizeHTMLInline.inlineReferences(doc, {}, callback);
 
-        expect(callback).toHaveBeenCalledWith(["the error", "another error", "more error", "yet another error", "and even more"]);
+        expect(callback).toHaveBeenCalledWith(["the error", "another error", "more error", "yet another error", "and even more", "error from script"]);
     });
 });
