@@ -102,24 +102,6 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
         }, errorCallback);
     };
 
-    module.util.loadAndExecuteJavascript = function (html, callback) {
-        var iframe = window.document.createElement("iframe");
-
-        // We need to add the iframe to the document so that it gets loaded
-        iframe.style.display = "none";
-        window.document.getElementsByTagName("body")[0].appendChild(iframe);
-
-        iframe.onload = function () {
-            var doc = iframe.contentDocument;
-            window.document.getElementsByTagName("body")[0].removeChild(iframe);
-            callback(doc);
-        };
-
-        iframe.contentDocument.open();
-        iframe.contentDocument.write(html);
-        iframe.contentDocument.close();
-    };
-
     var unquoteUrl = function (quotedUrl) {
         var doubleQuoteRegex = /^"(.*)"$/,
             singleQuoteRegex = /^'(.*)'$/;

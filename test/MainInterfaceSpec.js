@@ -81,6 +81,18 @@ describe("Main interface of rasterizeHTML.js", function () {
             rasterizeHTML.drawDocument("doc", canvas, {baseUrl: "a_baseUrl"});
         });
 
+        it("should optionally execute JavaScript in the page", function () {
+            var doc = "the document",
+                executeJavascript = spyOn(rasterizeHTML.util, "executeJavascript").andCallFake(function (doc, callback) {
+                    callback(doc);
+                });
+
+            rasterizeHTML.drawDocument(doc, {executeJs: true}, callback);
+
+            expect(executeJavascript).toHaveBeenCalledWith(doc, jasmine.any(Function));
+            expect(callback).toHaveBeenCalled();
+        });
+
         it("should take a HTML string, inline all displayable content and render to the given canvas", function () {
             var html = "<head><title>a title</title></head><body>some html</body>",
                 drawDocumentSpy = spyOn(rasterizeHTML, "drawDocument").andCallFake(function (doc, canvas, options, callback) {
@@ -138,19 +150,6 @@ describe("Main interface of rasterizeHTML.js", function () {
 
         it("should make callback optional for drawHTML", function () {
             rasterizeHTML.drawHTML("<html></html>", canvas, {baseUrl: "a_baseUrl"});
-        });
-
-        it("should optionally execute JavaScript in the page", function () {
-            var doc = "the document",
-                loadAndExecuteJavascript = spyOn(rasterizeHTMLInline.util, "loadAndExecuteJavascript").andCallFake(function (html, callback) {
-                    callback(doc);
-                }),
-                drawDocumentSpy = spyOn(rasterizeHTML, "drawDocument");
-
-            rasterizeHTML.drawHTML("some content", {executeJs: true}, callback);
-
-            expect(loadAndExecuteJavascript).toHaveBeenCalledWith("some content", jasmine.any(Function));
-            expect(drawDocumentSpy).toHaveBeenCalledWith(doc, null, jasmine.any(Object), jasmine.any(Function));
         });
 
         it("should take a URL, inline all displayable content and render to the given canvas", function () {

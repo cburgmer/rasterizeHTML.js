@@ -272,42 +272,6 @@ describe("Inline utilities function", function () {
 
     });
 
-    describe("loadAndExecuteJavascript", function () {
-        it("should load an URL and execute the included JS", function () {
-            var html = "<html><body><script>document.body.innerHTML = 'dynamic content';</script></body></html>",
-                the_result = null;
-
-            rasterizeHTMLInline.util.loadAndExecuteJavascript(html, function (result) {
-                the_result = result;
-            });
-
-            waitsFor(function () {
-                return the_result !== null;
-            });
-
-            runs(function () {
-                expect(the_result.body.innerHTML).toEqual('dynamic content');
-            });
-        });
-
-        it("should remove the iframe element when done", function () {
-            var html = "<html><body><script>document.body.innerHTML = 'dynamic content';</script></body></html>",
-                finished = false;
-
-            rasterizeHTMLInline.util.loadAndExecuteJavascript(html, function () {
-                finished = true;
-            });
-
-            waitsFor(function () {
-                return finished;
-            });
-
-            runs(function () {
-                expect($("iframe")).not.toExist();
-            });
-        });
-    });
-
     describe("getDataURIForImageURL", function () {
         var binaryAjaxSpy;
 

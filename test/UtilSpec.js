@@ -1,6 +1,47 @@
 describe("Utilities function", function () {
     // TODO tests for log and getConstantUniqueIdFor
 
+    describe("executeJavascript", function () {
+        var doc;
+
+        beforeEach(function () {
+            doc = window.document.implementation.createHTMLDocument("");
+            doc.documentElement.innerHTML = "<html><body><script>document.body.innerHTML = 'dynamic content';</script></body></html>";
+        });
+
+        it("should load an URL and execute the included JS", function () {
+            var the_result = null;
+
+            rasterizeHTML.util.executeJavascript(doc, function (result) {
+                the_result = result;
+            });
+
+            waitsFor(function () {
+                return the_result !== null;
+            });
+
+            runs(function () {
+                expect(the_result.body.innerHTML).toEqual('dynamic content');
+            });
+        });
+
+        it("should remove the iframe element when done", function () {
+            var finished = false;
+
+            rasterizeHTML.util.executeJavascript(doc, function () {
+                finished = true;
+            });
+
+            waitsFor(function () {
+                return finished;
+            });
+
+            runs(function () {
+                expect($("iframe")).not.toExist();
+            });
+        });
+    });
+
     describe("parseOptionalParameters", function () {
         var canvas, options, callback;
 

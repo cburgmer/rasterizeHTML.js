@@ -76,6 +76,25 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, window) {
         return parameters;
     };
 
+    module.util.executeJavascript = function (doc, callback) {
+        var iframe = window.document.createElement("iframe"),
+            html = doc.getElementsByTagName("html")[0].outerHTML;
+
+        // We need to add the iframe to the document so that it gets loaded
+        iframe.style.display = "none";
+        window.document.getElementsByTagName("body")[0].appendChild(iframe);
+
+        iframe.onload = function () {
+            var doc = iframe.contentDocument;
+            window.document.getElementsByTagName("body")[0].removeChild(iframe);
+            callback(doc);
+        };
+
+        iframe.contentDocument.open();
+        iframe.contentDocument.write(html);
+        iframe.contentDocument.close();
+    };
+
     /* Rendering */
 
     var needsXMLParserWorkaround = function() {
@@ -256,63 +275,64 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, window) {
 
     /* "Public" API */
 
-    module.drawDocument = function (doc, canvas, options, callback) {
-        var params = module.util.parseOptionalParameters(canvas, options, callback),
+    var doDraw = function (doc, width, height, canvas, callback, allErrors) {
+        var svg = module.getSvgForDocument(doc, width, height),
             handleInternalError = function (errors) {
                 errors.push({
                     resourceType: "document"
                 });
             },
+            successful;
+
+        module.renderSvg(svg, canvas, function (image) {
+            if (canvas) {
+                successful = module.drawImageOnCanvas(image, canvas);
+
+                if (!successful) {
+                    handleInternalError(allErrors);
+                    image = null;   // Set image to null so that Firefox behaves similar to Webkit
+                }
+            }
+
+            if (callback) {
+                callback(image, allErrors);
+            }
+        }, function () {
+            handleInternalError(allErrors);
+
+            if (callback) {
+                callback(null, allErrors);
+            }
+
+        });
+    };
+
+    module.drawDocument = function (doc, canvas, options, callback) {
+        var params = module.util.parseOptionalParameters(canvas, options, callback),
             fallbackWidth = params.canvas ? params.canvas.width : 300,
             fallbackHeight = params.canvas ? params.canvas.height : 200,
             width = params.options.width !== undefined ? params.options.width : fallbackWidth,
             height = params.options.height !== undefined ? params.options.height : fallbackHeight;
 
         rasterizeHTMLInline.inlineReferences(doc, params.options, function (allErrors) {
-
-            var svg = module.getSvgForDocument(doc, width, height),
-                successful;
-
-            module.renderSvg(svg, params.canvas, function (image) {
-                if (params.canvas) {
-                    successful = module.drawImageOnCanvas(image, params.canvas);
-
-                    if (!successful) {
-                        handleInternalError(allErrors);
-                        image = null;   // Set image to null so that Firefox behaves similar to Webkit
-                    }
-                }
-
-                if (params.callback) {
-                    params.callback(image, allErrors);
-                }
-            }, function () {
-                handleInternalError(allErrors);
-
-                if (params.callback) {
-                    params.callback(null, allErrors);
-                }
-
-            });
+            if (params.options.executeJs) {
+                module.util.executeJavascript(doc, function (doc) {
+                    doDraw(doc, width, height, params.canvas, params.callback, allErrors);
+                });
+            } else {
+                doDraw(doc, width, height, params.canvas, params.callback, allErrors);
+            }
         });
     };
 
     module.drawHTML = function (html, canvas, options, callback) {
         // TODO remove reference to rasterizeHTMLInline.util
         var params = module.util.parseOptionalParameters(canvas, options, callback),
-            doc,
-            doDraw = function (doc) {
-                module.drawDocument(doc, params.canvas, params.options, params.callback);
-            };
-
-        if (params.options.executeJs) {
-            rasterizeHTMLInline.util.loadAndExecuteJavascript(html, doDraw);
-        } else {
             doc = window.document.implementation.createHTMLDocument("");
-            doc.documentElement.innerHTML = html;
-            doDraw(doc);
-        }
 
+        doc.documentElement.innerHTML = html;
+
+        module.drawDocument(doc, params.canvas, params.options, params.callback);
     };
 
     module.drawURL = function (url, canvas, options, callback) {
