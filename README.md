@@ -5,8 +5,16 @@ Renders HTML into the browser's canvas.
 
 See the [API](https://github.com/cburgmer/rasterizeHTML.js/wiki/API).
 
-How it works
-------------
+Example
+-------
+
+    var canvas = document.getElementById("canvas");
+    rasterizeHTML.drawHTML('Some <span style="color: green">HTML</span> with an image <img src="someimg.png" />', canvas);
+
+See [Examples](https://github.com/cburgmer/rasterizeHTML.js/wiki/Examples).
+
+How does it work
+----------------
 
 For security reasons rendering HTML into a canvas is severly limited. Firefox offers such a function via `ctx.drawWindow()`, but only with Chrome privileges (see https://developer.mozilla.org/en/Drawing_Graphics_with_Canvas).
 
@@ -23,14 +31,6 @@ The code is tested under Firefox, Chrome & Safari. However IE is not supported s
 
 At the time of writing it seems that the individual browsers still have some issues with rendering SVGs with embedded HTML to the canvas. See the [wiki for a list of known issues](https://github.com/cburgmer/rasterizeHTML.js/wiki/Browser-issues) and do add your findings there.
 
-Example
--------
-
-    var canvas = document.getElementById("canvas");
-    rasterizeHTML.drawHTML('Some <span style="color: green">HTML</span> with an image <img src="someimg.png" />', canvas);
-
-Also see `example.html`.
-
 Testing
 -------
 
@@ -44,6 +44,12 @@ for linting, jasmine tests and minification.
 Alternatively point your browser to `test/SpecRunner.html` and `test/manualIntegrationTestForWebkit.html` (under Chrome you will either need to start the browser passing in the option `--allow-file-access-from-files` or load the page through a local webserver).
 
 [![Build Status](https://secure.travis-ci.org/cburgmer/rasterizeHTML.js.png?branch=master)](http://travis-ci.org/cburgmer/rasterizeHTML.js)
+
+Where is it used?
+-----------------
+
+* [CSS Critic](https://github.com/cburgmer/csscritic), a lightweight framework for regression testing of Cascading Style Sheets
+* ...
 
 Author
 ------
