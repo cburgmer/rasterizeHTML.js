@@ -302,21 +302,24 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
     /* CSS inlining */
 
     var adjustPathOfDeclarationAndReportChange = function (baseUrl, cssDeclaration) {
-        var url;
-        try {
-            url = module.util.extractCssUrl(cssDeclaration.values[0].cssText());
-        } catch (e) {
-            return false;
+        var url, i, changed = false;
+        for (i = 0; i < cssDeclaration.values.length; i++) {
+            try {
+                url = module.util.extractCssUrl(cssDeclaration.values[i].cssText());
+            } catch (e) {
+                continue;
+            }
+
+            if (module.util.isDataUri(url)) {
+                continue;
+            }
+
+            url = module.util.joinUrl(baseUrl, url);
+            cssDeclaration.values[i].setCssText('url("' + url + '")');
+            changed = true;
         }
 
-        if (module.util.isDataUri(url)) {
-            return false;
-        }
-
-        url = module.util.joinUrl(baseUrl, url);
-        cssDeclaration.values[0].setCssText('url("' + url + '")');
-
-        return true;
+        return changed;
     };
 
     var adjustPathsOfCssResources = function (baseUrl, styleContent) {

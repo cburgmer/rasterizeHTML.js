@@ -192,7 +192,7 @@ describe("CSS inline", function () {
         ajaxSpy.andCallFake(function (url, options, success) {
             if (url === "some_url/below/some.css") {
                 success('div { background-image: url("../green.png"); }\n' +
-                    '@font-face { font-family: "test font"; src: url("fake.woff"); }');
+                    '@font-face { font-family: "test font"; src: local("some font"), url("fake.woff"); }');
             }
         });
 
