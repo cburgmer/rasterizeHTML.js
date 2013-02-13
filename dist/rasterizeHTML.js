@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.2.1 - 2013-02-03
+/*! rasterizeHTML.js - v0.2.1 - 2013-02-13
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2013 Christoph Burgmer; Licensed MIT */
 
@@ -106,7 +106,7 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
         }, errorCallback);
     };
 
-    var unquoteUrl = function (quotedUrl) {
+    var unquoteString = function (quotedUrl) {
         var doubleQuoteRegex = /^"(.*)"$/,
             singleQuoteRegex = /^'(.*)'$/;
 
@@ -136,7 +136,7 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
         }
 
         quotedUrl = urlRegex.exec(cssUrl)[1];
-        return unquoteUrl(trimCSSWhitespace(quotedUrl));
+        return unquoteString(trimCSSWhitespace(quotedUrl));
     };
 
     module.util.getDataURIForImageURL = function (url, options, successCallback, errorCallback) {
@@ -453,7 +453,7 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
             cssHrefRelativeToDoc, url;
 
         if (isQuotedString(href)) {
-            url = unquoteUrl(href);
+            url = unquoteString(href);
         } else {
             try {
                 url = module.util.extractCssUrl(href);
@@ -604,27 +604,58 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
         });
     };
 
+    var findFontFaceFormat = function (value) {
+        var fontFaceFormatRegex = /^format\(([^\)]+)\)/,
+            quotedFormat;
+
+        if (!fontFaceFormatRegex.test(value)) {
+            return null;
+        }
+
+        quotedFormat = fontFaceFormatRegex.exec(value)[1];
+        return unquoteString(quotedFormat);
+    };
+
+    var findFontFaceSrcUrl = function (fontSrcValues) {
+        var i, url, format = null;
+
+        for (i = 0; i < fontSrcValues.length; i++) {
+            try {
+                url = module.util.extractCssUrl(fontSrcValues[i].cssText());
+                // format() follows url and has it's own entry with the CSSParser
+                if (i + 1 < fontSrcValues.length) {
+                    format = findFontFaceFormat(fontSrcValues[i+1].cssText());
+                }
+                return {
+                    url: url,
+                    format: format
+                };
+            } catch (e) {}
+        }
+    };
+
     var loadAndInlineFontFace = function (cssDeclaration, baseUri, cache, successCallback, errorCallback) {
-        var url, base64Content;
-        try {
-            url = module.util.extractCssUrl(cssDeclaration.values[0].cssText());
-        } catch (e) {
+        var fontSrc, url, format, base64Content;
+
+        fontSrc = findFontFaceSrcUrl(cssDeclaration.values);
+        if (!fontSrc) {
             successCallback(false);
             return;
         }
 
-        if (module.util.isDataUri(url)) {
+        if (module.util.isDataUri(fontSrc.url)) {
             successCallback(false);
             return;
         }
 
-        url = getUrlRelativeToDocumentBase(url, baseUri);
+        url = getUrlRelativeToDocumentBase(fontSrc.url, baseUri);
+        format = fontSrc.format ? fontSrc.format : "woff";
 
         module.util.binaryAjax(url, {
             cache: cache
         }, function (content) {
             base64Content = btoa(content);
-            cssDeclaration.values[0].setCssText('url("data:font/woff;base64,' + base64Content + '")');
+            cssDeclaration.values[0].setCssText('url("data:font/' + format + ';base64,' + base64Content + '")');
 
             successCallback(true);
         }, function () {

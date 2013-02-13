@@ -278,17 +278,22 @@ describe("CSS references inline", function () {
     });
 
     describe("on font-face", function () {
-        var fontFaceRegex = /\s*@font-face\s*\{\s*font-family\s*:\s*"([^\"]+)";\s*src:\s*url\("([^\)]+)"\);\s*\}/,
+        var fontFaceRegex = /\s*@font-face\s*\{\s*font-family\s*:\s*"([^\"]+)";\s*src:\s*url\("([^\)]+)"\)(\s*format\(([^\)]+)\))?;\s*\}/,
             callback;
 
-        var expectFontFaceUrlToMatch = function (url) {
-            var extractedUrl, styleContent;
+        var expectFontFaceUrlToMatch = function (url, format) {
+            var extractedUrl, styleContent, match;
 
             expect(doc.getElementsByTagName("style").length).toEqual(1);
             styleContent = doc.getElementsByTagName("style")[0].textContent;
             expect(styleContent).toMatch(fontFaceRegex);
-            extractedUrl = fontFaceRegex.exec(styleContent)[2];
+
+            match = fontFaceRegex.exec(styleContent);
+            extractedUrl = match[2];
             expect(extractedUrl).toEqual(url);
+            if (format) {
+                expect(match[4]).toEqual(format);
+            }
         };
 
         beforeEach(function () {
@@ -317,6 +322,18 @@ describe("CSS references inline", function () {
             expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/@font-face \{ font-family: "test font"; src: "invalid url"; \}/);
         });
 
+        it("should ignore a local font", function () {
+            rasterizeHTMLTestHelper.addStyleToDocument(doc, '@font-face { font-family: "test font"; src: local("font name"); }');
+
+            rasterizeHTMLInline.loadAndInlineCSSReferences(doc, callback);
+
+            expect(callback).toHaveBeenCalled();
+            expect(binaryAjaxSpy).not.toHaveBeenCalled();
+
+            expect(doc.head.getElementsByTagName("style").length).toEqual(1);
+            expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/@font-face \{ font-family: "test font"; src: local\("font name"\); \}/);
+        });
+
         it("should inline a font", function () {
             binaryAjaxSpy.andCallFake(function (url, options, success) {
                 success("this is not a font");
@@ -331,6 +348,50 @@ describe("CSS references inline", function () {
             expect(extractCssUrlSpy).toHaveBeenCalledWith('url("fake.woff")');
 
             expectFontFaceUrlToMatch("data:font/woff;base64,dGhpcyBpcyBub3QgYSBmb250");
+        });
+
+        it("should take a font from url with alternatives", function () {
+            rasterizeHTMLTestHelper.addStyleToDocument(doc, '@font-face { font-family: "test font"; src: local("font name"), url("fake.woff"); }');
+
+            rasterizeHTMLInline.loadAndInlineCSSReferences(doc, callback);
+
+            expect(extractCssUrlSpy).toHaveBeenCalledWith('url("fake.woff")');
+        });
+
+        it("should detect a woff", function () {
+            binaryAjaxSpy.andCallFake(function (url, options, success) {
+                success("font's content");
+            });
+
+            rasterizeHTMLTestHelper.addStyleToDocument(doc, '@font-face { font-family: "test font"; src: url("fake.woff") format("woff"); }');
+
+            rasterizeHTMLInline.loadAndInlineCSSReferences(doc, callback);
+
+            expectFontFaceUrlToMatch("data:font/woff;base64,Zm9udCdzIGNvbnRlbnQ=", '"woff"');
+        });
+
+        it("should detect a truetype font", function () {
+            binaryAjaxSpy.andCallFake(function (url, options, success) {
+                success("font's content");
+            });
+
+            rasterizeHTMLTestHelper.addStyleToDocument(doc, '@font-face { font-family: "test font"; src: url("fake.ttf") format("truetype"); }');
+
+            rasterizeHTMLInline.loadAndInlineCSSReferences(doc, callback);
+
+            expectFontFaceUrlToMatch("data:font/truetype;base64,Zm9udCdzIGNvbnRlbnQ=", '"truetype"');
+        });
+
+        it("should detect a opentype font", function () {
+            binaryAjaxSpy.andCallFake(function (url, options, success) {
+                success("font's content");
+            });
+
+            rasterizeHTMLTestHelper.addStyleToDocument(doc, '@font-face { font-family: "test font"; src: url("fake.otf") format("opentype"); }');
+
+            rasterizeHTMLInline.loadAndInlineCSSReferences(doc, callback);
+
+            expectFontFaceUrlToMatch("data:font/opentype;base64,Zm9udCdzIGNvbnRlbnQ=", '"opentype"');
         });
 
         it("should respect the document's baseURI when loading the font", function () {
