@@ -296,6 +296,40 @@ describe("Inline utilities function", function () {
             expect(binaryAjaxSpy).toHaveBeenCalledWith('green.png', {}, jasmine.any(Function), jasmine.any(Function));
         });
 
+        it("should return a SVG as data: URI", function () {
+            var returnedDataURI = null,
+                svgImageHead = '<?xml version="1.0" encoding="utf-8"?>';
+
+            binaryAjaxSpy.andCallFake(function (url, options, successCallback) {
+                if (url === 'green.svg') {
+                    successCallback(svgImageHead);
+                }
+            });
+
+            rasterizeHTMLInline.util.getDataURIForImageURL("green.svg", {}, function (dataURI) {
+                returnedDataURI = dataURI;
+            }, function () {});
+
+            expect(returnedDataURI).toEqual('data:image/svg+xml;base64,' + btoa(svgImageHead));
+        });
+
+        it("should return a SVG as data: URI without XML head", function () {
+            var returnedDataURI = null,
+                svgImageHead = '<svg xmlns="http://www.w3.org/2000/svg">';
+
+            binaryAjaxSpy.andCallFake(function (url, options, successCallback) {
+                if (url === 'green.svg') {
+                    successCallback(svgImageHead);
+                }
+            });
+
+            rasterizeHTMLInline.util.getDataURIForImageURL("green.svg", {}, function (dataURI) {
+                returnedDataURI = dataURI;
+            }, function () {});
+
+            expect(returnedDataURI).toEqual('data:image/svg+xml;base64,' + btoa(svgImageHead));
+        });
+
         it("should return an error if the image could not be located due to a REST error", function () {
             var errorCallback = jasmine.createSpy("errorCallback"),
                 successCallback = jasmine.createSpy("successCallback");

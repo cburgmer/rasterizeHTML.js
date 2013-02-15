@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.2.1 - 2013-02-13
+/*! rasterizeHTML.js - v0.2.1 - 2013-02-15
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2013 Christoph Burgmer; Licensed MIT */
 
@@ -139,13 +139,26 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
         return unquoteString(trimCSSWhitespace(quotedUrl));
     };
 
+    var detectMimeType = function (content) {
+        var startsWith = function (string, substring) {
+            return string.substring(0, substring.length) === substring;
+        };
+
+        if (startsWith(content, '<?xml') || startsWith(content, '<svg')) {
+            return 'image/svg+xml';
+        }
+        return 'image/png';
+    };
+
     module.util.getDataURIForImageURL = function (url, options, successCallback, errorCallback) {
-        var base64Content;
+        var base64Content, mimeType;
 
         module.util.binaryAjax(url, options, function (content) {
             base64Content = btoa(content);
 
-            successCallback('data:image/png;base64,' + base64Content);
+            mimeType = detectMimeType(content);
+
+            successCallback('data:' + mimeType + ';base64,' + base64Content);
         }, function () {
             errorCallback();
         });
