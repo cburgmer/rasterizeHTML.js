@@ -76,19 +76,26 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, window) {
         return parameters;
     };
 
-    module.util.executeJavascript = function (doc, callback) {
+    module.util.executeJavascript = function (doc, timeout, callback) {
         var iframe = window.document.createElement("iframe"),
-            html = doc.getElementsByTagName("html")[0].outerHTML;
+            html = doc.getElementsByTagName("html")[0].outerHTML,
+            doCallback = function () {
+                var doc = iframe.contentDocument;
+                window.document.getElementsByTagName("body")[0].removeChild(iframe);
+                callback(doc);
+            };
 
         // We need to add the iframe to the document so that it gets loaded
         iframe.style.display = "none";
         window.document.getElementsByTagName("body")[0].appendChild(iframe);
 
-        iframe.onload = function () {
-            var doc = iframe.contentDocument;
-            window.document.getElementsByTagName("body")[0].removeChild(iframe);
-            callback(doc);
-        };
+        if (timeout > 0) {
+            iframe.onload = function () {
+                setTimeout(doCallback, timeout);
+            };
+        } else {
+            iframe.onload = doCallback;
+        }
 
         iframe.contentDocument.open();
         iframe.contentDocument.write(html);
@@ -312,11 +319,12 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, window) {
             fallbackWidth = params.canvas ? params.canvas.width : 300,
             fallbackHeight = params.canvas ? params.canvas.height : 200,
             width = params.options.width !== undefined ? params.options.width : fallbackWidth,
-            height = params.options.height !== undefined ? params.options.height : fallbackHeight;
+            height = params.options.height !== undefined ? params.options.height : fallbackHeight,
+            executeJsTimeout = params.options.executeJsTimeout || 0;
 
         rasterizeHTMLInline.inlineReferences(doc, params.options, function (allErrors) {
             if (params.options.executeJs) {
-                module.util.executeJavascript(doc, function (doc) {
+                module.util.executeJavascript(doc, executeJsTimeout, function (doc) {
                     doDraw(doc, width, height, params.canvas, params.callback, allErrors);
                 });
             } else {

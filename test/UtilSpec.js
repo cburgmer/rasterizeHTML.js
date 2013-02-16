@@ -6,13 +6,13 @@ describe("Utilities function", function () {
 
         beforeEach(function () {
             doc = window.document.implementation.createHTMLDocument("");
-            doc.documentElement.innerHTML = "<html><body><script>document.body.innerHTML = 'dynamic content';</script></body></html>";
         });
 
         it("should load an URL and execute the included JS", function () {
             var the_result = null;
 
-            rasterizeHTML.util.executeJavascript(doc, function (result) {
+            doc.documentElement.innerHTML = "<html><body><script>document.body.innerHTML = 'dynamic content';</script></body></html>";
+            rasterizeHTML.util.executeJavascript(doc, 0, function (result) {
                 the_result = result;
             });
 
@@ -28,7 +28,8 @@ describe("Utilities function", function () {
         it("should remove the iframe element when done", function () {
             var finished = false;
 
-            rasterizeHTML.util.executeJavascript(doc, function () {
+            doc.documentElement.innerHTML = "<html><body><script>document.body.innerHTML = 'dynamic content';</script></body></html>";
+            rasterizeHTML.util.executeJavascript(doc, 0, function () {
                 finished = true;
             });
 
@@ -38,6 +39,23 @@ describe("Utilities function", function () {
 
             runs(function () {
                 expect($("iframe")).not.toExist();
+            });
+        });
+
+        it("should wait a configured period of time before calling back", function () {
+            var the_result = null;
+
+            doc.documentElement.innerHTML = "<html><body onload=\"setTimeout(function () {document.body.innerHTML = 'dynamic content';}, 1);\"></body></html>";
+            rasterizeHTML.util.executeJavascript(doc, 2, function (result) {
+                the_result = result;
+            });
+
+            waitsFor(function () {
+                return the_result !== null;
+            });
+
+            runs(function () {
+                expect(the_result.body.innerHTML).toEqual('dynamic content');
             });
         });
     });
