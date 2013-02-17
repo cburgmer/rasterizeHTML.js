@@ -124,6 +124,39 @@ describe("CSS references inline", function () {
             expect(url).toEqual(anImagesDataUri);
         });
 
+        it("should inline multiple background-images in one rule", function () {
+            var backgroundImageRegex = /span\s*\{\s*background-image: url\("([^\)]+)"\)\s*,\s*url\("([^\)]+)"\);\s*\}/,
+                anImage = "anImage.png",
+                anImagesDataUri = "data:image/png;base64,someDataUri",
+                aSecondImage = "aSecondImage.png",
+                aSecondImagesDataUri = "data:image/png;base64,anotherDataUri",
+                url, styleContent;
+
+            getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback) {
+                if (url === anImage) {
+                    successCallback(anImagesDataUri);
+                } else if (url === aSecondImage) {
+                    successCallback(aSecondImagesDataUri);
+                }
+            });
+
+            rasterizeHTMLTestHelper.addStyleToDocument(doc, 'span { background-image: url("' + anImage + '"), url("' + aSecondImage + '"); }');
+
+            rasterizeHTMLInline.loadAndInlineCSSReferences(doc, callback);
+
+            expect(callback).toHaveBeenCalled();
+            expect(extractCssUrlSpy).toHaveBeenCalledWith('url("' + anImage + '")');
+            expect(extractCssUrlSpy).toHaveBeenCalledWith('url("' + aSecondImage + '")');
+
+            expect(doc.head.getElementsByTagName("style").length).toEqual(1);
+            styleContent = doc.head.getElementsByTagName("style")[0].textContent;
+            expect(styleContent).toMatch(backgroundImageRegex);
+            url = backgroundImageRegex.exec(styleContent)[1];
+            expect(url).toEqual(anImagesDataUri);
+            url = backgroundImageRegex.exec(styleContent)[2];
+            expect(url).toEqual(aSecondImagesDataUri);
+        });
+
         it("should inline a background-image on a style element without a type", function () {
             var anImage = "anImage.png",
                 styleNode = doc.createElement("style");
@@ -261,6 +294,28 @@ describe("CSS references inline", function () {
         it("should report multiple failing backgroundImages as error", function () {
             rasterizeHTMLTestHelper.addStyleToDocument(doc, 'span { background-image: url("a_backgroundImage_that_doesnt_exist.png"); }');
             rasterizeHTMLTestHelper.addStyleToDocument(doc, 'span { background-image: url("another_backgroundImage_that_doesnt_exist.png"); }');
+
+            rasterizeHTMLInline.loadAndInlineCSSReferences(doc, callback);
+
+            expect(callback).toHaveBeenCalledWith([jasmine.any(Object), jasmine.any(Object)]);
+            expect(callback.mostRecentCall.args[0][0]).not.toEqual(callback.mostRecentCall.args[0][1]);
+        });
+
+        it("should only report one failing backgroundImage for multiple in a rule", function () {
+            rasterizeHTMLTestHelper.addStyleToDocument(doc,
+                'span { background-image: url("' + aBackgroundImageThatDoesExist + '"), url("a_backgroundImage_that_doesnt_exist.png"); }');
+
+            rasterizeHTMLInline.loadAndInlineCSSReferences(doc, callback);
+
+            expect(callback).toHaveBeenCalledWith([{
+                resourceType: "backgroundImage",
+                url: "a_backgroundImage_that_doesnt_exist.png"
+            }]);
+        });
+
+        it("should report multiple failing backgroundImages in a rule as error", function () {
+            rasterizeHTMLTestHelper.addStyleToDocument(doc,
+                'span { background-image: url("a_backgroundImage_that_doesnt_exist.png"), url("another_backgroundImage_that_doesnt_exist.png"); }');
 
             rasterizeHTMLInline.loadAndInlineCSSReferences(doc, callback);
 

@@ -569,30 +569,45 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
 
     /* CSS linked resource inlining */
 
-    var loadAndInlineBackgroundImage = function (cssDeclaration, baseUri, cache, successCallback, errorCallback) {
-        var url;
-        try {
-            url = module.util.extractCssUrl(cssDeclaration.values[0].cssText());
-        } catch (e) {
-            successCallback(false);
-            return;
-        }
+    var loadAndInlineBackgroundImage = function (cssDeclaration, baseUri, cache, callback) {
+        var changed = false,
+            errorUrls = [],
+            finishedDeclarations = 0,
+            url;
 
-        if (module.util.isDataUri(url)) {
-            successCallback(false);
-            return;
-        }
+        var finishUp = function () {
+            finishedDeclarations += 1;
+            if (finishedDeclarations === cssDeclaration.values.length) {
+                callback(changed, errorUrls);
+            }
+        };
 
-        url = getUrlRelativeToDocumentBase(url, baseUri);
+        cssDeclaration.values.forEach(function (value, i) {
+            try {
+                url = module.util.extractCssUrl(cssDeclaration.values[i].cssText());
+            } catch (e) {
+                finishUp();
+                return;
+            }
 
-        module.util.getDataURIForImageURL(url, {
-            cache: cache
-        }, function (dataURI) {
-            cssDeclaration.values[0].setCssText('url("' + dataURI + '")');
+            if (module.util.isDataUri(url)) {
+                finishUp();
+                return;
+            }
 
-            successCallback(true);
-        }, function () {
-            errorCallback(url);
+            url = getUrlRelativeToDocumentBase(url, baseUri);
+
+            module.util.getDataURIForImageURL(url, {
+                cache: cache
+            }, function (dataURI) {
+                cssDeclaration.values[i].setCssText('url("' + dataURI + '")');
+
+                changed = true;
+                finishUp();
+            }, function () {
+                errorUrls.push(url);
+                finishUp();
+            });
         });
     };
 
@@ -602,12 +617,14 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
             cssHasChanges;
 
         module.util.map(declarationsToInline, function (declaration, finish) {
-            loadAndInlineBackgroundImage(declaration, baseUri, cache, finish, function (url) {
-                errors.push({
-                    resourceType: "backgroundImage",
-                    url: url
+            loadAndInlineBackgroundImage(declaration, baseUri, cache, function (changed, errorUrls) {
+                errorUrls.forEach(function (url) {
+                    errors.push({
+                        resourceType: "backgroundImage",
+                        url: url
+                    });
                 });
-                finish();
+                finish(changed);
             });
 
         }, function (changedStates) {
