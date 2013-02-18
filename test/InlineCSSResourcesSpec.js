@@ -169,6 +169,23 @@ describe("CSS references inline", function () {
             expect(getDataURIForImageURLSpy).toHaveBeenCalledWith(anImage, jasmine.any(Object), jasmine.any(Function), jasmine.any(Function));
         });
 
+        it("should not break background-position (#30)", function () {
+            var styleNode = doc.createElement("style"),
+                styleContent;
+
+            getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback) {
+                successCallback("data:image/png;base64,someDataUri");
+            });
+
+            styleNode.appendChild(doc.createTextNode('span { background-image: url("anImage.png"); background-position: 0 center, right center;}'));
+            doc.head.appendChild(styleNode);
+
+            rasterizeHTMLInline.loadAndInlineCSSReferences(doc, callback);
+
+            styleContent = doc.head.getElementsByTagName("style")[0].textContent;
+            expect(styleContent).toMatch(/background-position: 0 center, right center;/);
+        });
+
         it("should respect the document's baseURI when loading the background-image", function () {
             getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback) {
                 successCallback("aDataUri");

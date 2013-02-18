@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.2.1 - 2013-02-17
+/*! rasterizeHTML.js - v0.2.1 - 2013-02-18
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2013 Christoph Burgmer; Licensed MIT */
 
@@ -225,6 +225,30 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
         return descriptorsToInline;
     };
 
+    var cssToText = function (parsedCSS) {
+        // Works around https://github.com/cburgmer/rasterizeHTML.js/issues/30
+        var text = "",
+            i, j, rule;
+
+        for (i = 0; i < parsedCSS.cssRules.length; i++) {
+            rule = parsedCSS.cssRules[i];
+            if (rule.type === window.kJscsspSTYLE_RULE) {
+                text += rule.selectorText() + " {\n";
+                for (j = 0; j < rule.declarations.length; j++) {
+                    if (rule.declarations[j].property === "background-image") {
+                        text += rule.declarations[j].cssText() + "\n";
+                    } else {
+                        text += rule.declarations[j].property + ": " + rule.declarations[j].valueText + ";\n";
+                    }
+                }
+                text += "}\n";
+            } else {
+                text += rule.cssText() + "\n";
+            }
+        }
+        return text;
+    };
+
     var cloneObject = function(object) {
         var newObject = {},
             i;
@@ -353,7 +377,7 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
         }
 
         if (change) {
-            return parsedCss.cssText();
+            return cssToText(parsedCss);
         } else {
             return styleContent;
         }
@@ -530,7 +554,7 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
         }, function (changedStates) {
             // CSSParser is invasive, if no changes are needed, we leave the text as it is
             if (changedStates.indexOf(true) >= 0) {
-                cssContent = parsedCss.cssText().trim();
+                cssContent = cssToText(parsedCss).trim();
             }
 
             callback(cssContent, errors);
@@ -739,7 +763,7 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
             iterateOverRulesAndInlineFontFace(parsedCss, base, cache, function (fontsHaveChanges, fontFaceErrors) {
                 // CSSParser is invasive, if no changes are needed, we leave the text as it is
                 if (bgImagesHaveChanges || fontsHaveChanges) {
-                    cssContent = parsedCss.cssText();
+                    cssContent = cssToText(parsedCss);
                 }
                 cssContent = workAroundWebkitBugIgnoringTheFirstRuleInCSS(cssContent, parsedCss);
                 style.childNodes[0].nodeValue = cssContent;
