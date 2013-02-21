@@ -28,7 +28,7 @@ describe("Utilities function", function () {
         it("should remove the iframe element when done", function () {
             var finished = false;
 
-            doc.documentElement.innerHTML = "<html><body><script>document.body.innerHTML = 'dynamic content';</script></body></html>";
+            doc.documentElement.innerHTML = "<html><body></body></html>";
             rasterizeHTML.util.executeJavascript(doc, 0, function () {
                 finished = true;
             });
@@ -46,7 +46,7 @@ describe("Utilities function", function () {
             var the_result = null;
 
             doc.documentElement.innerHTML = "<html><body onload=\"setTimeout(function () {document.body.innerHTML = 'dynamic content';}, 1);\"></body></html>";
-            rasterizeHTML.util.executeJavascript(doc, 2, function (result) {
+            rasterizeHTML.util.executeJavascript(doc, 20, function (result) {
                 the_result = result;
             });
 
@@ -56,6 +56,23 @@ describe("Utilities function", function () {
 
             runs(function () {
                 expect(the_result.body.innerHTML).toEqual('dynamic content');
+            });
+        });
+
+        it("should be able to access CSS", function () {
+            var the_result = null;
+
+            doc.documentElement.innerHTML = '<html><head><style>div { height: 20px; }</style></head><body onload="var elem = document.getElementById(\'elem\'); document.body.innerHTML = elem.offsetHeight;"><div id="elem"></div></body></html>';
+            rasterizeHTML.util.executeJavascript(doc, 0, function (result) {
+                the_result = result;
+            });
+
+            waitsFor(function () {
+                return the_result !== null;
+            });
+
+            runs(function () {
+                expect(the_result.body.innerHTML).toEqual('20');
             });
         });
     });

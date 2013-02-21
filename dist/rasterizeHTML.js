@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.2.1 - 2013-02-18
+/*! rasterizeHTML.js - v0.2.1 - 2013-02-21
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2013 Christoph Burgmer; Licensed MIT */
 
@@ -959,17 +959,13 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, window) {
     };
 
     module.util.executeJavascript = function (doc, timeout, callback) {
-        var iframe = window.document.createElement("iframe"),
+        var iframe = createHiddenElement(window.document, "iframe"),
             html = doc.getElementsByTagName("html")[0].outerHTML,
             doCallback = function () {
                 var doc = iframe.contentDocument;
                 window.document.getElementsByTagName("body")[0].removeChild(iframe);
                 callback(doc);
             };
-
-        // We need to add the iframe to the document so that it gets loaded
-        iframe.style.display = "none";
-        window.document.getElementsByTagName("body")[0].appendChild(iframe);
 
         if (timeout > 0) {
             iframe.onload = function () {
@@ -1060,18 +1056,25 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, window) {
         }
     };
 
+    var createHiddenElement = function (doc, tagName) {
+        var element = doc.createElement(tagName);
+        // 'display: none' doesn't cut it, as browsers seem to be lazy loading CSS
+        element.style.visibility = "hidden";
+        element.style.width = "0px";
+        element.style.height = "0px";
+        element.style.position = "absolute";
+        element.style.top = "-10000px";
+        element.style.left = "-10000px";
+        // We need to add the element to the document so that its content gets loaded
+        doc.getElementsByTagName("body")[0].appendChild(element);
+        return element;
+    };
+
     var getOrCreateHiddenDivWithId = function (doc, id) {
         var div = doc.getElementById(id);
         if (! div) {
-            div = doc.createElement("div");
-            div.style.visibility = "hidden";
-            div.style.width = "0px";
-            div.style.height = "0px";
-            div.style.position = "absolute";
-            div.style.top = "-10000px";
-            div.style.left = "-10000px";
+            div = createHiddenElement(doc, "div");
             div.id = id;
-            doc.getElementsByTagName("body")[0].appendChild(div);
         }
 
         return div;
