@@ -254,7 +254,8 @@ describe("CSS inline", function () {
 
             expect(callback).toHaveBeenCalledWith([{
                 resourceType: "stylesheet",
-                url: "some_base_url/a_document_that_doesnt_exist.css"
+                url: "some_base_url/a_document_that_doesnt_exist.css",
+                msg: "Unable to load stylesheet some_base_url/a_document_that_doesnt_exist.css"
             }]);
         });
 
@@ -266,7 +267,8 @@ describe("CSS inline", function () {
 
             expect(callback).toHaveBeenCalledWith([{
                 resourceType: "stylesheet",
-                url: "a_document_that_doesnt_exist.css"
+                url: "a_document_that_doesnt_exist.css",
+                msg: jasmine.any(String)
             }]);
         });
 

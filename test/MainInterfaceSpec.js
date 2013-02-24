@@ -287,7 +287,8 @@ describe("Main interface of rasterizeHTML.js", function () {
             expect(ajaxSpy).toHaveBeenCalled();
             expect(callback).toHaveBeenCalledWith(null, [{
                 resourceType: "page",
-                url: "non_existing.html"
+                url: "non_existing.html",
+                msg: "Unable to load page non_existing.html"
             }]);
         });
 
@@ -331,7 +332,8 @@ describe("Main interface of rasterizeHTML.js", function () {
             expect(renderSvg).toHaveBeenCalled();
             expect(drawImageOnCanvas).not.toHaveBeenCalled();
             expect(callback).toHaveBeenCalledWith(null, [{
-                resourceType: "document"
+                resourceType: "document",
+                msg: "Error rendering page"
             }]);
         });
 
@@ -348,7 +350,8 @@ describe("Main interface of rasterizeHTML.js", function () {
             expect(renderSvg).toHaveBeenCalled();
             expect(drawImageOnCanvas).toHaveBeenCalled();
             expect(callback).toHaveBeenCalledWith(null, [{
-                resourceType: "document"
+                resourceType: "document",
+                msg: "Error rendering page"
             }]);
         });
 
@@ -378,10 +381,7 @@ describe("Main interface of rasterizeHTML.js", function () {
             var doc = "doc";
 
             executeJavascript.andCallFake(function (doc, timeout, callback) {
-                callback(doc, [{
-                    resourceType: "script",
-                    msg: "the error msg"
-                }]);
+                callback(doc, ["the error"]);
             });
             renderSvg.andCallFake(function (svg, canvas, successCallback) {
                 successCallback(svgImage);
@@ -390,10 +390,7 @@ describe("Main interface of rasterizeHTML.js", function () {
 
             rasterizeHTML.drawDocument(doc, canvas, {executeJs: true}, callback);
 
-            expect(callback).toHaveBeenCalledWith(svgImage, [{
-                resourceType: "script",
-                msg: "the error msg"
-            }]);
+            expect(callback).toHaveBeenCalledWith(svgImage, ["the error"]);
         });
 
     });

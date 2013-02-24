@@ -168,7 +168,8 @@ describe("Image and image input inline", function () {
 
             expect(callback).toHaveBeenCalledWith([{
                 resourceType: "image",
-                url: "some_base_url/image_that_doesnt_exist.png"
+                url: "some_base_url/image_that_doesnt_exist.png",
+                msg: "Unable to load image some_base_url/image_that_doesnt_exist.png"
             }]);
         });
 
@@ -182,7 +183,8 @@ describe("Image and image input inline", function () {
 
             expect(callback).toHaveBeenCalledWith([{
                 resourceType: "image",
-                url: "image_that_doesnt_exist.png"
+                url: "image_that_doesnt_exist.png",
+                msg: jasmine.any(String)
             }]);
         });
 

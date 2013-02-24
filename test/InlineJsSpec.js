@@ -153,7 +153,8 @@ describe("JS inline", function () {
 
             expect(callback).toHaveBeenCalledWith([{
                 resourceType: "script",
-                url: "some_base_url/a_document_that_doesnt_exist.js"
+                url: "some_base_url/a_document_that_doesnt_exist.js",
+                msg: "Unable to load script some_base_url/a_document_that_doesnt_exist.js"
             }]);
         });
 
@@ -165,7 +166,8 @@ describe("JS inline", function () {
 
             expect(callback).toHaveBeenCalledWith([{
                 resourceType: "script",
-                url: "a_document_that_doesnt_exist.js"
+                url: "a_document_that_doesnt_exist.js",
+                msg: jasmine.any(String)
             }]);
         });
 

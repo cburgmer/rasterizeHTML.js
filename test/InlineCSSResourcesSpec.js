@@ -292,7 +292,8 @@ describe("CSS references inline", function () {
 
             expect(callback).toHaveBeenCalledWith([{
                 resourceType: "backgroundImage",
-                url: "some_base_url/a_backgroundImage_that_doesnt_exist.png"
+                url: "some_base_url/a_backgroundImage_that_doesnt_exist.png",
+                msg: "Unable to load background-image some_base_url/a_backgroundImage_that_doesnt_exist.png"
             }]);
         });
 
@@ -304,7 +305,8 @@ describe("CSS references inline", function () {
 
             expect(callback).toHaveBeenCalledWith([{
                 resourceType: "backgroundImage",
-                url: "a_backgroundImage_that_doesnt_exist.png"
+                url: "a_backgroundImage_that_doesnt_exist.png",
+                msg: jasmine.any(String)
             }]);
         });
 
@@ -326,7 +328,8 @@ describe("CSS references inline", function () {
 
             expect(callback).toHaveBeenCalledWith([{
                 resourceType: "backgroundImage",
-                url: "a_backgroundImage_that_doesnt_exist.png"
+                url: "a_backgroundImage_that_doesnt_exist.png",
+                msg: jasmine.any(String)
             }]);
         });
 
@@ -564,7 +567,8 @@ describe("CSS references inline", function () {
 
             expect(callback).toHaveBeenCalledWith([{
                 resourceType: "fontFace",
-                url: "some_base_url/a_font_that_doesnt_exist.woff"
+                url: "some_base_url/a_font_that_doesnt_exist.woff",
+                msg: "Unable to load font-face some_base_url/a_font_that_doesnt_exist.woff"
             }]);
         });
 
@@ -576,7 +580,8 @@ describe("CSS references inline", function () {
 
             expect(callback).toHaveBeenCalledWith([{
                 resourceType: "fontFace",
-                url: "a_font_that_doesnt_exist.woff"
+                url: "a_font_that_doesnt_exist.woff",
+                msg: jasmine.any(String)
             }]);
         });
 

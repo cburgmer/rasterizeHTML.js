@@ -348,7 +348,8 @@ describe("CSS import inline", function () {
 
             expect(callback).toHaveBeenCalledWith([{
                 resourceType: "stylesheet",
-                url: "missing.css"
+                url: "missing.css",
+                msg: "Unable to load stylesheet missing.css"
             }]);
         });
 
@@ -366,7 +367,8 @@ describe("CSS import inline", function () {
 
             expect(callback).toHaveBeenCalledWith([{
                 resourceType: "stylesheet",
-                url: "some_url/missing.css"
+                url: "some_url/missing.css",
+                msg: "Unable to load stylesheet some_url/missing.css"
             }]);
         });
 
@@ -386,7 +388,8 @@ describe("CSS import inline", function () {
 
             expect(callback).toHaveBeenCalledWith([{
                 resourceType: "stylesheet",
-                url: "missing.css"
+                url: "missing.css",
+                msg: jasmine.any(String)
             }]);
         });
 
@@ -404,15 +407,18 @@ describe("CSS import inline", function () {
             expect(callback).toHaveBeenCalledWith([
                 {
                     resourceType: "stylesheet",
-                    url: "missing.css"
+                    url: "missing.css",
+                    msg: jasmine.any(String)
                 },
                 {
                     resourceType: "stylesheet",
-                    url: "another_missing.css"
+                    url: "another_missing.css",
+                    msg: jasmine.any(String)
                 },
                 {
                     resourceType: "stylesheet",
-                    url: "and_a_third_missing.css"
+                    url: "and_a_third_missing.css",
+                    msg: jasmine.any(String)
                 }
             ]);
         });
@@ -434,11 +440,13 @@ describe("CSS import inline", function () {
             expect(callback).toHaveBeenCalledWith([
                 {
                     resourceType: "stylesheet",
-                    url: "that.css"
+                    url: "that.css",
+                    msg: jasmine.any(String)
                 },
                 {
                     resourceType: "stylesheet",
-                    url: "and_also_that.css"
+                    url: "and_also_that.css",
+                    msg: jasmine.any(String)
                 }
             ]);
         });

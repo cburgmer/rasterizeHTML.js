@@ -95,7 +95,7 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, theWindow) {
         if (iframeJsErrors[id]) {
             iframeJsErrors[id].forEach(function (msg) {
                 errors.push({
-                    resourceType: "script",
+                    resourceType: "scriptExecution",
                     msg: msg
                 });
             });
@@ -318,7 +318,8 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, theWindow) {
         var svg = module.getSvgForDocument(doc, width, height),
             handleInternalError = function (errors) {
                 errors.push({
-                    resourceType: "document"
+                    resourceType: "document",
+                    msg: "Error rendering page"
                 });
             },
             successful;
@@ -389,7 +390,8 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, theWindow) {
             if (params.callback) {
                 params.callback(null, [{
                     resourceType: "page",
-                    url: url
+                    url: url,
+                    msg: "Unable to load page " + url
                 }]);
             }
         });

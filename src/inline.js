@@ -325,7 +325,8 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
             encodeImageAsDataURI(image, baseUrl, cache, finish, function (url) {
                 errors.push({
                     resourceType: "image",
-                    url: url
+                    url: url,
+                    msg: "Unable to load image " + url
                 });
                 finish();
             });
@@ -428,7 +429,8 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
                 }, function (url) {
                     errors.push({
                         resourceType: "stylesheet",
-                        url: url
+                        url: url,
+                        msg: "Unable to load stylesheet " + url
                     });
 
                     finish();
@@ -542,7 +544,8 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
             }, function (url) {
                 errors.push({
                     resourceType: "stylesheet",
-                    url: url
+                    url: url,
+                    msg: "Unable to load stylesheet " + url
                 });
 
                 finish();
@@ -645,7 +648,8 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
                 errorUrls.forEach(function (url) {
                     errors.push({
                         resourceType: "backgroundImage",
-                        url: url
+                        url: url,
+                        msg: "Unable to load background-image " + url
                     });
                 });
                 finish(changed);
@@ -725,7 +729,8 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
             loadAndInlineFontFace(declaration, baseUri, cache, finish, function (url) {
                 errors.push({
                     resourceType: "fontFace",
-                    url: url
+                    url: url,
+                    msg: "Unable to load font-face " + url
                 });
                 finish();
             });
@@ -833,7 +838,8 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
                 }, function (url) {
                     errors.push({
                         resourceType: "script",
-                        url: url
+                        url: url,
+                        msg: "Unable to load script " + url
                     });
 
                     finish();

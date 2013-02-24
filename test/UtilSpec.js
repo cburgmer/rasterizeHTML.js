@@ -90,7 +90,7 @@ describe("Utilities function", function () {
 
             runs(function () {
                 expect(errors).toEqual([{
-                    resourceType: "script",
+                    resourceType: "scriptExecution",
                     msg: jasmine.any(String)
                 }]);
                 expect(errors[0].msg).toMatch(/ReferenceError:\s+(.+\s+)?undefinedVar/);
