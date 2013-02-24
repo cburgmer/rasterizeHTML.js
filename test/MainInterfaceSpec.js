@@ -304,7 +304,7 @@ describe("Main interface of rasterizeHTML.js", function () {
     });
 
     describe("Internal errors", function () {
-        var callback;
+        var callback, executeJavascript;
 
         beforeEach(function () {
             callback = jasmine.createSpy("drawCallback");
@@ -314,6 +314,8 @@ describe("Main interface of rasterizeHTML.js", function () {
             getSvgForDocument = spyOn(rasterizeHTML, "getSvgForDocument").andReturn(svg);
             renderSvg = spyOn(rasterizeHTML, "renderSvg");
             drawImageOnCanvas = spyOn(rasterizeHTML, "drawImageOnCanvas");
+
+            executeJavascript = spyOn(rasterizeHTML.util, "executeJavascript");
         });
 
         it("should pass through an error from inlining when rendering the SVG on drawDocument", function () {
@@ -370,6 +372,28 @@ describe("Main interface of rasterizeHTML.js", function () {
             drawImageOnCanvas.andReturn(false);
 
             rasterizeHTML.drawDocument(doc, canvas);
+        });
+
+        it("should pass through a JS error", function () {
+            var doc = "doc";
+
+            executeJavascript.andCallFake(function (doc, timeout, callback) {
+                callback(doc, [{
+                    resourceType: "script",
+                    msg: "the error msg"
+                }]);
+            });
+            renderSvg.andCallFake(function (svg, canvas, successCallback) {
+                successCallback(svgImage);
+            });
+            drawImageOnCanvas.andReturn(true);
+
+            rasterizeHTML.drawDocument(doc, canvas, {executeJs: true}, callback);
+
+            expect(callback).toHaveBeenCalledWith(svgImage, [{
+                resourceType: "script",
+                msg: "the error msg"
+            }]);
         });
 
     });

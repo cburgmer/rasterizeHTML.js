@@ -75,6 +75,27 @@ describe("Utilities function", function () {
                 expect(the_result.body.innerHTML).toEqual('20');
             });
         });
+
+        it("should report failing JS", function () {
+            var errors = null;
+
+            doc.documentElement.innerHTML = "<html><body><script>undefinedVar.t = 42</script></body></html>";
+            rasterizeHTML.util.executeJavascript(doc, 0, function (result, theErrors) {
+                errors = theErrors;
+            });
+
+            waitsFor(function () {
+                return errors !== null;
+            });
+
+            runs(function () {
+                expect(errors).toEqual([{
+                    resourceType: "script",
+                    msg: jasmine.any(String)
+                }]);
+                expect(errors[0].msg).toMatch(/ReferenceError:\s+(.+\s+)?undefinedVar/);
+            });
+        });
     });
 
     describe("parseOptionalParameters", function () {

@@ -880,7 +880,7 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
     return module;
 }(window, URI, CSSParser));
 
-window.rasterizeHTML = (function (rasterizeHTMLInline, window) {
+window.rasterizeHTML = (function (rasterizeHTMLInline, theWindow) {
     "use strict";
 
     var module = {};
@@ -900,8 +900,8 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, window) {
     };
 
     module.util.log = function (msg) {
-        if (window.console && window.console.log) {
-            window.console.log(msg);
+        if (theWindow.console && theWindow.console.log) {
+            theWindow.console.log(msg);
         }
     };
 
@@ -958,13 +958,42 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, window) {
         return parameters;
     };
 
+    var iframeJsErrorHandler = function (id) {
+        return ("" + function (msg) {
+            window.parent.rasterizeHTML.util.reportIframeJsError('put_unique_id_here', msg);
+        }).replace("put_unique_id_here", id);
+    };
+
+    var iframeJsErrors = {};
+
+    module.util.reportIframeJsError = function (id, msg) {
+        var messages = iframeJsErrors[id] || [];
+        messages.push(msg);
+        iframeJsErrors[id] = messages;
+    };
+
+    var collectIframeErrors = function (id) {
+        var errors = [];
+        if (iframeJsErrors[id]) {
+            iframeJsErrors[id].forEach(function (msg) {
+                errors.push({
+                    resourceType: "script",
+                    msg: msg
+                });
+            });
+        }
+        return errors;
+    };
+
     module.util.executeJavascript = function (doc, timeout, callback) {
-        var iframe = createHiddenElement(window.document, "iframe"),
-            html = doc.getElementsByTagName("html")[0].outerHTML,
+        var iframe = createHiddenElement(theWindow.document, "iframe"),
+            html = doc.getElementsByTagName("html")[0].innerHTML,
+            documentId = module.util.getConstantUniqueIdFor(doc),
+            injectErrorHandling = "<script>window.onerror = " + iframeJsErrorHandler(documentId) + ";</script>",
             doCallback = function () {
                 var doc = iframe.contentDocument;
-                window.document.getElementsByTagName("body")[0].removeChild(iframe);
-                callback(doc);
+                theWindow.document.getElementsByTagName("body")[0].removeChild(iframe);
+                callback(doc, collectIframeErrors(documentId));
             };
 
         if (timeout > 0) {
@@ -976,7 +1005,7 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, window) {
         }
 
         iframe.contentDocument.open();
-        iframe.contentDocument.write(html);
+        iframe.contentDocument.write("<html>" + injectErrorHandling + html + "</html>");
         iframe.contentDocument.close();
     };
 
@@ -984,17 +1013,17 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, window) {
 
     var needsXMLParserWorkaround = function() {
         // See https://bugs.webkit.org/show_bug.cgi?id=47768
-        return window.navigator.userAgent.indexOf("WebKit") >= 0;
+        return theWindow.navigator.userAgent.indexOf("WebKit") >= 0;
     };
 
     var serializeToXML = function (doc) {
         var xml;
 
         doc.documentElement.setAttribute("xmlns", doc.documentElement.namespaceURI);
-        xml = (new window.XMLSerializer()).serializeToString(doc.documentElement);
+        xml = (new theWindow.XMLSerializer()).serializeToString(doc.documentElement);
         if (needsXMLParserWorkaround()) {
-            if (window.HTMLtoXML) {
-                return window.HTMLtoXML(xml);
+            if (theWindow.HTMLtoXML) {
+                return theWindow.HTMLtoXML(xml);
             } else {
                 module.util.log("Looks like your browser needs htmlparser.js as workaround for writing XML. " +
                     "Please include it.");
@@ -1007,17 +1036,17 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, window) {
 
     var supportsBlobBuilding = function () {
         // Newer Safari (under PhantomJS) seems to support blob building, but loading an image with the blob fails
-        if (window.navigator.userAgent.indexOf("WebKit") >= 0 && window.navigator.userAgent.indexOf("Chrome") < 0) {
+        if (theWindow.navigator.userAgent.indexOf("WebKit") >= 0 && theWindow.navigator.userAgent.indexOf("Chrome") < 0) {
             return false;
         }
-        if (window.BlobBuilder || window.MozBlobBuilder || window.WebKitBlobBuilder) {
+        if (theWindow.BlobBuilder || theWindow.MozBlobBuilder || theWindow.WebKitBlobBuilder) {
             // Deprecated interface
             return true;
         } else {
-            if (window.Blob) {
+            if (theWindow.Blob) {
                 // Available as constructor only in newer builds for all Browsers
                 try {
-                    new window.Blob('<b></b>', { "type" : "text\/xml" });
+                    new theWindow.Blob('<b></b>', { "type" : "text\/xml" });
                     return true;
                 } catch (err) {
                     return false;
@@ -1029,19 +1058,19 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, window) {
 
     var getBlob = function (data) {
        var imageType = "image/svg+xml;charset=utf-8",
-           BLOBBUILDER = window.BlobBuilder || window.MozBlobBuilder || window.WebKitBlobBuilder,
+           BLOBBUILDER = theWindow.BlobBuilder || theWindow.MozBlobBuilder || theWindow.WebKitBlobBuilder,
            svg;
        if (BLOBBUILDER) {
            svg = new BLOBBUILDER();
            svg.append(data);
            return svg.getBlob(imageType);
        } else {
-           return new window.Blob(data, {"type": imageType});
+           return new theWindow.Blob(data, {"type": imageType});
        }
     };
 
     var buildImageUrl = function (svg) {
-        var DOMURL = window.URL || window.webkitURL || window;
+        var DOMURL = theWindow.URL || theWindow.webkitURL || window;
         if (supportsBlobBuilding()) {
             return DOMURL.createObjectURL(getBlob(svg));
         } else {
@@ -1050,7 +1079,7 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, window) {
     };
 
     var cleanUpUrl = function (url) {
-        var DOMURL = window.URL || window.webkitURL || window;
+        var DOMURL = theWindow.URL || theWindow.webkitURL || window;
         if (supportsBlobBuilding()) {
             DOMURL.revokeObjectURL(url);
         }
@@ -1083,7 +1112,7 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, window) {
     var WORKAROUND_ID = "rasterizeHTML_js_FirefoxWorkaround";
 
     var needsBackgroundImageWorkaround = function () {
-        var firefoxMatch = window.navigator.userAgent.match(/Firefox\/(\d+).0/);
+        var firefoxMatch = theWindow.navigator.userAgent.match(/Firefox\/(\d+).0/);
         return !firefoxMatch || !firefoxMatch[1] || parseInt(firefoxMatch[1], 10) < 17;
     };
 
@@ -1091,7 +1120,7 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, window) {
         // Firefox < 17, Chrome & Safari will (sometimes) not show an inlined background-image until the svg is
         // connected to the DOM it seems.
         var uniqueId = module.util.getConstantUniqueIdFor(svg),
-            doc = canvas ? canvas.ownerDocument : window.document,
+            doc = canvas ? canvas.ownerDocument : theWindow.document,
             workaroundDiv;
 
         if (needsBackgroundImageWorkaround()) {
@@ -1103,7 +1132,7 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, window) {
 
     var cleanUpAfterWorkAroundForBackgroundImages = function (svg, canvas) {
         var uniqueId = module.util.getConstantUniqueIdFor(svg),
-            doc = canvas ? canvas.ownerDocument : window.document,
+            doc = canvas ? canvas.ownerDocument : theWindow.document,
             div = doc.getElementById(WORKAROUND_ID + uniqueId);
         if (div) {
             div.parentNode.removeChild(div);
@@ -1139,7 +1168,7 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, window) {
 
         url = buildImageUrl(svg);
 
-        image = new window.Image();
+        image = new theWindow.Image();
         image.onload = function() {
             resetEventHandlers();
             cleanUp();
@@ -1209,8 +1238,8 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, window) {
 
         rasterizeHTMLInline.inlineReferences(doc, params.options, function (allErrors) {
             if (params.options.executeJs) {
-                module.util.executeJavascript(doc, executeJsTimeout, function (doc) {
-                    doDraw(doc, width, height, params.canvas, params.callback, allErrors);
+                module.util.executeJavascript(doc, executeJsTimeout, function (doc, errors) {
+                    doDraw(doc, width, height, params.canvas, params.callback, allErrors.concat(errors));
                 });
             } else {
                 doDraw(doc, width, height, params.canvas, params.callback, allErrors);
@@ -1221,7 +1250,7 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, window) {
     module.drawHTML = function (html, canvas, options, callback) {
         // TODO remove reference to rasterizeHTMLInline.util
         var params = module.util.parseOptionalParameters(canvas, options, callback),
-            doc = window.document.implementation.createHTMLDocument("");
+            doc = theWindow.document.implementation.createHTMLDocument("");
 
         doc.documentElement.innerHTML = html;
 
