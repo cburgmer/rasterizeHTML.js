@@ -164,7 +164,7 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, theWindow) {
             if (theWindow.Blob) {
                 // Available as constructor only in newer builds for all Browsers
                 try {
-                    new theWindow.Blob('<b></b>', { "type" : "text\/xml" });
+                    new theWindow.Blob(['<b></b>'], { "type" : "text\/xml" });
                     return true;
                 } catch (err) {
                     return false;
@@ -183,7 +183,7 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, theWindow) {
            svg.append(data);
            return svg.getBlob(imageType);
        } else {
-           return new theWindow.Blob(data, {"type": imageType});
+           return new theWindow.Blob([data], {"type": imageType});
        }
     };
 
