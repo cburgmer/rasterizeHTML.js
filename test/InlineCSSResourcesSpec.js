@@ -469,6 +469,27 @@ describe("CSS references inline", function () {
             expectFontFaceUrlToMatch("data:font/opentype;base64,Zm9udCdzIGNvbnRlbnQ=", '"opentype"');
         });
 
+        it("should keep all src references intact", function () {
+            var fontFaceSrcRegex = /src:\s*((?:\([^\(]*\)|[^;])+)\s*;/,
+                styleContent, match, src;
+
+            binaryAjaxSpy.andCallFake(function (url, options, success) {
+                success("font");
+            });
+
+            rasterizeHTMLTestHelper.addStyleToDocument(doc, '@font-face { font-family: "test font"; src: local("Fake Font"), url("fake.otf") format("opentype"), url("fake.woff"), local("Another Fake Font"); }');
+
+            rasterizeHTMLInline.loadAndInlineCSSReferences(doc, callback);
+
+            expect(doc.getElementsByTagName("style").length).toEqual(1);
+            styleContent = doc.getElementsByTagName("style")[0].textContent;
+            expect(styleContent).toMatch(fontFaceSrcRegex);
+            match = fontFaceSrcRegex.exec(styleContent);
+            src = match[1];
+
+            expect(src).toEqual('local("Fake Font"), url("data:font/opentype;base64,Zm9udA==") format("opentype"), url("data:font/woff;base64,Zm9udA=="), local("Another Fake Font")');
+        });
+
         it("should respect the document's baseURI when loading the font", function () {
             joinUrlSpy.andCallThrough();
 

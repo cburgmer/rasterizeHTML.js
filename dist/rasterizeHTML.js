@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.3.0 - 2013-02-24
+/*! rasterizeHTML.js - v0.3.0 - 2013-02-28
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2013 Christoph Burgmer; Licensed MIT */
 
@@ -228,10 +228,9 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
     var cssToText = function (parsedCSS) {
         // Works around https://github.com/cburgmer/rasterizeHTML.js/issues/30
         var text = "",
-            i, j, rule;
+            j;
 
-        for (i = 0; i < parsedCSS.cssRules.length; i++) {
-            rule = parsedCSS.cssRules[i];
+        parsedCSS.cssRules.forEach(function (rule) {
             if (rule.type === window.kJscsspSTYLE_RULE) {
                 text += rule.selectorText() + " {\n";
                 for (j = 0; j < rule.declarations.length; j++) {
@@ -242,10 +241,16 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
                     }
                 }
                 text += "}\n";
+            } else if (rule.type === window.kJscsspFONT_FACE_RULE) {
+                text += "@font-face {\n";
+                rule.descriptors.forEach(function (descriptor) {
+                    text += "  " + descriptor.property + ": " + descriptor.valueText + ";\n";
+                });
+                text += "}\n";
             } else {
                 text += rule.cssText() + "\n";
             }
-        }
+        });
         return text;
     };
 
@@ -366,16 +371,29 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
 
     var adjustPathsOfCssResources = function (baseUrl, styleContent) {
         var parsedCss = parseCss(styleContent),
-            declarationsToInline = [],
-            change = false,
-            i;
+            change = false;
 
-        declarationsToInline = declarationsToInline.concat(findBackgroundImageDeclarations(parsedCss));
-        declarationsToInline = declarationsToInline.concat(findFontFaceDescriptors(parsedCss));
+        findBackgroundImageDeclarations(parsedCss).forEach(function (declaration) {
+            change = adjustPathOfDeclarationAndReportChange(baseUrl, declaration) || change;
+        });
+        findFontFaceDescriptors(parsedCss).forEach(function (declaration) {
+            var fontReferences = sliceFontFaceSrcReferences(declaration.valueText),
+                declarationChanged = false;
 
-        for(i = 0; i < declarationsToInline.length; i++) {
-            change = adjustPathOfDeclarationAndReportChange(baseUrl, declarationsToInline[i]) || change;
-        }
+            fontReferences.forEach(function (reference) {
+                var fontSrc = extractFontFaceSrcUrl(reference),
+                    url;
+
+                if (fontSrc && !module.util.isDataUri(fontSrc.url)) {
+                    url = module.util.joinUrl(baseUrl, fontSrc.url);
+                    reference[0] = 'url("' + url + '")';
+                    declarationChanged = true;
+                }
+            });
+
+            declaration.valueText = joinFontFaceSrcReferences(fontReferences);
+            change = change || declarationChanged;
+        });
 
         if (change) {
             return cssToText(parsedCss);
@@ -677,50 +695,96 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
         return unquoteString(quotedFormat);
     };
 
-    var findFontFaceSrcUrl = function (fontSrcValues) {
-        var i, url, format = null;
+    var sliceFontFaceSrcReferences = function (fontFaceSrc) {
+        var functionParamRegexS = "\\s*(?:\"[^\"]*\"|'[^']*'|[^\\(]+)\\s*",
+            referenceRegexS = "(local\\(" + functionParamRegexS + "\\))" + "|" +
+                              "(url\\(" + functionParamRegexS + "\\))" + "(?:\\s+(format\\(" + functionParamRegexS + "\\)))?",
+            simpleFontFaceSrcRegexS = "^\\s*(" + referenceRegexS + ")" +
+                                      "(?:\\s*,\\s*(" + referenceRegexS + "))*" +
+                                      "\\s*$",
+            referenceRegex = new RegExp(referenceRegexS, "g"),
+            repeatedMatch,
+            reference,
+            fontFaceSrcReferences = [];
 
-        for (i = 0; i < fontSrcValues.length; i++) {
-            try {
-                url = module.util.extractCssUrl(fontSrcValues[i].cssText());
-                // format() follows url and has it's own entry with the CSSParser
-                if (i + 1 < fontSrcValues.length) {
-                    format = findFontFaceFormat(fontSrcValues[i+1].cssText());
+        if (fontFaceSrc.match(new RegExp(simpleFontFaceSrcRegexS))) {
+            repeatedMatch = referenceRegex.exec(fontFaceSrc);
+            while (repeatedMatch) {
+                if (repeatedMatch[1]) {
+                    reference = [repeatedMatch[1]];
+                } else {
+                    reference = [repeatedMatch[2]];
+                    if (repeatedMatch[3]) {
+                        reference.push(repeatedMatch[3]);
+                    }
                 }
-                return {
-                    url: url,
-                    format: format
-                };
-            } catch (e) {}
+                fontFaceSrcReferences.push(reference);
+                repeatedMatch = referenceRegex.exec(fontFaceSrc);
+            }
+            return fontFaceSrcReferences;
         }
+        return [];
     };
 
-    var loadAndInlineFontFace = function (cssDeclaration, baseUri, cache, successCallback, errorCallback) {
-        var fontSrc, url, format, base64Content;
+    var joinFontFaceSrcReferences = function (references) {
+        var fontFaceReferences = [];
+        references.forEach(function (reference) {
+            fontFaceReferences.push(reference.join(' '));
+        });
+        return fontFaceReferences.join(', ');
+    };
 
-        fontSrc = findFontFaceSrcUrl(cssDeclaration.values);
-        if (!fontSrc) {
-            successCallback(false);
-            return;
-        }
+    var extractFontFaceSrcUrl = function (reference) {
+        var url, format = null;
 
-        if (module.util.isDataUri(fontSrc.url)) {
-            successCallback(false);
-            return;
-        }
+        try {
+            url = module.util.extractCssUrl(reference[0]);
+            if (reference[1]) {
+                format = findFontFaceFormat(reference[1]);
+            }
+            return {
+                url: url,
+                format: format
+            };
+        } catch (e) {}
+    };
 
-        url = getUrlRelativeToDocumentBase(fontSrc.url, baseUri);
-        format = fontSrc.format ? fontSrc.format : "woff";
+    var loadAndInlineFontFace = function (cssDeclaration, baseUri, cache, successCallback) {
+        var fontReferences, fontSrc, url, format, base64Content,
+            errors = [];
 
-        module.util.binaryAjax(url, {
-            cache: cache
-        }, function (content) {
-            base64Content = btoa(content);
-            cssDeclaration.values[0].setCssText('url("data:font/' + format + ';base64,' + base64Content + '")');
+        fontReferences = sliceFontFaceSrcReferences(cssDeclaration.valueText);
+        module.util.map(fontReferences, function (reference, finish) {
+            fontSrc = extractFontFaceSrcUrl(reference);
 
-            successCallback(true);
-        }, function () {
-            errorCallback(url);
+            if (!fontSrc || module.util.isDataUri(fontSrc.url)) {
+                finish(false);
+                return;
+            }
+
+            url = getUrlRelativeToDocumentBase(fontSrc.url, baseUri);
+            format = fontSrc.format || "woff";
+
+            module.util.binaryAjax(url, {
+                cache: cache
+            }, function (content) {
+                base64Content = btoa(content);
+                reference[0] = 'url("data:font/' + format + ';base64,' + base64Content + '")';
+
+                finish(true);
+            }, function () {
+                errors.push(url);
+                finish(false);
+            });
+        }, function (changedStates) {
+            var changed = changedStates.indexOf(true) >= 0;
+
+            if (changed) {
+                cssDeclaration.valueText = joinFontFaceSrcReferences(fontReferences);
+            }
+
+            // TODO handle errors
+            successCallback(changed, errors);
         });
     };
 
@@ -730,13 +794,15 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
             cssHasChanges;
 
         module.util.map(descriptorsToInline, function (declaration, finish) {
-            loadAndInlineFontFace(declaration, baseUri, cache, finish, function (url) {
-                errors.push({
-                    resourceType: "fontFace",
-                    url: url,
-                    msg: "Unable to load font-face " + url
+            loadAndInlineFontFace(declaration, baseUri, cache, function (changed, errorUrls) {
+                errorUrls.forEach(function (url) {
+                    errors.push({
+                        resourceType: "fontFace",
+                        url: url,
+                        msg: "Unable to load font-face " + url
+                    });
                 });
-                finish();
+                finish(changed);
             });
 
         }, function (changedStates) {

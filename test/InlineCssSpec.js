@@ -205,7 +205,7 @@ describe("CSS inline", function () {
 
         expect(doc.head.getElementsByTagName("style").length).toEqual(1);
         expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/url\(\"green\.png\"\)/);
-        expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/url\(\"below\/fake\.woff\"\)/);
+        expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/local\("some font"\), url\(\"below\/fake\.woff\"\)/);
     });
 
     it("should circumvent caching if requested", function () {
