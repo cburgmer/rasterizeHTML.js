@@ -704,21 +704,21 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
                                       "\\s*$",
             referenceRegex = new RegExp(referenceRegexS, "g"),
             repeatedMatch,
-            reference,
-            fontFaceSrcReferences = [];
+            fontFaceSrcReferences = [],
+            getReferences = function (match) {
+                var references = [];
+                match.slice(1).forEach(function (elem) {
+                    if (elem) {
+                        references.push(elem);
+                    }
+                });
+                return references;
+            };
 
         if (fontFaceSrc.match(new RegExp(simpleFontFaceSrcRegexS))) {
             repeatedMatch = referenceRegex.exec(fontFaceSrc);
             while (repeatedMatch) {
-                if (repeatedMatch[1]) {
-                    reference = [repeatedMatch[1]];
-                } else {
-                    reference = [repeatedMatch[2]];
-                    if (repeatedMatch[3]) {
-                        reference.push(repeatedMatch[3]);
-                    }
-                }
-                fontFaceSrcReferences.push(reference);
+                fontFaceSrcReferences.push(getReferences(repeatedMatch));
                 repeatedMatch = referenceRegex.exec(fontFaceSrc);
             }
             return fontFaceSrcReferences;
