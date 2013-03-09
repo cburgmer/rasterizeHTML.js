@@ -86,6 +86,7 @@ module.exports = function (grunt) {
                     readFixtures:true,
                     setFixtures:true,
                     ifNotInWebkitIt:true,
+                    ifNotInPhantomJsIt:true,
                     btoa:true,
                     CSSParser:true,
                     URI:true,

@@ -174,6 +174,25 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
         return url;
     };
 
+    var getArrayForArrayLike = function (list) {
+        return Array.prototype.slice.call(list);
+    };
+
+    var rulesForCssText = function (styleContent) {
+        var doc = document.implementation.createHTMLDocument(""),
+            styleElement = document.createElement("style"),
+            rules;
+
+        styleElement.textContent = styleContent;
+        // the style will only be parsed once it is added to a document
+        doc.body.appendChild(styleElement);
+        rules = styleElement.sheet.cssRules;
+        doc.body.removeChild(styleElement);
+
+        return getArrayForArrayLike(rules);
+    };
+
+    // @deprecated
     var parseCss = function (styleContent) {
         var parser = new CSSParser(),
             parsedCSS = parser.parse(styleContent, false, true);
@@ -181,6 +200,19 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
         return parsedCSS;
     };
 
+    var findBackgroundImageRules = function (cssRules) {
+        var rulesToInline = [];
+
+        cssRules.forEach(function (rule) {
+            if (rule.type === window.CSSRule.STYLE_RULE && rule.style.backgroundImage) {
+                rulesToInline.push(rule);
+            }
+        });
+
+        return rulesToInline;
+    };
+
+    // @deprecated
     var findBackgroundImageDeclarations = function (parsedCSS) {
         var declarationsToInline = [],
             i, j, rule;
@@ -203,6 +235,19 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
         return declarationsToInline;
     };
 
+    var findFontFaceRules = function (cssRules) {
+        var rulesToInline = [];
+
+        cssRules.forEach(function (rule) {
+            if (rule.type === window.CSSRule.FONT_FACE_RULE && rule.style.getPropertyValue("src")) {
+                rulesToInline.push(rule);
+            }
+        });
+
+        return rulesToInline;
+    };
+
+    // @deprecated
     var findFontFaceDescriptors = function (parsedCSS) {
         var descriptorsToInline = [],
             i, j, rule;
@@ -225,6 +270,16 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
         return descriptorsToInline;
     };
 
+    var cssRulesToText = function (cssRules) {
+        var cssText = "";
+
+        cssRules.forEach(function (rule) {
+            cssText += rule.cssText;
+        });
+        return cssText;
+    };
+
+    // @deprecated
     var cssToText = function (parsedCSS) {
         // Works around https://github.com/cburgmer/rasterizeHTML.js/issues/30
         var text = "",
@@ -344,12 +399,25 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
 
     /* CSS inlining */
 
+    // Workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=443978
+    var changeFontFaceRuleSrc = function (cssRules, rule, newSrc) {
+        var ruleIdx = cssRules.indexOf(rule),
+            newRule = '@font-face { font-family: ' + rule.style.getPropertyValue("font-family") + '; src: ' + newSrc + '}',
+            styleSheet = rule.parentStyleSheet;
+
+        // Generate a new rule
+        styleSheet.insertRule(newRule, ruleIdx+1);
+        styleSheet.deleteRule(ruleIdx);
+        // Exchange with the
+        cssRules[ruleIdx] = styleSheet.cssRules[ruleIdx];
+    };
+
     var adjustPathsOfCssResources = function (baseUrl, styleContent) {
-        var parsedCss = parseCss(styleContent),
+        var cssRules = rulesForCssText(styleContent),
             change = false;
 
-        findBackgroundImageDeclarations(parsedCss).forEach(function (declaration) {
-            var backgroundDeclarations = sliceBackgroundDeclarations(declaration.valueText),
+        findBackgroundImageRules(cssRules).forEach(function (rule) {
+            var backgroundDeclarations = sliceBackgroundDeclarations(rule.style.backgroundImage),
                 declarationChanged = false;
 
             backgroundDeclarations.forEach(function (singleBackgroundValues) {
@@ -363,11 +431,11 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
                 }
             });
 
-            declaration.valueText = joinBackgroundDeclarations(backgroundDeclarations);
+            rule.style.backgroundImage = joinBackgroundDeclarations(backgroundDeclarations);
             change = change || declarationChanged;
         });
-        findFontFaceDescriptors(parsedCss).forEach(function (declaration) {
-            var fontReferences = sliceFontFaceSrcReferences(declaration.valueText),
+        findFontFaceRules(cssRules).forEach(function (rule) {
+            var fontReferences = sliceFontFaceSrcReferences(rule.style.getPropertyValue("src")),
                 declarationChanged = false;
 
             fontReferences.forEach(function (reference) {
@@ -381,12 +449,14 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
                 }
             });
 
-            declaration.valueText = joinFontFaceSrcReferences(fontReferences);
+            if (declarationChanged) {
+                changeFontFaceRuleSrc(cssRules, rule, joinFontFaceSrcReferences(fontReferences));
+            }
             change = change || declarationChanged;
         });
 
         if (change) {
-            return cssToText(parsedCss);
+            return cssRulesToText(cssRules);
         } else {
             return styleContent;
         }

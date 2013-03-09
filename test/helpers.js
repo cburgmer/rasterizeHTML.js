@@ -1,6 +1,14 @@
 var isWebkit = navigator.userAgent.indexOf("WebKit") >= 0,
+    isPhantomJs = navigator.userAgent.indexOf("PhantomJS") >= 0,
     ifNotInWebkitIt = function(text, functionHandle) {
         if (! isWebkit) {
+            return it(text, functionHandle);
+        } else {
+            safeLog('Warning: "' + text + '" is disabled on this platform');
+        }
+    },
+    ifNotInPhantomJsIt = function(text, functionHandle) {
+        if (! isPhantomJs) {
             return it(text, functionHandle);
         } else {
             safeLog('Warning: "' + text + '" is disabled on this platform');
