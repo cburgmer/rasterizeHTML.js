@@ -25,7 +25,7 @@ module.exports = function (grunt) {
             test:'test/*Spec.js'
         },
         jasmine:{
-            src:['lib/*.js', 'src/*.js'],
+            src:['lib/cssParser.js', 'lib/URI.js', 'lib/htmlparser.js', 'src/*.js'],
             specs:'test/*Spec.js',
             helpers:['test/helpers.js', 'test/lib/*.js', 'test/gruntpath.js'],
             timeout:10000
@@ -68,6 +68,7 @@ module.exports = function (grunt) {
                 globals:{
                     btoa:true,
                     CSSParser:true,
+                    CSSOM:true,
                     URI:true
                 }
             },
@@ -89,6 +90,7 @@ module.exports = function (grunt) {
                     ifNotInPhantomJsIt:true,
                     btoa:true,
                     CSSParser:true,
+                    CSSOM:true,
                     URI:true,
                     imagediff:true,
                     rasterizeHTML:true,

@@ -247,7 +247,7 @@ describe("CSS inline", function () {
         });
         ajaxSpy.andCallFake(function (url, options, success) {
             if (url === "some.css") {
-                success("@font-face { font-family: 'test font'; src: url('fake.woff'); }");
+                success("@font-face { font-family: 'test font'; src: url(\"fake.woff\"); }");
             }
         });
 

@@ -1,4 +1,4 @@
-window.rasterizeHTML = (function (rasterizeHTMLInline, theWindow) {
+window.rasterizeHTML = (function (rasterizeHTMLInline, hTMLtoXML, theWindow) {
     "use strict";
 
     var module = {};
@@ -140,8 +140,8 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, theWindow) {
         doc.documentElement.setAttribute("xmlns", doc.documentElement.namespaceURI);
         xml = (new theWindow.XMLSerializer()).serializeToString(doc.documentElement);
         if (needsXMLParserWorkaround()) {
-            if (theWindow.HTMLtoXML) {
-                return theWindow.HTMLtoXML(xml);
+            if (hTMLtoXML) {
+                return hTMLtoXML(xml);
             } else {
                 module.util.log("Looks like your browser needs htmlparser.js as workaround for writing XML. " +
                     "Please include it.");
@@ -398,4 +398,4 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, theWindow) {
     };
 
     return module;
-}(window.rasterizeHTMLInline, window));
+}(window.rasterizeHTMLInline, window.HTMLtoXML || {}, window));

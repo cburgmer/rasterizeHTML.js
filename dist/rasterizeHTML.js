@@ -2,7 +2,7 @@
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2013 Christoph Burgmer; Licensed MIT */
 
-window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
+window.rasterizeHTMLInline = (function (window, URI, CSSParser, CSSOM) {
     "use strict";
 
     var module = {};
@@ -178,7 +178,7 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
         return Array.prototype.slice.call(list);
     };
 
-    var rulesForCssText = function (styleContent) {
+    var rulesForCssTextFromBrowser = function (styleContent) {
         var doc = document.implementation.createHTMLDocument(""),
             styleElement = document.createElement("style"),
             rules;
@@ -190,6 +190,14 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
         doc.body.removeChild(styleElement);
 
         return getArrayForArrayLike(rules);
+    };
+
+    var rulesForCssText = function (styleContent) {
+        if (window.navigator.userAgent.indexOf("Chrome") >= 0) {
+            return CSSOM.parse(styleContent).cssRules;
+        } else {
+            return rulesForCssTextFromBrowser(styleContent);
+        }
     };
 
     // @deprecated
@@ -204,7 +212,7 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
         var rulesToInline = [];
 
         cssRules.forEach(function (rule) {
-            if (rule.type === window.CSSRule.STYLE_RULE && rule.style.backgroundImage) {
+            if (rule.type === window.CSSRule.STYLE_RULE && rule.style.getPropertyValue('background-image')) {
                 rulesToInline.push(rule);
             }
         });
@@ -408,7 +416,7 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
         // Generate a new rule
         styleSheet.insertRule(newRule, ruleIdx+1);
         styleSheet.deleteRule(ruleIdx);
-        // Exchange with the
+        // Exchange with the new
         cssRules[ruleIdx] = styleSheet.cssRules[ruleIdx];
     };
 
@@ -417,7 +425,7 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
             change = false;
 
         findBackgroundImageRules(cssRules).forEach(function (rule) {
-            var backgroundDeclarations = sliceBackgroundDeclarations(rule.style.backgroundImage),
+            var backgroundDeclarations = sliceBackgroundDeclarations(rule.style.getPropertyValue('background-image')),
                 declarationChanged = false;
 
             backgroundDeclarations.forEach(function (singleBackgroundValues) {
@@ -431,7 +439,7 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
                 }
             });
 
-            rule.style.backgroundImage = joinBackgroundDeclarations(backgroundDeclarations);
+            rule.style.setProperty('background-image', joinBackgroundDeclarations(backgroundDeclarations));
             change = change || declarationChanged;
         });
         findFontFaceRules(cssRules).forEach(function (rule) {
@@ -1064,9 +1072,9 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
     };
 
     return module;
-}(window, URI, CSSParser));
+}(window, URI, CSSParser, window.CSSOM || {}));
 
-window.rasterizeHTML = (function (rasterizeHTMLInline, theWindow) {
+window.rasterizeHTML = (function (rasterizeHTMLInline, hTMLtoXML, theWindow) {
     "use strict";
 
     var module = {};
@@ -1208,8 +1216,8 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, theWindow) {
         doc.documentElement.setAttribute("xmlns", doc.documentElement.namespaceURI);
         xml = (new theWindow.XMLSerializer()).serializeToString(doc.documentElement);
         if (needsXMLParserWorkaround()) {
-            if (theWindow.HTMLtoXML) {
-                return theWindow.HTMLtoXML(xml);
+            if (hTMLtoXML) {
+                return hTMLtoXML(xml);
             } else {
                 module.util.log("Looks like your browser needs htmlparser.js as workaround for writing XML. " +
                     "Please include it.");
@@ -1466,4 +1474,4 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, theWindow) {
     };
 
     return module;
-}(window.rasterizeHTMLInline, window));
+}(window.rasterizeHTMLInline, window.HTMLtoXML || {}, window));
