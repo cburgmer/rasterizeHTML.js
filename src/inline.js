@@ -615,28 +615,20 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
     /* CSS linked resource inlining */
 
     var loadAndInlineBackgroundImage = function (cssDeclaration, baseUri, cache, callback) {
-        var changed = false,
-            errorUrls = [],
-            finishedDeclarations = 0,
-            url;
+        var errorUrls = [];
 
-        var finishUp = function () {
-            finishedDeclarations += 1;
-            if (finishedDeclarations === cssDeclaration.values.length) {
-                callback(changed, errorUrls);
-            }
-        };
+        module.util.map(cssDeclaration.values, function (value, finish) {
+            var url;
 
-        cssDeclaration.values.forEach(function (value, i) {
             try {
-                url = module.util.extractCssUrl(cssDeclaration.values[i].cssText());
+                url = module.util.extractCssUrl(value.cssText());
             } catch (e) {
-                finishUp();
+                finish(false);
                 return;
             }
 
             if (module.util.isDataUri(url)) {
-                finishUp();
+                finish(false);
                 return;
             }
 
@@ -645,14 +637,17 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
             module.util.getDataURIForImageURL(url, {
                 cache: cache
             }, function (dataURI) {
-                cssDeclaration.values[i].setCssText('url("' + dataURI + '")');
+                value.setCssText('url("' + dataURI + '")');
 
-                changed = true;
-                finishUp();
+                finish(true);
             }, function () {
                 errorUrls.push(url);
-                finishUp();
+                finish(false);
             });
+        }, function (changedStates) {
+            var changed = changedStates.indexOf(true) >= 0;
+
+            callback(changed, errorUrls);
         });
     };
 
