@@ -88,6 +88,9 @@ describe("CSS references inline", function () {
         });
 
         it("should ignore invalid values", function () {
+            extractCssUrlSpy.andCallFake(function () {
+                throw new Error("Invalid url");
+            });
             rasterizeHTMLTestHelper.addStyleToDocument(doc, 'span { background-image: "invalid url"; }');
 
             rasterizeHTMLInline.loadAndInlineCSSReferences(doc, callback);
@@ -122,6 +125,25 @@ describe("CSS references inline", function () {
             expect(styleContent).toMatch(backgroundImageRegex);
             url = backgroundImageRegex.exec(styleContent)[1];
             expect(url).toEqual(anImagesDataUri);
+        });
+
+        it("should inline a background declaration", function () {
+            var anImage = "anImage.png",
+                anImagesDataUri = "data:image/png;base64,someDataUri",
+                styleContent;
+
+            getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback) {
+                if (url === anImage) {
+                    successCallback(anImagesDataUri);
+                }
+            });
+
+            rasterizeHTMLTestHelper.addStyleToDocument(doc, 'span { background: #CCC url("' + anImage + '") top left / 100% auto no-repeat, #FFF; }');
+
+            rasterizeHTMLInline.loadAndInlineCSSReferences(doc);
+
+            styleContent = doc.head.getElementsByTagName("style")[0].textContent;
+            expect(styleContent).toMatch(/span\s*\{\s*background: #CCC url\("data:image\/png;base64,someDataUri"\) top left \/ 100% auto no-repeat, #FFF;\s*\}/);
         });
 
         it("should inline multiple background-images in one rule", function () {

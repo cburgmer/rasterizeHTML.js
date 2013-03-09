@@ -189,7 +189,7 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
             rule = parsedCSS.cssRules[i];
             if (rule.type === window.kJscsspSTYLE_RULE) {
                 for (j = 0; j < rule.declarations.length; j++) {
-                    if (rule.declarations[j].property === "background-image") {
+                    if (rule.declarations[j].property === "background-image" || rule.declarations[j].property === "background") {
                         declarationsToInline.push(rule.declarations[j]);
                     }
                 }
@@ -230,11 +230,7 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
             if (rule.type === window.kJscsspSTYLE_RULE) {
                 text += rule.selectorText() + " {\n";
                 for (j = 0; j < rule.declarations.length; j++) {
-                    if (rule.declarations[j].property === "background-image") {
-                        text += rule.declarations[j].cssText() + "\n";
-                    } else {
-                        text += rule.declarations[j].property + ": " + rule.declarations[j].valueText + ";\n";
-                    }
+                    text += rule.declarations[j].property + ": " + rule.declarations[j].valueText + ";\n";
                 }
                 text += "}\n";
             } else if (rule.type === window.kJscsspFONT_FACE_RULE) {
@@ -344,33 +340,27 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
 
     /* CSS inlining */
 
-    var adjustPathOfDeclarationAndReportChange = function (baseUrl, cssDeclaration) {
-        var url, i, changed = false;
-        for (i = 0; i < cssDeclaration.values.length; i++) {
-            try {
-                url = module.util.extractCssUrl(cssDeclaration.values[i].cssText());
-            } catch (e) {
-                continue;
-            }
-
-            if (module.util.isDataUri(url)) {
-                continue;
-            }
-
-            url = module.util.joinUrl(baseUrl, url);
-            cssDeclaration.values[i].setCssText('url("' + url + '")');
-            changed = true;
-        }
-
-        return changed;
-    };
-
     var adjustPathsOfCssResources = function (baseUrl, styleContent) {
         var parsedCss = parseCss(styleContent),
             change = false;
 
         findBackgroundImageDeclarations(parsedCss).forEach(function (declaration) {
-            change = adjustPathOfDeclarationAndReportChange(baseUrl, declaration) || change;
+            var backgroundDeclarations = sliceBackgroundDeclarations(declaration.valueText),
+                declarationChanged = false;
+
+            backgroundDeclarations.forEach(function (singleBackgroundValues) {
+                var bgUrl = findBackgroundImageUrlInValues(singleBackgroundValues),
+                    url;
+
+                if (bgUrl && !module.util.isDataUri(bgUrl.url)) {
+                    url = module.util.joinUrl(baseUrl, bgUrl.url);
+                    singleBackgroundValues[bgUrl.idx] = 'url("' + url + '")';
+                    declarationChanged = true;
+                }
+            });
+
+            declaration.valueText = joinBackgroundDeclarations(backgroundDeclarations);
+            change = change || declarationChanged;
         });
         findFontFaceDescriptors(parsedCss).forEach(function (declaration) {
             var fontReferences = sliceFontFaceSrcReferences(declaration.valueText),
@@ -614,30 +604,85 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
 
     /* CSS linked resource inlining */
 
-    var loadAndInlineBackgroundImage = function (cssDeclaration, baseUri, cache, callback) {
-        var errorUrls = [];
+    var sliceBackgroundDeclarations = function (backgroundDeclarationText) {
+        var functionParamRegexS = "\\s*(?:\"[^\"]*\"|'[^']*'|[^\\(]+)\\s*",
+            valueRegexS = "(" + "url\\(" + functionParamRegexS + "\\)" + "|" + "[^,\\s]+" + ")",
+            simpleSingularBackgroundRegexS = "(?:\\s*" + valueRegexS + ")+",
+            simpleBackgroundRegexS = "^\\s*(" + simpleSingularBackgroundRegexS + ")" +
+                                      "(?:\\s*,\\s*(" + simpleSingularBackgroundRegexS + "))*" +
+                                      "\\s*$",
+            simpleSingularBackgroundRegex = new RegExp(simpleSingularBackgroundRegexS, "g"),
+            outerRepeatedMatch,
+            backgroundDeclarations = [],
+            getValues = function (singularBackgroundDeclaration) {
+                var valueRegex = new RegExp(valueRegexS, "g"),
+                    backgroundValues = [],
+                    repeatedMatch;
 
-        module.util.map(cssDeclaration.values, function (value, finish) {
-            var url;
+                repeatedMatch = valueRegex.exec(singularBackgroundDeclaration);
+                while (repeatedMatch) {
+                    backgroundValues.push(repeatedMatch[1]);
+                    repeatedMatch = valueRegex.exec(singularBackgroundDeclaration);
+                }
+                return backgroundValues;
+            };
 
+        if (backgroundDeclarationText.match(new RegExp(simpleBackgroundRegexS))) {
+            outerRepeatedMatch = simpleSingularBackgroundRegex.exec(backgroundDeclarationText);
+            while (outerRepeatedMatch) {
+                backgroundDeclarations.push(getValues(outerRepeatedMatch[0]));
+                outerRepeatedMatch = simpleSingularBackgroundRegex.exec(backgroundDeclarationText);
+            }
+
+            return backgroundDeclarations;
+        }
+        return [];
+    };
+
+    var findBackgroundImageUrlInValues = function (values) {
+        var i, url;
+
+        for(i = 0; i < values.length; i++) {
             try {
-                url = module.util.extractCssUrl(value.cssText());
-            } catch (e) {
+                url = module.util.extractCssUrl(values[i]);
+                return {
+                    url: url,
+                    idx: i
+                };
+            } catch (e) {}
+        }
+    };
+
+    var joinBackgroundDeclarations = function (valuesList) {
+        var backgroundDeclarations = [];
+        valuesList.forEach(function (values) {
+            backgroundDeclarations.push(values.join(' '));
+        });
+        return backgroundDeclarations.join(', ');
+    };
+
+
+    var loadAndInlineBackgroundImage = function (cssDeclaration, baseUri, cache, callback) {
+        var errorUrls = [],
+            backgroundDeclarations;
+
+        backgroundDeclarations = sliceBackgroundDeclarations(cssDeclaration.valueText);
+
+        module.util.map(backgroundDeclarations, function (singleBackgroundValues, finish) {
+            var bgUrl = findBackgroundImageUrlInValues(singleBackgroundValues),
+                url;
+
+            if (!bgUrl || module.util.isDataUri(bgUrl.url)) {
                 finish(false);
                 return;
             }
 
-            if (module.util.isDataUri(url)) {
-                finish(false);
-                return;
-            }
-
-            url = getUrlRelativeToDocumentBase(url, baseUri);
+            url = getUrlRelativeToDocumentBase(bgUrl.url, baseUri);
 
             module.util.getDataURIForImageURL(url, {
                 cache: cache
             }, function (dataURI) {
-                value.setCssText('url("' + dataURI + '")');
+                singleBackgroundValues[bgUrl.idx] = 'url("' + dataURI + '")';
 
                 finish(true);
             }, function () {
@@ -646,6 +691,10 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser) {
             });
         }, function (changedStates) {
             var changed = changedStates.indexOf(true) >= 0;
+
+            if (changed) {
+                cssDeclaration.valueText = joinBackgroundDeclarations(backgroundDeclarations);
+            }
 
             callback(changed, errorUrls);
         });
