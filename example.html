@@ -4,30 +4,41 @@
     <meta charset="utf-8" />
     <title>rasterizeHTML.js example</title>
     <script type="text/javascript" src="dist/rasterizeHTML.allinone.js"></script>
+    <style>
+        canvas, textarea {
+            display: block;
+            border: 1px solid gray;
+            margin: 3px 0;
+        }
+    </style>
 </head>
 <body>
-    <canvas id="canvas" style="border:2px solid black;" width="550" height="200"></canvas>
-    <div>
-        <textarea id="input" cols="80" rows="10" style="width: 550px;">You can type HTML into this &lt;span style='color: green'&gt;canvas&lt;/span&gt;. 
-In &lt;span style="font-style: italic"&gt;Chrome&lt;/span&gt; make sure to open the file through a webserver to load the embedded images.
-&lt;div class="tigerbg"&gt;
-A div with background-image
-&lt;/div&gt;
-An img: &lt;img src='ghostscript_tiger.png' alt='Tiger'/&gt;
-&lt;style type="text/css"&gt;
-body {
-    font-size: 16px;
-}
-.tigerbg {
-    background: url(ghostscript_tiger.png) no-repeat top right #eef;
-    height: 50px;
-}
-&lt;/style&gt;
-</textarea>
+    <canvas id="canvas" width="600" height="200"></canvas>
+
+    <textarea id="input" cols="80" rows="10" style="width: 600px; height: 250px"></textarea>
+
+    <div id="template" style="display: none">
+        You can type HTML into this <span style='color: green'>canvas</span>.
+        In <span style="font-style: italic">Chrome</span> make sure to open the file through a webserver to load the embedded images.
+        <div class="tigerbg">
+            A div with background-image
+        </div>
+        An img: <img src='ghostscript_tiger.png' alt='Tiger'/>
+        <style type="text/css">
+            body {
+                font-size: 16px;
+            }
+            .tigerbg {
+                background: url(ghostscript_tiger.png) no-repeat top right #eef;
+                height: 50px;
+            }
+        </style>
     </div>
+
     <script type="text/javascript">
         var input = document.getElementById("input"),
             canvas = document.getElementById("canvas"),
+            template = document.getElementById("template"),
             oldText = input.value;
 
         input.onkeyup = function () {
@@ -39,6 +50,9 @@ body {
             }
         };
 
+        if (!input.value) {
+            input.value = template.innerHTML.replace(/^ {8}/gm, "").replace(/^\n/g, "").replace(/\n +$/g, "\n");
+        }
         rasterizeHTML.drawHTML(input.value, canvas);
     </script>
 </body>
