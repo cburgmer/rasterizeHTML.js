@@ -13,8 +13,8 @@
     <script type="text/javascript" src="lib/imagediff.js"></script>
 
     <!-- include source files here... -->
-    <script type="text/javascript" src="../lib/htmlparser.js"></script>
-    <script type="text/javascript" src="../lib/CSSOM.js"></script>
+    <script type="text/javascript" src="../lib/htmlparser.js"></script> <!-- Only needed for Chrome & Safari -->
+    <script type="text/javascript" src="../lib/CSSOM.js"></script> <!-- Only needed for Chrome -->
     <script type="text/javascript" src="../lib/URI.js"></script>
     <script type="text/javascript" src="../src/inline.js"></script>
     <script type="text/javascript" src="../src/rasterizeHTML.js"></script>
@@ -39,7 +39,7 @@
             var jasmineEnv = jasmine.getEnv();
             jasmineEnv.updateInterval = 1000;
 
-            var htmlReporter = new jasmine.HtmlReporter(); // doesn't work nicely with phantomjs-testrunner.js
+            var htmlReporter = new jasmine.HtmlReporter();
 
             jasmineEnv.addReporter(htmlReporter);
 

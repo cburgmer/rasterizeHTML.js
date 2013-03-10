@@ -188,7 +188,7 @@ window.rasterizeHTMLInline = (function (window, URI, CSSOM) {
     };
 
     var rulesForCssText = function (styleContent) {
-        if (window.navigator.userAgent.indexOf("Chrome") >= 0) {
+        if (CSSOM.parse && window.navigator.userAgent.indexOf("Chrome") >= 0) {
             return CSSOM.parse(styleContent).cssRules;
         } else {
             return rulesForCssTextFromBrowser(styleContent);
