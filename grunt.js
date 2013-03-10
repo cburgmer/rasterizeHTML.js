@@ -25,7 +25,7 @@ module.exports = function (grunt) {
             test:'test/*Spec.js'
         },
         jasmine:{
-            src:['lib/URI.js', 'lib/htmlparser.js', 'src/*.js'],
+            src:['lib/*.js', 'src/*.js'],
             specs:'test/*Spec.js',
             helpers:['test/helpers.js', 'test/lib/*.js', 'test/gruntpath.js'],
             timeout:10000
