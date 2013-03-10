@@ -143,7 +143,7 @@ describe("CSS references inline", function () {
             rasterizeHTMLInline.loadAndInlineCSSReferences(doc);
 
             styleContent = doc.head.getElementsByTagName("style")[0].textContent;
-            expect(styleContent).toMatch(/background(-image)?: .*url\("?data:image\/png;base64,someDataUri"?\).*, .*url\("?data:image\/png;base64,someMoreDataUri"?\).*;/);
+            expect(styleContent).toMatch(/(background: [^;]*url\("?data:image\/png;base64,someDataUri"?\).*\s*top\s*.*, .*url\("?data:image\/png;base64,someMoreDataUri"?\).*;)|(background-image:\s*url\("?data:image\/png;base64,someDataUri"?\)\s*,\s*url\("?data:image\/png;base64,someMoreDataUri"?\)\s*;)/);
         });
 
         it("should inline multiple background-images in one rule", function () {

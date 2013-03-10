@@ -203,7 +203,7 @@ window.rasterizeHTMLInline = (function (window, URI, CSSOM) {
         var rulesToInline = [];
 
         cssRules.forEach(function (rule) {
-            if (rule.type === window.CSSRule.STYLE_RULE && rule.style.getPropertyValue('background-image')) {
+            if (rule.type === window.CSSRule.STYLE_RULE && (rule.style.getPropertyValue('background-image') || rule.style.getPropertyValue('background'))) {
                 rulesToInline.push(rule);
             }
         });
@@ -341,10 +341,12 @@ window.rasterizeHTMLInline = (function (window, URI, CSSOM) {
 
     var adjustPathsOfCssResources = function (baseUrl, styleContent) {
         var cssRules = rulesForCssText(styleContent),
-            change = false;
+            change = false,
+            joinedBackgroundDeclarations;
 
         findBackgroundImageRules(cssRules).forEach(function (rule) {
-            var backgroundDeclarations = sliceBackgroundDeclarations(rule.style.getPropertyValue('background-image')),
+            var backgroundValue = rule.style.getPropertyValue('background-image') || rule.style.getPropertyValue('background'),
+                backgroundDeclarations = sliceBackgroundDeclarations(backgroundValue),
                 declarationChanged = false;
 
             backgroundDeclarations.forEach(function (singleBackgroundValues) {
@@ -358,7 +360,12 @@ window.rasterizeHTMLInline = (function (window, URI, CSSOM) {
                 }
             });
 
-            rule.style.setProperty('background-image', joinBackgroundDeclarations(backgroundDeclarations));
+            joinedBackgroundDeclarations = joinBackgroundDeclarations(backgroundDeclarations);
+            if (rule.style.getPropertyValue('background-image')) {
+                rule.style.setProperty('background-image', joinedBackgroundDeclarations);
+            } else {
+                rule.style.setProperty('background', joinedBackgroundDeclarations);
+            }
             change = change || declarationChanged;
         });
         findFontFaceRules(cssRules).forEach(function (rule) {
@@ -647,9 +654,11 @@ window.rasterizeHTMLInline = (function (window, URI, CSSOM) {
 
     var loadAndInlineBackgroundImage = function (rule, baseUri, cache, callback) {
         var errorUrls = [],
-            backgroundDeclarations;
+            backgroundDeclarations,
+            backgroundValue = rule.style.getPropertyValue('background-image') || rule.style.getPropertyValue('background'),
+            joinedBackgroundDeclarations;
 
-        backgroundDeclarations = sliceBackgroundDeclarations(rule.style.getPropertyValue('background-image'));
+        backgroundDeclarations = sliceBackgroundDeclarations(backgroundValue);
 
         module.util.map(backgroundDeclarations, function (singleBackgroundValues, finish) {
             var bgUrl = findBackgroundImageUrlInValues(singleBackgroundValues),
@@ -676,7 +685,12 @@ window.rasterizeHTMLInline = (function (window, URI, CSSOM) {
             var changed = changedStates.indexOf(true) >= 0;
 
             if (changed) {
-                rule.style.setProperty('background-image', joinBackgroundDeclarations(backgroundDeclarations));
+                joinedBackgroundDeclarations = joinBackgroundDeclarations(backgroundDeclarations);
+                if (rule.style.getPropertyValue('background-image')) {
+                    rule.style.setProperty('background-image', joinedBackgroundDeclarations);
+                } else {
+                    rule.style.setProperty('background', joinedBackgroundDeclarations);
+                }
             }
 
             callback(changed, errorUrls);
