@@ -398,4 +398,4 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, hTMLtoXML, theWindow) {
     };
 
     return module;
-}(window.rasterizeHTMLInline, window.HTMLtoXML || {}, window));
+}(window.rasterizeHTMLInline, window.HTMLtoXML, window));
