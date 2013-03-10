@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.3.0 - 2013-03-09
+/*! rasterizeHTML.js - v0.3.0 - 2013-03-10
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2013 Christoph Burgmer; Licensed MIT */
 
@@ -187,7 +187,6 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser, CSSOM) {
         // the style will only be parsed once it is added to a document
         doc.body.appendChild(styleElement);
         rules = styleElement.sheet.cssRules;
-        doc.body.removeChild(styleElement);
 
         return getArrayForArrayLike(rules);
     };
@@ -198,14 +197,6 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser, CSSOM) {
         } else {
             return rulesForCssTextFromBrowser(styleContent);
         }
-    };
-
-    // @deprecated
-    var parseCss = function (styleContent) {
-        var parser = new CSSParser(),
-            parsedCSS = parser.parse(styleContent, false, true);
-
-        return parsedCSS;
     };
 
     var findBackgroundImageRules = function (cssRules) {
@@ -220,29 +211,6 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser, CSSOM) {
         return rulesToInline;
     };
 
-    // @deprecated
-    var findBackgroundImageDeclarations = function (parsedCSS) {
-        var declarationsToInline = [],
-            i, j, rule;
-
-        if (! parsedCSS) {
-            return [];
-        }
-
-        for (i = 0; i < parsedCSS.cssRules.length; i++) {
-            rule = parsedCSS.cssRules[i];
-            if (rule.type === window.kJscsspSTYLE_RULE) {
-                for (j = 0; j < rule.declarations.length; j++) {
-                    if (rule.declarations[j].property === "background-image" || rule.declarations[j].property === "background") {
-                        declarationsToInline.push(rule.declarations[j]);
-                    }
-                }
-            }
-        }
-
-        return declarationsToInline;
-    };
-
     var findFontFaceRules = function (cssRules) {
         var rulesToInline = [];
 
@@ -255,29 +223,6 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser, CSSOM) {
         return rulesToInline;
     };
 
-    // @deprecated
-    var findFontFaceDescriptors = function (parsedCSS) {
-        var descriptorsToInline = [],
-            i, j, rule;
-
-        if (! parsedCSS) {
-            return [];
-        }
-
-        for (i = 0; i < parsedCSS.cssRules.length; i++) {
-            rule = parsedCSS.cssRules[i];
-            if (rule.type === window.kJscsspFONT_FACE_RULE) {
-                for (j = 0; j < rule.descriptors.length; j++) {
-                    if (rule.descriptors[j].property === "src") {
-                        descriptorsToInline.push(rule.descriptors[j]);
-                    }
-                }
-            }
-        }
-
-        return descriptorsToInline;
-    };
-
     var cssRulesToText = function (cssRules) {
         var cssText = "";
 
@@ -285,32 +230,6 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser, CSSOM) {
             cssText += rule.cssText;
         });
         return cssText;
-    };
-
-    // @deprecated
-    var cssToText = function (parsedCSS) {
-        // Works around https://github.com/cburgmer/rasterizeHTML.js/issues/30
-        var text = "",
-            j;
-
-        parsedCSS.cssRules.forEach(function (rule) {
-            if (rule.type === window.kJscsspSTYLE_RULE) {
-                text += rule.selectorText() + " {\n";
-                for (j = 0; j < rule.declarations.length; j++) {
-                    text += rule.declarations[j].property + ": " + rule.declarations[j].valueText + ";\n";
-                }
-                text += "}\n";
-            } else if (rule.type === window.kJscsspFONT_FACE_RULE) {
-                text += "@font-face {\n";
-                rule.descriptors.forEach(function (descriptor) {
-                    text += "  " + descriptor.property + ": " + descriptor.valueText + ";\n";
-                });
-                text += "}\n";
-            } else {
-                text += rule.cssText() + "\n";
-            }
-        });
-        return text;
     };
 
     var cloneObject = function(object) {
@@ -727,11 +646,11 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser, CSSOM) {
     };
 
 
-    var loadAndInlineBackgroundImage = function (cssDeclaration, baseUri, cache, callback) {
+    var loadAndInlineBackgroundImage = function (rule, baseUri, cache, callback) {
         var errorUrls = [],
             backgroundDeclarations;
 
-        backgroundDeclarations = sliceBackgroundDeclarations(cssDeclaration.valueText);
+        backgroundDeclarations = sliceBackgroundDeclarations(rule.style.getPropertyValue('background-image'));
 
         module.util.map(backgroundDeclarations, function (singleBackgroundValues, finish) {
             var bgUrl = findBackgroundImageUrlInValues(singleBackgroundValues),
@@ -758,20 +677,20 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser, CSSOM) {
             var changed = changedStates.indexOf(true) >= 0;
 
             if (changed) {
-                cssDeclaration.valueText = joinBackgroundDeclarations(backgroundDeclarations);
+                rule.style.setProperty('background-image', joinBackgroundDeclarations(backgroundDeclarations));
             }
 
             callback(changed, errorUrls);
         });
     };
 
-    var iterateOverRulesAndInlineBackgroundImage = function (parsedCss, baseUri, cache, callback) {
-        var declarationsToInline = findBackgroundImageDeclarations(parsedCss),
+    var iterateOverRulesAndInlineBackgroundImage = function (cssRules, baseUri, cache, callback) {
+        var rulesToInline = findBackgroundImageRules(cssRules),
             errors = [],
             cssHasChanges;
 
-        module.util.map(declarationsToInline, function (declaration, finish) {
-            loadAndInlineBackgroundImage(declaration, baseUri, cache, function (changed, errorUrls) {
+        module.util.map(rulesToInline, function (rule, finish) {
+            loadAndInlineBackgroundImage(rule, baseUri, cache, function (changed, errorUrls) {
                 errorUrls.forEach(function (url) {
                     errors.push({
                         resourceType: "backgroundImage",
@@ -854,11 +773,11 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser, CSSOM) {
         } catch (e) {}
     };
 
-    var loadAndInlineFontFace = function (cssDeclaration, baseUri, cache, successCallback) {
+    var loadAndInlineFontFace = function (cssRules, rule, baseUri, cache, successCallback) {
         var fontReferences, fontSrc, url, format, base64Content,
             errors = [];
 
-        fontReferences = sliceFontFaceSrcReferences(cssDeclaration.valueText);
+        fontReferences = sliceFontFaceSrcReferences(rule.style.getPropertyValue("src"));
         module.util.map(fontReferences, function (reference, finish) {
             fontSrc = extractFontFaceSrcUrl(reference);
 
@@ -885,7 +804,7 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser, CSSOM) {
             var changed = changedStates.indexOf(true) >= 0;
 
             if (changed) {
-                cssDeclaration.valueText = joinFontFaceSrcReferences(fontReferences);
+                changeFontFaceRuleSrc(cssRules, rule, joinFontFaceSrcReferences(fontReferences));
             }
 
             // TODO handle errors
@@ -893,13 +812,13 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser, CSSOM) {
         });
     };
 
-    var iterateOverRulesAndInlineFontFace = function (parsedCss, baseUri, cache, callback) {
-        var descriptorsToInline = findFontFaceDescriptors(parsedCss),
+    var iterateOverRulesAndInlineFontFace = function (cssRules, baseUri, cache, callback) {
+        var rulesToInline = findFontFaceRules(cssRules),
             errors = [],
             cssHasChanges;
 
-        module.util.map(descriptorsToInline, function (declaration, finish) {
-            loadAndInlineFontFace(declaration, baseUri, cache, function (changed, errorUrls) {
+        module.util.map(rulesToInline, function (rule, finish) {
+            loadAndInlineFontFace(cssRules, rule, baseUri, cache, function (changed, errorUrls) {
                 errorUrls.forEach(function (url) {
                     errors.push({
                         resourceType: "fontFace",
@@ -916,12 +835,12 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser, CSSOM) {
         });
     };
 
-    var workAroundWebkitBugIgnoringTheFirstRuleInCSS = function (cssContent, parsedCss) {
+    var workAroundWebkitBugIgnoringTheFirstRuleInCSS = function (cssContent, cssRules) {
         // Works around bug with webkit ignoring the first rule in each style declaration when rendering the SVG to the
         // DOM. While this does not directly affect the process when rastering to canvas, this is needed for the
         // workaround found in workAroundBrowserBugForBackgroundImages();
-        var hasBackgroundImageDeclarations = (findBackgroundImageDeclarations(parsedCss).length +
-                findFontFaceDescriptors(parsedCss).length) > 0;
+        var hasBackgroundImageDeclarations = (findBackgroundImageRules(cssRules).length +
+                findFontFaceRules(cssRules).length) > 0;
 
         if (hasBackgroundImageDeclarations && window.navigator.userAgent.indexOf("WebKit") >= 0) {
             return "span {}\n" + cssContent;
@@ -933,15 +852,15 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser, CSSOM) {
     var loadAndInlineCSSResourcesForStyle = function (style, baseUrl, cache, callback) {
         var cssContent = style.textContent,
             base = baseUrl || style.ownerDocument.baseURI,
-            parsedCss = parseCss(cssContent);
+            cssRules = rulesForCssText(cssContent);
 
-        iterateOverRulesAndInlineBackgroundImage(parsedCss, base, cache, function (bgImagesHaveChanges, bgImageErrors) {
-            iterateOverRulesAndInlineFontFace(parsedCss, base, cache, function (fontsHaveChanges, fontFaceErrors) {
+        iterateOverRulesAndInlineBackgroundImage(cssRules, base, cache, function (bgImagesHaveChanges, bgImageErrors) {
+            iterateOverRulesAndInlineFontFace(cssRules, base, cache, function (fontsHaveChanges, fontFaceErrors) {
                 // CSSParser is invasive, if no changes are needed, we leave the text as it is
                 if (bgImagesHaveChanges || fontsHaveChanges) {
-                    cssContent = cssToText(parsedCss);
+                    cssContent = cssRulesToText(cssRules);
                 }
-                cssContent = workAroundWebkitBugIgnoringTheFirstRuleInCSS(cssContent, parsedCss);
+                cssContent = workAroundWebkitBugIgnoringTheFirstRuleInCSS(cssContent, cssRules);
                 style.childNodes[0].nodeValue = cssContent;
 
                 callback(bgImageErrors.concat(fontFaceErrors));
