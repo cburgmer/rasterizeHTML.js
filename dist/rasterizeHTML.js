@@ -2,7 +2,7 @@
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2013 Christoph Burgmer; Licensed MIT */
 
-window.rasterizeHTMLInline = (function (window, URI, CSSParser, CSSOM) {
+window.rasterizeHTMLInline = (function (window, URI, CSSOM) {
     "use strict";
 
     var module = {};
@@ -525,7 +525,6 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser, CSSOM) {
 
         rulesToInline = findCSSImportRules(cssRules);
 
-        // CSSParser is invasive, if no changes are needed, we leave the text as it is
         if (rulesToInline.length === 0) {
             callback(cssContent, errors);
             return;
@@ -856,7 +855,7 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser, CSSOM) {
 
         iterateOverRulesAndInlineBackgroundImage(cssRules, base, cache, function (bgImagesHaveChanges, bgImageErrors) {
             iterateOverRulesAndInlineFontFace(cssRules, base, cache, function (fontsHaveChanges, fontFaceErrors) {
-                // CSSParser is invasive, if no changes are needed, we leave the text as it is
+                // CSS substitution is invasive, if no changes are needed, we leave the text as it is
                 if (bgImagesHaveChanges || fontsHaveChanges) {
                     cssContent = cssRulesToText(cssRules);
                 }
@@ -974,7 +973,7 @@ window.rasterizeHTMLInline = (function (window, URI, CSSParser, CSSOM) {
     };
 
     return module;
-}(window, URI, CSSParser, window.CSSOM || {}));
+}(window, URI, window.CSSOM || {}));
 
 window.rasterizeHTML = (function (rasterizeHTMLInline, hTMLtoXML, theWindow) {
     "use strict";

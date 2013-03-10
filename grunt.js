@@ -16,7 +16,7 @@ module.exports = function (grunt) {
                 '* Copyright (c) <%= grunt.template.today("yyyy") %> <%= pkg.author.name %>;' +
                 '\n/* Integrated dependencies:\n' +
                 ' * URI.js (MIT License/GPL v3),\n' +
-                ' * cssParser.js (MPL 1.1/GPL 2.0/LGPL 2.1),\n' +
+                ' * CSSOM.js (MIT License),\n' +
                 ' * htmlparser.js */'
         },
         lint:{
@@ -25,7 +25,7 @@ module.exports = function (grunt) {
             test:'test/*Spec.js'
         },
         jasmine:{
-            src:['lib/cssParser.js', 'lib/URI.js', 'lib/htmlparser.js', 'src/*.js'],
+            src:['lib/URI.js', 'lib/htmlparser.js', 'src/*.js'],
             specs:'test/*Spec.js',
             helpers:['test/helpers.js', 'test/lib/*.js', 'test/gruntpath.js'],
             timeout:10000
