@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.3.0 - 2013-03-14
+/*! rasterizeHTML.js - v0.3.0 - 2013-03-21
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2013 Christoph Burgmer; Licensed MIT */
 
@@ -339,7 +339,7 @@ window.rasterizeHTMLInline = (function (window, URI, CSSOM) {
         cssRules[ruleIdx] = styleSheet.cssRules[ruleIdx];
     };
 
-    var adjustPathsOfCssResources = function (baseUrl, cssRules) {
+    module.adjustPathsOfCssResources = function (baseUrl, cssRules) {
         var change = false,
             joinedBackgroundDeclarations;
 
@@ -418,7 +418,7 @@ window.rasterizeHTMLInline = (function (window, URI, CSSOM) {
             var cssRules = rulesForCssText(content),
                 changed;
 
-            changed = adjustPathsOfCssResources(cssHref, cssRules);
+            changed = module.adjustPathsOfCssResources(cssHref, cssRules);
             if (changed) {
                 content = cssRulesToText(cssRules);
             }
@@ -515,8 +515,8 @@ window.rasterizeHTMLInline = (function (window, URI, CSSOM) {
             var externalCssRules = rulesForCssText(cssText);
 
             // Recursively follow @import statements
-            loadCSSImportsForRules(externalCssRules, documentBaseUrl, cache, alreadyLoadedCssUrls, function (hasChanges, errors) {
-                adjustPathsOfCssResources(url, externalCssRules);
+            module.loadCSSImportsForRules(externalCssRules, documentBaseUrl, cache, alreadyLoadedCssUrls, function (hasChanges, errors) {
+                module.adjustPathsOfCssResources(url, externalCssRules);
 
                 substituteRule(cssRules, rule, externalCssRules);
 
@@ -527,7 +527,7 @@ window.rasterizeHTMLInline = (function (window, URI, CSSOM) {
         });
     };
 
-    var loadCSSImportsForRules = function (cssRules, baseUrl, cache, alreadyLoadedCssUrls, callback) {
+    module.loadCSSImportsForRules = function (cssRules, baseUrl, cache, alreadyLoadedCssUrls, callback) {
         var errors = [],
             rulesToInline;
 
@@ -557,7 +557,7 @@ window.rasterizeHTMLInline = (function (window, URI, CSSOM) {
     var loadAndInlineCSSImportsForStyle = function (style, baseUrl, cache, alreadyLoadedCssUrls, callback) {
         var cssRules = rulesForCssText(style.textContent);
 
-        loadCSSImportsForRules(cssRules, baseUrl, cache, alreadyLoadedCssUrls, function (hasChanges, errors) {
+        module.loadCSSImportsForRules(cssRules, baseUrl, cache, alreadyLoadedCssUrls, function (hasChanges, errors) {
             if (hasChanges) {
                 style.childNodes[0].nodeValue = cssRulesToText(cssRules);
             }
@@ -860,7 +860,7 @@ window.rasterizeHTMLInline = (function (window, URI, CSSOM) {
         }
     };
 
-    var loadAndInlineCSSResourcesForStyle = function (cssRules, baseUrl, cache, callback) {
+    module.loadAndInlineCSSResourcesForRules = function (cssRules, baseUrl, cache, callback) {
         iterateOverRulesAndInlineBackgroundImage(cssRules, baseUrl, cache, function (bgImagesHaveChanges, bgImageErrors) {
             iterateOverRulesAndInlineFontFace(cssRules, baseUrl, cache, function (fontsHaveChanges, fontFaceErrors) {
                 var hasChanges = bgImagesHaveChanges || fontsHaveChanges;
@@ -884,7 +884,7 @@ window.rasterizeHTMLInline = (function (window, URI, CSSOM) {
                 cssContent = style.textContent;
                 cssRules = rulesForCssText(cssContent);
 
-                loadAndInlineCSSResourcesForStyle(cssRules, baseUrl, cache, function (hasChanges, errors) {
+                module.loadAndInlineCSSResourcesForRules(cssRules, baseUrl, cache, function (hasChanges, errors) {
                     // CSS substitution is invasive, if no changes are needed, we leave the text as it is
                     if (hasChanges) {
                         cssContent = cssRulesToText(cssRules);
