@@ -458,15 +458,6 @@ describe("Inline CSS content", function () {
                 expect(match[2]).toEqual(aSecondImagesDataUri);
             });
 
-            it("should inline a background-image on a style element without a type", function () {
-                var anImage = "anImage.png",
-                    rules = CSSOM.parse('span { background-image: url("' + anImage + '"); }').cssRules;
-
-                rasterizeHTMLInline.loadAndInlineCSSResourcesForRules(rules, '', true, callback);
-
-                expect(getDataURIForImageURLSpy).toHaveBeenCalledWith(anImage, jasmine.any(Object), jasmine.any(Function), jasmine.any(Function));
-            });
-
             it("should not break background-position (#30)", function () {
                 var rules = CSSOM.parse('span { background-image: url("anImage.png"); background-position: 0 center, right center;}').cssRules;
 
