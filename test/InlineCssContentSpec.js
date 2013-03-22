@@ -110,6 +110,18 @@ describe("Inline CSS content", function () {
             expect(rules[1].cssText).toMatch(/p \{\s*font-size: 10px;\s*\}/);
         });
 
+        it("should support an import without the functional url() form", function () {
+            var rules = CSSOM.parse('@import "that.css";').cssRules;
+
+            ajaxSpy.andCallFake(function (url, options, callback) {
+                callback("");
+            });
+
+            rasterizeHTMLInline.loadCSSImportsForRules(rules, '', false, [], callback);
+
+            expect(ajaxSpy).toHaveBeenCalledWith("that.css", jasmine.any(Object), jasmine.any(Function), jasmine.any(Function));
+        });
+
         it("should handle empty content", function () {
             var rules = CSSOM.parse('@import url("that.css");').cssRules;
 
@@ -121,6 +133,104 @@ describe("Inline CSS content", function () {
 
             rasterizeHTMLInline.loadCSSImportsForRules(rules, '', false, [], callback);
 
+            expect(rules.length).toEqual(0);
+        });
+
+        it("should not add CSS if no content is given", function () {
+            var rules = CSSOM.parse('@import url("that.css");\n' +
+                '@import url("this.css");').cssRules;
+
+            ajaxSpy.andCallFake(function (url, options, callback) {
+                if (url === 'that.css') {
+                    callback("");
+                } else if (url === 'this.css') {
+                    callback("span { font-weight: bold; }");
+                }
+            });
+
+            rasterizeHTMLInline.loadCSSImportsForRules(rules, '', false, [], callback);
+
+            expect(rules.length).toEqual(1);
+        });
+
+        it("should ignore invalid values", function () {
+            var rules = CSSOM.parse('@import   invalid url;').cssRules;
+
+            rasterizeHTMLInline.loadCSSImportsForRules(rules, '', false, [], callback);
+
+            expect(callback).toHaveBeenCalledWith(false, []);
+        });
+
+        it("should not touch unrelated CSS", function () {
+            var rules = CSSOM.parse('span {   padding-left: 0; }').cssRules;
+
+            rasterizeHTMLInline.loadCSSImportsForRules(rules, '', false, [], callback);
+
+            expect(callback).toHaveBeenCalledWith(false, []);
+        });
+
+        it("should not include a document more than once", function () {
+            var rules = CSSOM.parse('@import url("that.css");\n' +
+                '@import url("that.css");').cssRules;
+
+            ajaxSpy.andCallFake(function (url, options, callback) {
+                callback('p { font-size: 12px; }');
+            });
+
+            rasterizeHTMLInline.loadCSSImportsForRules(rules, '', false, [], callback);
+
+            expect(ajaxSpy.callCount).toEqual(1);
+            expect(rules.length).toEqual(1);
+        });
+
+        it("should handle import in an import", function () {
+            var rules = CSSOM.parse('@import url("this.css");').cssRules;
+
+            ajaxSpy.andCallFake(function (url, options, callback) {
+                if (url === "this.css") {
+                    callback('@import url("that.css");');
+                } else if (url === "that.css") {
+                    callback('p { font-weight: bold; }');
+                }
+            });
+
+            rasterizeHTMLInline.loadCSSImportsForRules(rules, '', false, [], callback);
+
+            expect(rules.length).toEqual(1);
+            expect(rules[0].cssText).toMatch(/p \{\s*font-weight: bold;\s*\}/);
+        });
+
+        it("should handle cyclic imports", function () {
+            var rules = CSSOM.parse('@import url("this.css");').cssRules;
+
+            ajaxSpy.andCallFake(function (url, options, callback) {
+                if (url === "this.css") {
+                    callback('@import url("that.css");\n' +
+                        'span { font-weight: 300; }');
+                } else if (url === "that.css") {
+                    callback('@import url("this.css");\n' +
+                        'p { font-weight: bold; }');
+                }
+            });
+
+            rasterizeHTMLInline.loadCSSImportsForRules(rules, '', false, [], callback);
+
+            expect(rules[0].cssText).toMatch(/p \{\s*font-weight: bold;\s*\}/);
+            expect(rules[1].cssText).toMatch(/span \{\s*font-weight: 300;\s*\}/);
+        });
+
+        it("should handle recursive imports", function () {
+            var rules = CSSOM.parse('@import url("this.css");').cssRules;
+
+            ajaxSpy.andCallFake(function (url, options, callback) {
+                if (url === "this.css") {
+                    callback('@import url("this.css");');
+                }
+            });
+
+            rasterizeHTMLInline.loadCSSImportsForRules(rules, '', false, [], callback);
+
+            expect(ajaxSpy.callCount).toEqual(1);
             expect(rules.length).toEqual(0);
         });
 
@@ -180,6 +290,8 @@ describe("Inline CSS content", function () {
                 ajaxSpy.andCallFake(function (url, options, success, error) {
                     if (url === "existing_document.css") {
                         success("");
+                    } else if (url === "existing_with_second_level_nonexisting.css") {
+                        success('@import url("nonexisting.css");');
                     } else {
                         error();
                     }
@@ -195,6 +307,18 @@ describe("Inline CSS content", function () {
                     resourceType: "stylesheet",
                     url: "does_not_exist.css",
                     msg: "Unable to load stylesheet does_not_exist.css"
+                }]);
+            });
+
+            it("should include the base URI in the reported url", function () {
+                var rules = CSSOM.parse('@import url("missing.css");').cssRules;
+
+                rasterizeHTMLInline.loadCSSImportsForRules(rules, 'some_url/', true, [], callback);
+
+                expect(callback).toHaveBeenCalledWith(false, [{
+                    resourceType: "stylesheet",
+                    url: "some_url/missing.css",
+                    msg: "Unable to load stylesheet some_url/missing.css"
                 }]);
             });
 
@@ -219,6 +343,20 @@ describe("Inline CSS content", function () {
 
                 expect(callback).toHaveBeenCalledWith(false, [jasmine.any(Object), jasmine.any(Object)]);
                 expect(callback.mostRecentCall.args[1][0]).not.toEqual(callback.mostRecentCall.args[1][1]);
+            });
+
+            it("should report errors from second level @imports", function () {
+                var rules = CSSOM.parse('@import url("existing_with_second_level_nonexisting.css");').cssRules;
+
+                rasterizeHTMLInline.loadCSSImportsForRules(rules, '', true, [], callback);
+
+                expect(callback).toHaveBeenCalledWith(true, [
+                    {
+                        resourceType: "stylesheet",
+                        url: "nonexisting.css",
+                        msg: jasmine.any(String)
+                    }
+                ]);
             });
 
             it("should report an empty list for a successful stylesheet", function () {

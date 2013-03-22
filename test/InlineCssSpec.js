@@ -1,5 +1,5 @@
 describe("CSS inline", function () {
-    var doc, anotherCssLink, cssLink, extractCssUrlSpy, joinUrlSpy, ajaxSpy, callback;
+    var doc, anotherCssLink, cssLink, extractCssUrlSpy, joinUrlSpy, ajaxSpy, adjustPathsOfCssResourcesSpy, callback;
 
     beforeEach(function () {
         doc = document.implementation.createHTMLDocument("");
@@ -13,6 +13,7 @@ describe("CSS inline", function () {
         });
         joinUrlSpy = spyOn(rasterizeHTMLInline.util, "joinUrl");
         ajaxSpy = spyOn(rasterizeHTMLInline.util, "ajax");
+        adjustPathsOfCssResourcesSpy = spyOn(rasterizeHTMLInline, 'adjustPathsOfCssResources');
         callback = jasmine.createSpy("loadAndInlineCssCallback");
 
         cssLink = window.document.createElement("link");
@@ -180,15 +181,9 @@ describe("CSS inline", function () {
         cssWithRelativeResource.rel = "stylesheet";
         cssWithRelativeResource.type = "text/css";
 
-        joinUrlSpy.andCallFake(function (base, url) {
-            if (url === "below/some.css" && base === "some_url/") {
-                return "some_url/below/some.css";
-            } else if (url === "../green.png" && base === "below/some.css") {
-                return "green.png";
-            } else if (url === "fake.woff" && base === "below/some.css") {
-                return "below/fake.woff";
-            }
-        });
+        doc.head.appendChild(cssWithRelativeResource);
+
+        joinUrlSpy.andCallThrough();
         ajaxSpy.andCallFake(function (url, options, success) {
             if (url === "some_url/below/some.css") {
                 success('div { background-image: url("../green.png"); }\n' +
@@ -196,69 +191,9 @@ describe("CSS inline", function () {
             }
         });
 
-        doc.head.appendChild(cssWithRelativeResource);
-
         rasterizeHTMLInline.loadAndInlineCSS(doc, {baseUrl: "some_url/"}, callback);
 
-        expect(callback).toHaveBeenCalled();
-
-        expect(doc.head.getElementsByTagName("style").length).toEqual(1);
-        expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/url\(\"?green\.png\"?\)/);
-        expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/url\(\"?below\/fake\.woff\"?\)/);
-    });
-
-    ifNotInPhantomJsIt("should keep all src references intact when mapping resource paths", function () {
-        var cssWithRelativeResource;
-
-        cssWithRelativeResource = window.document.createElement("link");
-        cssWithRelativeResource.href = "some_url/some.css";
-        cssWithRelativeResource.rel = "stylesheet";
-        cssWithRelativeResource.type = "text/css";
-
-        doc.head.appendChild(cssWithRelativeResource);
-
-        joinUrlSpy.andCallFake(function (base, url) {
-            if (url === "fake.woff" && base === "some_url/some.css") {
-                return "some_url/fake.woff";
-            }
-        });
-        ajaxSpy.andCallFake(function (url, options, success) {
-            if (url === "some_url/some.css") {
-                success('@font-face { font-family: "test font"; src: local("some font"), url("fake.woff"); }');
-            }
-        });
-
-        rasterizeHTMLInline.loadAndInlineCSS(doc);
-
-        expect(doc.head.getElementsByTagName("style").length).toEqual(1);
-        expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/local\("?some font"?\), url\(\"?some_url\/fake\.woff\"?\)/);
-    });
-
-    it("should keep the font-family when inlining with Webkit", function () {
-        var cssWithRelativeResource;
-
-        cssWithRelativeResource = window.document.createElement("link");
-        cssWithRelativeResource.href = "some.css";
-        cssWithRelativeResource.rel = "stylesheet";
-        cssWithRelativeResource.type = "text/css";
-
-        joinUrlSpy.andCallFake(function (base, url) {
-            return url;
-        });
-        ajaxSpy.andCallFake(function (url, options, success) {
-            if (url === "some.css") {
-                success("@font-face { font-family: 'test font'; src: url(\"fake.woff\"); }");
-            }
-        });
-
-        doc.head.appendChild(cssWithRelativeResource);
-
-        rasterizeHTMLInline.loadAndInlineCSS(doc, callback);
-
-        expect(callback).toHaveBeenCalled();
-
-        expect(doc.head.getElementsByTagName("style").length).toEqual(1);
-        expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/@font-face\s*\{\s*font-family: ["']test font["'];\s*src: url\(["']?fake\.woff["']?\);\s*\}/);
+        expect(adjustPathsOfCssResourcesSpy).toHaveBeenCalledWith("below/some.css", jasmine.any(Object));
     });
 
     it("should circumvent caching if requested", function () {
