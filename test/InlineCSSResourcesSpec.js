@@ -1,10 +1,13 @@
 describe("CSS references inline", function () {
-    var doc, loadAndInlineCSSResourcesForRulesSpy, callback;
+    var doc, loadAndInlineCSSResourcesForRulesSpy, workAroundWebkitBugIgnoringTheFirstRuleInCSSSpy, callback;
 
     beforeEach(function () {
         doc = document.implementation.createHTMLDocument("");
 
         loadAndInlineCSSResourcesForRulesSpy = spyOn(rasterizeHTMLInline, 'loadAndInlineCSSResourcesForRules');
+        workAroundWebkitBugIgnoringTheFirstRuleInCSSSpy = spyOn(rasterizeHTMLInline, 'workAroundWebkitBugIgnoringTheFirstRuleInCSS').andCallFake(function (content) {
+            return content;
+        });
 
         callback = jasmine.createSpy("callback");
     });
@@ -92,42 +95,20 @@ describe("CSS references inline", function () {
         expect(loadAndInlineCSSResourcesForRulesSpy).toHaveBeenCalledWith(jasmine.any(Object), baseUrl, true, jasmine.any(Function));
     });
 
-    it("should add a workaround for Webkit to account for first CSS rules being ignored on background-images", function () {
+    it("should apply workaround for WebKit", function () {
         rasterizeHTMLTestHelper.addStyleToDocument(doc, 'span { background-image: url("data:image/png;base64,soMEfAkebASE64="); }');
 
-        loadAndInlineCSSResourcesForRulesSpy.andCallFake(function(rules, baseUrl, cache, callback) {
-            callback(true, []);
+        loadAndInlineCSSResourcesForRulesSpy.andCallFake(function (cssRules, baseUrl, cache, callback) {
+            callback(false, []);
+        });
+
+        workAroundWebkitBugIgnoringTheFirstRuleInCSSSpy.andCallFake(function () {
+            return "workaround css";
         });
 
         rasterizeHTMLInline.loadAndInlineCSSReferences(doc, callback);
 
-        expect(callback).toHaveBeenCalled();
-
-        expect(doc.head.getElementsByTagName("style").length).toEqual(1);
-        if (window.navigator.userAgent.indexOf("WebKit") >= 0) {
-            expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/^span \{\}/);
-        } else {
-            expect(doc.head.getElementsByTagName("style")[0].textContent).not.toMatch(/^span \{\}/);
-        }
-    });
-
-    it("should add a workaround for Webkit to account for first CSS rules being ignored on font face", function () {
-        rasterizeHTMLTestHelper.addStyleToDocument(doc, '@font-face { font-family: "RaphaelIcons"; src: url("data:font/woff;base64,soMEfAkebASE64="); }');
-
-        loadAndInlineCSSResourcesForRulesSpy.andCallFake(function(rules, baseUrl, cache, callback) {
-            callback(true, []);
-        });
-
-        rasterizeHTMLInline.loadAndInlineCSSReferences(doc, callback);
-
-        expect(callback).toHaveBeenCalled();
-
-        expect(doc.head.getElementsByTagName("style").length).toEqual(1);
-        if (window.navigator.userAgent.indexOf("WebKit") >= 0) {
-            expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(/^span \{\}/);
-        } else {
-            expect(doc.head.getElementsByTagName("style")[0].textContent).not.toMatch(/^span \{\}/);
-        }
+        expect(doc.head.getElementsByTagName("style")[0].textContent).toEqual("workaround css");
     });
 
     it("should inline a background-image", function () {

@@ -789,4 +789,57 @@ describe("Inline CSS content", function () {
             });
         });
     });
+
+    describe("workAroundWebkitBugIgnoringTheFirstRuleInCSS", function () {
+        var originalUserAgent, myUserAgent;
+
+        beforeEach(function () {
+            originalUserAgent = window.navigator.userAgent;
+            // Mock userAgent, does not work under Safari
+            navigator.__defineGetter__('userAgent', function () {
+                return myUserAgent;
+            });
+        });
+
+        afterEach(function () {
+            myUserAgent = originalUserAgent;
+        });
+
+        it("should add a workaround for Webkit to account for first CSS rules being ignored on background-images", function () {
+            var content = 'span { background-image: url("data:image/png;base64,soMEfAkebASE64="); }',
+                rules = CSSOM.parse(content).cssRules,
+                newContent;
+
+            myUserAgent = "WebKit";
+
+            newContent = rasterizeHTMLInline.workAroundWebkitBugIgnoringTheFirstRuleInCSS(content, rules);
+
+            expect(newContent).toMatch(/^span \{\}/);
+        });
+
+        it("should add a workaround for Webkit to account for first CSS rules being ignored on font face", function () {
+            var content = '@font-face { font-family: "RaphaelIcons"; src: url("data:font/woff;base64,soMEfAkebASE64="); }',
+                rules = CSSOM.parse(content).cssRules,
+                newContent;
+
+            myUserAgent = "WebKit";
+
+            newContent = rasterizeHTMLInline.workAroundWebkitBugIgnoringTheFirstRuleInCSS(content, rules);
+
+            expect(newContent).toMatch(/^span \{\}/);
+        });
+
+        ifNotInWebkitIt("should not add a workaround outside of WebKit", function () {
+            var content = 'span { background-image: url("data:image/png;base64,soMEfAkebASE64="); }',
+                rules = CSSOM.parse(content).cssRules,
+                newContent;
+
+            myUserAgent = "Something else";
+
+            newContent = rasterizeHTMLInline.workAroundWebkitBugIgnoringTheFirstRuleInCSS(content, rules);
+
+            expect(newContent).not.toMatch(/^span \{\}/);
+        });
+
+    });
 });

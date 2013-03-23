@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.3.0 - 2013-03-22
+/*! rasterizeHTML.js - v0.3.0 - 2013-03-23
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2013 Christoph Burgmer; Licensed MIT */
 
@@ -846,14 +846,14 @@ window.rasterizeHTMLInline = (function (window, URI, CSSOM) {
         });
     };
 
-    var workAroundWebkitBugIgnoringTheFirstRuleInCSS = function (cssContent, cssRules) {
+    module.workAroundWebkitBugIgnoringTheFirstRuleInCSS = function (cssContent, cssRules) {
         // Works around bug with webkit ignoring the first rule in each style declaration when rendering the SVG to the
         // DOM. While this does not directly affect the process when rastering to canvas, this is needed for the
         // workaround found in workAroundBrowserBugForBackgroundImages();
-        var hasBackgroundImageDeclarations = (findBackgroundImageRules(cssRules).length +
+        var hasResourceDeclarations = (findBackgroundImageRules(cssRules).length +
                 findFontFaceRules(cssRules).length) > 0;
 
-        if (hasBackgroundImageDeclarations && window.navigator.userAgent.indexOf("WebKit") >= 0) {
+        if (hasResourceDeclarations && window.navigator.userAgent.indexOf("WebKit") >= 0) {
             return "span {}\n" + cssContent;
         } else {
             return cssContent;
@@ -889,7 +889,7 @@ window.rasterizeHTMLInline = (function (window, URI, CSSOM) {
                     if (hasChanges) {
                         cssContent = cssRulesToText(cssRules);
                     }
-                    cssContent = workAroundWebkitBugIgnoringTheFirstRuleInCSS(cssContent, cssRules);
+                    cssContent = module.workAroundWebkitBugIgnoringTheFirstRuleInCSS(cssContent, cssRules);
                     style.childNodes[0].nodeValue = cssContent;
 
                     allErrors = allErrors.concat(errors);
