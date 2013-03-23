@@ -412,20 +412,28 @@ window.rasterizeHTMLInline = (function (window, URI, CSSOM) {
             cache: cache
         }, function (content) {
             var cssRules = rulesForCssText(content),
-                changed;
+                changedFromPathAdjustment;
 
-            changed = module.adjustPathsOfCssResources(cssHref, cssRules);
-            if (changed) {
-                content = cssRulesToText(cssRules);
-            }
+            changedFromPathAdjustment = module.adjustPathsOfCssResources(cssHref, cssRules);
+            module.loadCSSImportsForRules(cssRules, documentBaseUrl, cache, [], function (changedFromImports, importErrors) {
+                module.loadAndInlineCSSResourcesForRules(cssRules, documentBaseUrl, cache, function (changedFromResources, resourceErrors) {
+                    var errors = importErrors.concat(resourceErrors);
 
-            successCallback(content);
+                    if (changedFromPathAdjustment || changedFromImports || changedFromResources) {
+                        content = cssRulesToText(cssRules);
+                    }
+
+                    content = module.workAroundWebkitBugIgnoringTheFirstRuleInCSS(content, cssRules);
+
+                    successCallback(content, errors);
+                });
+            });
         }, function () {
             errorCallback(cssHrefRelativeToDoc);
         });
     };
 
-    module.loadAndInlineCSS = function (doc, options, callback) {
+    module.loadAndInlineCssLinks = function (doc, options, callback) {
         var params = module.util.parseOptionalParameters(options, callback),
             links = doc.getElementsByTagName("link"),
             baseUrl = params.options.baseUrl,
@@ -435,8 +443,10 @@ window.rasterizeHTMLInline = (function (window, URI, CSSOM) {
         module.util.map(links, function (link, finish) {
             if (link.attributes.rel && link.attributes.rel.nodeValue === "stylesheet" &&
                 (!link.attributes.type || link.attributes.type.nodeValue === "text/css")) {
-                loadLinkedCSS(link, baseUrl, cache, function(css) {
+                loadLinkedCSS(link, baseUrl, cache, function(css, moreErrors) {
                     substituteLinkWithInlineStyle(link, css + "\n");
+
+                    errors = errors.concat(moreErrors);
                     finish();
                 }, function (url) {
                     errors.push({
@@ -550,19 +560,30 @@ window.rasterizeHTMLInline = (function (window, URI, CSSOM) {
         });
     };
 
-    var loadAndInlineCSSImportsForStyle = function (style, baseUrl, cache, alreadyLoadedCssUrls, callback) {
+    var loadAndInlineCssForStyle = function (style, baseUrl, cache, alreadyLoadedCssUrls, callback) {
         var cssRules = rulesForCssText(style.textContent);
 
-        module.loadCSSImportsForRules(cssRules, baseUrl, cache, alreadyLoadedCssUrls, function (hasChanges, errors) {
-            if (hasChanges) {
-                style.childNodes[0].nodeValue = cssRulesToText(cssRules);
-            }
+        module.loadCSSImportsForRules(cssRules, baseUrl, cache, alreadyLoadedCssUrls, function (changedFromImports, importErrors) {
+            module.loadAndInlineCSSResourcesForRules(cssRules, baseUrl, cache, function (changedFromResources, resourceErrors) {
+                var errors = importErrors.concat(resourceErrors),
+                    content;
 
-            callback(errors);
+                if (changedFromImports || changedFromResources) {
+                    content = cssRulesToText(cssRules);
+                } else {
+                    content = style.textContent;
+                }
+
+                content = module.workAroundWebkitBugIgnoringTheFirstRuleInCSS(content, cssRules);
+
+                style.childNodes[0].nodeValue = content;
+
+                callback(errors);
+            });
         });
     };
 
-    module.loadAndInlineCSSImports = function (doc, options, callback) {
+    module.loadAndInlineStyles = function (doc, options, callback) {
         var params = module.util.parseOptionalParameters(options, callback),
             styles = doc.getElementsByTagName("style"),
             base = params.options.baseUrl || doc.baseURI,
@@ -572,7 +593,7 @@ window.rasterizeHTMLInline = (function (window, URI, CSSOM) {
 
         module.util.map(styles, function (style, finish) {
             if (!style.attributes.type || style.attributes.type.nodeValue === "text/css") {
-                loadAndInlineCSSImportsForStyle(style, base, cache, alreadyLoadedCssUrls, function (errors) {
+                loadAndInlineCssForStyle(style, base, cache, alreadyLoadedCssUrls, function (errors) {
                     allErrors = allErrors.concat(errors);
 
                     finish();
@@ -866,42 +887,6 @@ window.rasterizeHTMLInline = (function (window, URI, CSSOM) {
         });
     };
 
-    module.loadAndInlineCSSReferences = function (doc, options, callback) {
-        var params = module.util.parseOptionalParameters(options, callback),
-            allErrors = [],
-            baseUrl = params.options.baseUrl || doc.baseURI,
-            cache = params.options.cache !== false,
-            styles = doc.getElementsByTagName("style");
-
-        module.util.map(styles, function (style, finish) {
-            var cssContent, cssRules;
-
-            if (!style.attributes.type || style.attributes.type.nodeValue === "text/css") {
-                cssContent = style.textContent;
-                cssRules = rulesForCssText(cssContent);
-
-                module.loadAndInlineCSSResourcesForRules(cssRules, baseUrl, cache, function (hasChanges, errors) {
-                    // CSS substitution is invasive, if no changes are needed, we leave the text as it is
-                    if (hasChanges) {
-                        cssContent = cssRulesToText(cssRules);
-                    }
-                    cssContent = module.workAroundWebkitBugIgnoringTheFirstRuleInCSS(cssContent, cssRules);
-                    style.childNodes[0].nodeValue = cssContent;
-
-                    allErrors = allErrors.concat(errors);
-                    finish();
-                });
-            } else {
-                // We need to properly deal with non-css in this concurrent context
-                finish();
-            }
-        }, function () {
-            if (params.callback) {
-                params.callback(allErrors);
-            }
-        });
-    };
-
     /* Script inlining */
 
     var loadLinkedScript = function (script, baseUrl, cache, successCallback, errorCallback) {
@@ -966,17 +951,14 @@ window.rasterizeHTMLInline = (function (window, URI, CSSOM) {
         // TODO introduce parseOptionalParameters
         module.loadAndInlineImages(doc, options, function (errors) {
             allErrors = allErrors.concat(errors);
-            module.loadAndInlineCSS(doc, options, function (errors) {
+            module.loadAndInlineCssLinks(doc, options, function (errors) {
                 allErrors = allErrors.concat(errors);
-                module.loadAndInlineCSSImports(doc, options, function (errors) {
+                module.loadAndInlineStyles(doc, options, function (errors) {
                     allErrors = allErrors.concat(errors);
-                    module.loadAndInlineCSSReferences(doc, options, function (errors) {
+                    module.loadAndInlineScript(doc, options, function (errors) {
                         allErrors = allErrors.concat(errors);
-                        module.loadAndInlineScript(doc, options, function (errors) {
-                            allErrors = allErrors.concat(errors);
 
-                            callback(allErrors);
-                        });
+                        callback(allErrors);
                     });
                 });
             });
