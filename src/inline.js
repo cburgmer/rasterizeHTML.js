@@ -951,9 +951,9 @@ window.rasterizeHTMLInline = (function (window, URI, CSSOM) {
         // TODO introduce parseOptionalParameters
         module.loadAndInlineImages(doc, options, function (errors) {
             allErrors = allErrors.concat(errors);
-            module.loadAndInlineCssLinks(doc, options, function (errors) {
+            module.loadAndInlineStyles(doc, options, function (errors) {
                 allErrors = allErrors.concat(errors);
-                module.loadAndInlineStyles(doc, options, function (errors) {
+                module.loadAndInlineCssLinks(doc, options, function (errors) {
                     allErrors = allErrors.concat(errors);
                     module.loadAndInlineScript(doc, options, function (errors) {
                         allErrors = allErrors.concat(errors);

@@ -67,11 +67,11 @@ describe("Inline main", function () {
         loadAndInlineImages.andCallFake(function (doc, options, callback) {
             callback(["the error"]);
         });
-        loadAndInlineCssLinks.andCallFake(function (doc, options, callback) {
-            callback(["another error"]);
-        });
         loadAndInlineStyles.andCallFake(function (doc, options, callback) {
             callback(["more error"]);
+        });
+        loadAndInlineCssLinks.andCallFake(function (doc, options, callback) {
+            callback(["another error"]);
         });
         loadAndInlineScript.andCallFake(function (doc, options, callback) {
             callback(["error from script"]);
@@ -79,6 +79,6 @@ describe("Inline main", function () {
 
         rasterizeHTMLInline.inlineReferences(doc, {}, callback);
 
-        expect(callback).toHaveBeenCalledWith(["the error", "another error", "more error", "error from script"]);
+        expect(callback).toHaveBeenCalledWith(["the error", "more error", "another error", "error from script"]);
     });
 });
