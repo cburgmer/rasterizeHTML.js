@@ -69,20 +69,20 @@ window.rasterizeHTMLInline = (function (module) {
     /* Style inlining */
 
     var loadAndInlineCssForStyle = function (style, baseUrl, cache, alreadyLoadedCssUrls, callback) {
-        var cssRules = module.rulesForCssText(style.textContent);
+        var cssRules = module.css.rulesForCssText(style.textContent);
 
-        module.loadCSSImportsForRules(cssRules, baseUrl, cache, alreadyLoadedCssUrls, function (changedFromImports, importErrors) {
-            module.loadAndInlineCSSResourcesForRules(cssRules, baseUrl, cache, function (changedFromResources, resourceErrors) {
+        module.css.loadCSSImportsForRules(cssRules, baseUrl, cache, alreadyLoadedCssUrls, function (changedFromImports, importErrors) {
+            module.css.loadAndInlineCSSResourcesForRules(cssRules, baseUrl, cache, function (changedFromResources, resourceErrors) {
                 var errors = importErrors.concat(resourceErrors),
                     content;
 
                 if (changedFromImports || changedFromResources) {
-                    content = module.cssRulesToText(cssRules);
+                    content = module.css.cssRulesToText(cssRules);
                 } else {
                     content = style.textContent;
                 }
 
-                content = module.workAroundWebkitBugIgnoringTheFirstRuleInCSS(content, cssRules);
+                content = module.css.workAroundWebkitBugIgnoringTheFirstRuleInCSS(content, cssRules);
 
                 style.childNodes[0].nodeValue = content;
 
@@ -141,19 +141,19 @@ window.rasterizeHTMLInline = (function (module) {
         module.util.ajax(cssHrefRelativeToDoc, {
             cache: cache
         }, function (content) {
-            var cssRules = module.rulesForCssText(content),
+            var cssRules = module.css.rulesForCssText(content),
                 changedFromPathAdjustment;
 
-            changedFromPathAdjustment = module.adjustPathsOfCssResources(cssHref, cssRules);
-            module.loadCSSImportsForRules(cssRules, documentBaseUrl, cache, [], function (changedFromImports, importErrors) {
-                module.loadAndInlineCSSResourcesForRules(cssRules, documentBaseUrl, cache, function (changedFromResources, resourceErrors) {
+            changedFromPathAdjustment = module.css.adjustPathsOfCssResources(cssHref, cssRules);
+            module.css.loadCSSImportsForRules(cssRules, documentBaseUrl, cache, [], function (changedFromImports, importErrors) {
+                module.css.loadAndInlineCSSResourcesForRules(cssRules, documentBaseUrl, cache, function (changedFromResources, resourceErrors) {
                     var errors = importErrors.concat(resourceErrors);
 
                     if (changedFromPathAdjustment || changedFromImports || changedFromResources) {
-                        content = module.cssRulesToText(cssRules);
+                        content = module.css.cssRulesToText(cssRules);
                     }
 
-                    content = module.workAroundWebkitBugIgnoringTheFirstRuleInCSS(content, cssRules);
+                    content = module.css.workAroundWebkitBugIgnoringTheFirstRuleInCSS(content, cssRules);
 
                     successCallback(content, errors);
                 });
@@ -259,7 +259,6 @@ window.rasterizeHTMLInline = (function (module) {
     module.inlineReferences = function (doc, options, callback) {
         var allErrors = [];
 
-        // TODO introduce parseOptionalParameters
         module.loadAndInlineImages(doc, options, function (errors) {
             allErrors = allErrors.concat(errors);
             module.loadAndInlineStyles(doc, options, function (errors) {

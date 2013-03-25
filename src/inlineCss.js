@@ -20,7 +20,7 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
         return getArrayForArrayLike(rules);
     };
 
-    module.rulesForCssText = function (styleContent) {
+    module.css.rulesForCssText = function (styleContent) {
         if (CSSOM.parse && window.navigator.userAgent.indexOf("Chrome") >= 0) {
             return CSSOM.parse(styleContent).cssRules;
         } else {
@@ -52,7 +52,7 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
         return rulesToInline;
     };
 
-    module.cssRulesToText = function (cssRules) {
+    module.css.cssRulesToText = function (cssRules) {
         var cssText = "";
 
         cssRules.forEach(function (rule) {
@@ -134,7 +134,7 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
         cssRules[ruleIdx] = styleSheet.cssRules[ruleIdx];
     };
 
-    module.adjustPathsOfCssResources = function (baseUrl, cssRules) {
+    module.css.adjustPathsOfCssResources = function (baseUrl, cssRules) {
         var change = false,
             joinedBackgroundDeclarations;
 
@@ -236,11 +236,11 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
         }
 
         module.util.ajax(cssHrefRelativeToDoc, {cache: cache}, function (cssText) {
-            var externalCssRules = module.rulesForCssText(cssText);
+            var externalCssRules = module.css.rulesForCssText(cssText);
 
             // Recursively follow @import statements
-            module.loadCSSImportsForRules(externalCssRules, documentBaseUrl, cache, alreadyLoadedCssUrls, function (hasChanges, errors) {
-                module.adjustPathsOfCssResources(url, externalCssRules);
+            module.css.loadCSSImportsForRules(externalCssRules, documentBaseUrl, cache, alreadyLoadedCssUrls, function (hasChanges, errors) {
+                module.css.adjustPathsOfCssResources(url, externalCssRules);
 
                 substituteRule(cssRules, rule, externalCssRules);
 
@@ -251,7 +251,7 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
         });
     };
 
-    module.loadCSSImportsForRules = function (cssRules, baseUrl, cache, alreadyLoadedCssUrls, callback) {
+    module.css.loadCSSImportsForRules = function (cssRules, baseUrl, cache, alreadyLoadedCssUrls, callback) {
         var errors = [],
             rulesToInline;
 
@@ -506,7 +506,7 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
         });
     };
 
-    module.loadAndInlineCSSResourcesForRules = function (cssRules, baseUrl, cache, callback) {
+    module.css.loadAndInlineCSSResourcesForRules = function (cssRules, baseUrl, cache, callback) {
         iterateOverRulesAndInlineBackgroundImage(cssRules, baseUrl, cache, function (bgImagesHaveChanges, bgImageErrors) {
             iterateOverRulesAndInlineFontFace(cssRules, baseUrl, cache, function (fontsHaveChanges, fontFaceErrors) {
                 var hasChanges = bgImagesHaveChanges || fontsHaveChanges;
@@ -516,7 +516,7 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
         });
     };
 
-    module.workAroundWebkitBugIgnoringTheFirstRuleInCSS = function (cssContent, cssRules) {
+    module.css.workAroundWebkitBugIgnoringTheFirstRuleInCSS = function (cssContent, cssRules) {
         // Works around bug with webkit ignoring the first rule in each style declaration when rendering the SVG to the
         // DOM. While this does not directly affect the process when rastering to canvas, this is needed for the
         // workaround found in workAroundBrowserBugForBackgroundImages();

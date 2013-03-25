@@ -4,13 +4,13 @@ describe("Impor styles", function () {
     beforeEach(function () {
         doc = document.implementation.createHTMLDocument("");
 
-        loadCSSImportsForRulesSpy = spyOn(rasterizeHTMLInline, 'loadCSSImportsForRules').andCallFake(function (cssRules, baseUrl, cache, alreadyLoadedCssUrls, callback) {
+        loadCSSImportsForRulesSpy = spyOn(rasterizeHTMLInline.css, 'loadCSSImportsForRules').andCallFake(function (cssRules, baseUrl, cache, alreadyLoadedCssUrls, callback) {
             callback(false, []);
         });
-        loadAndInlineCSSResourcesForRulesSpy = spyOn(rasterizeHTMLInline, 'loadAndInlineCSSResourcesForRules').andCallFake(function (cssRules, baseUrl, cache, callback) {
+        loadAndInlineCSSResourcesForRulesSpy = spyOn(rasterizeHTMLInline.css, 'loadAndInlineCSSResourcesForRules').andCallFake(function (cssRules, baseUrl, cache, callback) {
             callback(false, []);
         });
-        workAroundWebkitBugIgnoringTheFirstRuleInCSSSpy = spyOn(rasterizeHTMLInline, 'workAroundWebkitBugIgnoringTheFirstRuleInCSS').andCallFake(function (content) {
+        workAroundWebkitBugIgnoringTheFirstRuleInCSSSpy = spyOn(rasterizeHTMLInline.css, 'workAroundWebkitBugIgnoringTheFirstRuleInCSS').andCallFake(function (content) {
             return content;
         });
 

@@ -15,14 +15,14 @@ describe("Inline CSS links", function () {
         });
         joinUrlSpy = spyOn(rasterizeHTMLInline.util, "joinUrl");
         ajaxSpy = spyOn(rasterizeHTMLInline.util, "ajax");
-        adjustPathsOfCssResourcesSpy = spyOn(rasterizeHTMLInline, 'adjustPathsOfCssResources');
-        loadCSSImportsForRulesSpy = spyOn(rasterizeHTMLInline, 'loadCSSImportsForRules').andCallFake(function (cssRules, baseUrl, cache, alreadyLoadedCssUrls, callback) {
+        adjustPathsOfCssResourcesSpy = spyOn(rasterizeHTMLInline.css, 'adjustPathsOfCssResources');
+        loadCSSImportsForRulesSpy = spyOn(rasterizeHTMLInline.css, 'loadCSSImportsForRules').andCallFake(function (cssRules, baseUrl, cache, alreadyLoadedCssUrls, callback) {
             callback(false, []);
         });
-        loadAndInlineCSSResourcesForRulesSpy = spyOn(rasterizeHTMLInline, 'loadAndInlineCSSResourcesForRules').andCallFake(function (cssRules, baseUrl, cache, callback) {
+        loadAndInlineCSSResourcesForRulesSpy = spyOn(rasterizeHTMLInline.css, 'loadAndInlineCSSResourcesForRules').andCallFake(function (cssRules, baseUrl, cache, callback) {
             callback(false, []);
         });
-        workAroundWebkitBugIgnoringTheFirstRuleInCSSSpy = spyOn(rasterizeHTMLInline, 'workAroundWebkitBugIgnoringTheFirstRuleInCSS').andCallFake(function (content) {
+        workAroundWebkitBugIgnoringTheFirstRuleInCSSSpy = spyOn(rasterizeHTMLInline.css, 'workAroundWebkitBugIgnoringTheFirstRuleInCSS').andCallFake(function (content) {
             return content;
         });
 
