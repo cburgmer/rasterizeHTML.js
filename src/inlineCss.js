@@ -1,6 +1,8 @@
 window.rasterizeHTMLInline = (function (module, window, CSSOM) {
     "use strict";
 
+    module.css = {};
+
     var getArrayForArrayLike = function (list) {
         return Array.prototype.slice.call(list);
     };
@@ -59,6 +61,66 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
         return cssText;
     };
 
+    var unquoteString = function (quotedUrl) {
+        var doubleQuoteRegex = /^"(.*)"$/,
+            singleQuoteRegex = /^'(.*)'$/;
+
+        if (doubleQuoteRegex.test(quotedUrl)) {
+            return quotedUrl.replace(doubleQuoteRegex, "$1");
+        } else {
+            if (singleQuoteRegex.test(quotedUrl)) {
+                return quotedUrl.replace(singleQuoteRegex, "$1");
+            } else {
+                return quotedUrl;
+            }
+        }
+    };
+
+    var trimCSSWhitespace = function (url) {
+        var whitespaceRegex = /^[\t\r\f\n ]*(.+?)[\t\r\f\n ]*$/;
+
+        return url.replace(whitespaceRegex, "$1");
+    };
+
+    module.css.extractCssUrl = function (cssUrl) {
+        var urlRegex = /^url\(([^\)]+)\)/,
+            quotedUrl;
+
+        if (!urlRegex.test(cssUrl)) {
+            throw new Error("Invalid url");
+        }
+
+        quotedUrl = urlRegex.exec(cssUrl)[1];
+        return unquoteString(trimCSSWhitespace(quotedUrl));
+    };
+
+    var findFontFaceFormat = function (value) {
+        var fontFaceFormatRegex = /^format\(([^\)]+)\)/,
+            quotedFormat;
+
+        if (!fontFaceFormatRegex.test(value)) {
+            return null;
+        }
+
+        quotedFormat = fontFaceFormatRegex.exec(value)[1];
+        return unquoteString(quotedFormat);
+    };
+
+    var extractFontFaceSrcUrl = function (reference) {
+        var url, format = null;
+
+        try {
+            url = module.css.extractCssUrl(reference[0]);
+            if (reference[1]) {
+                format = findFontFaceFormat(reference[1]);
+            }
+            return {
+                url: url,
+                format: format
+            };
+        } catch (e) {}
+    };
+
     // Workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=443978
     var changeFontFaceRuleSrc = function (cssRules, rule, newSrc) {
         var ruleIdx = cssRules.indexOf(rule),
@@ -105,7 +167,7 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
                 declarationChanged = false;
 
             fontReferences.forEach(function (reference) {
-                var fontSrc = module.util.extractFontFaceSrcUrl(reference),
+                var fontSrc = extractFontFaceSrcUrl(reference),
                     url;
 
                 if (fontSrc && !module.util.isDataUri(fontSrc.url)) {
@@ -159,7 +221,7 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
             cssHrefRelativeToDoc;
 
         if (isQuotedString(url)) {
-            url = module.util.unquoteString(url);
+            url = unquoteString(url);
         }
 
         cssHrefRelativeToDoc = module.util.getUrlRelativeToDocumentBase(url, documentBaseUrl);
@@ -258,7 +320,7 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
 
         for(i = 0; i < values.length; i++) {
             try {
-                url = module.util.extractCssUrl(values[i]);
+                url = module.css.extractCssUrl(values[i]);
                 return {
                     url: url,
                     idx: i
@@ -389,7 +451,7 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
 
         fontReferences = sliceFontFaceSrcReferences(rule.style.getPropertyValue("src"));
         module.util.map(fontReferences, function (reference, finish) {
-            fontSrc = module.util.extractFontFaceSrcUrl(reference);
+            fontSrc = extractFontFaceSrcUrl(reference);
 
             if (!fontSrc || module.util.isDataUri(fontSrc.url)) {
                 finish(false);

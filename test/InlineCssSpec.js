@@ -1,24 +1,81 @@
 describe("Inline CSS content", function () {
-    var joinUrlSpy, ajaxSpy, binaryAjaxSpy, extractCssUrlSpy, getDataURIForImageURLSpy,
+    var joinUrlSpy, ajaxSpy, binaryAjaxSpy, getDataURIForImageURLSpy,
         callback;
 
     beforeEach(function () {
         joinUrlSpy = spyOn(rasterizeHTMLInline.util, "joinUrl");
         ajaxSpy = spyOn(rasterizeHTMLInline.util, "ajax");
         binaryAjaxSpy = spyOn(rasterizeHTMLInline.util, "binaryAjax");
-        extractCssUrlSpy = spyOn(rasterizeHTMLInline.util, "extractCssUrl").andCallFake(function (cssUrl) {
-            if (/^url/.test(cssUrl)) {
-                return cssUrl.replace(/^url\("?/, '').replace(/"?\)$/, '');
-            } else {
-                throw "error";
-            }
-        });
         getDataURIForImageURLSpy = spyOn(rasterizeHTMLInline.util, "getDataURIForImageURL");
 
         callback = jasmine.createSpy("callback");
     });
 
+    describe("extractCssUrl", function () {
+        it("should extract a CSS URL", function () {
+            var url = rasterizeHTMLInline.css.extractCssUrl('url(path/file.png)');
+            expect(url).toEqual("path/file.png");
+        });
+
+        it("should handle double quotes", function () {
+            var url = rasterizeHTMLInline.css.extractCssUrl('url("path/file.png")');
+            expect(url).toEqual("path/file.png");
+        });
+
+        it("should handle single quotes", function () {
+            var url = rasterizeHTMLInline.css.extractCssUrl("url('path/file.png')");
+            expect(url).toEqual("path/file.png");
+        });
+
+        it("should handle whitespace", function () {
+            var url = rasterizeHTMLInline.css.extractCssUrl('url(   path/file.png )');
+            expect(url).toEqual("path/file.png");
+        });
+
+        it("should also handle tab, line feed, carriage return and form feed", function () {
+            var url = rasterizeHTMLInline.css.extractCssUrl('url(\t\r\f\npath/file.png\t\r\f\n)');
+            expect(url).toEqual("path/file.png");
+        });
+
+        it("should keep any other whitspace", function () {
+            var url = rasterizeHTMLInline.css.extractCssUrl('url(\u2003\u3000path/file.png)');
+            expect(url).toEqual("\u2003\u3000path/file.png");
+        });
+
+        it("should handle whitespace with double quotes", function () {
+            var url = rasterizeHTMLInline.css.extractCssUrl('url( "path/file.png"  )');
+            expect(url).toEqual("path/file.png");
+        });
+
+        it("should handle whitespace with single quotes", function () {
+            var url = rasterizeHTMLInline.css.extractCssUrl("url( 'path/file.png'  )");
+            expect(url).toEqual("path/file.png");
+        });
+
+        it("should extract a data URI", function () {
+            var url = rasterizeHTMLInline.css.extractCssUrl('url("data:image/png;base64,soMEfAkebASE64=")');
+            expect(url).toEqual("data:image/png;base64,soMEfAkebASE64=");
+        });
+
+        it("should throw an exception on invalid CSS URL", function () {
+            expect(function () {
+                rasterizeHTMLInline.css.extractCssUrl('invalid_stuff');
+            }).toThrow(new Error("Invalid url"));
+        });
+    });
+
     describe("adjustPathsOfCssResources", function () {
+        var extractCssUrlSpy;
+
+        beforeEach(function () {
+            extractCssUrlSpy = spyOn(rasterizeHTMLInline.css, "extractCssUrl").andCallFake(function (cssUrl) {
+                if (/^url/.test(cssUrl)) {
+                    return cssUrl.replace(/^url\("?/, '').replace(/"?\)$/, '');
+                } else {
+                    throw "error";
+                }
+            });
+        });
 
         it("should map resource paths relative to the stylesheet", function () {
             var rules = CSSOM.parse('div { background-image: url("../green.png"); }\n' +
@@ -370,6 +427,18 @@ describe("Inline CSS content", function () {
     });
 
     describe("loadAndInlineCSSResourcesForRules", function () {
+        var extractCssUrlSpy;
+
+        beforeEach(function () {
+            extractCssUrlSpy = spyOn(rasterizeHTMLInline.css, "extractCssUrl").andCallFake(function (cssUrl) {
+                if (/^url/.test(cssUrl)) {
+                    return cssUrl.replace(/^url\("?/, '').replace(/"?\)$/, '');
+                } else {
+                    throw "error";
+                }
+            });
+        });
+
         it("should work with empty content", function () {
             rasterizeHTMLInline.loadAndInlineCSSResourcesForRules([], '', true, callback);
 
