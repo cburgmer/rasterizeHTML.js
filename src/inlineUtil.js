@@ -1,7 +1,15 @@
-window.rasterizeHTMLInline = (function (module) {
+window.rasterizeHTMLInline = (function (module, window, URI) {
     "use strict";
 
     module.util = {};
+
+    module.util.getUrlRelativeToDocumentBase = function (url, baseUrl) {
+        if (baseUrl && baseUrl !== "about:blank") {
+            url = module.util.joinUrl(baseUrl, url);
+        }
+
+        return url;
+    };
 
     module.util.cloneArray = function (nodeList) {
         return Array.prototype.slice.apply(nodeList, [0]);
@@ -215,4 +223,4 @@ window.rasterizeHTMLInline = (function (module) {
     };
 
     return module;
-}(window.rasterizeHTMLInline || {}));
+}(window.rasterizeHTMLInline || {}, window, URI));
