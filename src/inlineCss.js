@@ -516,19 +516,5 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
         });
     };
 
-    module.css.workAroundWebkitBugIgnoringTheFirstRuleInCSS = function (cssContent, cssRules) {
-        // Works around bug with webkit ignoring the first rule in each style declaration when rendering the SVG to the
-        // DOM. While this does not directly affect the process when rastering to canvas, this is needed for the
-        // workaround found in workAroundBrowserBugForBackgroundImages();
-        var hasResourceDeclarations = (findBackgroundImageRules(cssRules).length +
-                findFontFaceRules(cssRules).length) > 0;
-
-        if (hasResourceDeclarations && window.navigator.userAgent.indexOf("WebKit") >= 0) {
-            return "span {}\n" + cssContent;
-        } else {
-            return cssContent;
-        }
-    };
-
     return module;
 }(window.rasterizeHTMLInline || {}, window, window.CSSOM || {}));

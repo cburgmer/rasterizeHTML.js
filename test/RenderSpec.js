@@ -72,6 +72,46 @@ describe("The rendering process", function () {
             );
         });
 
+        describe("workAroundWebkitBugIgnoringTheFirstRuleInCSS", function () {
+            var originalUserAgent, myUserAgent;
+
+            beforeEach(function () {
+                originalUserAgent = window.navigator.userAgent;
+                // Mock userAgent, does not work under Safari
+                navigator.__defineGetter__('userAgent', function () {
+                    return myUserAgent;
+                });
+            });
+
+            afterEach(function () {
+                myUserAgent = originalUserAgent;
+            });
+
+            it("should add a workaround for Webkit to account for first CSS rules being ignored", function () {
+                var doc = document.implementation.createHTMLDocument(""),
+                    svgCode;
+
+                myUserAgent = "WebKit";
+                rasterizeHTMLTestHelper.addStyleToDocument(doc, 'span { background-image: url("data:image/png;base64,soMEfAkebASE64="); }');
+
+                svgCode = rasterizeHTML.getSvgForDocument(doc, 123, 987);
+
+                expect(svgCode).toMatch(/<style type="text\/css"><\!\[CDATA\[\s*span \{\}/);
+            });
+
+            ifNotInWebkitIt("should not add a workaround outside of WebKit", function () {
+                var doc = document.implementation.createHTMLDocument(""),
+                    svgCode;
+
+                myUserAgent = "Something else";
+                rasterizeHTMLTestHelper.addStyleToDocument(doc, 'span { background-image: url("data:image/png;base64,soMEfAkebASE64="); }');
+
+                svgCode = rasterizeHTML.getSvgForDocument(doc, 123, 987);
+
+                expect(svgCode).not.toMatch(/span \{\}/);
+            });
+
+        });
     });
 
     describe("on SVG rendering", function () {

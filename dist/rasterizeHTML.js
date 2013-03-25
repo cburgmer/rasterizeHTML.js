@@ -73,18 +73,11 @@ window.rasterizeHTMLInline = (function (module) {
 
         module.css.loadCSSImportsForRules(cssRules, baseUrl, cache, alreadyLoadedCssUrls, function (changedFromImports, importErrors) {
             module.css.loadAndInlineCSSResourcesForRules(cssRules, baseUrl, cache, function (changedFromResources, resourceErrors) {
-                var errors = importErrors.concat(resourceErrors),
-                    content;
+                var errors = importErrors.concat(resourceErrors);
 
                 if (changedFromImports || changedFromResources) {
-                    content = module.css.cssRulesToText(cssRules);
-                } else {
-                    content = style.textContent;
+                    style.childNodes[0].nodeValue = module.css.cssRulesToText(cssRules);
                 }
-
-                content = module.css.workAroundWebkitBugIgnoringTheFirstRuleInCSS(content, cssRules);
-
-                style.childNodes[0].nodeValue = content;
 
                 callback(errors);
             });
@@ -152,8 +145,6 @@ window.rasterizeHTMLInline = (function (module) {
                     if (changedFromPathAdjustment || changedFromImports || changedFromResources) {
                         content = module.css.cssRulesToText(cssRules);
                     }
-
-                    content = module.css.workAroundWebkitBugIgnoringTheFirstRuleInCSS(content, cssRules);
 
                     successCallback(content, errors);
                 });
@@ -528,6 +519,17 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, hTMLtoXML, theWindow) {
         }
     };
 
+    var workAroundWebkitBugIgnoringTheFirstRuleInCSS = function (doc) {
+        // Works around bug with webkit ignoring the first rule in each style declaration when rendering the SVG to the
+        // DOM. While this does not directly affect the process when rastering to canvas, this is needed for the
+        // workaround found in workAroundBrowserBugForBackgroundImages();
+        if (window.navigator.userAgent.indexOf("WebKit") >= 0) {
+            Array.prototype.forEach.call(doc.getElementsByTagName("style"), function (style) {
+                style.textContent = "span {}\n" + style.textContent;
+            });
+        }
+    };
+
     var cleanUpAfterWorkAroundForBackgroundImages = function (svg, canvas) {
         var uniqueId = module.util.getConstantUniqueIdFor(svg),
             doc = canvas ? canvas.ownerDocument : theWindow.document,
@@ -538,7 +540,10 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, hTMLtoXML, theWindow) {
     };
 
     module.getSvgForDocument = function (doc, width, height) {
-        var html = serializeToXML(doc);
+        var html;
+
+        workAroundWebkitBugIgnoringTheFirstRuleInCSS(doc);
+        html = serializeToXML(doc);
 
         return (
             '<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height + '">' +

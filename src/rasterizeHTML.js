@@ -248,6 +248,17 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, hTMLtoXML, theWindow) {
         }
     };
 
+    var workAroundWebkitBugIgnoringTheFirstRuleInCSS = function (doc) {
+        // Works around bug with webkit ignoring the first rule in each style declaration when rendering the SVG to the
+        // DOM. While this does not directly affect the process when rastering to canvas, this is needed for the
+        // workaround found in workAroundBrowserBugForBackgroundImages();
+        if (window.navigator.userAgent.indexOf("WebKit") >= 0) {
+            Array.prototype.forEach.call(doc.getElementsByTagName("style"), function (style) {
+                style.textContent = "span {}\n" + style.textContent;
+            });
+        }
+    };
+
     var cleanUpAfterWorkAroundForBackgroundImages = function (svg, canvas) {
         var uniqueId = module.util.getConstantUniqueIdFor(svg),
             doc = canvas ? canvas.ownerDocument : theWindow.document,
@@ -258,7 +269,10 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, hTMLtoXML, theWindow) {
     };
 
     module.getSvgForDocument = function (doc, width, height) {
-        var html = serializeToXML(doc);
+        var html;
+
+        workAroundWebkitBugIgnoringTheFirstRuleInCSS(doc);
+        html = serializeToXML(doc);
 
         return (
             '<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height + '">' +

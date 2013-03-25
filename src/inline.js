@@ -69,18 +69,11 @@ window.rasterizeHTMLInline = (function (module) {
 
         module.css.loadCSSImportsForRules(cssRules, baseUrl, cache, alreadyLoadedCssUrls, function (changedFromImports, importErrors) {
             module.css.loadAndInlineCSSResourcesForRules(cssRules, baseUrl, cache, function (changedFromResources, resourceErrors) {
-                var errors = importErrors.concat(resourceErrors),
-                    content;
+                var errors = importErrors.concat(resourceErrors);
 
                 if (changedFromImports || changedFromResources) {
-                    content = module.css.cssRulesToText(cssRules);
-                } else {
-                    content = style.textContent;
+                    style.childNodes[0].nodeValue = module.css.cssRulesToText(cssRules);
                 }
-
-                content = module.css.workAroundWebkitBugIgnoringTheFirstRuleInCSS(content, cssRules);
-
-                style.childNodes[0].nodeValue = content;
 
                 callback(errors);
             });
@@ -148,8 +141,6 @@ window.rasterizeHTMLInline = (function (module) {
                     if (changedFromPathAdjustment || changedFromImports || changedFromResources) {
                         content = module.css.cssRulesToText(cssRules);
                     }
-
-                    content = module.css.workAroundWebkitBugIgnoringTheFirstRuleInCSS(content, cssRules);
 
                     successCallback(content, errors);
                 });

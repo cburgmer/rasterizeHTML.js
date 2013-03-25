@@ -1,6 +1,6 @@
 describe("Inline CSS links", function () {
     var doc, anotherCssLink, cssLink, extractCssUrlSpy, joinUrlSpy, ajaxSpy,
-        adjustPathsOfCssResourcesSpy, loadCSSImportsForRulesSpy, loadAndInlineCSSResourcesForRulesSpy, workAroundWebkitBugIgnoringTheFirstRuleInCSSSpy,
+        adjustPathsOfCssResourcesSpy, loadCSSImportsForRulesSpy, loadAndInlineCSSResourcesForRulesSpy,
         callback;
 
     beforeEach(function () {
@@ -21,9 +21,6 @@ describe("Inline CSS links", function () {
         });
         loadAndInlineCSSResourcesForRulesSpy = spyOn(rasterizeHTMLInline.css, 'loadAndInlineCSSResourcesForRules').andCallFake(function (cssRules, baseUrl, cache, callback) {
             callback(false, []);
-        });
-        workAroundWebkitBugIgnoringTheFirstRuleInCSSSpy = spyOn(rasterizeHTMLInline.css, 'workAroundWebkitBugIgnoringTheFirstRuleInCSS').andCallFake(function (content) {
-            return content;
         });
 
         callback = jasmine.createSpy("loadAndInlineCssCallback");
@@ -261,18 +258,6 @@ describe("Inline CSS links", function () {
 
         expect(loadCSSImportsForRulesSpy.mostRecentCall.args[2]).toBeTruthy();
         expect(loadAndInlineCSSResourcesForRulesSpy.mostRecentCall.args[2]).toBeTruthy();
-    });
-
-    it("should apply workaround for WebKit", function () {
-        doc.head.appendChild(cssLink);
-
-        workAroundWebkitBugIgnoringTheFirstRuleInCSSSpy.andCallFake(function () {
-            return "workaround css";
-        });
-
-        rasterizeHTMLInline.loadAndInlineCssLinks(doc, callback);
-
-        expect(doc.head.getElementsByTagName("style")[0].textContent).toEqual("workaround css");
     });
 
     describe("error handling", function () {

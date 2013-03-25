@@ -1,5 +1,5 @@
 describe("Impor styles", function () {
-    var doc, loadCSSImportsForRulesSpy, loadAndInlineCSSResourcesForRulesSpy, workAroundWebkitBugIgnoringTheFirstRuleInCSSSpy, callback;
+    var doc, loadCSSImportsForRulesSpy, loadAndInlineCSSResourcesForRulesSpy, callback;
 
     beforeEach(function () {
         doc = document.implementation.createHTMLDocument("");
@@ -9,9 +9,6 @@ describe("Impor styles", function () {
         });
         loadAndInlineCSSResourcesForRulesSpy = spyOn(rasterizeHTMLInline.css, 'loadAndInlineCSSResourcesForRules').andCallFake(function (cssRules, baseUrl, cache, callback) {
             callback(false, []);
-        });
-        workAroundWebkitBugIgnoringTheFirstRuleInCSSSpy = spyOn(rasterizeHTMLInline.css, 'workAroundWebkitBugIgnoringTheFirstRuleInCSS').andCallFake(function (content) {
-            return content;
         });
 
         callback = jasmine.createSpy("callback");
@@ -72,22 +69,6 @@ describe("Impor styles", function () {
 
         expect(loadCSSImportsForRulesSpy).toHaveBeenCalled();
         expect(loadAndInlineCSSResourcesForRulesSpy).toHaveBeenCalled();
-    });
-
-    it("should apply workaround for WebKit", function () {
-        rasterizeHTMLTestHelper.addStyleToDocument(doc, 'span { background-image: url("data:image/png;base64,soMEfAkebASE64="); }');
-
-        loadAndInlineCSSResourcesForRulesSpy.andCallFake(function (cssRules, baseUrl, cache, callback) {
-            callback(false, []);
-        });
-
-        workAroundWebkitBugIgnoringTheFirstRuleInCSSSpy.andCallFake(function () {
-            return "workaround css";
-        });
-
-        rasterizeHTMLInline.loadAndInlineStyles(doc, callback);
-
-        expect(doc.head.getElementsByTagName("style")[0].textContent).toEqual("workaround css");
     });
 
     it("should respect the document's baseURI", function () {
