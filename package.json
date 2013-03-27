@@ -19,6 +19,6 @@
     "grunt-jasmine-runner": "~0.5.2"
   },
   "scripts": {
-    "test": "grunt --verbose"
+    "test": "bash go --verbose"
   }
 }

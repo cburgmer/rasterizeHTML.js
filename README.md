@@ -37,7 +37,7 @@ Testing
 Run
 
     $ npm install
-    $ ./node_modules/.bin/grunt
+    $ ./go
 
 for linting, jasmine tests and minification.
 

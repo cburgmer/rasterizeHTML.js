@@ -1,0 +1,43 @@
+var fs = require("fs");
+
+var getDataUriForBase64PNG = function (pngBase64) {
+    return "data:image/png;base64," + pngBase64;
+};
+
+var renderPage = function (url, successCallback) {
+    var page = require("webpage").create();
+
+    page.viewportSize = { width: 210, height: 110 };
+    page.open(url, function () {
+        setTimeout(function () {
+            var base64PNG, imgURI;
+
+            base64PNG = page.renderBase64("PNG");
+            imgURI = getDataUriForBase64PNG(base64PNG);
+
+            successCallback(imgURI);
+        }, 100);
+    });
+};
+
+renderPage(fs.absolute('integrationTestPage.html'), function (imageUrl) {
+    renderPage(fs.absolute('fixtures/testResult.png'), function (targetImageUrl) {
+        var imageDiffPage = require("webpage").create();
+
+        imageDiffPage.onConsoleMessage = function (msg) {
+            console.log("Integration test: " + msg);
+            if (msg === "success") {
+                phantom.exit(0);
+            } else {
+                imageDiffPage.render("rasterizeHtmlSmokeTestDiff.png");
+                phantom.exit(1);
+            }
+        };
+
+        imageDiffPage.open("diffHelperPage.html", function () {
+            imageDiffPage.evaluate(function (url1, url2) {
+                isEqual(url1, url2, 300);
+            }, imageUrl, targetImageUrl);
+        });
+    });
+});

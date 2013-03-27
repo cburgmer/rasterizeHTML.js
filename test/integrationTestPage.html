@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Smoke test</title>
+    <script type="text/javascript" src="../dist/rasterizeHTML.allinone.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" width="204" height="100"></canvas>
+    <script type="text/javascript">
+        var canvas = document.getElementById("canvas");
+
+        rasterizeHTML.drawURL("fixtures/testWithJs.html", canvas, {cache: false, executeJs: true});
+    </script>
+</body>
+</html>
