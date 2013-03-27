@@ -381,7 +381,6 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, hTMLtoXML, theWindow) {
     };
 
     module.drawHTML = function (html, canvas, options, callback) {
-        // TODO remove reference to rasterizeHTMLInline.util
         var params = module.util.parseOptionalParameters(canvas, options, callback),
             doc = theWindow.document.implementation.createHTMLDocument("");
 
@@ -396,6 +395,7 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, hTMLtoXML, theWindow) {
 
         params.options.baseUrl = url;
 
+        // TODO remove reference to rasterizeHTMLInline.util
         rasterizeHTMLInline.util.ajax(url, {
             cache: cache
         }, function (html) {
