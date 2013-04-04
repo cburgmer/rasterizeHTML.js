@@ -202,33 +202,58 @@ describe("Inline utilities function", function () {
             });
         });
 
-        it("should attach an unique parameter to the given URL to circumvent caching if requested", function () {
-            var ajaxRequest = jasmine.createSpyObj("ajaxRequest", ["open", "addEventListener", "overrideMimeType", "send"]);
-            spyOn(window, "XMLHttpRequest").andReturn(ajaxRequest);
+        describe("options", function () {
+            var ajaxRequest;
 
-            rasterizeHTMLInline.util.ajax("non_existing_url.html", {cache: false}, function () {}, function () {});
+            beforeEach(function () {
+                ajaxRequest = jasmine.createSpyObj("ajaxRequest", ["open", "addEventListener", "overrideMimeType", "send"]);
+                spyOn(window, "XMLHttpRequest").andReturn(ajaxRequest);
+            });
 
-            expect(ajaxRequest.open).toHaveBeenCalledWith('GET', jasmine.any(String), true);
-            expect(ajaxRequest.open.mostRecentCall.args[1]).toMatch(/^non_existing_url.html\?_=[0123456789]+$/);
+            it("should attach an unique parameter to the given URL to circumvent caching if requested", function () {
+                rasterizeHTMLInline.util.ajax("non_existing_url.html", {cache: false}, function () {}, function () {});
+
+                expect(ajaxRequest.open).toHaveBeenCalledWith('GET', jasmine.any(String), true);
+                expect(ajaxRequest.open.mostRecentCall.args[1]).toMatch(/^non_existing_url.html\?_=[0123456789]+$/);
+            });
+
+            it("should not attach an unique parameter to the given URL by default", function () {
+                rasterizeHTMLInline.util.ajax("non_existing_url.html", {}, function () {}, function () {});
+
+                expect(ajaxRequest.open).toHaveBeenCalledWith('GET', "non_existing_url.html", true);
+            });
+
+            it("should allow caching for repeated calls if requested", function () {
+                var dateNowSpy = spyOn(window.Date, 'now').andReturn(42);
+
+                rasterizeHTMLInline.util.ajax("non_existing_url.html", {cache: false}, function () {}, function () {});
+
+                expect(ajaxRequest.open.mostRecentCall.args[1]).toEqual('non_existing_url.html?_=42');
+
+                rasterizeHTMLInline.util.ajax("non_existing_url.html", {cache: false, cacheRepeated: true}, function () {}, function () {});
+                expect(ajaxRequest.open.mostRecentCall.args[1]).toEqual('non_existing_url.html?_=42');
+
+                expect(dateNowSpy.callCount).toEqual(1);
+            });
+
+            it("should not cache repeated calls by default", function () {
+                var dateNowSpy = spyOn(window.Date, 'now').andReturn(42);
+                rasterizeHTMLInline.util.ajax("non_existing_url.html", {cache: false}, function () {}, function () {});
+
+                expect(ajaxRequest.open.mostRecentCall.args[1]).toEqual('non_existing_url.html?_=42');
+
+                dateNowSpy.andReturn(43);
+                rasterizeHTMLInline.util.ajax("non_existing_url.html", {cache: false}, function () {}, function () {});
+                expect(ajaxRequest.open.mostRecentCall.args[1]).toEqual('non_existing_url.html?_=43');
+            });
+
+            it("should force mime type if requested", function () {
+                rasterizeHTMLInline.util.ajax("non_existing_url.html", {mimeType: "42"}, function () {}, function () {});
+
+                expect(ajaxRequest.overrideMimeType).toHaveBeenCalledWith('42');
+            });
         });
 
-        it("should not attach an unique parameter to the given URL by default", function () {
-            var ajaxRequest = jasmine.createSpyObj("ajaxRequest", ["open", "addEventListener", "overrideMimeType", "send"]);
-            spyOn(window, "XMLHttpRequest").andReturn(ajaxRequest);
-
-            rasterizeHTMLInline.util.ajax("non_existing_url.html", {}, function () {}, function () {});
-
-            expect(ajaxRequest.open).toHaveBeenCalledWith('GET', "non_existing_url.html", true);
-        });
-
-        it("should force mime type if requested", function () {
-            var ajaxRequest = jasmine.createSpyObj("ajaxRequest", ["open", "addEventListener", "overrideMimeType", "send"]);
-            spyOn(window, "XMLHttpRequest").andReturn(ajaxRequest);
-
-            rasterizeHTMLInline.util.ajax("non_existing_url.html", {mimeType: "42"}, function () {}, function () {});
-
-            expect(ajaxRequest.overrideMimeType).toHaveBeenCalledWith('42');
-        });
     });
 
     describe("binaryAjax", function () {

@@ -58,8 +58,17 @@ window.rasterizeHTMLInline = (function (module, window, URI) {
         }
     };
 
-    var getUncachableURL = function (url) {
-        return url + "?_=" + Date.now();
+    var lastCacheDate = null;
+
+    var getUncachableURL = function (url, workAroundCaching, cacheRepeated) {
+        if (workAroundCaching) {
+            if (lastCacheDate === null || !cacheRepeated) {
+                lastCacheDate = Date.now();
+            }
+            return url + "?_=" + lastCacheDate;
+        } else {
+            return url;
+        }
     };
 
     module.util.ajax = function (url, options, successCallback, errorCallback) {
@@ -67,7 +76,7 @@ window.rasterizeHTMLInline = (function (module, window, URI) {
             augmentedUrl;
 
         options = options || {};
-        augmentedUrl = options.cache === false ? getUncachableURL(url) : url;
+        augmentedUrl = getUncachableURL(url, options.cache === false, options.cacheRepeated);
 
         ajaxRequest.addEventListener("load", function () {
             if (ajaxRequest.status === 200 || ajaxRequest.status === 0) {
