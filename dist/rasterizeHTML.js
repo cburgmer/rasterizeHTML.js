@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.4.0 - 2013-04-05
+/*! rasterizeHTML.js - v0.4.0 - 2013-04-09
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2013 Christoph Burgmer; Licensed MIT */
 
@@ -882,9 +882,9 @@ window.rasterizeHTMLInline = (function (module, window, URI) {
             errorCallback();
         }, false);
 
-        ajaxRequest.open('GET', augmentedUrl, true);
-        ajaxRequest.overrideMimeType(options.mimeType);
         try {
+            ajaxRequest.open('GET', augmentedUrl, true);
+            ajaxRequest.overrideMimeType(options.mimeType);
             ajaxRequest.send(null);
         } catch (err) {
             errorCallback();

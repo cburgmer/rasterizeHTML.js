@@ -90,9 +90,9 @@ window.rasterizeHTMLInline = (function (module, window, URI) {
             errorCallback();
         }, false);
 
-        ajaxRequest.open('GET', augmentedUrl, true);
-        ajaxRequest.overrideMimeType(options.mimeType);
         try {
+            ajaxRequest.open('GET', augmentedUrl, true);
+            ajaxRequest.overrideMimeType(options.mimeType);
             ajaxRequest.send(null);
         } catch (err) {
             errorCallback();
