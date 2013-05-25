@@ -20,8 +20,14 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
         return getArrayForArrayLike(rules);
     };
 
+    var browserHasBackgroundImageUrlIssue = (function () {
+        // Checks for http://code.google.com/p/chromium/issues/detail?id=161644
+        var rules = rulesForCssTextFromBrowser('a{background:url(i)}');
+        return !rules.length || rules[0].cssText.indexOf('url()') >= 0;
+    }());
+
     module.css.rulesForCssText = function (styleContent) {
-        if (CSSOM.parse && window.navigator.userAgent.indexOf("Chrome") >= 0) {
+        if (browserHasBackgroundImageUrlIssue && CSSOM.parse) {
             return CSSOM.parse(styleContent).cssRules;
         } else {
             return rulesForCssTextFromBrowser(styleContent);
