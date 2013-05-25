@@ -71,6 +71,19 @@ describe("Import styles", function () {
         expect(loadAndInlineCSSResourcesForRulesSpy).toHaveBeenCalled();
     });
 
+    it("should ignore a style element with a non CSS type", function () {
+        var styleNode = doc.createElement("style");
+        styleNode.type = "text/plain";
+
+        styleNode.appendChild(doc.createTextNode('@import url("imported.css");'));
+        doc.head.appendChild(styleNode);
+
+        rasterizeHTMLInline.loadAndInlineStyles(doc, callback);
+
+        expect(loadCSSImportsForRulesSpy).not.toHaveBeenCalled();
+        expect(loadAndInlineCSSResourcesForRulesSpy).not.toHaveBeenCalled();
+    });
+
     it("should respect the document's baseURI", function () {
         doc = rasterizeHTMLTestHelper.readDocumentFixture("importCss.html");
 

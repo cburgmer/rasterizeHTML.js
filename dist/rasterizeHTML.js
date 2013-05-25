@@ -84,25 +84,37 @@ window.rasterizeHTMLInline = (function (module) {
         });
     };
 
+    var getArrayForArrayLike = function (list) {
+        return Array.prototype.slice.call(list);
+    };
+
+    var getCssStyleElements = function (doc) {
+        var styles = getArrayForArrayLike(doc.getElementsByTagName("style")),
+            cssStyles = [];
+
+        styles.forEach(function (style) {
+            if (!style.attributes.type || style.attributes.type.nodeValue === "text/css") {
+                cssStyles.push(style);
+            }
+        });
+
+        return cssStyles;
+    };
+
     module.loadAndInlineStyles = function (doc, options, callback) {
         var params = module.util.parseOptionalParameters(options, callback),
-            styles = doc.getElementsByTagName("style"),
+            styles = getCssStyleElements(doc),
             base = params.options.baseUrl || doc.baseURI,
             cache = params.options.cache !== false,
             allErrors = [],
             alreadyLoadedCssUrls = [];
 
         module.util.map(styles, function (style, finish) {
-            if (!style.attributes.type || style.attributes.type.nodeValue === "text/css") {
-                loadAndInlineCssForStyle(style, base, cache, alreadyLoadedCssUrls, function (errors) {
-                    allErrors = allErrors.concat(errors);
+            loadAndInlineCssForStyle(style, base, cache, alreadyLoadedCssUrls, function (errors) {
+                allErrors = allErrors.concat(errors);
 
-                    finish();
-                });
-            } else {
-                // We need to properly deal with non-css in this concurrent context
                 finish();
-            }
+            });
         }, function () {
             params.callback(allErrors);
         });
