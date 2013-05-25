@@ -1,4 +1,4 @@
-describe("Impor styles", function () {
+describe("Import styles", function () {
     var doc, loadCSSImportsForRulesSpy, loadAndInlineCSSResourcesForRulesSpy, callback;
 
     beforeEach(function () {
