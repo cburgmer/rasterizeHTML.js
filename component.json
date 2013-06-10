@@ -1,6 +1,0 @@
-{
-  "name": "rasterizeHTML.js",
-  "version": "0.1.0",
-  "main": ["./dist/rasterizeHTML.js", "./dist/rasterizeHTML.allinone.js"],
-  "dependencies": {}
-}
