@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>A panoramic tour through HTML5 rendering itself</title>
+    <link href="css/reset.css" rel="stylesheet" />
+    <meta name="author" content="Christoph Burgmer">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=1024" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <link rel="shortcut icon" href="css/favicon.png" />
+    <link rel="apple-touch-icon" href="css/apple-touch-icon.png" />
+    <!-- Code Prettifier: -->
+<link href="css/highlight.css" type="text/css" rel="stylesheet" />
+<script type="text/javascript" src="js/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+    <link href="css/style.css" rel="stylesheet" />
+    <link href="http://fonts.googleapis.com/css?family=Lato:300,900" rel="stylesheet" />
+
+  </head>
+
+  <body>
+  <div class="fallback-message">
+  <p>Your browser <b>doesn't support the features required</b> by impress.js, so you are presented with a simplified version of this presentation.</p>
+  <p>For the best experience please use the latest <b>Chrome</b>, <b>Safari</b> or <b>Firefox</b> browser.</p>
+  </div>
+    <div id="impress">
+    <div class='step'  data-x='1000' data-y='-5000' data-scale='5' data-rotate-z='180'>
+    
+<h1>A panoramic tour through HTML5 rendering itself</h1>
+
+<h2>The good, the bad and the hacky</h2>
+
+<p>Christoph Burgmer</p>
+
+<p><a href="mailto:cburgmer@thoughtworks.com">cburgmer@thoughtworks.com</a> <a href="http://twitter.com/cburgmer">@cburgmer</a></p>
+
+<p><img src="https://si0.twimg.com/profile_images/378800000099616166/c9f50502c1ea93a0009f5b287da5d002_normal.jpeg" alt=" "> JSConf EU 2013</p>
+</div>
+      <div class='step'  data-x='1000'>
+    
+<h1>What are we up to?</h1>
+
+<ol>
+<li>Misuse new browser features</li>
+<li>Use our JS fu to manipulate SVG, HTML, CSS, DOM and CSSOM</li>
+<li>Boldly go where no man or woman has gone before</li>
+<li>Hopefully have some fun on the way</li>
+</ol>
+</div>
+      <div class='step'  data-x='1000'>
+    
+<h1>A special welcome</h1>
+
+<p>... to the Chrome developers here today.</p>
+
+<p>I have a few treats for you.</p>
+</div>
+      <div class='step'  data-x='2000'>
+    
+<h1>Our task</h1>
+
+<ul>
+<li>Trigger HTML rendering capabilities from JavaScript
+
+<ul>
+<li>Get a screenshot from a web page</li>
+<li>Render HTML on to a canvas</li>
+</ul></li>
+<li><p>Provide the missing (i.e. a &quot;prollyfill&quot;)</p>
+<pre><code class='prettyprint '>var ctx = canvas.getContext("2d");
+ctx.drawHTML(htmlString, 0, 0);
+</code></pre></li>
+</ul>
+
+<p>Sounds easy?</p>
+</div>
+      <div class='step'  data-x='3000'>
+    
+<h1>Quick solution</h1>
+
+<h2>In Firefox</h2>
+<pre><code class='prettyprint '>var canvas = document.getElementById('mycanvas');
+var ctx = canvas.getContext("2d");
+ctx.drawWindow(content, 0, 0, w, h, "rgb(0,0,0)");
+</code></pre>
+<p>That was easy</p>
+</div>
+      <div class='step'  data-x='4000'>
+    
+<h1>But :(</h1>
+
+<ul>
+<li>Only works with &quot;Chrome privileges&quot; and only in Firefox</li>
+<li>Not executable in a web page
+
+<ul>
+<li>Security concerns</li>
+<li>Would allow any script to read any content</li>
+</ul></li>
+<li>So much for that</li>
+</ul>
+</div>
+      <div class='step'  data-x='5000'>
+    
+<h1>SVG to the rescue</h1>
+
+<p><code class='inline prettyprint'>&lt;foreignObject&gt;</code> allows to embed foreign content, including (X)HTML</p>
+<pre><code class='prettyprint '>&lt;svg xmlns="http://www.w3.org/2000/svg"&gt;
+    &lt;foreignObject width="100%" height="100%"&gt;
+        &lt;html&gt;
+            &lt;strong&gt;
+                This is an image containing HTML
+            &lt;/strong&gt;
+        &lt;/html&gt;
+    &lt;/foreignObject&gt;
+&lt;/svg&gt;
+</code></pre>
+<p>Can we build on that?</p>
+</div>
+      <div class='step'  data-x='6000' data-scale='0.5'>
+    
+<h1>XHTML</h1>
+
+<ul>
+<li>SVG is XML and only allows XML in <code class='inline prettyprint'>&lt;foreignObject&gt;</code></li>
+<li><p>Firefox</p>
+<pre><code class='prettyprint '>var doc = document.implementation.createHTMLDocument("");
+doc.documentElement.innerHTML = ourHTML;
+doc.documentElement.setAttribute("xmlns", 
+    doc.documentElement.namespaceURI);
+var xhtml = (new XMLSerializer())
+    .serializeToString(doc.documentElement);
+</code></pre></li>
+<li><p>Pure JS implementation needed for Chrome &amp; Safari :(</p>
+
+<ul>
+<li>Sadly no good candiate for now</li>
+</ul></li>
+</ul>
+</div>
+      <div class='step'  data-x='7000' data-scale='0.5'>
+    
+<h1>Inline data</h1>
+
+<ul>
+<li><p>The future</p>
+<pre><code class='prettyprint '>var blob = new Blob(["&lt;svg xmlns=...&gt;"],
+        {"type": "image/svg+xml"});
+return URL.createObjectURL(blob);
+</code></pre></li>
+<li><p>The present: <em>data URI</em>s</p>
+
+<ul>
+<li><p>Allows embedding inline</p>
+<pre><code class='prettyprint '>&lt;img src="data:image/svg+xml;charset=utf-8,&lt;svg xmlns='http://www..."/&gt;
+</code></pre></li>
+</ul></li>
+</ul>
+</div>
+      <div class='step'  data-x='8000' data-scale='0.5'>
+    
+<h1>Bringing this together</h1>
+
+<ul>
+<li><p>Now we can render this</p>
+<pre><code class='prettyprint '>var image = new Image();
+image.src = "data:image/svg+xml;charset=utf-8," + 
+    encodeURIComponent("&lt;svg xmlns='http://www...'");
+canvas.getContext("2d").drawImage(image, 0, 0);
+</code></pre></li>
+</ul>
+</div>
+      <div class='step'  data-x='9000'>
+    
+<h1>Congratulations, we are done!</h1>
+
+<ol>
+<li>We embeded HTML as XHTML using <code class='inline prettyprint'>&lt;foreignObject&gt;</code> into an SVG</li>
+<li>... which we converted into a data URI to yield an <code class='inline prettyprint'>&lt;img&gt;</code></li>
+<li>... which we drew with the canvas&#39; <code class='inline prettyprint'>drawImage()</code>.</li>
+</ol>
+
+<p>All good?</p>
+</div>
+      <div class='step'  data-x='10000'>
+    
+<h1>SVG + external resources</h1>
+
+<p>SVGs are not allowed to include external references.</p>
+
+<p>HTML allows</p>
+
+<ul>
+<li><code class='inline prettyprint'>&lt;img&gt;</code> and <code class='inline prettyprint'>&lt;input type="image"&gt;</code></li>
+<li><code class='inline prettyprint'>&lt;link rel="stylesheet" href="..."&gt;</code></li>
+<li><code class='inline prettyprint'>div { background-img: "url(...)"}</code></li>
+<li><code class='inline prettyprint'>@import url(...)</code></li>
+<li><code class='inline prettyprint'>@font face {}</code></li>
+</ul>
+
+<p>We could try embed them.</p>
+</div>
+      <div class='step'  data-x='11000'>
+    
+<h1>Finding external elements (1)</h1>
+
+<ul>
+<li><p><code class='inline prettyprint'>&lt;img&gt;</code> and <code class='inline prettyprint'>&lt;input type="image"&gt;</code> are easy</p>
+<pre><code class='prettyprint '>var doc = document.implementation.createHTMLDocument("");
+doc.documentElement.innerHTML = "&lt;html&gt;&lt;img src="..."/&gt;&lt;/html&gt;";
+var images = doc.getElementsByTagName("img");
+
+images.forEach(function (image) {
+    loadAndEmbedImageSrc(image.src);
+});
+</code></pre></li>
+</ul>
+</div>
+      <div class='step'  data-x='12000' data-scale='0.5'>
+    
+<h1>Embedding &lt;img&gt;</h1>
+<pre><code class='prettyprint '>&lt;img src="externalImage.png"/&gt;
+</code></pre>
+<ul>
+<li><p>Replace image src with data URI</p>
+<pre><code class='prettyprint '>&lt;img src="data:image/png;base64,iVBORw0KGgo..."&gt;
+</code></pre></li>
+<li><p>Get the image content via AJAX</p>
+<pre><code class='prettyprint '>var xhr = new XMLHttpRequest();
+xhr.addEventListener("load", function () {
+    image.src = "data:image/png;base64," 
+        + btoa(xhr.response); // base64
+});
+xhr.open('GET', "externalImage.png");
+xhr.send();
+</code></pre></li>
+</ul>
+</div>
+      <div class='step'  data-x='13000' data-scale='0.5'>
+    
+<h1>binary AJAX</h1>
+
+<ul>
+<li>AJAX was designed for XML, i. e. text</li>
+<li>Not designed for binary</li>
+<li>XMLHttpRequest2 knows about binary <em>blobs</em>, still missing in Safari</li>
+<li><p>Workaround:</p>
+<pre><code class='prettyprint '>xhr.addEventListener("load", function () {
+    var content = xhr.response,
+        binaryContent = "";
+
+    for (var i = 0; i < content.length; i++) {
+        binaryContent += String.fromCharCode(
+            content.charCodeAt(i) & 0xFF);
+    }
+});
+</code></pre></li>
+</ul>
+</div>
+      <div class='step'  data-x='14000'>
+    
+<h1>Finding external elements (2)</h1>
+
+<ul>
+<li>How do we embed <code class='inline prettyprint'>background-image</code>?</li>
+<li><p>Working on CSS resources needs parsing CSS</p>
+<pre><code class='prettyprint '>var rules = parseCss("span {" + 
+    "background-image: url('externalImage.png');" +
+"}");
+</code></pre></li>
+</ul>
+</div>
+      <div class='step'  data-x='15000' data-scale='0.5'>
+    
+<h1>Our minimal CSS parser</h1>
+
+<ul>
+<li>The browser implements a full-blown CSS parser</li>
+<li><p>We can access it through the CSSOM</p>
+<pre><code class='prettyprint '>function parseCss(content) {
+    var styleElement = document.createElement("style");
+
+    styleElement.textContent = content;
+    // the style will only be parsed once
+    //   it is added to a document
+    document.implementation.createHTMLDocument("")
+        .body.appendChild(styleElement);
+    return styleElement.sheet.cssRules;
+}
+</code></pre></li>
+</ul>
+</div>
+      <div class='step'  data-x='16000' data-scale='0.5'>
+    
+<h1>Putting the CSS stuff together</h1>
+
+<ul>
+<li><p>We now have our rules</p>
+<pre><code class='prettyprint '>var rules = parseCss("span {" + 
+    "background-image: url('externalImage.png');" +
+"}");
+</code></pre></li>
+<li><p>Then iterate over rules</p>
+<pre><code class='prettyprint '>rules.forEach(function (rule) {
+    var backgroundImage = rule.style.getPropertyValue(
+        'background-image');
+    if (backgroundImage) {
+        doInlineImageUrl(backgroundImage);
+    }
+});
+</code></pre></li>
+<li><p>Finally same stuff as for our <code class='inline prettyprint'>&lt;img&gt;</code> before</p></li>
+</ul>
+</div>
+      <div class='step'  data-x='17000'>
+    
+<h1>Finding external elements (3)</h1>
+
+<ul>
+<li>Next up is embedding <code class='inline prettyprint'>&lt;link rel="stylesheet" href="sheetUrl"&gt;</code></li>
+<li>Simple at first
+
+<ul>
+<li>Load the <code class='inline prettyprint'>sheetUrl</code> via AJAX</li>
+<li>Then replace <code class='inline prettyprint'>&lt;link&gt;</code> with <code class='inline prettyprint'>&lt;style&gt;PUT_CONTENT_HERE&lt;/style&gt;</code></li>
+</ul></li>
+<li>However: relative links inside the stylesheet will break</li>
+</ul>
+</div>
+      <div class='step'  data-x='18000' data-scale='0.5'>
+    
+<h1>relative URLs</h1>
+
+<ul>
+<li>Relative resource URLs are relative to the sheet&#39;s URL</li>
+<li><p>Example
+<code class='inline prettyprint'>../images/sprite.png</code> in <code class='inline prettyprint'>assets/style/default.css</code> becomes <code class='inline prettyprint'>assets/images/sprite.png</code> after embedding</p></li>
+<li><p>Using pure JS URL parser <a href="http://medialize.github.com/URI.js/">URI.js</a></p>
+<pre><code class='prettyprint '>fontFaceRules.forEach(function (rule) {
+    var url = getFontFaceSrc(rule),
+        adaptedUrl = new URI(url).absoluteTo(sheetUrl);
+
+    updateBackgroundImageSrc(rule, adaptedUrl);
+});
+</code></pre></li>
+</ul>
+</div>
+      <div class='step'  data-x='19000'>
+    
+<h1>There you go</h1>
+
+<ol>
+<li>We rendered HTML through SVG&#39;s <code class='inline prettyprint'>&lt;foreignObject&gt;</code></li>
+<li>and inlined all external resources
+
+<ol>
+<li>loading binary content through AJAX,</li>
+<li>embedding images and fonts through <em>data URI</em>s,</li>
+<li>parsing CSS for style resources, and</li>
+<li>adapting relative paths</li>
+</ol></li>
+</ol>
+</div>
+      <div class='step'  data-x='20000' data-rotate-z='360'>
+    
+<h1>Demo time</h1>
+
+<ul>
+<li><a href="demo.html">demo.html</a></li>
+</ul>
+
+<p>Bonus: What about dynamic pages?</p>
+</div>
+      <div class='step'  data-x='21000'>
+    
+<h1>Executing JavaScript</h1>
+
+<ul>
+<li>Allow the page to change dynamic bits</li>
+<li><p>We can execute JS</p>
+<pre><code class='prettyprint '>var iframe = document.createElement('iframe');
+iframe.onload = function () {
+    var newContent = iframe.innerHTML;
+    ...
+}
+iframe.contentDocument.open();
+iframe.contentDocument.write(soFarStaticHtml);
+iframe.contentDocument.close();
+</code></pre></li>
+</ul>
+</div>
+      <div class='step'  data-x='22000'>
+    
+<h1>Fast forward: issues</h1>
+
+<ul>
+<li>same-origin policy (workaround with CORS)</li>
+<li>Webkit family
+
+<ul>
+<li>Chrome cannot write <code class='inline prettyprint'>background-images</code> rules
+
+<ul>
+<li>Fallback to <a href="https://github.com/NV/CSSOM">CSSOM</a> implemented in pure JS</li>
+</ul></li>
+<li>SVGs inside SVGs aren&#39;t rendered</li>
+<li>Re-reading from a canvas not allowed</li>
+</ul></li>
+<li>No support for <code class='inline prettyprint'>&lt;foreignObject&gt;</code> in IE 11 preview</li>
+<li>Stability in all browsers improving throughout last year</li>
+</ul>
+</div>
+      <div class='step'  data-x='23000'>
+    
+<h1>What is this all about?</h1>
+
+<ul>
+<li>All this went into <a href="http://github.com/cburgmer/rasterizeHTML.js">github.com/cburgmer/rasterizeHTML.js</a></li>
+<li>Sparked some interest, but what do people use it for??</li>
+<li>My own use case: underlying technique for CSS testing tool: <a href="http://cburgmer.github.io/csscritic/">CSS Critic</a></li>
+</ul>
+</div>
+      <div class='step'  data-x='24000' data-y='2000' data-rotate-z='180'>
+    
+<h1>Thanks for listening</h1>
+
+<p>Oh, and go make something cool with it.</p>
+</div>
+      <div class='step' >
+    
+<h1>Meta</h1>
+
+<p>This presentation was made with</p>
+
+<ul>
+<li>impress.js</li>
+<li>mdpress</li>
+<li>some homegrown CSS adaptions of the style &quot;obtvse&quot;</li>
+</ul>
+
+      </div>
+    <script src="js/impress.js"></script>
+    <script>impress().init();</script>
+  </body>
+</html>
+    

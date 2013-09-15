@@ -1,0 +1,176 @@
+/* the style used in impress.js's intro presentation */
+
+/* http://meyerweb.com/eric/tools/css/reset/
+   v2.0 | 20110126
+   License: none (public domain)
+*/
+
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed,
+figure, figcaption, footer, header, hgroup,
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: 100%;
+    font: inherit;
+    vertical-align: baseline;
+}
+
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure,
+footer, header, hgroup, menu, nav, section {
+    display: block;
+}
+body {
+    line-height: 1;
+}
+ol{
+  margin: 0px 0 20px 70px;
+}
+
+ul {
+  margin: 0px 0 20px 50px;
+}
+
+blockquote, q {
+  border-left: 10px solid #BBB;
+  padding-left: 10px;
+}
+
+blockquote p {
+  line-height: 60px;
+}
+
+blockquote:before, blockquote:after,
+q:before, q:after {
+    content: '';
+    content: none;
+}
+
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+
+/* show "unsupported" message conditionally */
+
+.fallback-message {
+	font-family: sans-serif;
+	line-height: 1.3;
+
+	width: 780px;
+	padding: 10px 10px 0;
+	margin: 20px auto;
+
+	border: 1px solid #E4C652;
+	border-radius: 10px;
+	background: #EEDC94;
+}
+
+.fallback-message p {
+	margin-bottom: 10px;
+}
+
+.impress-supported .fallback-message {
+	display: none;
+}
+
+/* styles start here */
+
+body {
+    font-family: 'Lato', sans-serif;
+
+    min-height: 740px;
+    background: white;
+
+    -webkit-font-smoothing: antialiased;
+}
+
+.step {
+    -webkit-transition: opacity 1s;
+    -moz-transition:    opacity 1s;
+    -ms-transition:     opacity 1s;
+    -o-transition:      opacity 1s;
+    transition:         opacity 1s;
+}
+
+.step:not(.active) {
+    opacity: 0.0;
+}
+
+.step {
+    width: 1400px;
+    min-height: 800px;
+    padding: 100px;
+
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing:    border-box;
+    -ms-box-sizing:     border-box;
+    -o-box-sizing:      border-box;
+    box-sizing:         border-box;
+
+    font-size: 48px;
+    line-height: 58px;
+}
+
+h1 {
+  font-weight: 900;
+  font-size: 80px;
+  line-height: 95px;
+  margin: 10px 0 30px 0;
+  text-align: center;
+}
+
+h2 {
+  font-weight: 900;
+  font-size: 56px;
+  margin: 10px 0 20px 0;
+}
+
+p {
+  font-weight: 400;
+  margin-bottom: 10px;
+}
+
+a {
+  text-decoration: none;
+  border-bottom: 1px solid #ddd;
+}
+
+ul, ol {
+  padding: 10px 0;
+}
+
+li {
+  margin: 3px 0;
+}
+
+/* code highlighting */
+
+pre {
+  margin-bottom: 30px;
+  white-space: pre-wrap;
+}
+
+code {
+  background-color: #F2F2F2;
+  font-family: monospace, serif;
+  word-wrap: break-word;
+  font-size: 85%;
+  line-height: 100%;
+}
+
+pre code {
+  font-size: 30px;
+}
