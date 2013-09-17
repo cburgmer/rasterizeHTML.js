@@ -17,7 +17,8 @@ module.exports = function (grunt) {
                 '\n/* Integrated dependencies:\n' +
                 ' * URI.js (MIT License/GPL v3),\n' +
                 ' * CSSOM.js (MIT License),\n' +
-                ' * htmlparser.js */'
+                ' * html2xhtml.js (MIT License),\n' +
+                ' * parse5.js (MIT License) */'
         },
         lint:{
             src:'src/*.js',
