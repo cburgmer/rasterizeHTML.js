@@ -6,13 +6,12 @@ describe("The rendering process", function () {
 
             var svgCode = rasterizeHTML.getSvgForDocument(doc, 123, 456);
 
-            expect(svgCode).toEqual(
+            expect(svgCode).toMatch(new RegExp(
                 '<svg xmlns="http://www.w3.org/2000/svg" width="123" height="456">' +
                     '<foreignObject width="100%" height="100%">' +
                         '<html xmlns="http://www.w3.org/1999/xhtml">' +
                             '<head>' +
-                                '<title>' +
-                                '</title>' +
+                                '<title(/>|></title>)' +
                             '</head>' +
                             '<body>' +
                                 "Test content" +
@@ -20,7 +19,7 @@ describe("The rendering process", function () {
                         '</html>' +
                     '</foreignObject>' +
                 '</svg>'
-            );
+            ));
         });
 
         it("should return a SVG with embedded image", function () {
@@ -32,13 +31,12 @@ describe("The rendering process", function () {
 
             expect(svgCode).not.toBeNull();
             canonicalXML = svgCode.replace(/ +\/>/, '/>');
-            expect(canonicalXML).toEqual(
+            expect(canonicalXML).toMatch(new RegExp(
                 '<svg xmlns="http://www.w3.org/2000/svg" width="123" height="456">' +
                     '<foreignObject width="100%" height="100%">' +
                         '<html xmlns="http://www.w3.org/1999/xhtml">' +
                             '<head>' +
-                                '<title>' +
-                                '</title>' +
+                                '<title(/>|></title>)' +
                             '</head>' +
                             '<body>' +
                                 '<img src="data:image/png;base64,sOmeFAKeBasE64="/>' +
@@ -46,7 +44,7 @@ describe("The rendering process", function () {
                         '</html>' +
                     '</foreignObject>' +
                 '</svg>'
-            );
+            ));
         });
 
         it("should return a SVG with the given size", function () {
@@ -55,13 +53,12 @@ describe("The rendering process", function () {
 
             var svgCode = rasterizeHTML.getSvgForDocument(doc, 123, 987);
 
-            expect(svgCode).toEqual(
+            expect(svgCode).toMatch(new RegExp(
                 '<svg xmlns="http://www.w3.org/2000/svg" width="123" height="987">' +
                     '<foreignObject width="100%" height="100%">' +
                         '<html xmlns="http://www.w3.org/1999/xhtml">' +
                             '<head>' +
-                                '<title>' +
-                                '</title>' +
+                                '<title(/>|></title>)' +
                             '</head>' +
                             '<body>' +
                                 "content" +
@@ -69,7 +66,7 @@ describe("The rendering process", function () {
                         '</html>' +
                     '</foreignObject>' +
                 '</svg>'
-            );
+            ));
         });
 
         describe("workAroundWebkitBugIgnoringTheFirstRuleInCSS", function () {

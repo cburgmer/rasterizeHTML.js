@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.4.1 - 2013-05-25
+/*! rasterizeHTML.js - v0.4.1 - 2013-09-17
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2013 Christoph Burgmer; Licensed MIT */
 
@@ -984,7 +984,7 @@ window.rasterizeHTMLInline = (function (module, window, URI) {
     return module;
 }(window.rasterizeHTMLInline || {}, window, URI));
 
-window.rasterizeHTML = (function (rasterizeHTMLInline, hTMLtoXML, theWindow) {
+window.rasterizeHTML = (function (rasterizeHTMLInline, html2xhtml, theWindow) {
     "use strict";
 
     var module = {};
@@ -1126,10 +1126,10 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, hTMLtoXML, theWindow) {
         doc.documentElement.setAttribute("xmlns", doc.documentElement.namespaceURI);
         xml = (new theWindow.XMLSerializer()).serializeToString(doc.documentElement);
         if (needsXMLParserWorkaround()) {
-            if (hTMLtoXML) {
-                return hTMLtoXML(xml);
+            if (html2xhtml) {
+                return html2xhtml(xml);
             } else {
-                module.util.log("Looks like your browser needs htmlparser.js as workaround for writing XML. " +
+                module.util.log("Looks like your browser needs html2xhtml.js as workaround for writing XML. " +
                     "Please include it.");
                 return xml;
             }
@@ -1398,4 +1398,4 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, hTMLtoXML, theWindow) {
     };
 
     return module;
-}(window.rasterizeHTMLInline, window.HTMLtoXML, window));
+}(window.rasterizeHTMLInline, window.html2xhtml || window.HTMLtoXML, window));
