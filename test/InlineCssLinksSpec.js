@@ -16,7 +16,7 @@ describe("Inline CSS links", function () {
         joinUrlSpy = spyOn(rasterizeHTMLInline.util, "joinUrl");
         ajaxSpy = spyOn(rasterizeHTMLInline.util, "ajax");
         adjustPathsOfCssResourcesSpy = spyOn(rasterizeHTMLInline.css, 'adjustPathsOfCssResources');
-        loadCSSImportsForRulesSpy = spyOn(rasterizeHTMLInline.css, 'loadCSSImportsForRules').andCallFake(function (cssRules, baseUrl, cache, alreadyLoadedCssUrls, callback) {
+        loadCSSImportsForRulesSpy = spyOn(rasterizeHTMLInline.css, 'loadCSSImportsForRules').andCallFake(function (cssRules, alreadyLoadedCssUrls, options, callback) {
             callback(false, []);
         });
         loadAndInlineCSSResourcesForRulesSpy = spyOn(rasterizeHTMLInline.css, 'loadAndInlineCSSResourcesForRules').andCallFake(function (cssRules, baseUrl, cache, callback) {
@@ -168,7 +168,7 @@ describe("Inline CSS links", function () {
         expect(doc.getElementsByTagName("style")[0].textContent).toEqual("p { font-size: 14px; }");
         expect(doc.getElementsByTagName("link").length).toEqual(0);
 
-        expect(loadCSSImportsForRulesSpy.mostRecentCall.args[1]).toEqual(doc.baseURI);
+        expect(loadCSSImportsForRulesSpy.mostRecentCall.args[2].baseUrl).toEqual(doc.baseURI);
         expect(loadAndInlineCSSResourcesForRulesSpy.mostRecentCall.args[1]).toEqual(doc.baseURI);
     });
 
@@ -184,7 +184,7 @@ describe("Inline CSS links", function () {
         expect(callback).toHaveBeenCalled();
         expect(joinUrlSpy).toHaveBeenCalledWith(jasmine.getFixtures().fixturesPath, "some.css");
 
-        expect(loadCSSImportsForRulesSpy.mostRecentCall.args[1]).toEqual(jasmine.getFixtures().fixturesPath);
+        expect(loadCSSImportsForRulesSpy.mostRecentCall.args[2].baseUrl).toEqual(jasmine.getFixtures().fixturesPath);
         expect(loadAndInlineCSSResourcesForRulesSpy.mostRecentCall.args[1]).toEqual(jasmine.getFixtures().fixturesPath);
     });
 
@@ -205,7 +205,7 @@ describe("Inline CSS links", function () {
         expect(callback).toHaveBeenCalled();
         expect(joinUrlSpy).toHaveBeenCalledWith(jasmine.getFixtures().fixturesPath, "some.css");
 
-        expect(loadCSSImportsForRulesSpy.mostRecentCall.args[1]).toEqual(jasmine.getFixtures().fixturesPath);
+        expect(loadCSSImportsForRulesSpy.mostRecentCall.args[2].baseUrl).toEqual(jasmine.getFixtures().fixturesPath);
         expect(loadAndInlineCSSResourcesForRulesSpy.mostRecentCall.args[1]).toEqual(jasmine.getFixtures().fixturesPath);
     });
 
@@ -242,7 +242,7 @@ describe("Inline CSS links", function () {
         }, jasmine.any(Function), jasmine.any(Function));
         expect(callback).toHaveBeenCalled();
 
-        expect(loadCSSImportsForRulesSpy.mostRecentCall.args[2]).toBeFalsy();
+        expect(loadCSSImportsForRulesSpy.mostRecentCall.args[2].cache).toBeFalsy();
         expect(loadAndInlineCSSResourcesForRulesSpy.mostRecentCall.args[2]).toBeFalsy();
     });
 
@@ -256,7 +256,7 @@ describe("Inline CSS links", function () {
         }, jasmine.any(Function), jasmine.any(Function));
         expect(callback).toHaveBeenCalled();
 
-        expect(loadCSSImportsForRulesSpy.mostRecentCall.args[2]).toBeTruthy();
+        expect(loadCSSImportsForRulesSpy.mostRecentCall.args[2].cache).toBeTruthy();
         expect(loadAndInlineCSSResourcesForRulesSpy.mostRecentCall.args[2]).toBeTruthy();
     });
 
@@ -315,7 +315,7 @@ describe("Inline CSS links", function () {
         it("should report errors from inlining resources", function () {
             doc.head.appendChild(cssLink);
 
-            loadCSSImportsForRulesSpy.andCallFake(function (cssRules, baseUrl, cache, alreadyLoadedCssUrls, callback) {
+            loadCSSImportsForRulesSpy.andCallFake(function (cssRules, alreadyLoadedCssUrls, options, callback) {
                 callback(false, ["import inline error"]);
             });
             loadAndInlineCSSResourcesForRulesSpy.andCallFake(function (cssRules, baseUrl, cache, callback) {

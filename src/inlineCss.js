@@ -222,7 +222,7 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
         return doubleQuoteRegex.test(string) || singleQuoteRegex.test(string);
     };
 
-    var loadAndInlineCSSImport = function (cssRules, rule, documentBaseUrl, cache, alreadyLoadedCssUrls, successCallback, errorCallback) {
+    var loadAndInlineCSSImport = function (cssRules, rule, alreadyLoadedCssUrls, options, successCallback, errorCallback) {
         var url = rule.href,
             cssHrefRelativeToDoc;
 
@@ -230,7 +230,7 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
             url = unquoteString(url);
         }
 
-        cssHrefRelativeToDoc = module.util.getUrlRelativeToDocumentBase(url, documentBaseUrl);
+        cssHrefRelativeToDoc = module.util.getUrlRelativeToDocumentBase(url, options.baseUrl);
 
         if (alreadyLoadedCssUrls.indexOf(cssHrefRelativeToDoc) >= 0) {
             // Remove URL by adding empty string
@@ -241,11 +241,15 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
             alreadyLoadedCssUrls.push(cssHrefRelativeToDoc);
         }
 
-        module.util.ajax(cssHrefRelativeToDoc, {cache: cache}, function (cssText) {
+        module.util.ajax(cssHrefRelativeToDoc, {
+                cache: options.cache !== false,
+                cacheRepeated: options.cacheRepeated === true
+            },
+            function (cssText) {
             var externalCssRules = module.css.rulesForCssText(cssText);
 
             // Recursively follow @import statements
-            module.css.loadCSSImportsForRules(externalCssRules, documentBaseUrl, cache, alreadyLoadedCssUrls, function (hasChanges, errors) {
+            module.css.loadCSSImportsForRules(externalCssRules, alreadyLoadedCssUrls, options, function (hasChanges, errors) {
                 module.css.adjustPathsOfCssResources(url, externalCssRules);
 
                 substituteRule(cssRules, rule, externalCssRules);
@@ -257,14 +261,14 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
         });
     };
 
-    module.css.loadCSSImportsForRules = function (cssRules, baseUrl, cache, alreadyLoadedCssUrls, callback) {
+    module.css.loadCSSImportsForRules = function (cssRules, alreadyLoadedCssUrls, options, callback) {
         var errors = [],
             rulesToInline;
 
         rulesToInline = findCSSImportRules(cssRules);
 
         module.util.map(rulesToInline, function (rule, finish) {
-            loadAndInlineCSSImport(cssRules, rule, baseUrl, cache, alreadyLoadedCssUrls, function (moreErrors) {
+            loadAndInlineCSSImport(cssRules, rule, alreadyLoadedCssUrls, options, function (moreErrors) {
                 errors = errors.concat(moreErrors);
 
                 finish(true);
