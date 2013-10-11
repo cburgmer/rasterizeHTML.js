@@ -58,6 +58,22 @@ window.rasterizeHTMLInline = (function (module, window, URI) {
         }
     };
 
+    module.util.selectOptions = function (options, paramList) {
+        var selectedOptions = {};
+
+        if (!options) {
+            return selectedOptions;
+        }
+
+        paramList.forEach(function (param) {
+            if (options[param] !== undefined) {
+                selectedOptions[param] = options[param];
+            }
+        });
+
+        return selectedOptions;
+    };
+
     var lastCacheDate = null;
 
     var getUncachableURL = function (url, workAroundCaching, cacheRepeated) {
@@ -100,14 +116,12 @@ window.rasterizeHTMLInline = (function (module, window, URI) {
     };
 
     module.util.binaryAjax = function (url, options, successCallback, errorCallback) {
-        var binaryContent = "";
+        var binaryContent = "",
+            ajaxOptions = module.util.selectOptions(options, ['cache', 'cacheRepeated']);
 
-        options = options || {};
+        ajaxOptions.mimeType = 'text/plain; charset=x-user-defined';
 
-        module.util.ajax(url, {
-            mimeType: 'text/plain; charset=x-user-defined',
-            cache: options.cache
-        }, function (content) {
+        module.util.ajax(url, ajaxOptions, function (content) {
             for (var i = 0; i < content.length; i++) {
                 binaryContent += String.fromCharCode(content.charCodeAt(i) & 0xFF);
             }

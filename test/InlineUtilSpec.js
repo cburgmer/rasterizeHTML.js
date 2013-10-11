@@ -164,6 +164,62 @@ describe("Inline utilities function", function () {
 
     });
 
+    describe("selectOptions", function () {
+        it("should return an empty object by default", function () {
+            var options = rasterizeHTMLInline.util.selectOptions(null, []);
+
+            expect(options).toEqual({});
+        });
+
+        it("should return an empty object by default even when selecting parameters", function () {
+            var options = rasterizeHTMLInline.util.selectOptions(null, ['aParam']);
+
+            expect(options).toEqual({});
+        });
+
+        it("should select a parameter out of the given options", function () {
+            var options = {
+                    aParam: "a value",
+                    anotherParam: "another value"
+                },
+                selectedOptions = rasterizeHTMLInline.util.selectOptions(options, ['aParam']);
+
+            expect(selectedOptions).toEqual({aParam: "a value"});
+        });
+
+        it("should select a parameter with a false value out of the given options", function () {
+            var options = {
+                    aFalseParam: false
+                },
+                selectedOptions = rasterizeHTMLInline.util.selectOptions(options, ['aFalseParam']);
+
+            expect(selectedOptions).toEqual({aFalseParam: false});
+        });
+
+        it("should select several parameters out of the given options", function () {
+            var options = {
+                    aParam: "a value",
+                    anotherParam: "another value"
+                },
+                selectedOptions = rasterizeHTMLInline.util.selectOptions(options, ['aParam', 'anotherParam']);
+
+            expect(selectedOptions).toEqual({
+                aParam: "a value",
+                anotherParam: "another value"
+            });
+        });
+
+        it("should return an empty object if no match is found", function () {
+            var options = {
+                    aParam: "a value",
+                    anotherParam: "another value"
+                },
+                selectedOptions = rasterizeHTMLInline.util.selectOptions(options, ['missingParam']);
+
+            expect(selectedOptions).toEqual({});
+        });
+    });
+
     describe("ajax", function () {
         it("should load content from a URL", function () {
             var finished = false,
@@ -287,14 +343,24 @@ describe("Inline utilities function", function () {
         it("should circumvent caching if requested", function () {
             var ajaxSpy = spyOn(rasterizeHTMLInline.util, "ajax");
 
-            rasterizeHTMLInline.util.binaryAjax("url", {cache: false}, function () {}, function () {});
+            rasterizeHTMLInline.util.binaryAjax("url", {cache: false, cacheRepeated: true}, function () {}, function () {});
 
             expect(ajaxSpy).toHaveBeenCalledWith("url", {
                 mimeType : jasmine.any(String),
-                cache: false
+                cache: false,
+                cacheRepeated: true
             }, jasmine.any(Function), jasmine.any(Function));
         });
 
+        it("should cache by default", function () {
+            var ajaxSpy = spyOn(rasterizeHTMLInline.util, "ajax");
+
+            rasterizeHTMLInline.util.binaryAjax("url", {}, function () {}, function () {});
+
+            expect(ajaxSpy).toHaveBeenCalledWith("url", {
+                mimeType : jasmine.any(String)
+            }, jasmine.any(Function), jasmine.any(Function));
+        });
     });
 
     describe("getDataURIForImageURL", function () {

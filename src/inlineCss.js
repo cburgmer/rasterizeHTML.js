@@ -224,7 +224,8 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
 
     var loadAndInlineCSSImport = function (cssRules, rule, alreadyLoadedCssUrls, options, successCallback, errorCallback) {
         var url = rule.href,
-            cssHrefRelativeToDoc;
+            cssHrefRelativeToDoc,
+            ajaxOptions;
 
         if (isQuotedString(url)) {
             url = unquoteString(url);
@@ -241,11 +242,9 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
             alreadyLoadedCssUrls.push(cssHrefRelativeToDoc);
         }
 
-        module.util.ajax(cssHrefRelativeToDoc, {
-                cache: options.cache !== false,
-                cacheRepeated: options.cacheRepeated === true
-            },
-            function (cssText) {
+        ajaxOptions = module.util.selectOptions(options, ['cache', 'cacheRepeated']);
+
+        module.util.ajax(cssHrefRelativeToDoc, ajaxOptions, function (cssText) {
             var externalCssRules = module.css.rulesForCssText(cssText);
 
             // Recursively follow @import statements

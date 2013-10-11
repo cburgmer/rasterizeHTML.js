@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.4.1 - 2013-10-10
+/*! rasterizeHTML.js - v0.4.1 - 2013-10-11
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2013 Christoph Burgmer; Licensed MIT */
 
@@ -507,7 +507,8 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
 
     var loadAndInlineCSSImport = function (cssRules, rule, alreadyLoadedCssUrls, options, successCallback, errorCallback) {
         var url = rule.href,
-            cssHrefRelativeToDoc;
+            cssHrefRelativeToDoc,
+            ajaxOptions;
 
         if (isQuotedString(url)) {
             url = unquoteString(url);
@@ -524,11 +525,9 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
             alreadyLoadedCssUrls.push(cssHrefRelativeToDoc);
         }
 
-        module.util.ajax(cssHrefRelativeToDoc, {
-                cache: options.cache !== false,
-                cacheRepeated: options.cacheRepeated === true
-            },
-            function (cssText) {
+        ajaxOptions = module.util.selectOptions(options, ['cache', 'cacheRepeated']);
+
+        module.util.ajax(cssHrefRelativeToDoc, ajaxOptions, function (cssText) {
             var externalCssRules = module.css.rulesForCssText(cssText);
 
             // Recursively follow @import statements
@@ -872,6 +871,22 @@ window.rasterizeHTMLInline = (function (module, window, URI) {
         }
     };
 
+    module.util.selectOptions = function (options, paramList) {
+        var selectedOptions = {};
+
+        if (!options) {
+            return selectedOptions;
+        }
+
+        paramList.forEach(function (param) {
+            if (options[param] !== undefined) {
+                selectedOptions[param] = options[param];
+            }
+        });
+
+        return selectedOptions;
+    };
+
     var lastCacheDate = null;
 
     var getUncachableURL = function (url, workAroundCaching, cacheRepeated) {
@@ -914,14 +929,12 @@ window.rasterizeHTMLInline = (function (module, window, URI) {
     };
 
     module.util.binaryAjax = function (url, options, successCallback, errorCallback) {
-        var binaryContent = "";
+        var binaryContent = "",
+            ajaxOptions = module.util.selectOptions(options, ['cache', 'cacheRepeated']);
 
-        options = options || {};
+        ajaxOptions.mimeType = 'text/plain; charset=x-user-defined';
 
-        module.util.ajax(url, {
-            mimeType: 'text/plain; charset=x-user-defined',
-            cache: options.cache
-        }, function (content) {
+        module.util.ajax(url, ajaxOptions, function (content) {
             for (var i = 0; i < content.length; i++) {
                 binaryContent += String.fromCharCode(content.charCodeAt(i) & 0xFF);
             }

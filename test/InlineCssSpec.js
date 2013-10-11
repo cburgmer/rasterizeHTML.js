@@ -336,10 +336,7 @@ describe("Inline CSS content", function () {
 
             rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {}, callback);
 
-            expect(ajaxSpy).toHaveBeenCalledWith("that.css", {
-                cache: true,
-                cacheRepeated: false
-            }, jasmine.any(Function), jasmine.any(Function));
+            expect(ajaxSpy).toHaveBeenCalledWith("that.css", {}, jasmine.any(Function), jasmine.any(Function));
         });
 
         describe("error handling", function () {
