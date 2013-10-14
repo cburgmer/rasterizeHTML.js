@@ -68,7 +68,7 @@ window.rasterizeHTMLInline = (function (module) {
         var cssRules = module.css.rulesForCssText(style.textContent);
 
         module.css.loadCSSImportsForRules(cssRules, alreadyLoadedCssUrls, {baseUrl: baseUrl, cache: cache}, function (changedFromImports, importErrors) {
-            module.css.loadAndInlineCSSResourcesForRules(cssRules, baseUrl, cache, function (changedFromResources, resourceErrors) {
+            module.css.loadAndInlineCSSResourcesForRules(cssRules, {baseUrl: baseUrl, cache: cache}, function (changedFromResources, resourceErrors) {
                 var errors = importErrors.concat(resourceErrors);
 
                 if (changedFromImports || changedFromResources) {
@@ -147,7 +147,7 @@ window.rasterizeHTMLInline = (function (module) {
 
             changedFromPathAdjustment = module.css.adjustPathsOfCssResources(cssHref, cssRules);
             module.css.loadCSSImportsForRules(cssRules, [], {baseUrl: documentBaseUrl, cache: cache}, function (changedFromImports, importErrors) {
-                module.css.loadAndInlineCSSResourcesForRules(cssRules, documentBaseUrl, cache, function (changedFromResources, resourceErrors) {
+                module.css.loadAndInlineCSSResourcesForRules(cssRules, {baseUrl: documentBaseUrl, cache: cache}, function (changedFromResources, resourceErrors) {
                     var errors = importErrors.concat(resourceErrors);
 
                     if (changedFromPathAdjustment || changedFromImports || changedFromResources) {

@@ -436,9 +436,9 @@ describe("Inline utilities function", function () {
         });
 
         it("should circumvent caching if requested", function () {
-            rasterizeHTMLInline.util.getDataURIForImageURL("image.png", {cache: false}, function () {}, function () {});
+            rasterizeHTMLInline.util.getDataURIForImageURL("image.png", {cache: false, cacheRepeated: true}, function () {}, function () {});
 
-            expect(binaryAjaxSpy).toHaveBeenCalledWith('image.png', {cache: false}, jasmine.any(Function), jasmine.any(Function));
+            expect(binaryAjaxSpy).toHaveBeenCalledWith('image.png', {cache: false, cacheRepeated: true}, jasmine.any(Function), jasmine.any(Function));
         });
 
     });

@@ -7,7 +7,7 @@ describe("Import styles", function () {
         loadCSSImportsForRulesSpy = spyOn(rasterizeHTMLInline.css, 'loadCSSImportsForRules').andCallFake(function (cssRules, alreadyLoadedCssUrls, options, callback) {
             callback(false, []);
         });
-        loadAndInlineCSSResourcesForRulesSpy = spyOn(rasterizeHTMLInline.css, 'loadAndInlineCSSResourcesForRules').andCallFake(function (cssRules, baseUrl, cache, callback) {
+        loadAndInlineCSSResourcesForRulesSpy = spyOn(rasterizeHTMLInline.css, 'loadAndInlineCSSResourcesForRules').andCallFake(function (cssRules, options, callback) {
             callback(false, []);
         });
 
@@ -29,7 +29,7 @@ describe("Import styles", function () {
             rules[0] = "fake rule";
             callback(false, []);
         });
-        loadAndInlineCSSResourcesForRulesSpy.andCallFake(function(rules, baseUrl, cache, callback) {
+        loadAndInlineCSSResourcesForRulesSpy.andCallFake(function(rules, options, callback) {
             rules[0] = "something else";
             callback(false, []);
         });
@@ -90,7 +90,7 @@ describe("Import styles", function () {
         rasterizeHTMLInline.loadAndInlineStyles(doc, callback);
 
         expect(loadCSSImportsForRulesSpy).toHaveBeenCalledWith(jasmine.any(Object), [], {baseUrl: doc.baseURI, cache: true}, jasmine.any(Function));
-        expect(loadAndInlineCSSResourcesForRulesSpy).toHaveBeenCalledWith(jasmine.any(Object), doc.baseURI, true, jasmine.any(Function));
+        expect(loadAndInlineCSSResourcesForRulesSpy).toHaveBeenCalledWith(jasmine.any(Object), {baseUrl: doc.baseURI, cache: true}, jasmine.any(Function));
     });
 
     it("should favour explicit baseUrl over document.baseURI", function () {
@@ -105,7 +105,7 @@ describe("Import styles", function () {
         rasterizeHTMLInline.loadAndInlineStyles(doc, {baseUrl: baseUrl}, callback);
 
         expect(loadCSSImportsForRulesSpy).toHaveBeenCalledWith(jasmine.any(Object), [], {baseUrl: baseUrl, cache: true}, jasmine.any(Function));
-        expect(loadAndInlineCSSResourcesForRulesSpy).toHaveBeenCalledWith(jasmine.any(Object), baseUrl, true, jasmine.any(Function));
+        expect(loadAndInlineCSSResourcesForRulesSpy).toHaveBeenCalledWith(jasmine.any(Object), {baseUrl: baseUrl, cache: true}, jasmine.any(Function));
     });
 
     it("should circumvent caching if requested", function () {
@@ -116,7 +116,7 @@ describe("Import styles", function () {
         expect(loadCSSImportsForRulesSpy).toHaveBeenCalled();
         expect(loadCSSImportsForRulesSpy.mostRecentCall.args[2].cache).toBeFalsy();
         expect(loadAndInlineCSSResourcesForRulesSpy).toHaveBeenCalled();
-        expect(loadAndInlineCSSResourcesForRulesSpy.mostRecentCall.args[2]).toBeFalsy();
+        expect(loadAndInlineCSSResourcesForRulesSpy.mostRecentCall.args[1].cache).toBeFalsy();
     });
 
     it("should not circumvent caching by default", function () {
@@ -127,14 +127,14 @@ describe("Import styles", function () {
         expect(loadCSSImportsForRulesSpy).toHaveBeenCalled();
         expect(loadCSSImportsForRulesSpy.mostRecentCall.args[2]).toBeTruthy();
         expect(loadAndInlineCSSResourcesForRulesSpy).toHaveBeenCalled();
-        expect(loadAndInlineCSSResourcesForRulesSpy.mostRecentCall.args[2]).toBeTruthy();
+        expect(loadAndInlineCSSResourcesForRulesSpy.mostRecentCall.args[1].cache).toBeTruthy();
     });
 
     it("should report errors", function () {
         loadCSSImportsForRulesSpy.andCallFake(function(rules, includedList, options, callback) {
             callback(false, ['import error']);
         });
-        loadAndInlineCSSResourcesForRulesSpy.andCallFake(function (cssRules, baseUrl, cache, callback) {
+        loadAndInlineCSSResourcesForRulesSpy.andCallFake(function (cssRules, options, callback) {
             callback(false, ['resource error']);
         });
 

@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.4.1 - 2013-10-11
+/*! rasterizeHTML.js - v0.4.1 - 2013-10-14
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2013 Christoph Burgmer; Licensed MIT */
 
@@ -72,7 +72,7 @@ window.rasterizeHTMLInline = (function (module) {
         var cssRules = module.css.rulesForCssText(style.textContent);
 
         module.css.loadCSSImportsForRules(cssRules, alreadyLoadedCssUrls, {baseUrl: baseUrl, cache: cache}, function (changedFromImports, importErrors) {
-            module.css.loadAndInlineCSSResourcesForRules(cssRules, baseUrl, cache, function (changedFromResources, resourceErrors) {
+            module.css.loadAndInlineCSSResourcesForRules(cssRules, {baseUrl: baseUrl, cache: cache}, function (changedFromResources, resourceErrors) {
                 var errors = importErrors.concat(resourceErrors);
 
                 if (changedFromImports || changedFromResources) {
@@ -151,7 +151,7 @@ window.rasterizeHTMLInline = (function (module) {
 
             changedFromPathAdjustment = module.css.adjustPathsOfCssResources(cssHref, cssRules);
             module.css.loadCSSImportsForRules(cssRules, [], {baseUrl: documentBaseUrl, cache: cache}, function (changedFromImports, importErrors) {
-                module.css.loadAndInlineCSSResourcesForRules(cssRules, documentBaseUrl, cache, function (changedFromResources, resourceErrors) {
+                module.css.loadAndInlineCSSResourcesForRules(cssRules, {baseUrl: documentBaseUrl, cache: cache}, function (changedFromResources, resourceErrors) {
                     var errors = importErrors.concat(resourceErrors);
 
                     if (changedFromPathAdjustment || changedFromImports || changedFromResources) {
@@ -630,11 +630,12 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
     };
 
 
-    var loadAndInlineBackgroundImage = function (rule, baseUri, cache, callback) {
+    var loadAndInlineBackgroundImage = function (rule, options, callback) {
         var errorUrls = [],
             backgroundDeclarations,
             backgroundValue = rule.style.getPropertyValue('background-image') || rule.style.getPropertyValue('background'),
-            joinedBackgroundDeclarations;
+            joinedBackgroundDeclarations,
+            ajaxOptions = module.util.selectOptions(options, ['cache', 'cacheRepeated']);
 
         backgroundDeclarations = sliceBackgroundDeclarations(backgroundValue);
 
@@ -647,11 +648,9 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
                 return;
             }
 
-            url = module.util.getUrlRelativeToDocumentBase(bgUrl.url, baseUri);
+            url = module.util.getUrlRelativeToDocumentBase(bgUrl.url, options.baseUrl);
 
-            module.util.getDataURIForImageURL(url, {
-                cache: cache
-            }, function (dataURI) {
+            module.util.getDataURIForImageURL(url, ajaxOptions, function (dataURI) {
                 singleBackgroundValues[bgUrl.idx] = 'url("' + dataURI + '")';
 
                 finish(true);
@@ -675,13 +674,13 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
         });
     };
 
-    var iterateOverRulesAndInlineBackgroundImage = function (cssRules, baseUri, cache, callback) {
+    var iterateOverRulesAndInlineBackgroundImage = function (cssRules, options, callback) {
         var rulesToInline = findBackgroundImageRules(cssRules),
             errors = [],
             cssHasChanges;
 
         module.util.map(rulesToInline, function (rule, finish) {
-            loadAndInlineBackgroundImage(rule, baseUri, cache, function (changed, errorUrls) {
+            loadAndInlineBackgroundImage(rule, options, function (changed, errorUrls) {
                 errorUrls.forEach(function (url) {
                     errors.push({
                         resourceType: "backgroundImage",
@@ -737,9 +736,10 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
         return fontFaceReferences.join(', ');
     };
 
-    var loadAndInlineFontFace = function (cssRules, rule, baseUri, cache, successCallback) {
+    var loadAndInlineFontFace = function (cssRules, rule, options, successCallback) {
         var fontReferences, fontSrc, url, format, base64Content,
-            errors = [];
+            errors = [],
+            ajaxOptions = module.util.selectOptions(options, ['cache', 'cacheRepeated']);
 
         fontReferences = sliceFontFaceSrcReferences(rule.style.getPropertyValue("src"));
         module.util.map(fontReferences, function (reference, finish) {
@@ -750,12 +750,10 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
                 return;
             }
 
-            url = module.util.getUrlRelativeToDocumentBase(fontSrc.url, baseUri);
+            url = module.util.getUrlRelativeToDocumentBase(fontSrc.url, options.baseUrl);
             format = fontSrc.format || "woff";
 
-            module.util.binaryAjax(url, {
-                cache: cache
-            }, function (content) {
+            module.util.binaryAjax(url, ajaxOptions, function (content) {
                 base64Content = btoa(content);
                 reference[0] = 'url("data:font/' + format + ';base64,' + base64Content + '")';
 
@@ -775,13 +773,13 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
         });
     };
 
-    var iterateOverRulesAndInlineFontFace = function (cssRules, baseUri, cache, callback) {
+    var iterateOverRulesAndInlineFontFace = function (cssRules, options, callback) {
         var rulesToInline = findFontFaceRules(cssRules),
             errors = [],
             cssHasChanges;
 
         module.util.map(rulesToInline, function (rule, finish) {
-            loadAndInlineFontFace(cssRules, rule, baseUri, cache, function (changed, errorUrls) {
+            loadAndInlineFontFace(cssRules, rule, options, function (changed, errorUrls) {
                 errorUrls.forEach(function (url) {
                     errors.push({
                         resourceType: "fontFace",
@@ -798,9 +796,9 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
         });
     };
 
-    module.css.loadAndInlineCSSResourcesForRules = function (cssRules, baseUrl, cache, callback) {
-        iterateOverRulesAndInlineBackgroundImage(cssRules, baseUrl, cache, function (bgImagesHaveChanges, bgImageErrors) {
-            iterateOverRulesAndInlineFontFace(cssRules, baseUrl, cache, function (fontsHaveChanges, fontFaceErrors) {
+    module.css.loadAndInlineCSSResourcesForRules = function (cssRules, options, callback) {
+        iterateOverRulesAndInlineBackgroundImage(cssRules, options, function (bgImagesHaveChanges, bgImageErrors) {
+            iterateOverRulesAndInlineFontFace(cssRules, options, function (fontsHaveChanges, fontFaceErrors) {
                 var hasChanges = bgImagesHaveChanges || fontsHaveChanges;
 
                 callback(hasChanges, bgImageErrors.concat(fontFaceErrors));
@@ -954,9 +952,10 @@ window.rasterizeHTMLInline = (function (module, window, URI) {
     };
 
     module.util.getDataURIForImageURL = function (url, options, successCallback, errorCallback) {
-        var base64Content, mimeType;
+        var base64Content, mimeType,
+            ajaxOptions = module.util.selectOptions(options, ['cache', 'cacheRepeated']);
 
-        module.util.binaryAjax(url, options, function (content) {
+        module.util.binaryAjax(url, ajaxOptions, function (content) {
             base64Content = btoa(content);
 
             mimeType = detectMimeType(content);

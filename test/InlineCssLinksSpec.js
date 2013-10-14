@@ -19,7 +19,7 @@ describe("Inline CSS links", function () {
         loadCSSImportsForRulesSpy = spyOn(rasterizeHTMLInline.css, 'loadCSSImportsForRules').andCallFake(function (cssRules, alreadyLoadedCssUrls, options, callback) {
             callback(false, []);
         });
-        loadAndInlineCSSResourcesForRulesSpy = spyOn(rasterizeHTMLInline.css, 'loadAndInlineCSSResourcesForRules').andCallFake(function (cssRules, baseUrl, cache, callback) {
+        loadAndInlineCSSResourcesForRulesSpy = spyOn(rasterizeHTMLInline.css, 'loadAndInlineCSSResourcesForRules').andCallFake(function (cssRules, options, callback) {
             callback(false, []);
         });
 
@@ -169,7 +169,7 @@ describe("Inline CSS links", function () {
         expect(doc.getElementsByTagName("link").length).toEqual(0);
 
         expect(loadCSSImportsForRulesSpy.mostRecentCall.args[2].baseUrl).toEqual(doc.baseURI);
-        expect(loadAndInlineCSSResourcesForRulesSpy.mostRecentCall.args[1]).toEqual(doc.baseURI);
+        expect(loadAndInlineCSSResourcesForRulesSpy.mostRecentCall.args[1].baseUrl).toEqual(doc.baseURI);
     });
 
     it("should respect optional baseUrl when loading linked CSS", function () {
@@ -185,7 +185,7 @@ describe("Inline CSS links", function () {
         expect(joinUrlSpy).toHaveBeenCalledWith(jasmine.getFixtures().fixturesPath, "some.css");
 
         expect(loadCSSImportsForRulesSpy.mostRecentCall.args[2].baseUrl).toEqual(jasmine.getFixtures().fixturesPath);
-        expect(loadAndInlineCSSResourcesForRulesSpy.mostRecentCall.args[1]).toEqual(jasmine.getFixtures().fixturesPath);
+        expect(loadAndInlineCSSResourcesForRulesSpy.mostRecentCall.args[1].baseUrl).toEqual(jasmine.getFixtures().fixturesPath);
     });
 
     it("should favour explicit baseUrl over document.baseURI when loading linked CSS", function () {
@@ -206,7 +206,7 @@ describe("Inline CSS links", function () {
         expect(joinUrlSpy).toHaveBeenCalledWith(jasmine.getFixtures().fixturesPath, "some.css");
 
         expect(loadCSSImportsForRulesSpy.mostRecentCall.args[2].baseUrl).toEqual(jasmine.getFixtures().fixturesPath);
-        expect(loadAndInlineCSSResourcesForRulesSpy.mostRecentCall.args[1]).toEqual(jasmine.getFixtures().fixturesPath);
+        expect(loadAndInlineCSSResourcesForRulesSpy.mostRecentCall.args[1].baseUrl).toEqual(jasmine.getFixtures().fixturesPath);
     });
 
     it("should map resource paths relative to the stylesheet", function () {
@@ -243,7 +243,7 @@ describe("Inline CSS links", function () {
         expect(callback).toHaveBeenCalled();
 
         expect(loadCSSImportsForRulesSpy.mostRecentCall.args[2].cache).toBeFalsy();
-        expect(loadAndInlineCSSResourcesForRulesSpy.mostRecentCall.args[2]).toBeFalsy();
+        expect(loadAndInlineCSSResourcesForRulesSpy.mostRecentCall.args[1].cache).toBeFalsy();
     });
 
     it("should not circumvent caching by default", function () {
@@ -257,7 +257,7 @@ describe("Inline CSS links", function () {
         expect(callback).toHaveBeenCalled();
 
         expect(loadCSSImportsForRulesSpy.mostRecentCall.args[2].cache).toBeTruthy();
-        expect(loadAndInlineCSSResourcesForRulesSpy.mostRecentCall.args[2]).toBeTruthy();
+        expect(loadAndInlineCSSResourcesForRulesSpy.mostRecentCall.args[1].cache).toBeTruthy();
     });
 
     describe("error handling", function () {
@@ -318,7 +318,7 @@ describe("Inline CSS links", function () {
             loadCSSImportsForRulesSpy.andCallFake(function (cssRules, alreadyLoadedCssUrls, options, callback) {
                 callback(false, ["import inline error"]);
             });
-            loadAndInlineCSSResourcesForRulesSpy.andCallFake(function (cssRules, baseUrl, cache, callback) {
+            loadAndInlineCSSResourcesForRulesSpy.andCallFake(function (cssRules, options, callback) {
                 callback(false, ["resource inline error"]);
             });
 

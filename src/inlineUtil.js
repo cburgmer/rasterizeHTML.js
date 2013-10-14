@@ -141,9 +141,10 @@ window.rasterizeHTMLInline = (function (module, window, URI) {
     };
 
     module.util.getDataURIForImageURL = function (url, options, successCallback, errorCallback) {
-        var base64Content, mimeType;
+        var base64Content, mimeType,
+            ajaxOptions = module.util.selectOptions(options, ['cache', 'cacheRepeated']);
 
-        module.util.binaryAjax(url, options, function (content) {
+        module.util.binaryAjax(url, ajaxOptions, function (content) {
             base64Content = btoa(content);
 
             mimeType = detectMimeType(content);
