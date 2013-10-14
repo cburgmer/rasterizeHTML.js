@@ -116,10 +116,11 @@ describe("JS inline", function () {
     it("should circumvent caching if requested", function () {
         doc.head.appendChild(externalScript);
 
-        rasterizeHTMLInline.loadAndInlineScript(doc, {cache: false}, callback);
+        rasterizeHTMLInline.loadAndInlineScript(doc, {cache: false, cacheRepeated: true}, callback);
 
         expect(ajaxSpy).toHaveBeenCalledWith(externalScript.attributes.src.nodeValue, {
-            cache: false
+            cache: false,
+            cacheRepeated: true
         }, jasmine.any(Function), jasmine.any(Function));
     });
 
@@ -128,9 +129,7 @@ describe("JS inline", function () {
 
         rasterizeHTMLInline.loadAndInlineScript(doc, callback);
 
-        expect(ajaxSpy).toHaveBeenCalledWith(externalScript.attributes.src.nodeValue, {
-            cache: true
-        }, jasmine.any(Function), jasmine.any(Function));
+        expect(ajaxSpy).toHaveBeenCalledWith(externalScript.attributes.src.nodeValue, {}, jasmine.any(Function), jasmine.any(Function));
     });
 
     describe("error handling", function () {

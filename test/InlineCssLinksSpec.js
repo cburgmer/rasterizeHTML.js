@@ -235,15 +235,18 @@ describe("Inline CSS links", function () {
     it("should circumvent caching if requested", function () {
         doc.head.appendChild(cssLink);
 
-        rasterizeHTMLInline.loadAndInlineCssLinks(doc, {cache: false}, callback);
+        rasterizeHTMLInline.loadAndInlineCssLinks(doc, {cache: false, cacheRepeated: true}, callback);
 
         expect(ajaxSpy).toHaveBeenCalledWith(cssLink.attributes.href.nodeValue, {
-            cache: false
+            cache: false,
+            cacheRepeated: true
         }, jasmine.any(Function), jasmine.any(Function));
         expect(callback).toHaveBeenCalled();
 
         expect(loadCSSImportsForRulesSpy.mostRecentCall.args[2].cache).toBeFalsy();
+        expect(loadCSSImportsForRulesSpy.mostRecentCall.args[2].cacheRepeated).toBeTruthy();
         expect(loadAndInlineCSSResourcesForRulesSpy.mostRecentCall.args[1].cache).toBeFalsy();
+        expect(loadAndInlineCSSResourcesForRulesSpy.mostRecentCall.args[1].cacheRepeated).toBeTruthy();
     });
 
     it("should not circumvent caching by default", function () {
@@ -251,13 +254,11 @@ describe("Inline CSS links", function () {
 
         rasterizeHTMLInline.loadAndInlineCssLinks(doc, callback);
 
-        expect(ajaxSpy).toHaveBeenCalledWith(cssLink.attributes.href.nodeValue, {
-            cache: true
-        }, jasmine.any(Function), jasmine.any(Function));
+        expect(ajaxSpy).toHaveBeenCalledWith(cssLink.attributes.href.nodeValue, {}, jasmine.any(Function), jasmine.any(Function));
         expect(callback).toHaveBeenCalled();
 
-        expect(loadCSSImportsForRulesSpy.mostRecentCall.args[2].cache).toBeTruthy();
-        expect(loadAndInlineCSSResourcesForRulesSpy.mostRecentCall.args[1].cache).toBeTruthy();
+        expect(loadCSSImportsForRulesSpy.mostRecentCall.args[2].cache).not.toBe(false);
+        expect(loadAndInlineCSSResourcesForRulesSpy.mostRecentCall.args[1].cache).not.toBe(false);
     });
 
     describe("error handling", function () {

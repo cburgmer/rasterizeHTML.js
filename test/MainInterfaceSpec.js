@@ -203,10 +203,11 @@ describe("Main interface of rasterizeHTML.js", function () {
                 error();
             });
 
-            rasterizeHTML.drawURL("fixtures/image.html", canvas, {cache: false}, callback);
+            rasterizeHTML.drawURL("fixtures/image.html", canvas, {cache: false, cacheRepeated: true}, callback);
 
             expect(ajaxSpy).toHaveBeenCalledWith("fixtures/image.html", {
-                cache: false
+                cache: false,
+                cacheRepeated: true
             }, jasmine.any(Function), jasmine.any(Function));
             expect(callback).toHaveBeenCalled();
         });

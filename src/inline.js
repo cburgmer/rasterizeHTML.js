@@ -3,20 +3,21 @@ window.rasterizeHTMLInline = (function (module) {
 
     /* Img Inlining */
 
-    var encodeImageAsDataURI = function (image, baseUrl, cache, successCallback, errorCallback) {
+    var encodeImageAsDataURI = function (image, options, successCallback, errorCallback) {
         var url = image.attributes.src.nodeValue,
-            base = baseUrl || image.ownerDocument.baseURI;
+            base = options.baseUrl || image.ownerDocument.baseURI,
+            ajaxOptions;
 
         if (module.util.isDataUri(url)) {
             successCallback();
             return;
         }
 
+        ajaxOptions = module.util.selectOptions(options, ['cache', 'cacheRepeated']);
+
         url = module.util.getUrlRelativeToDocumentBase(url, base);
 
-        module.util.getDataURIForImageURL(url, {
-            cache: cache
-        }, function (dataURI) {
+        module.util.getDataURIForImageURL(url, ajaxOptions, function (dataURI) {
             image.attributes.src.nodeValue = dataURI;
             successCallback();
         }, function () {
@@ -38,8 +39,6 @@ window.rasterizeHTMLInline = (function (module) {
         var params = module.util.parseOptionalParameters(options, callback),
             images = doc.getElementsByTagName("img"),
             inputs = doc.getElementsByTagName("input"),
-            baseUrl = params.options.baseUrl,
-            cache = params.options.cache !== false,
             imageLike = [],
             errors = [];
 
@@ -47,7 +46,7 @@ window.rasterizeHTMLInline = (function (module) {
         imageLike = imageLike.concat(filterInputsForImageType(inputs));
 
         module.util.map(imageLike, function (image, finish) {
-            encodeImageAsDataURI(image, baseUrl, cache, finish, function (url) {
+            encodeImageAsDataURI(image, params.options, finish, function (url) {
                 errors.push({
                     resourceType: "image",
                     url: url,
@@ -64,11 +63,11 @@ window.rasterizeHTMLInline = (function (module) {
 
     /* Style inlining */
 
-    var loadAndInlineCssForStyle = function (style, baseUrl, cache, alreadyLoadedCssUrls, callback) {
+    var loadAndInlineCssForStyle = function (style, options, alreadyLoadedCssUrls, callback) {
         var cssRules = module.css.rulesForCssText(style.textContent);
 
-        module.css.loadCSSImportsForRules(cssRules, alreadyLoadedCssUrls, {baseUrl: baseUrl, cache: cache}, function (changedFromImports, importErrors) {
-            module.css.loadAndInlineCSSResourcesForRules(cssRules, {baseUrl: baseUrl, cache: cache}, function (changedFromResources, resourceErrors) {
+        module.css.loadCSSImportsForRules(cssRules, alreadyLoadedCssUrls, options, function (changedFromImports, importErrors) {
+            module.css.loadAndInlineCSSResourcesForRules(cssRules, options, function (changedFromResources, resourceErrors) {
                 var errors = importErrors.concat(resourceErrors);
 
                 if (changedFromImports || changedFromResources) {
@@ -100,13 +99,15 @@ window.rasterizeHTMLInline = (function (module) {
     module.loadAndInlineStyles = function (doc, options, callback) {
         var params = module.util.parseOptionalParameters(options, callback),
             styles = getCssStyleElements(doc),
-            base = params.options.baseUrl || doc.baseURI,
-            cache = params.options.cache !== false,
             allErrors = [],
-            alreadyLoadedCssUrls = [];
+            alreadyLoadedCssUrls = [],
+            inlineOptions;
+
+        inlineOptions = module.util.clone(params.options);
+        inlineOptions.baseUrl = inlineOptions.baseUrl || doc.baseURI;
 
         module.util.map(styles, function (style, finish) {
-            loadAndInlineCssForStyle(style, base, cache, alreadyLoadedCssUrls, function (errors) {
+            loadAndInlineCssForStyle(style, inlineOptions, alreadyLoadedCssUrls, function (errors) {
                 allErrors = allErrors.concat(errors);
 
                 finish();
@@ -134,20 +135,24 @@ window.rasterizeHTMLInline = (function (module) {
         parent.removeChild(oldLinkNode);
     };
 
-    var loadLinkedCSS = function (link, baseUrl, cache, successCallback, errorCallback) {
+    var loadLinkedCSS = function (link, options, successCallback, errorCallback) {
         var cssHref = link.attributes.href.nodeValue,
-            documentBaseUrl = baseUrl || link.ownerDocument.baseURI,
-            cssHrefRelativeToDoc = module.util.getUrlRelativeToDocumentBase(cssHref, documentBaseUrl);
+            documentBaseUrl = options.baseUrl || link.ownerDocument.baseURI,
+            cssHrefRelativeToDoc = module.util.getUrlRelativeToDocumentBase(cssHref, documentBaseUrl),
+            inlineOptions, ajaxOptions;
 
-        module.util.ajax(cssHrefRelativeToDoc, {
-            cache: cache
-        }, function (content) {
+        inlineOptions = module.util.clone(options);
+        inlineOptions.baseUrl = documentBaseUrl;
+
+        ajaxOptions = module.util.selectOptions(options, ['cache', 'cacheRepeated']);
+
+        module.util.ajax(cssHrefRelativeToDoc, ajaxOptions, function (content) {
             var cssRules = module.css.rulesForCssText(content),
                 changedFromPathAdjustment;
 
             changedFromPathAdjustment = module.css.adjustPathsOfCssResources(cssHref, cssRules);
-            module.css.loadCSSImportsForRules(cssRules, [], {baseUrl: documentBaseUrl, cache: cache}, function (changedFromImports, importErrors) {
-                module.css.loadAndInlineCSSResourcesForRules(cssRules, {baseUrl: documentBaseUrl, cache: cache}, function (changedFromResources, resourceErrors) {
+            module.css.loadCSSImportsForRules(cssRules, [], inlineOptions, function (changedFromImports, importErrors) {
+                module.css.loadAndInlineCSSResourcesForRules(cssRules, inlineOptions, function (changedFromResources, resourceErrors) {
                     var errors = importErrors.concat(resourceErrors);
 
                     if (changedFromPathAdjustment || changedFromImports || changedFromResources) {
@@ -165,14 +170,12 @@ window.rasterizeHTMLInline = (function (module) {
     module.loadAndInlineCssLinks = function (doc, options, callback) {
         var params = module.util.parseOptionalParameters(options, callback),
             links = doc.getElementsByTagName("link"),
-            baseUrl = params.options.baseUrl,
-            cache = params.options.cache !== false,
             errors = [];
 
         module.util.map(links, function (link, finish) {
             if (link.attributes.rel && link.attributes.rel.nodeValue === "stylesheet" &&
                 (!link.attributes.type || link.attributes.type.nodeValue === "text/css")) {
-                loadLinkedCSS(link, baseUrl, cache, function(css, moreErrors) {
+                loadLinkedCSS(link, params.options, function(css, moreErrors) {
                     substituteLinkWithInlineStyle(link, css + "\n");
 
                     errors = errors.concat(moreErrors);
@@ -199,11 +202,14 @@ window.rasterizeHTMLInline = (function (module) {
 
     /* Script inlining */
 
-    var loadLinkedScript = function (script, baseUrl, cache, successCallback, errorCallback) {
-        var base = baseUrl || script.ownerDocument.baseURI,
-            scriptSrcRelativeToDoc = module.util.getUrlRelativeToDocumentBase(script.attributes.src.nodeValue, base);
+    var loadLinkedScript = function (script, options, successCallback, errorCallback) {
+        var base = options.baseUrl || script.ownerDocument.baseURI,
+            scriptSrcRelativeToDoc = module.util.getUrlRelativeToDocumentBase(script.attributes.src.nodeValue, base),
+            ajaxOptions;
 
-        module.util.ajax(scriptSrcRelativeToDoc, {cache: cache}, successCallback, function () {
+        ajaxOptions = module.util.selectOptions(options, ['cache', 'cacheRepeated']);
+
+        module.util.ajax(scriptSrcRelativeToDoc, ajaxOptions, successCallback, function () {
             errorCallback(scriptSrcRelativeToDoc);
         });
     };
@@ -225,12 +231,11 @@ window.rasterizeHTMLInline = (function (module) {
     module.loadAndInlineScript = function (doc, options, callback) {
         var params = module.util.parseOptionalParameters(options, callback),
             scripts = doc.getElementsByTagName("script"),
-            cache = params.options.cache !== false,
             errors = [];
 
         module.util.map(scripts, function (script, finish) {
             if (script.attributes.src) {
-                loadLinkedScript(script, params.options.baseUrl, cache, function (jsCode) {
+                loadLinkedScript(script, params.options, function (jsCode) {
                     substituteExternalScriptWithInline(script, jsCode);
 
                     finish();

@@ -1,4 +1,16 @@
 describe("Inline utilities function", function () {
+    describe("clone", function () {
+        it("should create a copy of the given object", function () {
+            var input = {anOption: '1', yetAnotherOption: '21'},
+                output;
+
+            output = rasterizeHTMLInline.util.clone(input);
+
+            expect(input).toEqual(output);
+            expect(input).not.toBe(output);
+        });
+    });
+
     describe("cloneArray", function () {
         it("should create a copy of the given list", function () {
             var input = [1, 2, 3],

@@ -11,6 +11,17 @@ window.rasterizeHTMLInline = (function (module, window, URI) {
         return url;
     };
 
+    module.util.clone = function (object) {
+        var theClone = {},
+            i;
+        for (i in object) {
+            if (object.hasOwnProperty(i)) {
+               theClone[i] = object[i];
+            }
+        }
+        return theClone;
+    };
+
     module.util.cloneArray = function (nodeList) {
         return Array.prototype.slice.apply(nodeList, [0]);
     };
