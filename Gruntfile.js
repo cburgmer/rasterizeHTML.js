@@ -119,18 +119,32 @@ module.exports = function (grunt) {
                     src: ['test/*Spec.js']
                 }
             }
-        }
+        },
+        "regex-check": {
+            files: [
+                'src/*',
+                // 'test/{,*/}*'
+                'test/*.html',
+                'test/*.js',
+                'test/*/*.html',
+            ],
+            options: {
+                pattern : /FIXME/g
+            },
+        },
     });
 
     grunt.loadNpmTasks('grunt-contrib-concat');
     grunt.loadNpmTasks('grunt-contrib-jasmine');
     grunt.loadNpmTasks('grunt-contrib-jshint');
     grunt.loadNpmTasks('grunt-contrib-uglify');
+    grunt.loadNpmTasks('grunt-regex-check');
     grunt.loadNpmTasks('grunt-contrib-watch');
 
     grunt.registerTask('default', [
         'jshint',
         'jasmine',
+        'regex-check',
         'concat',
         'uglify'
     ]);
