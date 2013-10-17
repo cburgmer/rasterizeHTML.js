@@ -81,7 +81,8 @@ describe("Image and image input inline", function () {
     });
 
     it("should respect the document's baseURI when loading the image", function () {
-        var callback = jasmine.createSpy("callback");
+        var callback = jasmine.createSpy("callback"),
+            getDocumentBaseUrlSpy = spyOn(rasterizeHTMLInline.util, 'getDocumentBaseUrl').andCallThrough();
 
         doc = rasterizeHTMLTestHelper.readDocumentFixture("image.html");
 
@@ -89,7 +90,8 @@ describe("Image and image input inline", function () {
 
         expect(callback).toHaveBeenCalled();
 
-        expect(joinUrlSpy).toHaveBeenCalledWith(doc.baseURI, "rednblue.png");
+        expect(getDataURIForImageURLSpy.mostRecentCall.args[1].baseUrl).toEqual(doc.baseURI);
+        expect(getDocumentBaseUrlSpy).toHaveBeenCalledWith(doc);
     });
 
     it("should respect optional baseUrl when loading the image", function () {
@@ -101,7 +103,7 @@ describe("Image and image input inline", function () {
 
         expect(callback).toHaveBeenCalled();
 
-        expect(joinUrlSpy).toHaveBeenCalledWith("aBaseUrl", "rednblue.png");
+        expect(getDataURIForImageURLSpy.mostRecentCall.args[1].baseUrl).toEqual("aBaseUrl");
     });
 
     it("should favour explicit baseUrl over document.baseURI when loading the image", function () {
@@ -117,7 +119,7 @@ describe("Image and image input inline", function () {
 
         expect(callback).toHaveBeenCalled();
 
-        expect(joinUrlSpy).toHaveBeenCalledWith(baseUrl, "rednblue.png");
+        expect(getDataURIForImageURLSpy.mostRecentCall.args[1].baseUrl).toEqual(baseUrl);
     });
 
     it("should circumvent caching if requested", function () {

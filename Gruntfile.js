@@ -22,7 +22,7 @@ module.exports = function (grunt) {
                     ' Licensed <%= _.pluck(pkg.licenses, "type").join(", ") %> */\n'
             },
             dist: {
-                src: ['<banner:meta.banner>', 'src/*.js'],
+                src: ['src/*.js'],
                 dest: 'dist/<%= pkg.name %>'
             }
         },

@@ -23,6 +23,32 @@ describe("Inline utilities function", function () {
         });
     });
 
+    describe("getDocumentBaseUrl", function () {
+        var endsWith = function (str, matchStr) {
+            return str.substr(-matchStr.length) === matchStr;
+        };
+
+        it("should return a document's base url", function () {
+            var fixturePath = jasmine.getFixtures().fixturesPath + "image.html",
+                doc = rasterizeHTMLTestHelper.readDocumentFixture("image.html"),
+                url, nonQueryPart;
+
+            url = rasterizeHTMLInline.util.getDocumentBaseUrl(doc);
+            nonQueryPart = url.split('?')[0];
+
+            expect(endsWith(nonQueryPart, fixturePath)).toBeTruthy();
+        });
+
+        it("should return null if document has no base url", function () {
+            var doc = document.implementation.createHTMLDocument(""),
+                url;
+
+            url = rasterizeHTMLInline.util.getDocumentBaseUrl(doc);
+
+            expect(url).toBe(null);
+        });
+    });
+
     describe("joinUrl", function () {
         it("should append the url to a directory-only base", function () {
             var url = rasterizeHTMLInline.util.joinUrl("rel/path/", "the_relative_url");
@@ -57,6 +83,11 @@ describe("Inline utilities function", function () {
         it("should ignore base without directories", function () {
             var url = rasterizeHTMLInline.util.joinUrl("aFile", "anotherFile");
             expect(url).toEqual("anotherFile");
+        });
+
+        it("should ignore an undefined base", function () {
+            var url = rasterizeHTMLInline.util.joinUrl(undefined, "aFile");
+            expect(url).toEqual("aFile");
         });
     });
 
@@ -176,62 +207,6 @@ describe("Inline utilities function", function () {
 
     });
 
-    describe("selectOptions", function () {
-        it("should return an empty object by default", function () {
-            var options = rasterizeHTMLInline.util.selectOptions(null, []);
-
-            expect(options).toEqual({});
-        });
-
-        it("should return an empty object by default even when selecting parameters", function () {
-            var options = rasterizeHTMLInline.util.selectOptions(null, ['aParam']);
-
-            expect(options).toEqual({});
-        });
-
-        it("should select a parameter out of the given options", function () {
-            var options = {
-                    aParam: "a value",
-                    anotherParam: "another value"
-                },
-                selectedOptions = rasterizeHTMLInline.util.selectOptions(options, ['aParam']);
-
-            expect(selectedOptions).toEqual({aParam: "a value"});
-        });
-
-        it("should select a parameter with a false value out of the given options", function () {
-            var options = {
-                    aFalseParam: false
-                },
-                selectedOptions = rasterizeHTMLInline.util.selectOptions(options, ['aFalseParam']);
-
-            expect(selectedOptions).toEqual({aFalseParam: false});
-        });
-
-        it("should select several parameters out of the given options", function () {
-            var options = {
-                    aParam: "a value",
-                    anotherParam: "another value"
-                },
-                selectedOptions = rasterizeHTMLInline.util.selectOptions(options, ['aParam', 'anotherParam']);
-
-            expect(selectedOptions).toEqual({
-                aParam: "a value",
-                anotherParam: "another value"
-            });
-        });
-
-        it("should return an empty object if no match is found", function () {
-            var options = {
-                    aParam: "a value",
-                    anotherParam: "another value"
-                },
-                selectedOptions = rasterizeHTMLInline.util.selectOptions(options, ['missingParam']);
-
-            expect(selectedOptions).toEqual({});
-        });
-    });
-
     describe("ajax", function () {
         it("should load content from a URL", function () {
             var finished = false,
@@ -276,6 +251,10 @@ describe("Inline utilities function", function () {
             beforeEach(function () {
                 ajaxRequest = jasmine.createSpyObj("ajaxRequest", ["open", "addEventListener", "overrideMimeType", "send"]);
                 spyOn(window, "XMLHttpRequest").andReturn(ajaxRequest);
+
+                spyOn(rasterizeHTMLInline.util, "joinUrl").andCallFake(function (baseUrl, url) {
+                    return baseUrl ? baseUrl + url : url;
+                });
             });
 
             it("should attach an unique parameter to the given URL to circumvent caching if requested", function () {
@@ -320,11 +299,25 @@ describe("Inline utilities function", function () {
 
                 expect(ajaxRequest.overrideMimeType).toHaveBeenCalledWith('42');
             });
+
+            it("should load URLs relative to baseUrl", function () {
+                rasterizeHTMLInline.util.ajax("relative/url.png", {baseUrl: "http://example.com/"}, function () {}, function () {});
+
+                expect(ajaxRequest.open.mostRecentCall.args[1]).toEqual('http://example.com/relative/url.png');
+
+                expect(rasterizeHTMLInline.util.joinUrl).toHaveBeenCalledWith("http://example.com/", "relative/url.png");
+            });
         });
 
     });
 
     describe("binaryAjax", function () {
+        beforeEach(function () {
+            spyOn(rasterizeHTMLInline.util, "joinUrl").andCallFake(function (baseUrl, url) {
+                return url;
+            });
+        });
+
         it("should load binary data", function () {
             var finished = false,
                 loadedContent;

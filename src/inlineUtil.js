@@ -3,12 +3,12 @@ window.rasterizeHTMLInline = (function (module, window, URI) {
 
     module.util = {};
 
-    module.util.getUrlRelativeToDocumentBase = function (url, baseUrl) {
-        if (baseUrl && baseUrl !== "about:blank") {
-            url = module.util.joinUrl(baseUrl, url);
+    module.util.getDocumentBaseUrl = function (doc) {
+        if (doc.baseURI !== 'about:blank') {
+            return doc.baseURI;
         }
 
-        return url;
+        return null;
     };
 
     module.util.clone = function (object) {
@@ -28,7 +28,7 @@ window.rasterizeHTMLInline = (function (module, window, URI) {
 
     module.util.joinUrl = function (baseUrl, url) {
         var theUrl = new URI(url);
-        if (theUrl.is("relative")) {
+        if (baseUrl && theUrl.is("relative")) {
             theUrl = theUrl.absoluteTo(baseUrl);
         }
         return theUrl.toString();
@@ -69,22 +69,6 @@ window.rasterizeHTMLInline = (function (module, window, URI) {
         }
     };
 
-    module.util.selectOptions = function (options, paramList) {
-        var selectedOptions = {};
-
-        if (!options) {
-            return selectedOptions;
-        }
-
-        paramList.forEach(function (param) {
-            if (options[param] !== undefined) {
-                selectedOptions[param] = options[param];
-            }
-        });
-
-        return selectedOptions;
-    };
-
     var lastCacheDate = null;
 
     var getUncachableURL = function (url, workAroundCaching, cacheRepeated) {
@@ -100,10 +84,11 @@ window.rasterizeHTMLInline = (function (module, window, URI) {
 
     module.util.ajax = function (url, options, successCallback, errorCallback) {
         var ajaxRequest = new window.XMLHttpRequest(),
+            joinedUrl = module.util.joinUrl(options.baseUrl, url),
             augmentedUrl;
 
         options = options || {};
-        augmentedUrl = getUncachableURL(url, options.cache === false, options.cacheRepeated);
+        augmentedUrl = getUncachableURL(joinedUrl, options.cache === false, options.cacheRepeated);
 
         ajaxRequest.addEventListener("load", function () {
             if (ajaxRequest.status === 200 || ajaxRequest.status === 0) {
@@ -128,7 +113,7 @@ window.rasterizeHTMLInline = (function (module, window, URI) {
 
     module.util.binaryAjax = function (url, options, successCallback, errorCallback) {
         var binaryContent = "",
-            ajaxOptions = module.util.selectOptions(options, ['cache', 'cacheRepeated']);
+            ajaxOptions = module.util.clone(options);
 
         ajaxOptions.mimeType = 'text/plain; charset=x-user-defined';
 
@@ -152,10 +137,9 @@ window.rasterizeHTMLInline = (function (module, window, URI) {
     };
 
     module.util.getDataURIForImageURL = function (url, options, successCallback, errorCallback) {
-        var base64Content, mimeType,
-            ajaxOptions = module.util.selectOptions(options, ['cache', 'cacheRepeated']);
+        var base64Content, mimeType;
 
-        module.util.binaryAjax(url, ajaxOptions, function (content) {
+        module.util.binaryAjax(url, options, function (content) {
             base64Content = btoa(content);
 
             mimeType = detectMimeType(content);

@@ -3,7 +3,9 @@ describe("Inline CSS content", function () {
         callback;
 
     beforeEach(function () {
-        joinUrlSpy = spyOn(rasterizeHTMLInline.util, "joinUrl");
+        joinUrlSpy = spyOn(rasterizeHTMLInline.util, "joinUrl").andCallFake(function (base, url) {
+            return url;
+        });
         ajaxSpy = spyOn(rasterizeHTMLInline.util, "ajax");
         binaryAjaxSpy = spyOn(rasterizeHTMLInline.util, "binaryAjax");
         getDataURIForImageURLSpy = spyOn(rasterizeHTMLInline.util, "getDataURIForImageURL");
@@ -543,7 +545,7 @@ describe("Inline CSS content", function () {
 
                 rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {baseUrl:  'url_base/page.html'}, callback);
 
-                expect(joinUrlSpy).toHaveBeenCalledWith('url_base/page.html', "image.png");
+                expect(getDataURIForImageURLSpy.mostRecentCall.args[1].baseUrl).toEqual('url_base/page.html');
             });
 
             it("should circumvent caching if requested", function () {
@@ -769,7 +771,7 @@ describe("Inline CSS content", function () {
 
                 rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {baseUrl:  'url_base/page.html'}, callback);
 
-                expect(joinUrlSpy).toHaveBeenCalledWith('url_base/page.html', "fake.woff");
+                expect(binaryAjaxSpy.mostRecentCall.args[1].baseUrl).toEqual('url_base/page.html');
             });
 
             it("should circumvent caching if requested", function () {

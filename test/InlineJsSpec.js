@@ -85,12 +85,15 @@ describe("JS inline", function () {
     });
 
     it("should respect the document's baseURI when loading linked JS", function () {
+        var getDocumentBaseUrlSpy = spyOn(rasterizeHTMLInline.util, 'getDocumentBaseUrl').andCallThrough();
+
         doc = rasterizeHTMLTestHelper.readDocumentFixture("externalJS.html");
 
         rasterizeHTMLInline.loadAndInlineScript(doc, callback);
 
         expect(callback).toHaveBeenCalled();
-        expect(ajaxSpy).toHaveBeenCalledWith(doc.baseURI + "some.js", jasmine.any(Object), jasmine.any(Function), jasmine.any(Function));
+        expect(ajaxSpy).toHaveBeenCalledWith("some.js", {baseUrl: doc.baseURI}, jasmine.any(Function), jasmine.any(Function));
+        expect(getDocumentBaseUrlSpy).toHaveBeenCalledWith(doc);
     });
 
     it("should respect optional baseUrl when loading linked JS", function () {
@@ -99,7 +102,7 @@ describe("JS inline", function () {
         rasterizeHTMLInline.loadAndInlineScript(doc, {baseUrl: "some_base_url/"}, callback);
 
         expect(callback).toHaveBeenCalled();
-        expect(ajaxSpy).toHaveBeenCalledWith("some_base_url/" + externalScript.attributes.src.nodeValue, jasmine.any(Object), jasmine.any(Function), jasmine.any(Function));
+        expect(ajaxSpy).toHaveBeenCalledWith(externalScript.attributes.src.nodeValue, {baseUrl: "some_base_url/"}, jasmine.any(Function), jasmine.any(Function));
     });
 
     it("should favour explicit baseUrl over document.baseURI when loading linked JS", function () {
@@ -110,7 +113,7 @@ describe("JS inline", function () {
         rasterizeHTMLInline.loadAndInlineScript(doc, {baseUrl: "some_base_url/"}, callback);
 
         expect(callback).toHaveBeenCalled();
-        expect(ajaxSpy).toHaveBeenCalledWith("some_base_url/some.js", jasmine.any(Object), jasmine.any(Function), jasmine.any(Function));
+        expect(ajaxSpy).toHaveBeenCalledWith("some.js", {baseUrl: "some_base_url/"}, jasmine.any(Function), jasmine.any(Function));
     });
 
     it("should circumvent caching if requested", function () {

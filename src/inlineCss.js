@@ -224,14 +224,13 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
 
     var loadAndInlineCSSImport = function (cssRules, rule, alreadyLoadedCssUrls, options, successCallback, errorCallback) {
         var url = rule.href,
-            cssHrefRelativeToDoc,
-            ajaxOptions;
+            cssHrefRelativeToDoc;
 
         if (isQuotedString(url)) {
             url = unquoteString(url);
         }
 
-        cssHrefRelativeToDoc = module.util.getUrlRelativeToDocumentBase(url, options.baseUrl);
+        cssHrefRelativeToDoc = module.util.joinUrl(options.baseUrl, url);
 
         if (alreadyLoadedCssUrls.indexOf(cssHrefRelativeToDoc) >= 0) {
             // Remove URL by adding empty string
@@ -242,9 +241,7 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
             alreadyLoadedCssUrls.push(cssHrefRelativeToDoc);
         }
 
-        ajaxOptions = module.util.selectOptions(options, ['cache', 'cacheRepeated']);
-
-        module.util.ajax(cssHrefRelativeToDoc, ajaxOptions, function (cssText) {
+        module.util.ajax(url, options, function (cssText) {
             var externalCssRules = module.css.rulesForCssText(cssText);
 
             // Recursively follow @import statements
@@ -351,28 +348,24 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
         var errorUrls = [],
             backgroundDeclarations,
             backgroundValue = rule.style.getPropertyValue('background-image') || rule.style.getPropertyValue('background'),
-            joinedBackgroundDeclarations,
-            ajaxOptions = module.util.selectOptions(options, ['cache', 'cacheRepeated']);
+            joinedBackgroundDeclarations;
 
         backgroundDeclarations = sliceBackgroundDeclarations(backgroundValue);
 
         module.util.map(backgroundDeclarations, function (singleBackgroundValues, finish) {
-            var bgUrl = findBackgroundImageUrlInValues(singleBackgroundValues),
-                url;
+            var bgUrl = findBackgroundImageUrlInValues(singleBackgroundValues);
 
             if (!bgUrl || module.util.isDataUri(bgUrl.url)) {
                 finish(false);
                 return;
             }
 
-            url = module.util.getUrlRelativeToDocumentBase(bgUrl.url, options.baseUrl);
-
-            module.util.getDataURIForImageURL(url, ajaxOptions, function (dataURI) {
+            module.util.getDataURIForImageURL(bgUrl.url, options, function (dataURI) {
                 singleBackgroundValues[bgUrl.idx] = 'url("' + dataURI + '")';
 
                 finish(true);
             }, function () {
-                errorUrls.push(url);
+                errorUrls.push(module.util.joinUrl(options.baseUrl, bgUrl.url));
                 finish(false);
             });
         }, function (changedStates) {
@@ -454,9 +447,8 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
     };
 
     var loadAndInlineFontFace = function (cssRules, rule, options, successCallback) {
-        var fontReferences, fontSrc, url, format, base64Content,
-            errors = [],
-            ajaxOptions = module.util.selectOptions(options, ['cache', 'cacheRepeated']);
+        var fontReferences, fontSrc, format, base64Content,
+            errors = [];
 
         fontReferences = sliceFontFaceSrcReferences(rule.style.getPropertyValue("src"));
         module.util.map(fontReferences, function (reference, finish) {
@@ -467,16 +459,15 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
                 return;
             }
 
-            url = module.util.getUrlRelativeToDocumentBase(fontSrc.url, options.baseUrl);
             format = fontSrc.format || "woff";
 
-            module.util.binaryAjax(url, ajaxOptions, function (content) {
+            module.util.binaryAjax(fontSrc.url, options, function (content) {
                 base64Content = btoa(content);
                 reference[0] = 'url("data:font/' + format + ';base64,' + base64Content + '")';
 
                 finish(true);
             }, function () {
-                errors.push(url);
+                errors.push(module.util.joinUrl(options.baseUrl, fontSrc.url));
                 finish(false);
             });
         }, function (changedStates) {

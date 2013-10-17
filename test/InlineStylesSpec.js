@@ -88,12 +88,14 @@ describe("Import styles", function () {
     });
 
     it("should respect the document's baseURI", function () {
+        var getDocumentBaseUrlSpy = spyOn(rasterizeHTMLInline.util, 'getDocumentBaseUrl').andCallThrough();
         doc = rasterizeHTMLTestHelper.readDocumentFixture("importCss.html");
 
         rasterizeHTMLInline.loadAndInlineStyles(doc, callback);
 
         expect(loadCSSImportsForRulesSpy).toHaveBeenCalledWith(jasmine.any(Object), [], {baseUrl: doc.baseURI}, jasmine.any(Function));
         expect(loadAndInlineCSSResourcesForRulesSpy).toHaveBeenCalledWith(jasmine.any(Object), {baseUrl: doc.baseURI}, jasmine.any(Function));
+        expect(getDocumentBaseUrlSpy).toHaveBeenCalledWith(doc);
     });
 
     it("should favour explicit baseUrl over document.baseURI", function () {

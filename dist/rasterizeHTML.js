@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.4.1 - 2013-10-16
+/*! rasterizeHTML.js - v0.4.1 - 2013-10-17
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2013 Christoph Burgmer; Licensed MIT */
 window.rasterizeHTMLInline = (function (module) {
@@ -8,23 +8,23 @@ window.rasterizeHTMLInline = (function (module) {
 
     var encodeImageAsDataURI = function (image, options, successCallback, errorCallback) {
         var url = image.attributes.src.nodeValue,
-            base = options.baseUrl || image.ownerDocument.baseURI,
-            ajaxOptions;
+            documentBase = module.util.getDocumentBaseUrl(image.ownerDocument),
+            ajaxOptions = module.util.clone(options);
 
         if (module.util.isDataUri(url)) {
             successCallback();
             return;
         }
 
-        ajaxOptions = module.util.selectOptions(options, ['cache', 'cacheRepeated']);
-
-        url = module.util.getUrlRelativeToDocumentBase(url, base);
+        if (!ajaxOptions.baseUrl && documentBase) {
+            ajaxOptions.baseUrl = documentBase;
+        }
 
         module.util.getDataURIForImageURL(url, ajaxOptions, function (dataURI) {
             image.attributes.src.nodeValue = dataURI;
             successCallback();
         }, function () {
-            errorCallback(url);
+            errorCallback(module.util.joinUrl(ajaxOptions.baseUrl, url));
         });
     };
 
@@ -107,7 +107,7 @@ window.rasterizeHTMLInline = (function (module) {
             inlineOptions;
 
         inlineOptions = module.util.clone(params.options);
-        inlineOptions.baseUrl = inlineOptions.baseUrl || doc.baseURI;
+        inlineOptions.baseUrl = inlineOptions.baseUrl || module.util.getDocumentBaseUrl(doc);
 
         module.util.map(styles, function (style, finish) {
             loadAndInlineCssForStyle(style, inlineOptions, alreadyLoadedCssUrls, function (errors) {
@@ -140,22 +140,20 @@ window.rasterizeHTMLInline = (function (module) {
 
     var loadLinkedCSS = function (link, options, successCallback, errorCallback) {
         var cssHref = link.attributes.href.nodeValue,
-            documentBaseUrl = options.baseUrl || link.ownerDocument.baseURI,
-            cssHrefRelativeToDoc = module.util.getUrlRelativeToDocumentBase(cssHref, documentBaseUrl),
-            inlineOptions, ajaxOptions;
+            documentBaseUrl = options.baseUrl || module.util.getDocumentBaseUrl(link.ownerDocument),
+            ajaxOptions = module.util.clone(options);
 
-        inlineOptions = module.util.clone(options);
-        inlineOptions.baseUrl = documentBaseUrl;
+        if (!ajaxOptions.baseUrl && documentBaseUrl) {
+            ajaxOptions.baseUrl = documentBaseUrl;
+        }
 
-        ajaxOptions = module.util.selectOptions(options, ['cache', 'cacheRepeated']);
-
-        module.util.ajax(cssHrefRelativeToDoc, ajaxOptions, function (content) {
+        module.util.ajax(cssHref, ajaxOptions, function (content) {
             var cssRules = module.css.rulesForCssText(content),
                 changedFromPathAdjustment;
 
             changedFromPathAdjustment = module.css.adjustPathsOfCssResources(cssHref, cssRules);
-            module.css.loadCSSImportsForRules(cssRules, [], inlineOptions, function (changedFromImports, importErrors) {
-                module.css.loadAndInlineCSSResourcesForRules(cssRules, inlineOptions, function (changedFromResources, resourceErrors) {
+            module.css.loadCSSImportsForRules(cssRules, [], ajaxOptions, function (changedFromImports, importErrors) {
+                module.css.loadAndInlineCSSResourcesForRules(cssRules, ajaxOptions, function (changedFromResources, resourceErrors) {
                     var errors = importErrors.concat(resourceErrors);
 
                     if (changedFromPathAdjustment || changedFromImports || changedFromResources) {
@@ -166,7 +164,7 @@ window.rasterizeHTMLInline = (function (module) {
                 });
             });
         }, function () {
-            errorCallback(cssHrefRelativeToDoc);
+            errorCallback(module.util.joinUrl(documentBaseUrl, cssHref));
         });
     };
 
@@ -206,14 +204,16 @@ window.rasterizeHTMLInline = (function (module) {
     /* Script inlining */
 
     var loadLinkedScript = function (script, options, successCallback, errorCallback) {
-        var base = options.baseUrl || script.ownerDocument.baseURI,
-            scriptSrcRelativeToDoc = module.util.getUrlRelativeToDocumentBase(script.attributes.src.nodeValue, base),
-            ajaxOptions;
+        var src = script.attributes.src.nodeValue,
+            documentBase = module.util.getDocumentBaseUrl(script.ownerDocument),
+            ajaxOptions = module.util.clone(options);
 
-        ajaxOptions = module.util.selectOptions(options, ['cache', 'cacheRepeated']);
+        if (!ajaxOptions.baseUrl && documentBase) {
+            ajaxOptions.baseUrl = documentBase;
+        }
 
-        module.util.ajax(scriptSrcRelativeToDoc, ajaxOptions, successCallback, function () {
-            errorCallback(scriptSrcRelativeToDoc);
+        module.util.ajax(src, ajaxOptions, successCallback, function () {
+            errorCallback(module.util.joinUrl(ajaxOptions.baseUrl, src));
         });
     };
 
@@ -511,14 +511,13 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
 
     var loadAndInlineCSSImport = function (cssRules, rule, alreadyLoadedCssUrls, options, successCallback, errorCallback) {
         var url = rule.href,
-            cssHrefRelativeToDoc,
-            ajaxOptions;
+            cssHrefRelativeToDoc;
 
         if (isQuotedString(url)) {
             url = unquoteString(url);
         }
 
-        cssHrefRelativeToDoc = module.util.getUrlRelativeToDocumentBase(url, options.baseUrl);
+        cssHrefRelativeToDoc = module.util.joinUrl(options.baseUrl, url);
 
         if (alreadyLoadedCssUrls.indexOf(cssHrefRelativeToDoc) >= 0) {
             // Remove URL by adding empty string
@@ -529,9 +528,7 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
             alreadyLoadedCssUrls.push(cssHrefRelativeToDoc);
         }
 
-        ajaxOptions = module.util.selectOptions(options, ['cache', 'cacheRepeated']);
-
-        module.util.ajax(cssHrefRelativeToDoc, ajaxOptions, function (cssText) {
+        module.util.ajax(url, options, function (cssText) {
             var externalCssRules = module.css.rulesForCssText(cssText);
 
             // Recursively follow @import statements
@@ -638,28 +635,24 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
         var errorUrls = [],
             backgroundDeclarations,
             backgroundValue = rule.style.getPropertyValue('background-image') || rule.style.getPropertyValue('background'),
-            joinedBackgroundDeclarations,
-            ajaxOptions = module.util.selectOptions(options, ['cache', 'cacheRepeated']);
+            joinedBackgroundDeclarations;
 
         backgroundDeclarations = sliceBackgroundDeclarations(backgroundValue);
 
         module.util.map(backgroundDeclarations, function (singleBackgroundValues, finish) {
-            var bgUrl = findBackgroundImageUrlInValues(singleBackgroundValues),
-                url;
+            var bgUrl = findBackgroundImageUrlInValues(singleBackgroundValues);
 
             if (!bgUrl || module.util.isDataUri(bgUrl.url)) {
                 finish(false);
                 return;
             }
 
-            url = module.util.getUrlRelativeToDocumentBase(bgUrl.url, options.baseUrl);
-
-            module.util.getDataURIForImageURL(url, ajaxOptions, function (dataURI) {
+            module.util.getDataURIForImageURL(bgUrl.url, options, function (dataURI) {
                 singleBackgroundValues[bgUrl.idx] = 'url("' + dataURI + '")';
 
                 finish(true);
             }, function () {
-                errorUrls.push(url);
+                errorUrls.push(module.util.joinUrl(options.baseUrl, bgUrl.url));
                 finish(false);
             });
         }, function (changedStates) {
@@ -741,9 +734,8 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
     };
 
     var loadAndInlineFontFace = function (cssRules, rule, options, successCallback) {
-        var fontReferences, fontSrc, url, format, base64Content,
-            errors = [],
-            ajaxOptions = module.util.selectOptions(options, ['cache', 'cacheRepeated']);
+        var fontReferences, fontSrc, format, base64Content,
+            errors = [];
 
         fontReferences = sliceFontFaceSrcReferences(rule.style.getPropertyValue("src"));
         module.util.map(fontReferences, function (reference, finish) {
@@ -754,16 +746,15 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
                 return;
             }
 
-            url = module.util.getUrlRelativeToDocumentBase(fontSrc.url, options.baseUrl);
             format = fontSrc.format || "woff";
 
-            module.util.binaryAjax(url, ajaxOptions, function (content) {
+            module.util.binaryAjax(fontSrc.url, options, function (content) {
                 base64Content = btoa(content);
                 reference[0] = 'url("data:font/' + format + ';base64,' + base64Content + '")';
 
                 finish(true);
             }, function () {
-                errors.push(url);
+                errors.push(module.util.joinUrl(options.baseUrl, fontSrc.url));
                 finish(false);
             });
         }, function (changedStates) {
@@ -818,12 +809,12 @@ window.rasterizeHTMLInline = (function (module, window, URI) {
 
     module.util = {};
 
-    module.util.getUrlRelativeToDocumentBase = function (url, baseUrl) {
-        if (baseUrl && baseUrl !== "about:blank") {
-            url = module.util.joinUrl(baseUrl, url);
+    module.util.getDocumentBaseUrl = function (doc) {
+        if (doc.baseURI !== 'about:blank') {
+            return doc.baseURI;
         }
 
-        return url;
+        return null;
     };
 
     module.util.clone = function (object) {
@@ -843,7 +834,7 @@ window.rasterizeHTMLInline = (function (module, window, URI) {
 
     module.util.joinUrl = function (baseUrl, url) {
         var theUrl = new URI(url);
-        if (theUrl.is("relative")) {
+        if (baseUrl && theUrl.is("relative")) {
             theUrl = theUrl.absoluteTo(baseUrl);
         }
         return theUrl.toString();
@@ -884,22 +875,6 @@ window.rasterizeHTMLInline = (function (module, window, URI) {
         }
     };
 
-    module.util.selectOptions = function (options, paramList) {
-        var selectedOptions = {};
-
-        if (!options) {
-            return selectedOptions;
-        }
-
-        paramList.forEach(function (param) {
-            if (options[param] !== undefined) {
-                selectedOptions[param] = options[param];
-            }
-        });
-
-        return selectedOptions;
-    };
-
     var lastCacheDate = null;
 
     var getUncachableURL = function (url, workAroundCaching, cacheRepeated) {
@@ -915,10 +890,11 @@ window.rasterizeHTMLInline = (function (module, window, URI) {
 
     module.util.ajax = function (url, options, successCallback, errorCallback) {
         var ajaxRequest = new window.XMLHttpRequest(),
+            joinedUrl = module.util.joinUrl(options.baseUrl, url),
             augmentedUrl;
 
         options = options || {};
-        augmentedUrl = getUncachableURL(url, options.cache === false, options.cacheRepeated);
+        augmentedUrl = getUncachableURL(joinedUrl, options.cache === false, options.cacheRepeated);
 
         ajaxRequest.addEventListener("load", function () {
             if (ajaxRequest.status === 200 || ajaxRequest.status === 0) {
@@ -943,7 +919,7 @@ window.rasterizeHTMLInline = (function (module, window, URI) {
 
     module.util.binaryAjax = function (url, options, successCallback, errorCallback) {
         var binaryContent = "",
-            ajaxOptions = module.util.selectOptions(options, ['cache', 'cacheRepeated']);
+            ajaxOptions = module.util.clone(options);
 
         ajaxOptions.mimeType = 'text/plain; charset=x-user-defined';
 
@@ -967,10 +943,9 @@ window.rasterizeHTMLInline = (function (module, window, URI) {
     };
 
     module.util.getDataURIForImageURL = function (url, options, successCallback, errorCallback) {
-        var base64Content, mimeType,
-            ajaxOptions = module.util.selectOptions(options, ['cache', 'cacheRepeated']);
+        var base64Content, mimeType;
 
-        module.util.binaryAjax(url, ajaxOptions, function (content) {
+        module.util.binaryAjax(url, options, function (content) {
             base64Content = btoa(content);
 
             mimeType = detectMimeType(content);
@@ -1408,16 +1383,13 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, html2xhtml, theWindow) {
 
     module.drawURL = function (url, canvas, options, callback) {
         var params = module.util.parseOptionalParameters(canvas, options, callback),
-            ajaxOptions,
             inlineOptions;
 
         inlineOptions = rasterizeHTMLInline.util.clone(params.options);
         inlineOptions.baseUrl = url;
 
         // TODO remove reference to rasterizeHTMLInline.util
-        ajaxOptions = rasterizeHTMLInline.util.selectOptions(params.options, ['cache', 'cacheRepeated']);
-
-        rasterizeHTMLInline.util.ajax(url, ajaxOptions, function (html) {
+        rasterizeHTMLInline.util.ajax(url, params.options, function (html) {
             module.drawHTML(html, params.canvas, inlineOptions, params.callback);
         }, function () {
             if (params.callback) {

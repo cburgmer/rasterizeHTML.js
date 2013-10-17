@@ -47,6 +47,12 @@ describe("Inline CSS links", function () {
         });
     });
 
+    var mockAjaxWithSuccess = function (text) {
+        ajaxSpy.andCallFake(function (url, options, success) {
+            success(text);
+        });
+    };
+
     it("should do nothing if no linked CSS is found", function () {
         rasterizeHTMLInline.loadAndInlineCssLinks(doc, callback);
 
@@ -153,36 +159,35 @@ describe("Inline CSS links", function () {
     });
 
     it("should respect the document's baseURI when loading linked CSS", function () {
-        joinUrlSpy.andCallFake(function (base, rel) {
-            return "url/" + rel;
-        });
+        var getDocumentBaseUrlSpy = spyOn(rasterizeHTMLInline.util, 'getDocumentBaseUrl').andCallThrough();
+
+        mockAjaxWithSuccess("p { font-size: 14px; }");
 
         doc = rasterizeHTMLTestHelper.readDocumentFixture("externalCSS.html");
 
         rasterizeHTMLInline.loadAndInlineCssLinks(doc, callback);
 
         expect(callback).toHaveBeenCalled();
-        expect(joinUrlSpy).toHaveBeenCalledWith(doc.baseURI, "some.css");
 
         expect(doc.getElementsByTagName("style").length).toEqual(1);
         expect(doc.getElementsByTagName("style")[0].textContent).toEqual("p { font-size: 14px; }");
         expect(doc.getElementsByTagName("link").length).toEqual(0);
 
+        expect(ajaxSpy.mostRecentCall.args[1].baseUrl).toEqual(doc.baseURI);
         expect(loadCSSImportsForRulesSpy.mostRecentCall.args[2].baseUrl).toEqual(doc.baseURI);
         expect(loadAndInlineCSSResourcesForRulesSpy.mostRecentCall.args[1].baseUrl).toEqual(doc.baseURI);
+        expect(getDocumentBaseUrlSpy).toHaveBeenCalledWith(doc);
     });
 
     it("should respect optional baseUrl when loading linked CSS", function () {
-        joinUrlSpy.andCallFake(function (base, rel) {
-            return "url/" + rel;
-        });
+        mockAjaxWithSuccess("p { font-size: 14px; }");
 
         doc = rasterizeHTMLTestHelper.readDocumentFixtureWithoutBaseURI("externalCSS.html");
 
         rasterizeHTMLInline.loadAndInlineCssLinks(doc, {baseUrl: jasmine.getFixtures().fixturesPath}, callback);
 
         expect(callback).toHaveBeenCalled();
-        expect(joinUrlSpy).toHaveBeenCalledWith(jasmine.getFixtures().fixturesPath, "some.css");
+        expect(ajaxSpy.mostRecentCall.args[1].baseUrl).toEqual(jasmine.getFixtures().fixturesPath);
 
         expect(loadCSSImportsForRulesSpy.mostRecentCall.args[2].baseUrl).toEqual(jasmine.getFixtures().fixturesPath);
         expect(loadAndInlineCSSResourcesForRulesSpy.mostRecentCall.args[1].baseUrl).toEqual(jasmine.getFixtures().fixturesPath);
@@ -191,9 +196,7 @@ describe("Inline CSS links", function () {
     it("should favour explicit baseUrl over document.baseURI when loading linked CSS", function () {
         var baseUrl = jasmine.getFixtures().fixturesPath;
 
-        joinUrlSpy.andCallFake(function (base, rel) {
-            return "url/" + rel;
-        });
+        mockAjaxWithSuccess("p { font-size: 14px; }");
 
         doc = rasterizeHTMLTestHelper.readDocumentFixture("externalCSS.html");
         expect(doc.baseURI).not.toBeNull();
@@ -203,7 +206,7 @@ describe("Inline CSS links", function () {
         rasterizeHTMLInline.loadAndInlineCssLinks(doc, {baseUrl: jasmine.getFixtures().fixturesPath}, callback);
 
         expect(callback).toHaveBeenCalled();
-        expect(joinUrlSpy).toHaveBeenCalledWith(jasmine.getFixtures().fixturesPath, "some.css");
+        expect(ajaxSpy.mostRecentCall.args[1].baseUrl).toEqual(jasmine.getFixtures().fixturesPath);
 
         expect(loadCSSImportsForRulesSpy.mostRecentCall.args[2].baseUrl).toEqual(jasmine.getFixtures().fixturesPath);
         expect(loadAndInlineCSSResourcesForRulesSpy.mostRecentCall.args[1].baseUrl).toEqual(jasmine.getFixtures().fixturesPath);
@@ -219,9 +222,8 @@ describe("Inline CSS links", function () {
 
         doc.head.appendChild(cssWithRelativeResource);
 
-        joinUrlSpy.andCallThrough();
         ajaxSpy.andCallFake(function (url, options, success) {
-            if (url === "some_url/below/some.css") {
+            if (url === "below/some.css" && options.baseUrl === "some_url/") {
                 success('div { background-image: url("../green.png"); }\n' +
                     '@font-face { font-family: "test font"; src: url("fake.woff"); }');
             }

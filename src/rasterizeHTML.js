@@ -391,16 +391,13 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, html2xhtml, theWindow) {
 
     module.drawURL = function (url, canvas, options, callback) {
         var params = module.util.parseOptionalParameters(canvas, options, callback),
-            ajaxOptions,
             inlineOptions;
 
         inlineOptions = rasterizeHTMLInline.util.clone(params.options);
         inlineOptions.baseUrl = url;
 
         // TODO remove reference to rasterizeHTMLInline.util
-        ajaxOptions = rasterizeHTMLInline.util.selectOptions(params.options, ['cache', 'cacheRepeated']);
-
-        rasterizeHTMLInline.util.ajax(url, ajaxOptions, function (html) {
+        rasterizeHTMLInline.util.ajax(url, params.options, function (html) {
             module.drawHTML(html, params.canvas, inlineOptions, params.callback);
         }, function () {
             if (params.callback) {
