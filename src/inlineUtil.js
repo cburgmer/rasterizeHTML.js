@@ -87,7 +87,6 @@ window.rasterizeHTMLInline = (function (module, window, URI) {
             joinedUrl = module.util.joinUrl(options.baseUrl, url),
             augmentedUrl;
 
-        options = options || {};
         augmentedUrl = getUncachableURL(joinedUrl, options.cache === false, options.cacheRepeated);
 
         ajaxRequest.addEventListener("load", function () {

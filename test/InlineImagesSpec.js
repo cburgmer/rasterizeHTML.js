@@ -80,6 +80,18 @@ describe("Image and image input inline", function () {
         expect(doc.getElementById("image").src).toEqual('data:image/png;base64,soMEfAkebASE64=');
     });
 
+    it("should not touch an image without a src", function () {
+        var callback = jasmine.createSpy("callback");
+
+        doc.body.innerHTML = '<img id="image">';
+
+        rasterizeHTMLInline.loadAndInlineImages(doc, callback);
+
+        expect(callback).toHaveBeenCalled();
+
+        expect(doc.getElementById("image").parentNode.innerHTML).toEqual('<img id="image">');
+    });
+
     it("should respect the document's baseURI when loading the image", function () {
         var callback = jasmine.createSpy("callback"),
             getDocumentBaseUrlSpy = spyOn(rasterizeHTMLInline.util, 'getDocumentBaseUrl').andCallThrough();

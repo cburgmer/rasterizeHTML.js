@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.4.1 - 2013-10-17
+/*! rasterizeHTML.js - v0.4.1 - 2013-10-19
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2013 Christoph Burgmer; Licensed MIT */
 window.rasterizeHTMLInline = (function (module) {
@@ -7,11 +7,11 @@ window.rasterizeHTMLInline = (function (module) {
     /* Img Inlining */
 
     var encodeImageAsDataURI = function (image, options, successCallback, errorCallback) {
-        var url = image.attributes.src.nodeValue,
+        var url = image.attributes.src ? image.attributes.src.nodeValue : null,
             documentBase = module.util.getDocumentBaseUrl(image.ownerDocument),
             ajaxOptions = module.util.clone(options);
 
-        if (module.util.isDataUri(url)) {
+        if (url === null || module.util.isDataUri(url)) {
             successCallback();
             return;
         }
@@ -893,7 +893,6 @@ window.rasterizeHTMLInline = (function (module, window, URI) {
             joinedUrl = module.util.joinUrl(options.baseUrl, url),
             augmentedUrl;
 
-        options = options || {};
         augmentedUrl = getUncachableURL(joinedUrl, options.cache === false, options.cacheRepeated);
 
         ajaxRequest.addEventListener("load", function () {

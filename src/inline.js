@@ -4,11 +4,11 @@ window.rasterizeHTMLInline = (function (module) {
     /* Img Inlining */
 
     var encodeImageAsDataURI = function (image, options, successCallback, errorCallback) {
-        var url = image.attributes.src.nodeValue,
+        var url = image.attributes.src ? image.attributes.src.nodeValue : null,
             documentBase = module.util.getDocumentBaseUrl(image.ownerDocument),
             ajaxOptions = module.util.clone(options);
 
-        if (module.util.isDataUri(url)) {
+        if (url === null || module.util.isDataUri(url)) {
             successCallback();
             return;
         }
