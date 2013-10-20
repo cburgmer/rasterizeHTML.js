@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>rasterizeHTML.js performance test</title>
+    <script type="text/javascript" src="../lib/html2xhtml.js"></script> <!-- Only needed for Chrome & Safari -->
+    <script type="text/javascript" src="../lib/CSSOM.js"></script> <!-- Only needed for Chrome -->
+    <script type="text/javascript" src="../lib/URI.js"></script>
+    <script type="text/javascript" src="../src/inlineUtil.js"></script>
+    <script type="text/javascript" src="../src/inlineCss.js"></script>
+    <script type="text/javascript" src="../src/inline.js"></script>
+    <script type="text/javascript" src="../src/rasterizeHTML.js"></script>
+</head>
+<body>
+    <pre id="console"></pre>
+    <canvas id="canvas" width="1024" height="768"></canvas>
+
+    <script type="text/javascript">
+        var url = "fixtures/test.html";
+
+        var renderPageMultipleTimes = function (count, tick, finishCallback) {
+            var canvas = document.getElementById("canvas");
+            if (count === 0) {
+                finishCallback();
+                return;
+            }
+            rasterizeHTML.drawURL(url, canvas, function () {
+                count -= 1;
+                tick(count);
+                renderPageMultipleTimes(count, tick, finishCallback);
+            });
+        }
+
+        var log = function (msg) {
+            var pre = document.getElementById("console");
+            pre.textContent += msg;
+        };
+
+        var run = function (runs, url) {
+            var startTime = Date.now(),
+                firstStepEndTime;
+
+            log("Running performance test against " + url + " with " + runs + " runs\n");
+
+            renderPageMultipleTimes(runs, function (stepsLeft) {
+                if (stepsLeft === runs - 1) {
+                    firstStepEndTime = Date.now();
+                }
+
+                log(".");
+                if (stepsLeft === 0) {
+                    log("\n");
+                }
+            }, function () {
+                var endTime = Date.now();
+
+                    log("Results:\n");
+                    log(Math.floor((endTime - startTime) / runs) + " milliseconds on average\n");
+                    log(Math.floor(firstStepEndTime - startTime) + " milliseconds for first call\n");
+                    log(Math.floor((endTime - firstStepEndTime) / (runs - 1)) + " milliseconds on avarage for remaining\n");
+            });
+        };
+
+        run(10, url);
+    </script>
+</body>
+</html>
