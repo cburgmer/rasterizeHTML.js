@@ -36,7 +36,7 @@ renderPage(fs.absolute('integrationTestPage.html'), function (imageUrl) {
 
         imageDiffPage.open("diffHelperPage.html", function () {
             imageDiffPage.evaluate(function (url1, url2) {
-                isEqual(url1, url2, 300);
+                isEqual(url1, url2, 5);
             }, imageUrl, targetImageUrl);
         });
     });
