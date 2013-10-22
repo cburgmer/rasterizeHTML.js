@@ -54,10 +54,10 @@
             }, function () {
                 var endTime = Date.now();
 
-                    log("Results:\n");
-                    log(Math.floor((endTime - startTime) / runs) + " milliseconds on average\n");
-                    log(Math.floor(firstStepEndTime - startTime) + " milliseconds for first call\n");
-                    log(Math.floor((endTime - firstStepEndTime) / (runs - 1)) + " milliseconds on avarage for remaining\n");
+                log("Results:\n");
+                log(Math.floor((endTime - startTime) / runs) + " milliseconds on average\n");
+                log(Math.floor(firstStepEndTime - startTime) + " milliseconds for first call\n");
+                log(Math.floor((endTime - firstStepEndTime) / (runs - 1)) + " milliseconds on avarage for remaining\n");
             });
         };
 

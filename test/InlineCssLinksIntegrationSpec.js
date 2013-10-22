@@ -26,6 +26,7 @@ describe("Inline CSS content (integration)", function () {
         ajaxSpyUrlMap[params.url] = params.respondWith;
     };
 
+    // https://github.com/cburgmer/rasterizeHTML.js/issues/42
     it("should correctly inline a font as second rule with CSSOM fallback", function () {
         mockAjaxWithSuccess({
             url: "some.html",
