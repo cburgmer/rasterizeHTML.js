@@ -16,7 +16,8 @@
     <canvas id="canvas" width="1024" height="768"></canvas>
 
     <script type="text/javascript">
-        var url = "fixtures/test.html";
+        var url = "performance_test_pages/twitter/twitter.com/index.html",
+            cache = {};
 
         var renderPageMultipleTimes = function (count, tick, finishCallback) {
             var canvas = document.getElementById("canvas");
@@ -24,7 +25,7 @@
                 finishCallback();
                 return;
             }
-            rasterizeHTML.drawURL(url, canvas, function () {
+            rasterizeHTML.drawURL(url, canvas, {cacheBucket: cache}, function () {
                 count -= 1;
                 tick(count);
                 renderPageMultipleTimes(count, tick, finishCallback);

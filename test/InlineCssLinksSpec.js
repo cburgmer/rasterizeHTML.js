@@ -263,6 +263,64 @@ describe("Inline CSS links", function () {
         expect(loadAndInlineCSSResourcesForRulesSpy.mostRecentCall.args[1].cache).not.toBe(false);
     });
 
+    it("should cache inlined content if a cache bucket is given", function () {
+        var cacheBucket = {};
+
+        // first call
+        doc = document.implementation.createHTMLDocument("");
+        doc.head.appendChild(cssLink);
+
+        rasterizeHTMLInline.loadAndInlineCssLinks(doc, {cacheBucket: cacheBucket}, callback);
+        expect(ajaxSpy).toHaveBeenCalled();
+
+        ajaxSpy.reset();
+        loadCSSImportsForRulesSpy.reset();
+        loadAndInlineCSSResourcesForRulesSpy.reset();
+
+        // second call
+        doc = rasterizeHTMLTestHelper.readDocumentFixture("externalCSS.html"); // use a document with different baseUrl
+        doc.getElementsByTagName("head")[0].appendChild(cssLink);
+
+        rasterizeHTMLInline.loadAndInlineCssLinks(doc, {cacheBucket: cacheBucket}, callback);
+
+        expect(ajaxSpy).not.toHaveBeenCalled();
+        expect(loadCSSImportsForRulesSpy).not.toHaveBeenCalled();
+        expect(loadAndInlineCSSResourcesForRulesSpy).not.toHaveBeenCalled();
+
+        expect(doc.getElementsByTagName("style")[0].textContent).toEqual("p { font-size: 14px; }");
+    });
+
+    it("should not cache inlined content if caching turned off", function () {
+        var cacheBucket = {};
+
+        // first call
+        doc = document.implementation.createHTMLDocument("");
+        doc.head.appendChild(cssLink);
+
+        rasterizeHTMLInline.loadAndInlineCssLinks(doc, {cacheBucket: cacheBucket, cache: false}, callback);
+        expect(ajaxSpy).toHaveBeenCalled();
+
+        ajaxSpy.reset();
+
+        // second call
+        doc = document.implementation.createHTMLDocument("");
+        doc.head.appendChild(cssLink);
+
+        rasterizeHTMLInline.loadAndInlineCssLinks(doc, {cacheBucket: cacheBucket, cache: false}, callback);
+
+        expect(ajaxSpy).toHaveBeenCalled();
+    });
+
+    it("should complain if the cache bucket has a hole", function () {
+        doc.head.appendChild(cssLink);
+        try {
+            rasterizeHTMLInline.loadAndInlineCssLinks(doc, {cacheBucket: 42}, callback);
+            expect(true).toBe(false);
+        } catch (e) {
+            expect(e.message).toEqual("cacheBucket is not an object");
+        }
+    });
+
     describe("error handling", function () {
         var brokenCssLink, anotherBrokenCssLink;
 
@@ -336,6 +394,28 @@ describe("Inline CSS links", function () {
             rasterizeHTMLInline.loadAndInlineCssLinks(doc, callback);
 
             expect(callback).toHaveBeenCalledWith([]);
+        });
+
+        it("should cache errors alongside if a cache bucket is given", function () {
+            var cacheBucket = {};
+
+            loadCSSImportsForRulesSpy.andCallFake(function (cssRules, alreadyLoadedCssUrls, options, callback) {
+                callback(false, ["import inline error"]);
+            });
+
+            // first call
+            doc = document.implementation.createHTMLDocument("");
+            doc.head.appendChild(cssLink);
+
+            rasterizeHTMLInline.loadAndInlineCssLinks(doc, {cacheBucket: cacheBucket}, function () {});
+
+            // second call
+            doc = document.implementation.createHTMLDocument("");
+            doc.head.appendChild(cssLink);
+
+            rasterizeHTMLInline.loadAndInlineCssLinks(doc, {cacheBucket: cacheBucket}, callback);
+
+            expect(callback).toHaveBeenCalledWith(["import inline error"]);
         });
     });
 });

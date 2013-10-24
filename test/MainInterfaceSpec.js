@@ -70,9 +70,9 @@ describe("Main interface of rasterizeHTML.js", function () {
         it("should pass on options", function () {
             var doc = "doc";
 
-            rasterizeHTML.drawDocument(doc, canvas, {baseUrl: "a_baseUrl", cache: false}, callback);
+            rasterizeHTML.drawDocument(doc, canvas, {baseUrl: "a_baseUrl", cache: false, cacheRepeated: true, cacheBucket: {}}, callback);
 
-            expect(inlineReferences).toHaveBeenCalledWith(doc, {baseUrl: "a_baseUrl", cache: false}, jasmine.any(Function));
+            expect(inlineReferences).toHaveBeenCalledWith(doc, {baseUrl: "a_baseUrl", cache: false, cacheRepeated: true, cacheBucket: {}}, jasmine.any(Function));
 
             expect(callback).toHaveBeenCalledWith(svgImage, []);
         });
@@ -207,7 +207,7 @@ describe("Main interface of rasterizeHTML.js", function () {
 
             expect(ajaxSpy).toHaveBeenCalledWith("fixtures/image.html", {
                 cache: false,
-                cacheRepeated: true
+                cacheRepeated: true,
             }, jasmine.any(Function), jasmine.any(Function));
             expect(callback).toHaveBeenCalled();
         });

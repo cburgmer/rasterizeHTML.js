@@ -135,13 +135,45 @@ window.rasterizeHTMLInline = (function (module) {
         parent.removeChild(oldLinkNode);
     };
 
+    var cacheInlinedContent = function (options) {
+        return options.cache !== false && options.cacheBucket;
+    };
+
+    var getLinkedCssCacheFor = function (bucket, baseUrl, url) {
+        var combinedUrl = module.util.joinUrl(baseUrl, url);
+
+        if (typeof bucket !== "object") {
+            throw new Error("cacheBucket is not an object");
+        }
+
+        bucket.linkedCssCache = bucket.linkedCssCache || {};
+
+        return bucket.linkedCssCache[combinedUrl];
+    };
+
+    var setLinkedCssCacheFor = function (bucket, baseUrl, url, value) {
+        var combinedUrl = module.util.joinUrl(baseUrl, url);
+
+        bucket.linkedCssCache = bucket.linkedCssCache || {};
+        bucket.linkedCssCache[combinedUrl] = value;
+    };
+
     var loadLinkedCSS = function (link, options, successCallback, errorCallback) {
         var cssHref = link.attributes.href.nodeValue,
             documentBaseUrl = options.baseUrl || module.util.getDocumentBaseUrl(link.ownerDocument),
-            ajaxOptions = module.util.clone(options);
+            ajaxOptions = module.util.clone(options),
+            cachedValue;
 
         if (!ajaxOptions.baseUrl && documentBaseUrl) {
             ajaxOptions.baseUrl = documentBaseUrl;
+        }
+
+        if (cacheInlinedContent(options)) {
+            cachedValue = getLinkedCssCacheFor(options.cacheBucket, ajaxOptions.baseUrl, cssHref);
+            if (cachedValue) {
+                successCallback(cachedValue.content, cachedValue.errors);
+                return;
+            }
         }
 
         module.util.ajax(cssHref, ajaxOptions, function (content) {
@@ -157,6 +189,12 @@ window.rasterizeHTMLInline = (function (module) {
                         content = module.css.cssRulesToText(cssRules);
                     }
 
+                    if (cacheInlinedContent(options)) {
+                        setLinkedCssCacheFor(options.cacheBucket, ajaxOptions.baseUrl, cssHref, {
+                            content: content,
+                            errors: module.util.cloneArray(errors)
+                        });
+                    }
                     successCallback(content, errors);
                 });
             });
