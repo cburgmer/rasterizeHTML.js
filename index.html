@@ -90,7 +90,11 @@ rasterizeHTML.drawDocument( document [, canvas] [, options] [, callback] )</pre>
     <span class="nt">&lt;script </span><span class="na">type=</span><span class="s">"text/javascript"</span><span class="nt">&gt;</span>
         <span class="kd">var</span> <span class="nx">canvas</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s2">"canvas"</span><span class="p">);</span>
 
-        <span class="nx">rasterizeHTML</span><span class="p">.</span><span class="nx">drawHTML</span><span class="p">(</span><span class="s1">'Some &lt;span style="color: green"&gt;HTML&lt;/span&gt; with an image &lt;img src="someimg.png" /&gt;'</span><span class="p">,</span> <span class="nx">canvas</span><span class="p">);</span>
+        <span class="nx">rasterizeHTML</span><span class="p">.</span><span class="nx">drawHTML</span><span class="p">(</span><span class="s1">'&lt;div style="font-size: 20px;"&gt;'</span><span class="p"> +</span>
+            <span class="s1">'Some &lt;span style="color: green"&gt;HTML&lt;/span&gt;'</span><span class="p"> +</span>
+            <span class="s1">' with an image &lt;img src="someimg.png"&gt;'</span><span class="p"> +</span>
+            <span class="s1">'&lt;/div&gt;'</span><span class="p">,</span>
+            <span class="nx">canvas</span><span class="p">);</span>
     <span class="nt">&lt;/script&gt;</span>
 <span class="nt">&lt;/body&gt;</span>
 <span class="nt">&lt;/html&gt;</span>
