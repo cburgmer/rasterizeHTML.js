@@ -158,9 +158,29 @@ window.rasterizeHTMLInline = (function (module) {
         bucket.linkedCssCache[combinedUrl] = value;
     };
 
+    var requestStylesheetAndInlineResources = function (url, options, successCallback, errorCallback) {
+        module.util.ajax(url, options, function (content) {
+            var cssRules = module.css.rulesForCssText(content),
+                changedFromPathAdjustment;
+
+            changedFromPathAdjustment = module.css.adjustPathsOfCssResources(url, cssRules);
+            module.css.loadCSSImportsForRules(cssRules, [], options, function (changedFromImports, importErrors) {
+                module.css.loadAndInlineCSSResourcesForRules(cssRules, options, function (changedFromResources, resourceErrors) {
+                    var errors = importErrors.concat(resourceErrors);
+
+                    if (changedFromPathAdjustment || changedFromImports || changedFromResources) {
+                        content = module.css.cssRulesToText(cssRules);
+                    }
+
+                    successCallback(content, errors);
+                });
+            });
+        }, errorCallback);
+    };
+
     var loadLinkedCSS = function (link, options, successCallback, errorCallback) {
         var cssHref = link.attributes.href.nodeValue,
-            documentBaseUrl = options.baseUrl || module.util.getDocumentBaseUrl(link.ownerDocument),
+            documentBaseUrl = module.util.getDocumentBaseUrl(link.ownerDocument),
             ajaxOptions = module.util.clone(options),
             cachedValue;
 
@@ -176,30 +196,17 @@ window.rasterizeHTMLInline = (function (module) {
             }
         }
 
-        module.util.ajax(cssHref, ajaxOptions, function (content) {
-            var cssRules = module.css.rulesForCssText(content),
-                changedFromPathAdjustment;
-
-            changedFromPathAdjustment = module.css.adjustPathsOfCssResources(cssHref, cssRules);
-            module.css.loadCSSImportsForRules(cssRules, [], ajaxOptions, function (changedFromImports, importErrors) {
-                module.css.loadAndInlineCSSResourcesForRules(cssRules, ajaxOptions, function (changedFromResources, resourceErrors) {
-                    var errors = importErrors.concat(resourceErrors);
-
-                    if (changedFromPathAdjustment || changedFromImports || changedFromResources) {
-                        content = module.css.cssRulesToText(cssRules);
-                    }
-
-                    if (cacheInlinedContent(options)) {
-                        setLinkedCssCacheFor(options.cacheBucket, ajaxOptions.baseUrl, cssHref, {
-                            content: content,
-                            errors: module.util.cloneArray(errors)
-                        });
-                    }
-                    successCallback(content, errors);
+        requestStylesheetAndInlineResources(cssHref, ajaxOptions, function (content, errors) {
+            if (cacheInlinedContent(options)) {
+                setLinkedCssCacheFor(options.cacheBucket, ajaxOptions.baseUrl, cssHref, {
+                    content: content,
+                    errors: module.util.cloneArray(errors)
                 });
-            });
+            }
+
+            successCallback(content, errors);
         }, function () {
-            errorCallback(module.util.joinUrl(documentBaseUrl, cssHref));
+            errorCallback(module.util.joinUrl(ajaxOptions.baseUrl, cssHref));
         });
     };
 
