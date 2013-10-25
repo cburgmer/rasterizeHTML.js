@@ -92,9 +92,26 @@ window.rasterizeHTMLInline = (function (module) {
         bucket.inlineCssCache[basePathUrl][originalContent] = value;
     };
 
+    var requestExternalsForStylesheet = function (styleContent, options, alreadyLoadedCssUrls, callback) {
+        var cssRules = module.css.rulesForCssText(styleContent);
+
+        module.css.loadCSSImportsForRules(cssRules, alreadyLoadedCssUrls, options, function (changedFromImports, importErrors) {
+            module.css.loadAndInlineCSSResourcesForRules(cssRules, options, function (changedFromResources, resourceErrors) {
+                var errors = importErrors.concat(resourceErrors),
+                    hasChanges = changedFromImports || changedFromResources;
+
+                if (hasChanges) {
+                    styleContent = module.css.cssRulesToText(cssRules);
+                }
+
+                callback(hasChanges, styleContent, errors);
+            });
+        });
+    };
+
     var loadAndInlineCssForStyle = function (style, options, alreadyLoadedCssUrls, callback) {
         var styleContent = style.textContent,
-            cachedValue, cssRules;
+            cachedValue;
 
         if (cacheInlinedContent(options)) {
             cachedValue = getInlineCssCacheFor(options.cacheBucket, options.baseUrl, styleContent);
@@ -107,29 +124,20 @@ window.rasterizeHTMLInline = (function (module) {
             }
         }
 
-        cssRules = module.css.rulesForCssText(styleContent);
+        requestExternalsForStylesheet(styleContent, options, alreadyLoadedCssUrls, function (hasChanges, inlinedStyleContent, errors) {
+            if (hasChanges) {
+                style.childNodes[0].nodeValue = inlinedStyleContent;
+            }
 
-        module.css.loadCSSImportsForRules(cssRules, alreadyLoadedCssUrls, options, function (changedFromImports, importErrors) {
-            module.css.loadAndInlineCSSResourcesForRules(cssRules, options, function (changedFromResources, resourceErrors) {
-                var errors = importErrors.concat(resourceErrors),
-                    hasChanges = changedFromImports || changedFromResources,
-                    inlinedStyleContent;
+            if (cacheInlinedContent(options)) {
+                setInlineCssCacheFor(options.cacheBucket, options.baseUrl, styleContent, {
+                    content: inlinedStyleContent,
+                    hasChanges: hasChanges,
+                    errors: module.util.cloneArray(errors)
+                });
+            }
 
-                if (hasChanges) {
-                    inlinedStyleContent = module.css.cssRulesToText(cssRules);
-                    style.childNodes[0].nodeValue = inlinedStyleContent;
-                }
-
-                if (cacheInlinedContent(options)) {
-                    setInlineCssCacheFor(options.cacheBucket, options.baseUrl, styleContent, {
-                        content: inlinedStyleContent,
-                        hasChanges: hasChanges,
-                        errors: module.util.cloneArray(errors)
-                    });
-                }
-
-                callback(errors);
-            });
+            callback(errors);
         });
     };
 
