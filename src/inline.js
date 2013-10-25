@@ -63,15 +63,66 @@ window.rasterizeHTMLInline = (function (module) {
 
     /* Style inlining */
 
+    var getUrlBasePath = function (url) {
+        return module.util.joinUrl(url, '.');
+    };
+
+    var getInlineCssCacheFor = function (bucket, baseUrl, content) {
+        var basePathUrl = getUrlBasePath(baseUrl);
+
+        if (typeof bucket !== "object") {
+            throw new Error("cacheBucket is not an object");
+        }
+
+        bucket.inlineCssCache = bucket.inlineCssCache || {};
+        bucket.inlineCssCache[basePathUrl] = bucket.inlineCssCache[basePathUrl] || {};
+
+        return bucket.inlineCssCache[basePathUrl][content];
+    };
+
+    var setInlineCssCacheFor = function (bucket, baseUrl, originalContent, value) {
+        var basePathUrl = getUrlBasePath(baseUrl);
+
+        bucket.inlineCssCache = bucket.inlineCssCache || {};
+        bucket.inlineCssCache[basePathUrl] = bucket.inlineCssCache[basePathUrl] || {};
+
+        bucket.inlineCssCache[basePathUrl][originalContent] = value;
+    };
+
     var loadAndInlineCssForStyle = function (style, options, alreadyLoadedCssUrls, callback) {
-        var cssRules = module.css.rulesForCssText(style.textContent);
+        var styleContent = style.textContent,
+            cachedValue, cssRules;
+
+        if (cacheInlinedContent(options)) {
+            cachedValue = getInlineCssCacheFor(options.cacheBucket, options.baseUrl, styleContent);
+            if (cachedValue) {
+                if (cachedValue.hasChanges) {
+                    style.childNodes[0].nodeValue = cachedValue.content;
+                }
+                callback(cachedValue.errors);
+                return;
+            }
+        }
+
+        cssRules = module.css.rulesForCssText(styleContent);
 
         module.css.loadCSSImportsForRules(cssRules, alreadyLoadedCssUrls, options, function (changedFromImports, importErrors) {
             module.css.loadAndInlineCSSResourcesForRules(cssRules, options, function (changedFromResources, resourceErrors) {
-                var errors = importErrors.concat(resourceErrors);
+                var errors = importErrors.concat(resourceErrors),
+                    hasChanges = changedFromImports || changedFromResources,
+                    inlinedStyleContent;
 
-                if (changedFromImports || changedFromResources) {
-                    style.childNodes[0].nodeValue = module.css.cssRulesToText(cssRules);
+                if (hasChanges) {
+                    inlinedStyleContent = module.css.cssRulesToText(cssRules);
+                    style.childNodes[0].nodeValue = inlinedStyleContent;
+                }
+
+                if (cacheInlinedContent(options)) {
+                    setInlineCssCacheFor(options.cacheBucket, options.baseUrl, styleContent, {
+                        content: inlinedStyleContent,
+                        hasChanges: hasChanges,
+                        errors: module.util.cloneArray(errors)
+                    });
                 }
 
                 callback(errors);

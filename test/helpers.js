@@ -106,7 +106,7 @@ var rasterizeHTMLTestHelper = (function () {
         styleNode.type = "text/css";
         styleNode.appendChild(doc.createTextNode(styleContent));
 
-        doc.head.appendChild(styleNode);
+        doc.getElementsByTagName('head')[0].appendChild(styleNode);
     };
 
     var getImageForURL = function (url, finishHandler) {

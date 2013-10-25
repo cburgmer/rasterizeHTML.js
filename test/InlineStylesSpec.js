@@ -137,19 +137,134 @@ describe("Import styles", function () {
         expect(loadAndInlineCSSResourcesForRulesSpy.mostRecentCall.args[1].cache).not.toBe(false);
     });
 
-    it("should report errors", function () {
-        loadCSSImportsForRulesSpy.andCallFake(function(rules, includedList, options, callback) {
-            callback(false, ['import error']);
-        });
+    it("should cache inlined content if a cache bucket is given", function () {
+        var cacheBucket = {};
+
         loadAndInlineCSSResourcesForRulesSpy.andCallFake(function (cssRules, options, callback) {
-            callback(false, ['resource error']);
+            callback(true, [{
+                cssText: 'background-image { }'
+            }]);
         });
 
-        rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import url("that.css");');
+        // first call
+        doc = document.implementation.createHTMLDocument("");
+        rasterizeHTMLTestHelper.addStyleToDocument(doc, 'background-image { url(anImage.png); }');
 
-        rasterizeHTMLInline.loadAndInlineStyles(doc, callback);
+        rasterizeHTMLInline.loadAndInlineStyles(doc, {cacheBucket: cacheBucket}, callback);
+        expect(loadCSSImportsForRulesSpy).toHaveBeenCalled();
 
-        expect(callback).toHaveBeenCalledWith(['import error', 'resource error']);
+        loadCSSImportsForRulesSpy.reset();
+        loadAndInlineCSSResourcesForRulesSpy.reset();
+
+        // second call
+        doc = document.implementation.createHTMLDocument("");
+        rasterizeHTMLTestHelper.addStyleToDocument(doc, 'background-image { url(anImage.png); }');
+
+        rasterizeHTMLInline.loadAndInlineStyles(doc, {cacheBucket: cacheBucket}, callback);
+
+        expect(loadCSSImportsForRulesSpy).not.toHaveBeenCalled();
+        expect(loadAndInlineCSSResourcesForRulesSpy).not.toHaveBeenCalled();
+
+        expect(doc.getElementsByTagName("style")[0].textContent).toMatch(/background-image\s*{\s*}/);
     });
 
+    it("should not use cache inlined content if the documents' URLs don't match", function () {
+        var cacheBucket = {};
+
+        loadAndInlineCSSResourcesForRulesSpy.andCallFake(function (cssRules, options, callback) {
+            callback(true, [{
+                cssText: 'background-image { }'
+            }]);
+        });
+
+        // first call
+        doc = document.implementation.createHTMLDocument("");
+        rasterizeHTMLTestHelper.addStyleToDocument(doc, 'background-image { url(anImage.png); }');
+
+        rasterizeHTMLInline.loadAndInlineStyles(doc, {cacheBucket: cacheBucket}, callback);
+        expect(loadCSSImportsForRulesSpy).toHaveBeenCalled();
+
+        loadCSSImportsForRulesSpy.reset();
+        loadAndInlineCSSResourcesForRulesSpy.reset();
+
+        // second call
+        doc = rasterizeHTMLTestHelper.readDocumentFixture("image.html"); // use a document with different baseUrl
+        rasterizeHTMLTestHelper.addStyleToDocument(doc, 'background-image { url(anImage.png); }');
+
+        rasterizeHTMLInline.loadAndInlineStyles(doc, {cacheBucket: cacheBucket}, callback);
+
+        expect(loadCSSImportsForRulesSpy).toHaveBeenCalled();
+        expect(loadAndInlineCSSResourcesForRulesSpy).toHaveBeenCalled();
+    });
+
+    it("should not cache inlined content if caching turned off", function () {
+        var cacheBucket = {};
+
+        // first call
+        doc = document.implementation.createHTMLDocument("");
+        rasterizeHTMLTestHelper.addStyleToDocument(doc, 'background-image { url(anImage.png); }');
+
+        rasterizeHTMLInline.loadAndInlineStyles(doc, {cacheBucket: cacheBucket, cache: false}, callback);
+        expect(loadCSSImportsForRulesSpy).toHaveBeenCalled();
+
+        loadCSSImportsForRulesSpy.reset();
+
+        // second call
+        doc = document.implementation.createHTMLDocument("");
+        rasterizeHTMLTestHelper.addStyleToDocument(doc, 'background-image { url(anImage.png); }');
+
+        rasterizeHTMLInline.loadAndInlineStyles(doc, {cacheBucket: cacheBucket, cache: false}, callback);
+
+        expect(loadCSSImportsForRulesSpy).toHaveBeenCalled();
+    });
+
+    it("should complain if the cache bucket has a hole", function () {
+        rasterizeHTMLTestHelper.addStyleToDocument(doc, 'background-image { url(anImage.png); }');
+        try {
+            rasterizeHTMLInline.loadAndInlineStyles(doc, {cacheBucket: 42}, callback);
+            expect(true).toBe(false);
+        } catch (e) {
+            expect(e.message).toEqual("cacheBucket is not an object");
+        }
+    });
+
+    describe("error handling", function () {
+
+        it("should report errors", function () {
+            loadCSSImportsForRulesSpy.andCallFake(function(rules, includedList, options, callback) {
+                callback(false, ['import error']);
+            });
+            loadAndInlineCSSResourcesForRulesSpy.andCallFake(function (cssRules, options, callback) {
+                callback(false, ['resource error']);
+            });
+
+            rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import url("that.css");');
+
+            rasterizeHTMLInline.loadAndInlineStyles(doc, callback);
+
+            expect(callback).toHaveBeenCalledWith(['import error', 'resource error']);
+        });
+
+        it("should cache errors alongside if a cache bucket is given", function () {
+            var cacheBucket = {};
+
+            loadCSSImportsForRulesSpy.andCallFake(function(rules, includedList, options, callback) {
+                callback(false, ['import error']);
+            });
+
+            // first call
+            doc = document.implementation.createHTMLDocument("");
+            rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import url("that.css");');
+
+            rasterizeHTMLInline.loadAndInlineStyles(doc, {cacheBucket: cacheBucket}, function () {});
+
+            // second call
+            doc = document.implementation.createHTMLDocument("");
+            rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import url("that.css");');
+
+            rasterizeHTMLInline.loadAndInlineStyles(doc, {cacheBucket: cacheBucket}, callback);
+
+            expect(callback).toHaveBeenCalledWith(["import error"]);
+        });
+    });
 });
