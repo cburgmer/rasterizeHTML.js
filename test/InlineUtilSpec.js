@@ -258,6 +258,13 @@ describe("Inline utilities function", function () {
             });
 
             it("should attach an unique parameter to the given URL to circumvent caching if requested", function () {
+                rasterizeHTMLInline.util.ajax("non_existing_url.html", {cache: 'none'}, function () {}, function () {});
+
+                expect(ajaxRequest.open).toHaveBeenCalledWith('GET', jasmine.any(String), true);
+                expect(ajaxRequest.open.mostRecentCall.args[1]).toMatch(/^non_existing_url.html\?_=[0123456789]+$/);
+            });
+
+            it("should attach an unique parameter to the given URL to circumvent caching if requested (legacy: 'false')", function () {
                 rasterizeHTMLInline.util.ajax("non_existing_url.html", {cache: false}, function () {}, function () {});
 
                 expect(ajaxRequest.open).toHaveBeenCalledWith('GET', jasmine.any(String), true);
@@ -273,11 +280,11 @@ describe("Inline utilities function", function () {
             it("should allow caching for repeated calls if requested", function () {
                 var dateNowSpy = spyOn(window.Date, 'now').andReturn(42);
 
-                rasterizeHTMLInline.util.ajax("non_existing_url.html", {cache: false}, function () {}, function () {});
+                rasterizeHTMLInline.util.ajax("non_existing_url.html", {cache: 'none'}, function () {}, function () {});
 
                 expect(ajaxRequest.open.mostRecentCall.args[1]).toEqual('non_existing_url.html?_=42');
 
-                rasterizeHTMLInline.util.ajax("non_existing_url.html", {cache: false, cacheRepeated: true}, function () {}, function () {});
+                rasterizeHTMLInline.util.ajax("non_existing_url.html", {cache: 'repeated'}, function () {}, function () {});
                 expect(ajaxRequest.open.mostRecentCall.args[1]).toEqual('non_existing_url.html?_=42');
 
                 expect(dateNowSpy.callCount).toEqual(1);
@@ -285,12 +292,12 @@ describe("Inline utilities function", function () {
 
             it("should not cache repeated calls by default", function () {
                 var dateNowSpy = spyOn(window.Date, 'now').andReturn(42);
-                rasterizeHTMLInline.util.ajax("non_existing_url.html", {cache: false}, function () {}, function () {});
+                rasterizeHTMLInline.util.ajax("non_existing_url.html", {cache: 'none'}, function () {}, function () {});
 
                 expect(ajaxRequest.open.mostRecentCall.args[1]).toEqual('non_existing_url.html?_=42');
 
                 dateNowSpy.andReturn(43);
-                rasterizeHTMLInline.util.ajax("non_existing_url.html", {cache: false}, function () {}, function () {});
+                rasterizeHTMLInline.util.ajax("non_existing_url.html", {cache: 'none'}, function () {}, function () {});
                 expect(ajaxRequest.open.mostRecentCall.args[1]).toEqual('non_existing_url.html?_=43');
             });
 
@@ -348,12 +355,11 @@ describe("Inline utilities function", function () {
         it("should circumvent caching if requested", function () {
             var ajaxSpy = spyOn(rasterizeHTMLInline.util, "ajax");
 
-            rasterizeHTMLInline.util.binaryAjax("url", {cache: false, cacheRepeated: true}, function () {}, function () {});
+            rasterizeHTMLInline.util.binaryAjax("url", {cache: 'none'}, function () {}, function () {});
 
             expect(ajaxSpy).toHaveBeenCalledWith("url", {
                 mimeType : jasmine.any(String),
-                cache: false,
-                cacheRepeated: true
+                cache: 'none'
             }, jasmine.any(Function), jasmine.any(Function));
         });
 
@@ -441,9 +447,9 @@ describe("Inline utilities function", function () {
         });
 
         it("should circumvent caching if requested", function () {
-            rasterizeHTMLInline.util.getDataURIForImageURL("image.png", {cache: false, cacheRepeated: true}, function () {}, function () {});
+            rasterizeHTMLInline.util.getDataURIForImageURL("image.png", {cache: 'none'}, function () {}, function () {});
 
-            expect(binaryAjaxSpy).toHaveBeenCalledWith('image.png', {cache: false, cacheRepeated: true}, jasmine.any(Function), jasmine.any(Function));
+            expect(binaryAjaxSpy).toHaveBeenCalledWith('image.png', {cache: 'none'}, jasmine.any(Function), jasmine.any(Function));
         });
 
     });

@@ -325,11 +325,10 @@ describe("Inline CSS content", function () {
         it("should circumvent caching if requested", function () {
             var rules = CSSOM.parse('@import url("that.css");').cssRules;
 
-            rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {cache: false, cacheRepeated: true}, callback);
+            rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {cache: 'none'}, callback);
 
             expect(ajaxSpy).toHaveBeenCalledWith("that.css", {
-                cache: false,
-                cacheRepeated: true
+                cache: 'none'
             }, jasmine.any(Function), jasmine.any(Function));
         });
 
@@ -556,9 +555,9 @@ describe("Inline CSS content", function () {
                     successCallback("uri");
                 });
 
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {cache:  false, cacheRepeated: true}, callback);
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {cache:  'none'}, callback);
 
-                expect(getDataURIForImageURLSpy).toHaveBeenCalledWith(anImage, {cache: false, cacheRepeated: true}, jasmine.any(Function), jasmine.any(Function));
+                expect(getDataURIForImageURLSpy).toHaveBeenCalledWith(anImage, {cache: 'none'}, jasmine.any(Function), jasmine.any(Function));
             });
 
             it("should not circumvent caching by default", function () {
@@ -592,7 +591,7 @@ describe("Inline CSS content", function () {
             it("should report an error if a backgroundImage could not be loaded", function () {
                 var rules = CSSOM.parse('span { background-image: url("a_backgroundImage_that_doesnt_exist.png"); }').cssRules;
 
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {baseUrl:  'some_base_url/', cache:  true}, callback);
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {baseUrl:  'some_base_url/'}, callback);
 
                 expect(callback).toHaveBeenCalledWith(false, [{
                     resourceType: "backgroundImage",
@@ -782,9 +781,9 @@ describe("Inline CSS content", function () {
                     success("this is not a font");
                 });
 
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {cache:  false, cacheRepeated: true}, callback);
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {cache: 'none'}, callback);
 
-                expect(binaryAjaxSpy).toHaveBeenCalledWith(fontUrl, {cache: false, cacheRepeated: true}, jasmine.any(Function), jasmine.any(Function));
+                expect(binaryAjaxSpy).toHaveBeenCalledWith(fontUrl, {cache: 'none'}, jasmine.any(Function), jasmine.any(Function));
             });
 
             it("should not circumvent caching by default", function () {

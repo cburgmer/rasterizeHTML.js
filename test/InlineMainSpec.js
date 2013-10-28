@@ -36,12 +36,12 @@ describe("Inline main", function () {
         loadAndInlineStyles.andCallFake(callbackCaller);
         loadAndInlineScript.andCallFake(callbackCaller);
 
-        rasterizeHTMLInline.inlineReferences(doc, {baseUrl: "a_baseUrl", cache: false}, callback);
+        rasterizeHTMLInline.inlineReferences(doc, {baseUrl: "a_baseUrl", cache: 'none'}, callback);
 
-        expect(loadAndInlineImages).toHaveBeenCalledWith(doc, {baseUrl: "a_baseUrl", cache: false}, jasmine.any(Function));
-        expect(loadAndInlineCssLinks).toHaveBeenCalledWith(doc, {baseUrl: "a_baseUrl", cache: false}, jasmine.any(Function));
-        expect(loadAndInlineStyles).toHaveBeenCalledWith(doc, {baseUrl: "a_baseUrl", cache: false}, jasmine.any(Function));
-        expect(loadAndInlineScript).toHaveBeenCalledWith(doc, {baseUrl: "a_baseUrl", cache: false}, jasmine.any(Function));
+        expect(loadAndInlineImages).toHaveBeenCalledWith(doc, {baseUrl: "a_baseUrl", cache: 'none'}, jasmine.any(Function));
+        expect(loadAndInlineCssLinks).toHaveBeenCalledWith(doc, {baseUrl: "a_baseUrl", cache: 'none'}, jasmine.any(Function));
+        expect(loadAndInlineStyles).toHaveBeenCalledWith(doc, {baseUrl: "a_baseUrl", cache: 'none'}, jasmine.any(Function));
+        expect(loadAndInlineScript).toHaveBeenCalledWith(doc, {baseUrl: "a_baseUrl", cache: 'none'}, jasmine.any(Function));
 
         expect(callback).toHaveBeenCalledWith([]);
     });

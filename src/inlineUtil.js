@@ -71,9 +71,9 @@ window.rasterizeHTMLInline = (function (module, window, URI) {
 
     var lastCacheDate = null;
 
-    var getUncachableURL = function (url, workAroundCaching, cacheRepeated) {
-        if (workAroundCaching) {
-            if (lastCacheDate === null || !cacheRepeated) {
+    var getUncachableURL = function (url, cache) {
+        if (cache === false || cache === 'none' || cache === 'repeated') {
+            if (lastCacheDate === null || cache !== 'repeated') {
                 lastCacheDate = Date.now();
             }
             return url + "?_=" + lastCacheDate;
@@ -87,7 +87,7 @@ window.rasterizeHTMLInline = (function (module, window, URI) {
             joinedUrl = module.util.joinUrl(options.baseUrl, url),
             augmentedUrl;
 
-        augmentedUrl = getUncachableURL(joinedUrl, options.cache === false, options.cacheRepeated);
+        augmentedUrl = getUncachableURL(joinedUrl, options.cache);
 
         ajaxRequest.addEventListener("load", function () {
             if (ajaxRequest.status === 200 || ajaxRequest.status === 0) {

@@ -139,11 +139,11 @@ describe("Image and image input inline", function () {
 
         doc.body.innerHTML = '<img id="image" src="' + firstImage + '" alt="test image"/>';
 
-        rasterizeHTMLInline.loadAndInlineImages(doc, {cache: false, cacheRepeated: true}, callback);
+        rasterizeHTMLInline.loadAndInlineImages(doc, {cache: 'none'}, callback);
 
         expect(callback).toHaveBeenCalled();
 
-        expect(getDataURIForImageURLSpy).toHaveBeenCalledWith(jasmine.any(String), {cache: false, cacheRepeated: true}, jasmine.any(Function), jasmine.any(Function));
+        expect(getDataURIForImageURLSpy).toHaveBeenCalledWith(jasmine.any(String), {cache: 'none'}, jasmine.any(Function), jasmine.any(Function));
     });
 
     it("should not circumvent caching by default", function () {

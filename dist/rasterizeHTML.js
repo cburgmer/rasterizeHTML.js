@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.4.1 - 2013-10-25
+/*! rasterizeHTML.js - v0.4.1 - 2013-10-28
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2013 Christoph Burgmer; Licensed MIT */
 window.rasterizeHTMLInline = (function (module) {
@@ -198,7 +198,7 @@ window.rasterizeHTMLInline = (function (module) {
     };
 
     var cacheInlinedContent = function (options) {
-        return options.cache !== false && options.cacheBucket;
+        return (options.cache !== false && options.cache !== 'none') && options.cacheBucket;
     };
 
     var getLinkedCssCacheFor = function (bucket, baseUrl, url) {
@@ -981,9 +981,9 @@ window.rasterizeHTMLInline = (function (module, window, URI) {
 
     var lastCacheDate = null;
 
-    var getUncachableURL = function (url, workAroundCaching, cacheRepeated) {
-        if (workAroundCaching) {
-            if (lastCacheDate === null || !cacheRepeated) {
+    var getUncachableURL = function (url, cache) {
+        if (cache === false || cache === 'none' || cache === 'repeated') {
+            if (lastCacheDate === null || cache !== 'repeated') {
                 lastCacheDate = Date.now();
             }
             return url + "?_=" + lastCacheDate;
@@ -997,7 +997,7 @@ window.rasterizeHTMLInline = (function (module, window, URI) {
             joinedUrl = module.util.joinUrl(options.baseUrl, url),
             augmentedUrl;
 
-        augmentedUrl = getUncachableURL(joinedUrl, options.cache === false, options.cacheRepeated);
+        augmentedUrl = getUncachableURL(joinedUrl, options.cache);
 
         ajaxRequest.addEventListener("load", function () {
             if (ajaxRequest.status === 200 || ajaxRequest.status === 0) {

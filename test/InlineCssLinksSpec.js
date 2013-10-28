@@ -237,18 +237,15 @@ describe("Inline CSS links", function () {
     it("should circumvent caching if requested", function () {
         doc.head.appendChild(cssLink);
 
-        rasterizeHTMLInline.loadAndInlineCssLinks(doc, {cache: false, cacheRepeated: true}, callback);
+        rasterizeHTMLInline.loadAndInlineCssLinks(doc, {cache: 'none'}, callback);
 
         expect(ajaxSpy).toHaveBeenCalledWith(cssLink.attributes.href.nodeValue, {
-            cache: false,
-            cacheRepeated: true
+            cache: 'none'
         }, jasmine.any(Function), jasmine.any(Function));
         expect(callback).toHaveBeenCalled();
 
-        expect(loadCSSImportsForRulesSpy.mostRecentCall.args[2].cache).toBeFalsy();
-        expect(loadCSSImportsForRulesSpy.mostRecentCall.args[2].cacheRepeated).toBeTruthy();
-        expect(loadAndInlineCSSResourcesForRulesSpy.mostRecentCall.args[1].cache).toBeFalsy();
-        expect(loadAndInlineCSSResourcesForRulesSpy.mostRecentCall.args[1].cacheRepeated).toBeTruthy();
+        expect(loadCSSImportsForRulesSpy.mostRecentCall.args[2].cache).toEqual('none');
+        expect(loadAndInlineCSSResourcesForRulesSpy.mostRecentCall.args[1].cache).toEqual('none');
     });
 
     it("should not circumvent caching by default", function () {
@@ -297,7 +294,7 @@ describe("Inline CSS links", function () {
         doc = document.implementation.createHTMLDocument("");
         doc.head.appendChild(cssLink);
 
-        rasterizeHTMLInline.loadAndInlineCssLinks(doc, {cacheBucket: cacheBucket, cache: false}, callback);
+        rasterizeHTMLInline.loadAndInlineCssLinks(doc, {cacheBucket: cacheBucket, cache: 'none'}, callback);
         expect(ajaxSpy).toHaveBeenCalled();
 
         ajaxSpy.reset();
@@ -306,7 +303,7 @@ describe("Inline CSS links", function () {
         doc = document.implementation.createHTMLDocument("");
         doc.head.appendChild(cssLink);
 
-        rasterizeHTMLInline.loadAndInlineCssLinks(doc, {cacheBucket: cacheBucket, cache: false}, callback);
+        rasterizeHTMLInline.loadAndInlineCssLinks(doc, {cacheBucket: cacheBucket, cache: 'none'}, callback);
 
         expect(ajaxSpy).toHaveBeenCalled();
     });

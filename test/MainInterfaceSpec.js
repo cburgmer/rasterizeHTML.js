@@ -70,9 +70,9 @@ describe("Main interface of rasterizeHTML.js", function () {
         it("should pass on options", function () {
             var doc = "doc";
 
-            rasterizeHTML.drawDocument(doc, canvas, {baseUrl: "a_baseUrl", cache: false, cacheRepeated: true, cacheBucket: {}}, callback);
+            rasterizeHTML.drawDocument(doc, canvas, {baseUrl: "a_baseUrl", cache: 'none', cacheBucket: {}}, callback);
 
-            expect(inlineReferences).toHaveBeenCalledWith(doc, {baseUrl: "a_baseUrl", cache: false, cacheRepeated: true, cacheBucket: {}}, jasmine.any(Function));
+            expect(inlineReferences).toHaveBeenCalledWith(doc, {baseUrl: "a_baseUrl", cache: 'none', cacheBucket: {}}, jasmine.any(Function));
 
             expect(callback).toHaveBeenCalledWith(svgImage, []);
         });
@@ -153,9 +153,9 @@ describe("Main interface of rasterizeHTML.js", function () {
                     callback(svgImage, []);
                 });
 
-            rasterizeHTML.drawHTML(html, canvas, {cache: false}, callback);
+            rasterizeHTML.drawHTML(html, canvas, {cache: 'none'}, callback);
 
-            expect(drawDocumentSpy).toHaveBeenCalledWith(jasmine.any(Object), canvas, {cache: false}, callback);
+            expect(drawDocumentSpy).toHaveBeenCalledWith(jasmine.any(Object), canvas, {cache: 'none'}, callback);
 
             expect(callback).toHaveBeenCalled();
         });
@@ -203,11 +203,10 @@ describe("Main interface of rasterizeHTML.js", function () {
                 error();
             });
 
-            rasterizeHTML.drawURL("fixtures/image.html", canvas, {cache: false, cacheRepeated: true}, callback);
+            rasterizeHTML.drawURL("fixtures/image.html", canvas, {cache: 'none'}, callback);
 
             expect(ajaxSpy).toHaveBeenCalledWith("fixtures/image.html", {
-                cache: false,
-                cacheRepeated: true,
+                cache: 'none'
             }, jasmine.any(Function), jasmine.any(Function));
             expect(callback).toHaveBeenCalled();
         });

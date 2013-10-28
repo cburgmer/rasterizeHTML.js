@@ -116,14 +116,12 @@ describe("Import styles", function () {
     it("should circumvent caching if requested", function () {
         rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import url("that.css");');
 
-        rasterizeHTMLInline.loadAndInlineStyles(doc, {cache: false, cacheRepeated: true}, callback);
+        rasterizeHTMLInline.loadAndInlineStyles(doc, {cache: 'none'}, callback);
 
         expect(loadCSSImportsForRulesSpy).toHaveBeenCalled();
-        expect(loadCSSImportsForRulesSpy.mostRecentCall.args[2].cache).toBeFalsy();
-        expect(loadCSSImportsForRulesSpy.mostRecentCall.args[2].cacheRepeated).toBeTruthy();
+        expect(loadCSSImportsForRulesSpy.mostRecentCall.args[2].cache).toEqual('none');
         expect(loadAndInlineCSSResourcesForRulesSpy).toHaveBeenCalled();
-        expect(loadAndInlineCSSResourcesForRulesSpy.mostRecentCall.args[1].cache).toBeFalsy();
-        expect(loadAndInlineCSSResourcesForRulesSpy.mostRecentCall.args[1].cacheRepeated).toBeTruthy();
+        expect(loadAndInlineCSSResourcesForRulesSpy.mostRecentCall.args[1].cache).toEqual('none');
     });
 
     it("should not circumvent caching by default", function () {
@@ -204,7 +202,7 @@ describe("Import styles", function () {
         doc = document.implementation.createHTMLDocument("");
         rasterizeHTMLTestHelper.addStyleToDocument(doc, 'background-image { url(anImage.png); }');
 
-        rasterizeHTMLInline.loadAndInlineStyles(doc, {cacheBucket: cacheBucket, cache: false}, callback);
+        rasterizeHTMLInline.loadAndInlineStyles(doc, {cacheBucket: cacheBucket, cache: 'none'}, callback);
         expect(loadCSSImportsForRulesSpy).toHaveBeenCalled();
 
         loadCSSImportsForRulesSpy.reset();
@@ -213,7 +211,7 @@ describe("Import styles", function () {
         doc = document.implementation.createHTMLDocument("");
         rasterizeHTMLTestHelper.addStyleToDocument(doc, 'background-image { url(anImage.png); }');
 
-        rasterizeHTMLInline.loadAndInlineStyles(doc, {cacheBucket: cacheBucket, cache: false}, callback);
+        rasterizeHTMLInline.loadAndInlineStyles(doc, {cacheBucket: cacheBucket, cache: 'none'}, callback);
 
         expect(loadCSSImportsForRulesSpy).toHaveBeenCalled();
     });

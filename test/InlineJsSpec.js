@@ -119,11 +119,10 @@ describe("JS inline", function () {
     it("should circumvent caching if requested", function () {
         doc.head.appendChild(externalScript);
 
-        rasterizeHTMLInline.loadAndInlineScript(doc, {cache: false, cacheRepeated: true}, callback);
+        rasterizeHTMLInline.loadAndInlineScript(doc, {cache: 'none'}, callback);
 
         expect(ajaxSpy).toHaveBeenCalledWith(externalScript.attributes.src.nodeValue, {
-            cache: false,
-            cacheRepeated: true
+            cache: 'none'
         }, jasmine.any(Function), jasmine.any(Function));
     });
 

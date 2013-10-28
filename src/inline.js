@@ -195,7 +195,7 @@ window.rasterizeHTMLInline = (function (module) {
     };
 
     var cacheInlinedContent = function (options) {
-        return options.cache !== false && options.cacheBucket;
+        return (options.cache !== false && options.cache !== 'none') && options.cacheBucket;
     };
 
     var getLinkedCssCacheFor = function (bucket, baseUrl, url) {

@@ -45,7 +45,7 @@ describe("Integration test", function () {
         });
 
         runs(function () {
-            rasterizeHTML.drawDocument(doc, canvas.get(0), {cache: false}, callback);
+            rasterizeHTML.drawDocument(doc, canvas.get(0), {cache: 'none'}, callback);
         });
 
         waitsFor(function () {
@@ -65,7 +65,7 @@ describe("Integration test", function () {
         html = readFixtures("test.html");
 
         runs(function () {
-            rasterizeHTML.drawHTML(html, canvas.get(0), {baseUrl: jasmine.getFixtures().fixturesPath, cache: false}, callback);
+            rasterizeHTML.drawHTML(html, canvas.get(0), {baseUrl: jasmine.getFixtures().fixturesPath, cache: 'none'}, callback);
         });
 
         waitsFor(function () {
@@ -81,7 +81,7 @@ describe("Integration test", function () {
 
     ifNotInWebkitIt("should take a URL, inline all displayable content and render to the given canvas", function () {
         runs(function () {
-            rasterizeHTML.drawURL(jasmine.getFixtures().fixturesPath + "testWithJs.html", canvas.get(0), {cache: false, executeJs: true}, callback);
+            rasterizeHTML.drawURL(jasmine.getFixtures().fixturesPath + "testWithJs.html", canvas.get(0), {cache: 'none', executeJs: true}, callback);
         });
 
         waitsFor(function () {
@@ -97,7 +97,7 @@ describe("Integration test", function () {
 
     ifNotInWebkitIt("should take a URL, inline all displayable content and return the image", function () {
         runs(function () {
-            rasterizeHTML.drawURL(jasmine.getFixtures().fixturesPath + "testWithJs.html", {cache: false, width: width, height: height, executeJs: true}, callback);
+            rasterizeHTML.drawURL(jasmine.getFixtures().fixturesPath + "testWithJs.html", {cache: 'none', width: width, height: height, executeJs: true}, callback);
         });
 
         waitsFor(function () {
