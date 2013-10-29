@@ -367,9 +367,13 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, html2xhtml, theWindow) {
             fallbackHeight = params.canvas ? params.canvas.height : 200,
             width = params.options.width !== undefined ? params.options.width : fallbackWidth,
             height = params.options.height !== undefined ? params.options.height : fallbackHeight,
-            executeJsTimeout = params.options.executeJsTimeout || 0;
+            executeJsTimeout = params.options.executeJsTimeout || 0,
+            inlineOptions;
 
-        rasterizeHTMLInline.inlineReferences(doc, params.options, function (allErrors) {
+        inlineOptions = rasterizeHTMLInline.util.clone(params.options);
+        inlineOptions.inlineScripts = params.options.executeJs === true;
+
+        rasterizeHTMLInline.inlineReferences(doc, inlineOptions, function (allErrors) {
             if (params.options.executeJs) {
                 module.util.executeJavascript(doc, executeJsTimeout, function (doc, errors) {
                     doDraw(doc, width, height, params.canvas, params.callback, allErrors.concat(errors));

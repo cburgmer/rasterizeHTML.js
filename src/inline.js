@@ -373,11 +373,16 @@ window.rasterizeHTMLInline = (function (module) {
                 allErrors = allErrors.concat(errors);
                 module.loadAndInlineCssLinks(doc, options, function (errors) {
                     allErrors = allErrors.concat(errors);
-                    module.loadAndInlineScript(doc, options, function (errors) {
-                        allErrors = allErrors.concat(errors);
 
+                    if (options.inlineScripts === false) {
                         callback(allErrors);
-                    });
+                    } else {
+                        module.loadAndInlineScript(doc, options, function (errors) {
+                            allErrors = allErrors.concat(errors);
+
+                            callback(allErrors);
+                        });
+                    }
                 });
             });
         });

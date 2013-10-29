@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.4.1 - 2013-10-28
+/*! rasterizeHTML.js - v0.4.1 - 2013-10-29
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2013 Christoph Burgmer; Licensed MIT */
 window.rasterizeHTMLInline = (function (module) {
@@ -376,11 +376,16 @@ window.rasterizeHTMLInline = (function (module) {
                 allErrors = allErrors.concat(errors);
                 module.loadAndInlineCssLinks(doc, options, function (errors) {
                     allErrors = allErrors.concat(errors);
-                    module.loadAndInlineScript(doc, options, function (errors) {
-                        allErrors = allErrors.concat(errors);
 
+                    if (options.inlineScripts === false) {
                         callback(allErrors);
-                    });
+                    } else {
+                        module.loadAndInlineScript(doc, options, function (errors) {
+                            allErrors = allErrors.concat(errors);
+
+                            callback(allErrors);
+                        });
+                    }
                 });
             });
         });
@@ -1462,9 +1467,13 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, html2xhtml, theWindow) {
             fallbackHeight = params.canvas ? params.canvas.height : 200,
             width = params.options.width !== undefined ? params.options.width : fallbackWidth,
             height = params.options.height !== undefined ? params.options.height : fallbackHeight,
-            executeJsTimeout = params.options.executeJsTimeout || 0;
+            executeJsTimeout = params.options.executeJsTimeout || 0,
+            inlineOptions;
 
-        rasterizeHTMLInline.inlineReferences(doc, params.options, function (allErrors) {
+        inlineOptions = rasterizeHTMLInline.util.clone(params.options);
+        inlineOptions.inlineScripts = params.options.executeJs === true;
+
+        rasterizeHTMLInline.inlineReferences(doc, inlineOptions, function (allErrors) {
             if (params.options.executeJs) {
                 module.util.executeJavascript(doc, executeJsTimeout, function (doc, errors) {
                     doDraw(doc, width, height, params.canvas, params.callback, allErrors.concat(errors));

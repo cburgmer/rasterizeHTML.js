@@ -81,4 +81,18 @@ describe("Inline main", function () {
 
         expect(callback).toHaveBeenCalledWith(["the error", "more error", "another error", "error from script"]);
     });
+
+    it("should optionally not inline scripts", function () {
+        var doc = "doc";
+
+        loadAndInlineImages.andCallFake(callbackCaller);
+        loadAndInlineCssLinks.andCallFake(callbackCaller);
+        loadAndInlineStyles.andCallFake(callbackCaller);
+
+        rasterizeHTMLInline.inlineReferences(doc, {inlineScripts: false}, callback);
+
+        expect(callback).toHaveBeenCalledWith([]);
+
+        expect(loadAndInlineScript).not.toHaveBeenCalled();
+    });
 });

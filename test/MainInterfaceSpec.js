@@ -34,7 +34,7 @@ describe("Main interface of rasterizeHTML.js", function () {
 
             rasterizeHTML.drawDocument(doc, canvas, callback);
 
-            expect(inlineReferences).toHaveBeenCalledWith(doc, {}, jasmine.any(Function));
+            expect(inlineReferences).toHaveBeenCalledWith(doc, {inlineScripts: false}, jasmine.any(Function));
             expect(getSvgForDocument).toHaveBeenCalledWith(doc, canvas.width, canvas.height);
             expect(renderSvg).toHaveBeenCalledWith(svg, canvas, jasmine.any(Function), jasmine.any(Function));
             expect(drawImageOnCanvas).toHaveBeenCalledWith(svgImage, canvas);
@@ -48,7 +48,7 @@ describe("Main interface of rasterizeHTML.js", function () {
 
             rasterizeHTML.drawDocument(doc, callback);
 
-            expect(inlineReferences).toHaveBeenCalledWith(doc, {}, jasmine.any(Function));
+            expect(inlineReferences).toHaveBeenCalledWith(doc, {inlineScripts : false}, jasmine.any(Function));
             expect(getSvgForDocument).toHaveBeenCalledWith(doc, 300, 200);
             expect(renderSvg).toHaveBeenCalledWith(svg, null, jasmine.any(Function), jasmine.any(Function));
             expect(drawImageOnCanvas).not.toHaveBeenCalled();
@@ -72,7 +72,7 @@ describe("Main interface of rasterizeHTML.js", function () {
 
             rasterizeHTML.drawDocument(doc, canvas, {baseUrl: "a_baseUrl", cache: 'none', cacheBucket: {}}, callback);
 
-            expect(inlineReferences).toHaveBeenCalledWith(doc, {baseUrl: "a_baseUrl", cache: 'none', cacheBucket: {}}, jasmine.any(Function));
+            expect(inlineReferences).toHaveBeenCalledWith(doc, {baseUrl: "a_baseUrl", cache: 'none', cacheBucket: {}, inlineScripts : false}, jasmine.any(Function));
 
             expect(callback).toHaveBeenCalledWith(svgImage, []);
         });
@@ -91,6 +91,15 @@ describe("Main interface of rasterizeHTML.js", function () {
 
             expect(executeJavascript).toHaveBeenCalledWith(doc, 0, jasmine.any(Function));
             expect(callback).toHaveBeenCalled();
+        });
+
+        it("should inline scripts when executing JavaScript", function () {
+            var doc = "the document";
+            spyOn(rasterizeHTML.util, "executeJavascript");
+
+            rasterizeHTML.drawDocument(doc, {executeJs: true}, callback);
+
+            expect(inlineReferences).toHaveBeenCalledWith(doc, {executeJs : true, inlineScripts: true}, jasmine.any(Function));
         });
 
         it("should follow optional timeout when executing JavaScript", function () {
