@@ -1,7 +1,7 @@
 {
   "name": "rasterizeHTML.js",
   "title": "rasterizeHTML.js",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "Renders HTML into the browser's canvas.",
   "keywords": [
     "canvas",
