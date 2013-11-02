@@ -12,7 +12,9 @@ module.exports = function (grunt) {
                 specs: 'test/*Spec.js',
                 helpers: [
                     'test/helpers.js',
-                    'test/lib/*.js',
+                    'bower_components/js-imagediff/imagediff.js',
+                    'bower_components/jquery/jquery.js',
+                    'bower_components/jasmine-jquery/lib/jasmine-jquery.js',
                     'test/gruntpath.js'
                 ]
             }
