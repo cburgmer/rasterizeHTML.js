@@ -5,6 +5,7 @@ module.exports = function (grunt) {
         jasmine: {
             src: [
                 'bower_components/uri.js/src/URI.js',
+                'bower_components/html2xhtml/dist/html2xhtml.js',
                 'lib/*.js',
                 'src/*.js'
             ],
@@ -60,6 +61,7 @@ module.exports = function (grunt) {
                 files: {
                     'dist/rasterizeHTML.allinone.js': [
                         'bower_components/uri.js/src/URI.js',
+                        'bower_components/html2xhtml/dist/html2xhtml.js',
                         'lib/*.js',
                         'dist/rasterizeHTML.js'
                     ]
