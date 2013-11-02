@@ -3,7 +3,11 @@ module.exports = function (grunt) {
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
         jasmine: {
-            src: ['lib/*.js', 'src/*.js'],
+            src: [
+                'bower_components/uri.js/src/URI.js',
+                'lib/*.js',
+                'src/*.js'
+            ],
             options: {
                 specs: 'test/*Spec.js',
                 helpers: [
@@ -53,6 +57,7 @@ module.exports = function (grunt) {
                 },
                 files: {
                     'dist/rasterizeHTML.allinone.js': [
+                        'bower_components/uri.js/src/URI.js',
                         'lib/*.js',
                         'dist/rasterizeHTML.js'
                     ]

@@ -5,5 +5,7 @@
     "./dist/rasterizeHTML.js",
     "./dist/rasterizeHTML.allinone.js"
   ],
-  "dependencies": {}
+  "dependencies": {
+    "uri.js": "~1.11.2"
+  }
 }
