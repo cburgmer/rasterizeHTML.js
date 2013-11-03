@@ -6,7 +6,7 @@ module.exports = function (grunt) {
             src: [
                 'bower_components/uri.js/src/URI.js',
                 'bower_components/html2xhtml/dist/html2xhtml.js',
-                'lib/*.js',
+                'build/CSSOM.js',
                 'src/*.js'
             ],
             options: {
@@ -18,6 +18,15 @@ module.exports = function (grunt) {
                     'bower_components/jasmine-jquery/lib/jasmine-jquery.js',
                     'test/gruntpath.js'
                 ]
+            }
+        },
+        browserify: {
+            cssom: {
+                src: 'node_modules/cssom/lib/index.js',
+                dest: 'build/CSSOM.js',
+                options: {
+                    'standalone': 'CSSOM'
+                }
             }
         },
         concat: {
@@ -62,7 +71,7 @@ module.exports = function (grunt) {
                     'dist/rasterizeHTML.allinone.js': [
                         'bower_components/uri.js/src/URI.js',
                         'bower_components/html2xhtml/dist/html2xhtml.js',
-                        'lib/*.js',
+                        'build/CSSOM.js',
                         'dist/rasterizeHTML.js'
                     ]
                 }
@@ -149,9 +158,11 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-regex-check');
     grunt.loadNpmTasks('grunt-contrib-watch');
+    grunt.loadNpmTasks('grunt-browserify');
 
     grunt.registerTask('default', [
         'jshint',
+        'browserify',
         'jasmine',
         'regex-check',
         'concat',
