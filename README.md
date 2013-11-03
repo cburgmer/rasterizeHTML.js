@@ -38,7 +38,7 @@ For linting, tests and minification install Node.js and run
 
     $ ./go
 
-Alternatively run `bower install` and point your browser to `test/SpecRunner.html` and `test/manualIntegrationTestForWebkit.html` (under Chrome you will either need to start the browser passing in the option `--allow-file-access-from-files` or load the page through a local webserver).
+For the integration test under Chrome and Safari open `test/manualIntegrationTestForWebkit.html` (under Chrome you will either need to start the browser passing in the option `--allow-file-access-from-files` or load the page through a local webserver).
 
 [![Build Status](https://secure.travis-ci.org/cburgmer/rasterizeHTML.js.png?branch=master)](http://travis-ci.org/cburgmer/rasterizeHTML.js)
 
