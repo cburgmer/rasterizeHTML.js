@@ -32,7 +32,7 @@
     "grunt-contrib-watch": "~0.5.2",
     "grunt-regex-check": "~0.1.5",
     "bower": "~1.2.0",
-    "cssom": "git+ssh://git@github.com:cburgmer/CSSOM.git#787dc0c55b5",
+    "cssom": "git+https://github.com/cburgmer/CSSOM.git#787dc0c55b5",
     "browserify": "~2.35.1",
     "grunt-browserify": "~1.2.11"
   },
