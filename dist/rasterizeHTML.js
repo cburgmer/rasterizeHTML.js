@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.5.1 - 2013-11-02
+/*! rasterizeHTML.js - v0.5.1 - 2013-11-10
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2013 Christoph Burgmer; Licensed MIT */
 window.rasterizeHTMLInline = (function (module) {
@@ -321,6 +321,11 @@ window.rasterizeHTMLInline = (function (module) {
         });
     };
 
+    var escapeClosingTags = function (text) {
+        // http://stackoverflow.com/questions/9246382/escaping-script-tag-inside-javascript
+        return text.replace(/<\//g, '<\\/');
+    };
+
     var substituteExternalScriptWithInline = function (oldScriptNode, jsCode) {
         var newScript = oldScriptNode.ownerDocument.createElement("script"),
             parent = oldScriptNode.parentNode;
@@ -328,6 +333,8 @@ window.rasterizeHTMLInline = (function (module) {
         if (oldScriptNode.attributes.type) {
             newScript.type = oldScriptNode.attributes.type.nodeValue;
         }
+
+        jsCode = escapeClosingTags(jsCode);
 
         newScript.appendChild(oldScriptNode.ownerDocument.createTextNode(jsCode));
 

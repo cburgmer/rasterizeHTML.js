@@ -84,6 +84,19 @@ describe("JS inline", function () {
         expect(doc.head.getElementsByTagName("script")[0]).toEqual(internalScript);
     });
 
+    it("should correctly quote closing HTML tags in the script", function () {
+        var script = window.document.createElement("script");
+        script.src = "some_url.js";
+
+        ajaxSpy.andCallFake(function (url, options, success) {
+            success('var closingScriptTag = "</script>";');
+        });
+        doc.head.appendChild(script);
+
+        rasterizeHTMLInline.loadAndInlineScript(doc, callback);
+        expect(doc.head.getElementsByTagName("script")[0].textContent).toEqual('var closingScriptTag = "<\\/script>";');
+    });
+
     it("should respect the document's baseURI when loading linked JS", function () {
         var getDocumentBaseUrlSpy = spyOn(rasterizeHTMLInline.util, 'getDocumentBaseUrl').andCallThrough();
 
