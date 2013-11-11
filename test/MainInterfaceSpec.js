@@ -2,11 +2,14 @@ describe("Main interface of rasterizeHTML.js", function () {
     var callbackCaller = function (doc, options, callback) { callback([]); },
         svg = "the svg",
         svgImage = "svg image",
-        canvas, ajaxSpy, parseOptionalParametersSpy,
+        doc = {},
+        canvas, ajaxSpy, parseHTMLSpy, parseOptionalParametersSpy,
         inlineReferences, getSvgForDocument, renderSvg, drawImageOnCanvas;
 
     beforeEach(function () {
         ajaxSpy = spyOn(rasterizeHTMLInline.util, "ajax");
+        parseHTMLSpy = spyOn(rasterizeHTML.util, 'parseHTML').andReturn(doc);
+
 
         canvas = document.createElement("canvas");
         canvas.width = 123;
@@ -116,34 +119,41 @@ describe("Main interface of rasterizeHTML.js", function () {
 
         it("should take a HTML string, inline all displayable content and render to the given canvas", function () {
             var html = "<head><title>a title</title></head><body>some html</body>",
+                doc = "doc",
                 drawDocumentSpy = spyOn(rasterizeHTML, "drawDocument").andCallFake(function (doc, canvas, options, callback) {
                     callback(svgImage, []);
                 });
 
+            parseHTMLSpy.andCallFake(function (someHtml) {
+                if (someHtml === html) {
+                    return doc;
+                }
+            });
+
             rasterizeHTML.drawHTML(html, canvas, callback);
 
-            expect(drawDocumentSpy).toHaveBeenCalledWith(jasmine.any(Object), canvas, {}, callback);
-            expect(drawDocumentSpy.mostRecentCall.args[0].documentElement.innerHTML).toEqual(html);
+            expect(drawDocumentSpy).toHaveBeenCalledWith(doc, canvas, {}, callback);
 
             expect(callback).toHaveBeenCalledWith(svgImage, []);
         });
 
         it("should make the canvas optional when drawing a HTML string", function () {
-            var html = "<head><title>a title</title></head><body>some html</body>",
+            var html = "the html",
                 drawDocumentSpy = spyOn(rasterizeHTML, "drawDocument").andCallFake(function (doc, canvas, options, callback) {
-                callback(svgImage, []);
-            });
+                    callback(svgImage, []);
+                });
+
+            parseHTMLSpy.andReturn(doc);
 
             rasterizeHTML.drawHTML(html, {width: 999, height: 987}, callback);
 
             expect(drawDocumentSpy).toHaveBeenCalledWith(jasmine.any(Object), null, {width: 999, height: 987}, callback);
-            expect(drawDocumentSpy.mostRecentCall.args[0].documentElement.innerHTML).toEqual(html);
 
             expect(callback).toHaveBeenCalledWith(svgImage, []);
         });
 
         it("should take a HTML string with optional baseUrl, inline all displayable content and render to the given canvas", function () {
-            var html = "<head><title>a title</title></head><body>some html</body>",
+            var html = "the html",
                 drawDocumentSpy = spyOn(rasterizeHTML, "drawDocument").andCallFake(function (doc, canvas, options, callback) {
                     callback(svgImage, []);
                 });
@@ -151,7 +161,6 @@ describe("Main interface of rasterizeHTML.js", function () {
             rasterizeHTML.drawHTML(html, canvas, {baseUrl: "a_baseUrl"}, callback);
 
             expect(drawDocumentSpy).toHaveBeenCalledWith(jasmine.any(Object), canvas, {baseUrl: "a_baseUrl"}, callback);
-            expect(drawDocumentSpy.mostRecentCall.args[0].documentElement.innerHTML).toEqual(html);
 
             expect(callback).toHaveBeenCalledWith(svgImage, []);
         });

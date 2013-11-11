@@ -11,7 +11,7 @@ describe("Utilities function", function () {
         it("should load an URL and execute the included JS", function () {
             var the_result = null;
 
-            doc.documentElement.innerHTML = "<html><body><script>document.body.innerHTML = 'dynamic content';</script></body></html>";
+            doc.documentElement.innerHTML = "<body><script>document.body.innerHTML = 'dynamic content';</script></body>";
             rasterizeHTML.util.executeJavascript(doc, 0, function (result) {
                 the_result = result;
             });
@@ -28,7 +28,7 @@ describe("Utilities function", function () {
         it("should remove the iframe element when done", function () {
             var finished = false;
 
-            doc.documentElement.innerHTML = "<html><body></body></html>";
+            doc.documentElement.innerHTML = "<body></body>";
             rasterizeHTML.util.executeJavascript(doc, 0, function () {
                 finished = true;
             });
@@ -45,7 +45,7 @@ describe("Utilities function", function () {
         it("should wait a configured period of time before calling back", function () {
             var the_result = null;
 
-            doc.documentElement.innerHTML = "<html><body onload=\"setTimeout(function () {document.body.innerHTML = 'dynamic content';}, 1);\"></body></html>";
+            doc.documentElement.innerHTML = "<body onload=\"setTimeout(function () {document.body.innerHTML = 'dynamic content';}, 1);\"></body>";
             rasterizeHTML.util.executeJavascript(doc, 20, function (result) {
                 the_result = result;
             });
@@ -62,7 +62,7 @@ describe("Utilities function", function () {
         it("should be able to access CSS", function () {
             var the_result = null;
 
-            doc.documentElement.innerHTML = '<html><head><style>div { height: 20px; }</style></head><body onload="var elem = document.getElementById(\'elem\'); document.body.innerHTML = elem.offsetHeight;"><div id="elem"></div></body></html>';
+            doc.documentElement.innerHTML = '<head><style>div { height: 20px; }</style></head><body onload="var elem = document.getElementById(\'elem\'); document.body.innerHTML = elem.offsetHeight;"><div id="elem"></div></body>';
             rasterizeHTML.util.executeJavascript(doc, 0, function (result) {
                 the_result = result;
             });
@@ -79,7 +79,7 @@ describe("Utilities function", function () {
         it("should report failing JS", function () {
             var errors = null;
 
-            doc.documentElement.innerHTML = "<html><body><script>undefinedVar.t = 42</script></body></html>";
+            doc.documentElement.innerHTML = "<body><script>undefinedVar.t = 42</script></body>";
             rasterizeHTML.util.executeJavascript(doc, 0, function (result, theErrors) {
                 errors = theErrors;
             });
@@ -95,6 +95,59 @@ describe("Utilities function", function () {
                 }]);
                 expect(errors[0].msg).toMatch(/ReferenceError:\s+(.+\s+)?undefinedVar/);
             });
+        });
+
+        it("should be able to access top 'html' tag attributes", function () {
+            var the_result = null;
+
+            doc.documentElement.innerHTML = '<head></head><body onload="document.body.innerHTML = document.querySelectorAll(\'[myattr]\').length;"></body>';
+            doc.documentElement.setAttribute('myattr', 'myvalue');
+
+            rasterizeHTML.util.executeJavascript(doc, 0, function (result) {
+                the_result = result;
+            });
+
+            waitsFor(function () {
+                return the_result !== null;
+            });
+
+            runs(function () {
+                expect(the_result.body.innerHTML).toEqual('1');
+            });
+        });
+    });
+
+    describe("parseHTML", function () {
+        var oldDOMParser = window.DOMParser;
+
+        afterEach(function () {
+            window.DOMParser = oldDOMParser;
+        });
+
+        it("should parse HTML to a document", function () {
+            var dom = rasterizeHTML.util.parseHTML('<html><body>Text</body></html>');
+
+            expect(dom.querySelector("body").textContent).toEqual("Text");
+        });
+
+        it("should keep 'html' tag attributes", function () {
+            var dom = rasterizeHTML.util.parseHTML('<html top="attribute"></html>');
+
+            expect(dom.documentElement.getAttribute('top')).toEqual('attribute');
+        });
+
+        it("should keep 'html' tag attributes even if DOMParser is not supported", function () {
+            var dom;
+
+            window.DOMParser = function () {
+                this.parseFromString = function () {
+                    return null;
+                };
+            };
+
+            dom = rasterizeHTML.util.parseHTML('<html top="attribute"></html>');
+
+            expect(dom.documentElement.getAttribute('top')).toEqual('attribute');
         });
     });
 

@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.5.1 - 2013-11-10
+/*! rasterizeHTML.js - v0.5.1 - 2013-11-11
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2013 Christoph Burgmer; Licensed MIT */
 window.rasterizeHTMLInline = (function (module) {
@@ -1212,7 +1212,7 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, html2xhtml, theWindow) {
 
     module.util.executeJavascript = function (doc, timeout, callback) {
         var iframe = createHiddenElement(theWindow.document, "iframe"),
-            html = doc.getElementsByTagName("html")[0].innerHTML,
+            html = doc.documentElement.outerHTML,
             documentId = module.util.getConstantUniqueIdFor(doc),
             injectErrorHandling = "<script>window.onerror = " + iframeJsErrorHandler(documentId) + ";</script>",
             doCallback = function () {
@@ -1230,8 +1230,36 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, html2xhtml, theWindow) {
         }
 
         iframe.contentDocument.open();
-        iframe.contentDocument.write("<html>" + injectErrorHandling + html + "</html>");
+        iframe.contentDocument.write(injectErrorHandling + html);
         iframe.contentDocument.close();
+    };
+
+    var addHTMLTagAttributes = function (doc, html) {
+        var attributeMatch = /<html((?:\s+[^>]*)?)>/.exec(html),
+            htmlTagSubstitute = '<div' + attributeMatch[1] + '></div>',
+            helperDoc = theWindow.document.implementation.createHTMLDocument(''),
+            i, elem, attribute;
+
+        helperDoc.documentElement.innerHTML = htmlTagSubstitute;
+        elem = helperDoc.querySelector('div');
+
+        for (i = 0; i < elem.attributes.length; i++) {
+            attribute = elem.attributes[i];
+            doc.documentElement.setAttribute(attribute.name, attribute.value);
+        }
+    };
+
+    module.util.parseHTML = function (html) {
+        var doc;
+        if ((new DOMParser()).parseFromString('<a></a>', 'text/html')) {
+            doc = (new DOMParser()).parseFromString(html, 'text/html');
+        } else {
+            doc = theWindow.document.implementation.createHTMLDocument('');
+            doc.documentElement.innerHTML = html;
+
+            addHTMLTagAttributes(doc, html);
+        }
+        return doc;
     };
 
     /* Rendering */
@@ -1493,9 +1521,7 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, html2xhtml, theWindow) {
 
     module.drawHTML = function (html, canvas, options, callback) {
         var params = module.util.parseOptionalParameters(canvas, options, callback),
-            doc = theWindow.document.implementation.createHTMLDocument("");
-
-        doc.documentElement.innerHTML = html;
+            doc = module.util.parseHTML(html);
 
         module.drawDocument(doc, params.canvas, params.options, params.callback);
     };
