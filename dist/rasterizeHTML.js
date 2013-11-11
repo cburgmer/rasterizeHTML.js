@@ -1235,16 +1235,21 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, html2xhtml, theWindow) {
     };
 
     var addHTMLTagAttributes = function (doc, html) {
-        var attributeMatch = /<html((?:\s+[^>]*)?)>/.exec(html),
-            htmlTagSubstitute = '<div' + attributeMatch[1] + '></div>',
+        var attributeMatch = /<html((?:\s+[^>]*)?)>/im.exec(html),
             helperDoc = theWindow.document.implementation.createHTMLDocument(''),
-            i, elem, attribute;
+            htmlTagSubstitute,
+            i, elementSubstitute, attribute;
 
+        if (!attributeMatch) {
+            return;
+        }
+
+        htmlTagSubstitute = '<div' + attributeMatch[1] + '></div>';
         helperDoc.documentElement.innerHTML = htmlTagSubstitute;
-        elem = helperDoc.querySelector('div');
+        elementSubstitute = helperDoc.querySelector('div');
 
-        for (i = 0; i < elem.attributes.length; i++) {
-            attribute = elem.attributes[i];
+        for (i = 0; i < elementSubstitute.attributes.length; i++) {
+            attribute = elementSubstitute.attributes[i];
             doc.documentElement.setAttribute(attribute.name, attribute.value);
         }
     };

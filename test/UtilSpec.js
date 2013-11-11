@@ -149,6 +149,10 @@ describe("Utilities function", function () {
 
             expect(dom.documentElement.getAttribute('top')).toEqual('attribute');
         });
+
+        it("should deal with a missing 'html' tag", function () {
+            rasterizeHTML.util.parseHTML('<div></div>');
+        });
     });
 
     describe("parseOptionalParameters", function () {
