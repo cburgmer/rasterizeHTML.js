@@ -21,7 +21,11 @@
     "type": "git",
     "url": "git://github.com/cburgmer/rasterizeHTML.js.git"
   },
-  "dependencies": {},
+  "dependencies": {
+    "cssom": "git+https://github.com/cburgmer/CSSOM.git#787dc0c55b5",
+    "URIjs": "~1.11.2",
+    "xmlserializer": "~0.2.0"
+  },
   "devDependencies": {
     "grunt": "~0.4.1",
     "grunt-cli": "~0.1",
@@ -32,10 +36,8 @@
     "grunt-contrib-watch": "~0.5.2",
     "grunt-regex-check": "~0.1.5",
     "bower": "~1.2.0",
-    "cssom": "git+https://github.com/cburgmer/CSSOM.git#787dc0c55b5",
     "browserify": "~2.35.1",
-    "grunt-browserify": "~1.2.11",
-    "xmlserializer": "~0.2.0"
+    "grunt-browserify": "~1.2.11"
   },
   "scripts": {
     "test": "bash go --verbose"

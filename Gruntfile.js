@@ -4,9 +4,7 @@ module.exports = function (grunt) {
         pkg: grunt.file.readJSON('package.json'),
         jasmine: {
             src: [
-                'bower_components/uri.js/src/URI.js',
-                'build/CSSOM.js',
-                'build/xmlserializer.js',
+                'build/*.js',
                 'src/*.js'
             ],
             options: {
@@ -33,6 +31,13 @@ module.exports = function (grunt) {
                 dest: 'build/xmlserializer.js',
                 options: {
                     'standalone': 'xmlserializer'
+                }
+            },
+            URIjs: {
+                src: 'node_modules/URIjs/src/URI.js',
+                dest: 'build/URI.js',
+                options: {
+                    'standalone': 'URI'
                 }
             }
         },
@@ -71,14 +76,11 @@ module.exports = function (grunt) {
                         '\n/* Integrated dependencies:\n' +
                         ' * URI.js (MIT License/GPL v3),\n' +
                         ' * CSSOM (MIT License),\n' +
-                        ' * xmlserializer (MIT License),\n' +
-                        ' * parse5 (MIT License) */\n'
+                        ' * xmlserializer (MIT License) */\n'
                 },
                 files: {
                     'dist/rasterizeHTML.allinone.js': [
-                        'bower_components/uri.js/src/URI.js',
-                        'build/CSSOM.js',
-                        'build/xmlserializer.js',
+                        'build/*',
                         'dist/rasterizeHTML.js'
                     ]
                 }
