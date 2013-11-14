@@ -41,6 +41,7 @@ module.exports = function (grunt) {
                 }
             }
         },
+        clean: ['build'],
         concat: {
             options: {
                 banner:'/*! <%= pkg.title || pkg.name %> - v<%= pkg.version %> - ' +
@@ -165,9 +166,11 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-regex-check');
     grunt.loadNpmTasks('grunt-contrib-watch');
+    grunt.loadNpmTasks('grunt-contrib-clean');
     grunt.loadNpmTasks('grunt-browserify');
 
     grunt.registerTask('default', [
+        'clean',
         'jshint',
         'browserify',
         'jasmine',
