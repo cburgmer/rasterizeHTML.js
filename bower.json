@@ -6,8 +6,7 @@
     "./dist/rasterizeHTML.allinone.js"
   ],
   "dependencies": {
-    "uri.js": "~1.11.2",
-    "html2xhtml": "~0.1.2"
+    "uri.js": "~1.11.2"
   },
   "devDependencies": {
     "jasmine": "~1.3.1",

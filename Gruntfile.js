@@ -5,8 +5,8 @@ module.exports = function (grunt) {
         jasmine: {
             src: [
                 'bower_components/uri.js/src/URI.js',
-                'bower_components/html2xhtml/dist/html2xhtml.js',
                 'build/CSSOM.js',
+                'build/xmlserializer.js',
                 'src/*.js'
             ],
             options: {
@@ -26,6 +26,13 @@ module.exports = function (grunt) {
                 dest: 'build/CSSOM.js',
                 options: {
                     'standalone': 'CSSOM'
+                }
+            },
+            xmlserializer: {
+                src: 'node_modules/xmlserializer/lib/serializer.js',
+                dest: 'build/xmlserializer.js',
+                options: {
+                    'standalone': 'xmlserializer'
                 }
             }
         },
@@ -63,15 +70,15 @@ module.exports = function (grunt) {
                         '* Copyright (c) <%= grunt.template.today("yyyy") %> <%= pkg.author.name %>;' +
                         '\n/* Integrated dependencies:\n' +
                         ' * URI.js (MIT License/GPL v3),\n' +
-                        ' * CSSOM.js (MIT License),\n' +
-                        ' * html2xhtml.js (MIT License),\n' +
-                        ' * parse5.js (MIT License) */\n'
+                        ' * CSSOM (MIT License),\n' +
+                        ' * xmlserializer (MIT License),\n' +
+                        ' * parse5 (MIT License) */\n'
                 },
                 files: {
                     'dist/rasterizeHTML.allinone.js': [
                         'bower_components/uri.js/src/URI.js',
-                        'bower_components/html2xhtml/dist/html2xhtml.js',
                         'build/CSSOM.js',
+                        'build/xmlserializer.js',
                         'dist/rasterizeHTML.js'
                     ]
                 }
@@ -98,7 +105,6 @@ module.exports = function (grunt) {
                 trailing: true,
                 browser: true,
                 globals: {
-                    CSSParser: true,
                     CSSOM: true,
                     URI: true
                 }
@@ -124,7 +130,6 @@ module.exports = function (grunt) {
                         setFixtures: true,
                         ifNotInWebkitIt: true,
                         ifNotInPhantomJsIt: true,
-                        CSSParser: true,
                         CSSOM: true,
                         URI: true,
                         imagediff: true,

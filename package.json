@@ -34,7 +34,8 @@
     "bower": "~1.2.0",
     "cssom": "git+https://github.com/cburgmer/CSSOM.git#787dc0c55b5",
     "browserify": "~2.35.1",
-    "grunt-browserify": "~1.2.11"
+    "grunt-browserify": "~1.2.11",
+    "xmlserializer": "~0.2.0"
   },
   "scripts": {
     "test": "bash go --verbose"

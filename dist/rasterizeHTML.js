@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.5.1 - 2013-11-12
+/*! rasterizeHTML.js - v0.5.1 - 2013-11-14
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2013 Christoph Burgmer; Licensed MIT */
 window.rasterizeHTMLInline = (function (module) {
@@ -1105,7 +1105,7 @@ window.rasterizeHTMLInline = (function (module, window, URI) {
     return module;
 }(window.rasterizeHTMLInline || {}, window, URI));
 
-window.rasterizeHTML = (function (rasterizeHTMLInline, html2xhtml, theWindow) {
+window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow) {
     "use strict";
 
     var module = {};
@@ -1269,29 +1269,6 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, html2xhtml, theWindow) {
 
     /* Rendering */
 
-    var needsXMLParserWorkaround = function() {
-        // See https://bugs.webkit.org/show_bug.cgi?id=47768
-        return theWindow.navigator.userAgent.indexOf("WebKit") >= 0;
-    };
-
-    var serializeToXML = function (doc) {
-        var xml;
-
-        doc.documentElement.setAttribute("xmlns", doc.documentElement.namespaceURI);
-        xml = (new theWindow.XMLSerializer()).serializeToString(doc.documentElement);
-        if (needsXMLParserWorkaround()) {
-            if (html2xhtml) {
-                return html2xhtml(xml);
-            } else {
-                module.util.log("Looks like your browser needs html2xhtml.js as workaround for writing XML. " +
-                    "Please include it.");
-                return xml;
-            }
-        } else {
-            return xml;
-        }
-    };
-
     var supportsBlobBuilding = function () {
         // Newer Safari (under PhantomJS) seems to support blob building, but loading an image with the blob fails
         if (theWindow.navigator.userAgent.indexOf("WebKit") >= 0 && theWindow.navigator.userAgent.indexOf("Chrome") < 0) {
@@ -1409,15 +1386,15 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, html2xhtml, theWindow) {
     };
 
     module.getSvgForDocument = function (doc, width, height) {
-        var html;
+        var xhtml;
 
         workAroundWebkitBugIgnoringTheFirstRuleInCSS(doc);
-        html = serializeToXML(doc);
+        xhtml = xmlserializer.serializeToString(doc);
 
         return (
             '<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height + '">' +
                 '<foreignObject width="100%" height="100%">' +
-                    html +
+                    xhtml +
                 '</foreignObject>' +
             '</svg>'
         );
@@ -1553,4 +1530,4 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, html2xhtml, theWindow) {
     };
 
     return module;
-}(window.rasterizeHTMLInline, window.html2xhtml || window.HTMLtoXML, window));
+}(window.rasterizeHTMLInline, window.xmlserializer, window));
