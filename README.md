@@ -11,7 +11,7 @@ Example
     var canvas = document.getElementById("canvas");
     rasterizeHTML.drawHTML('Some <span style="color: green">HTML</span> with an image <img src="someimg.png" />', canvas);
 
-See [Examples](https://github.com/cburgmer/rasterizeHTML.js/wiki/Examples).
+See [the examples page](https://github.com/cburgmer/rasterizeHTML.js/wiki/Examples) and [the examples shipped with the code](https://github.com/cburgmer/rasterizeHTML.js/tree/master/examples).
 
 How does it work
 ----------------
