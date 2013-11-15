@@ -22,7 +22,7 @@
     "url": "git://github.com/cburgmer/rasterizeHTML.js.git"
   },
   "dependencies": {
-    "cssom": "git+https://github.com/cburgmer/CSSOM.git#787dc0c55b5",
+    "cssom": "~0.3.0",
     "URIjs": "~1.11.2",
     "xmlserializer": "~0.2.0"
   },
