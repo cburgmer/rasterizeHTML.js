@@ -12,12 +12,23 @@
     <![endif]-->
     <script type="text/javascript" src="rasterizeHTML.allinone.js"></script>
     <style type="text/css">
-        #pageInPageCanvas {
-            display: block;
-            border:1px solid black;
-            margin-bottom: 20px;
+        #pageInPageCanvas, #liveDemoCanvas, #liveDemoInput {
+            box-sizing: border-box;
             width: 500px;
+        }
+        #pageInPageCanvas, #liveDemoCanvas {
+            display: block;
+            border: 1px solid black;
+        }
+        #pageInPageCanvas {
+            margin-bottom: 20px;
             height: 300px;
+        }
+        #liveDemoInput, #liveDemoCanvas {
+            height: 140px;
+        }
+        #liveDemoInput {
+            margin: 5px 0 20px;
         }
     </style>
   </head>
@@ -58,16 +69,72 @@ rasterizeHTML.drawDocument( document [, canvas] [, options] [, callback] )</pre>
 
 <p>You can <a href="http://2013.jsconf.eu/speakers/christoph-burgmer-a-panoramic-tour-through-html5-rendering-itself.html">hear me talk</a> on some of the details of the implementation.</p>
 
-<h2>Demo</h2>
+<h2>Demo I</h2>
 
 <canvas id="pageInPageCanvas" width="1000" height="600"></canvas>
 
 <script type="text/javascript">
-  var canvas = document.getElementById("pageInPageCanvas");
+(function () {
+    var canvas = document.getElementById("pageInPageCanvas");
 
-  document.getElementsByTagName("body")[0].onload = function () {
-      rasterizeHTML.drawURL("index.html", canvas);
-  };
+    document.getElementsByTagName("body")[0].onload = function () {
+        rasterizeHTML.drawURL("index.html", canvas);
+    };
+}());
+</script>
+
+<h2>Demo II</h2>
+
+<canvas id="liveDemoCanvas" width="600" height="200"></canvas>
+
+<textarea id="liveDemoInput"></textarea>
+
+<script type="text/template" id="liveDemoTemplate">
+    You can type HTML into this <span style="color: green">canvas</span>.
+    <p>An img: <img src="tiger.png" alt="Tiger"/></p>
+
+    <style type="text/css">
+        body {
+            font-size: 32px;
+            background: url(tiger.png) top right no-repeat;
+            background-size: 50px;
+        }
+    </style>
+</script>
+
+<script type="text/javascript">
+(function () {
+    var input = document.getElementById("liveDemoInput"),
+        canvas = document.getElementById("liveDemoCanvas"),
+        template = document.getElementById("liveDemoTemplate"),
+        oldText = input.value;
+
+    var parsePixelValue = function (value) {
+        return parseInt(value, 10);
+    };
+    var sizeCanvas = function (canvas) {
+        var canvasStyle = window.getComputedStyle(canvas);
+
+        canvas.width = parsePixelValue(canvasStyle.width) * 2;
+        canvas.height = parsePixelValue(canvasStyle.height) * 2;
+    };
+
+    sizeCanvas(canvas);
+
+    input.onkeyup = function () {
+        if (input.value !== oldText) {
+            oldText = input.value;
+            canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+
+            rasterizeHTML.drawHTML(input.value, canvas);
+        }
+    };
+
+    if (!input.value) {
+        input.value = template.innerHTML.replace(/^ {4}/gm, "").replace(/^\n/g, "").replace(/\n +$/g, "\n");
+    }
+    rasterizeHTML.drawHTML(input.value, canvas);
+}());
 </script>
 
 <h2>Limitations</h2>
