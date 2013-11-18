@@ -5,7 +5,7 @@
     <title>rasterizeHTML.js performance test</title>
     <script type="text/javascript" src="../build/CSSOM.js"></script> <!-- Only needed for Chrome -->
     <script type="text/javascript" src="../build/xmlserializer.js"></script>
-    <script type="text/javascript" src="../bower_components/uri.js/src/URI.js"></script>
+    <script type="text/javascript" src="../build/URI.js"></script>
     <script type="text/javascript" src="../src/inlineUtil.js"></script>
     <script type="text/javascript" src="../src/inlineCss.js"></script>
     <script type="text/javascript" src="../src/inline.js"></script>
@@ -25,9 +25,9 @@
                 finishCallback();
                 return;
             }
-            rasterizeHTML.drawURL(url, canvas, {cacheBucket: cache}, function () {
+            rasterizeHTML.drawURL(url, canvas, {cacheBucket: cache}, function (image, errors) {
                 count -= 1;
-                tick(count);
+                tick(count, errors);
                 renderPageMultipleTimes(count, tick, finishCallback);
             });
         }
@@ -43,9 +43,13 @@
 
             log("Running performance test against " + url + " with " + runs + " runs\n");
 
-            renderPageMultipleTimes(runs, function (stepsLeft) {
+            renderPageMultipleTimes(runs, function (stepsLeft, errors) {
                 if (stepsLeft === runs - 1) {
                     firstStepEndTime = Date.now();
+
+                    errors.forEach(function (error) {
+                        console.log(error);
+                    });
                 }
 
                 log(".");
