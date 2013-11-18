@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Helper page for bundlePage.js</title>
+    <script type="text/javascript" src="../dist/rasterizeHTML.allinone.js"></script>
+    <script>
+        var sendMessage = function (cmd, content) {
+            console.log(JSON.stringify({
+                cmd: cmd,
+                content: content
+            }));
+        };
+        window.bundlePage = function (url) {
+            rasterizeHTMLInline.util.ajax(url, {}, function (html) {
+                var doc = rasterizeHTML.util.parseHTML(html);
+                rasterizeHTMLInline.inlineReferences(doc, {baseUrl: url}, function (errors) {
+                    var xhtml;
+
+                    errors.forEach(function (error) {
+                        sendMessage('log', error.msg);
+                    });
+
+                    xhtml = xmlserializer.serializeToString(doc);
+                    sendMessage('done', xhtml);
+                });
+            }, function () {
+                sendMessage('log', "error loading file '" + url + "'");
+            });
+
+        };
+    </script>
+</head>
+<body>
+    <h1>Helper page for bundlePage.js</h1>
+    <p>Example usage:</p>
+    <pre>phantomjs examples/bundlePage.js test/fixtures/image.html</pre>
+</body>
+</html>
