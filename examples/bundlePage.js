@@ -7,20 +7,43 @@ console.error = function () {
     require("system").stderr.write(Array.prototype.join.call(arguments, ' ') + '\n');
 };
 
+var textExtensions = ['html', 'htm', 'css', 'js'];
+
+var isBinaryFile = function (path) {
+    var extension;
+    if (path.lastIndexOf('.') < 0) {
+        return false;
+    }
+
+    extension = path.substr(path.lastIndexOf('.') + 1);
+    if (textExtensions.indexOf(extension) >= 0) {
+        return false;
+    }
+    return true;
+};
+
 var startWebserver = function () {
     var fs = require('fs'),
         server = require('webserver').create();
 
     var launched = server.listen(port, function(request, response) {
-        var localPath = '.' + request.url;
+        var localPath = '.' + request.url,
+            inputStream;
 
         if (fs.isReadable(localPath)) {
             response.statusCode = 200;
-            response.write(fs.read(localPath));
+            if (isBinaryFile(request.url)) {
+                response.setEncoding('binary');
+                inputStream = fs.open(localPath, 'rb');
+            } else {
+                inputStream = fs.open(localPath, 'r');
+            }
+            response.write(inputStream.read());
         } else {
             response.statusCode = 404;
             response.write("");
         }
+
         response.close();
     });
 
