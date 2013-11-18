@@ -89,6 +89,11 @@ describe("Inline utilities function", function () {
             var url = rasterizeHTMLInline.util.joinUrl(undefined, "aFile");
             expect(url).toEqual("aFile");
         });
+
+        it("should keep a relative base URL", function () {
+            var url = rasterizeHTMLInline.util.joinUrl("../rel/path/", "the_relative_url");
+            expect(url).toEqual("../rel/path/the_relative_url");
+        });
     });
 
     describe("isDataUri", function () {

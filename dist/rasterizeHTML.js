@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.5.1 - 2013-11-14
+/*! rasterizeHTML.js - v0.5.1 - 2013-11-18
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2013 Christoph Burgmer; Licensed MIT */
 window.rasterizeHTMLInline = (function (module) {
@@ -920,7 +920,7 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
     return module;
 }(window.rasterizeHTMLInline || {}, window, window.CSSOM || {}));
 
-window.rasterizeHTMLInline = (function (module, window, URI) {
+window.rasterizeHTMLInline = (function (module, window, url) {
     "use strict";
 
     module.util = {};
@@ -948,12 +948,8 @@ window.rasterizeHTMLInline = (function (module, window, URI) {
         return Array.prototype.slice.apply(nodeList, [0]);
     };
 
-    module.util.joinUrl = function (baseUrl, url) {
-        var theUrl = new URI(url);
-        if (baseUrl && theUrl.is("relative")) {
-            theUrl = theUrl.absoluteTo(baseUrl);
-        }
-        return theUrl.toString();
+    module.util.joinUrl = function (baseUrl, relUrl) {
+        return url.resolve(baseUrl, relUrl);
     };
 
     module.util.isDataUri = function (url) {
@@ -1103,7 +1099,7 @@ window.rasterizeHTMLInline = (function (module, window, URI) {
     };
 
     return module;
-}(window.rasterizeHTMLInline || {}, window, URI));
+}(window.rasterizeHTMLInline || {}, window, url));
 
 window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow) {
     "use strict";

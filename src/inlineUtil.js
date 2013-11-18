@@ -1,4 +1,4 @@
-window.rasterizeHTMLInline = (function (module, window, URI) {
+window.rasterizeHTMLInline = (function (module, window, url) {
     "use strict";
 
     module.util = {};
@@ -26,12 +26,8 @@ window.rasterizeHTMLInline = (function (module, window, URI) {
         return Array.prototype.slice.apply(nodeList, [0]);
     };
 
-    module.util.joinUrl = function (baseUrl, url) {
-        var theUrl = new URI(url);
-        if (baseUrl && theUrl.is("relative")) {
-            theUrl = theUrl.absoluteTo(baseUrl);
-        }
-        return theUrl.toString();
+    module.util.joinUrl = function (baseUrl, relUrl) {
+        return url.resolve(baseUrl, relUrl);
     };
 
     module.util.isDataUri = function (url) {
@@ -181,4 +177,4 @@ window.rasterizeHTMLInline = (function (module, window, URI) {
     };
 
     return module;
-}(window.rasterizeHTMLInline || {}, window, URI));
+}(window.rasterizeHTMLInline || {}, window, url));

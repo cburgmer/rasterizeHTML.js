@@ -33,11 +33,11 @@ module.exports = function (grunt) {
                     'standalone': 'xmlserializer'
                 }
             },
-            URIjs: {
-                src: 'node_modules/URIjs/src/URI.js',
-                dest: 'build/URI.js',
+            url: {
+                src: 'node_modules/url/url.js',
+                dest: 'build/url.js',
                 options: {
-                    'standalone': 'URI'
+                    'standalone': 'url'
                 }
             }
         },
@@ -75,7 +75,7 @@ module.exports = function (grunt) {
                         '* <%= pkg.homepage %>\n' +
                         '* Copyright (c) <%= grunt.template.today("yyyy") %> <%= pkg.author.name %>;' +
                         '\n/* Integrated dependencies:\n' +
-                        ' * URI.js (MIT License/GPL v3),\n' +
+                        ' * url (MIT License),\n' +
                         ' * CSSOM (MIT License),\n' +
                         ' * xmlserializer (MIT License) */\n'
                 },
@@ -109,7 +109,7 @@ module.exports = function (grunt) {
                 browser: true,
                 globals: {
                     CSSOM: true,
-                    URI: true
+                    url: true
                 }
             },
             uses_defaults: [
@@ -134,7 +134,7 @@ module.exports = function (grunt) {
                         ifNotInWebkitIt: true,
                         ifNotInPhantomJsIt: true,
                         CSSOM: true,
-                        URI: true,
+                        url: true,
                         imagediff: true,
                         rasterizeHTML: true,
                         rasterizeHTMLInline: true,
