@@ -1,5 +1,3 @@
-#!/usr/bin/env phantomjs
-
 var port = 8000;
 
 // https://github.com/ariya/phantomjs/issues/10150
@@ -27,7 +25,7 @@ var startWebserver = function () {
         server = require('webserver').create();
 
     var launched = server.listen(port, function(request, response) {
-        var localPath = '.' + request.url,
+        var localPath = '.' + decodeURIComponent(request.url),
             inputStream;
 
         if (fs.isReadable(localPath)) {
