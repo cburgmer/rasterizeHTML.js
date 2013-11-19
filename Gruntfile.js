@@ -41,7 +41,10 @@ module.exports = function (grunt) {
                 }
             }
         },
-        clean: ['build'],
+        clean: {
+            dist: ['build/*.js'],
+            all: ['build']
+        },
         concat: {
             options: {
                 banner:'/*! <%= pkg.title || pkg.name %> - v<%= pkg.version %> - ' +
@@ -81,7 +84,7 @@ module.exports = function (grunt) {
                 },
                 files: {
                     'dist/rasterizeHTML.allinone.js': [
-                        'build/*',
+                        'build/*.js',
                         'dist/rasterizeHTML.js'
                     ]
                 }
@@ -170,7 +173,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-browserify');
 
     grunt.registerTask('default', [
-        'clean',
+        'clean:dist',
         'jshint',
         'browserify',
         'jasmine',

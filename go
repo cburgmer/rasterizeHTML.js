@@ -1,31 +1,38 @@
 #!/bin/bash
 set -e
 
-function installBuildDependencies {
+installBuildDependencies() {
     npm install
 }
 
-function installDependencies {
+installDependencies() {
     ./node_modules/.bin/bower install
 }
 
-function build {
+build() {
     ./node_modules/.bin/grunt $@
 }
 
-function runIntegrationTest {
-    cd test && phantomjs phantomIntegrationTest.js
-
+runIntegrationTest() {
+    phantomjs test/phantomIntegrationTest.js
 }
 
+runCharacterisationTest() {
+    ./test/inlineIntegration/runInlineTests.sh
+}
 
-if [ ! -d node_modules ]; then
-    installBuildDependencies
-fi
+main() {
+    if [ ! -d node_modules ]; then
+        installBuildDependencies
+    fi
 
-if [ ! -d bower_components ]; then
-    installDependencies
-fi
+    if [ ! -d bower_components ]; then
+        installDependencies
+    fi
 
-build
-runIntegrationTest
+    build
+    runIntegrationTest
+    runCharacterisationTest
+}
+
+main

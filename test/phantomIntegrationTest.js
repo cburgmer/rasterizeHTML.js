@@ -20,8 +20,8 @@ var renderPage = function (url, successCallback) {
     });
 };
 
-renderPage(fs.absolute('integrationTestPage.html'), function (imageUrl) {
-    renderPage(fs.absolute('fixtures/testResult.png'), function (targetImageUrl) {
+renderPage(fs.absolute('test/integrationTestPage.html'), function (imageUrl) {
+    renderPage(fs.absolute('test/fixtures/testResult.png'), function (targetImageUrl) {
         var imageDiffPage = require("webpage").create();
 
         imageDiffPage.onConsoleMessage = function (msg) {
@@ -29,12 +29,12 @@ renderPage(fs.absolute('integrationTestPage.html'), function (imageUrl) {
             if (msg === "success") {
                 phantom.exit(0);
             } else {
-                imageDiffPage.render("rasterizeHtmlSmokeTestDiff.png");
+                imageDiffPage.render("test/rasterizeHtmlSmokeTestDiff.png");
                 phantom.exit(1);
             }
         };
 
-        imageDiffPage.open("diffHelperPage.html", function () {
+        imageDiffPage.open("test/diffHelperPage.html", function () {
             imageDiffPage.evaluate(function (url1, url2) {
                 isEqual(url1, url2, 5);
             }, imageUrl, targetImageUrl);

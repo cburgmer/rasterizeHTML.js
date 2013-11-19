@@ -11,6 +11,13 @@
 
 failedTests=0
 
+exitOnFail() {
+    if [[ "$?" -ne 0 ]]; then
+        echo "Internal error"
+        exit 1
+    fi
+}
+
 testFile() {
     local sourceFile="$1"
     local testReference="$2"
@@ -42,6 +49,7 @@ takeScreenshot() {
     echo "Taking a screenshot, writing to ${screenshotPath}"
     echo "file://$(pwd)/$inlinedFilePath"
     slimerjs test/inlineIntegration/rasterize.js "file://$(pwd)/$inlinedFilePath" "$screenshotPath"
+    exitOnFail
 }
 
 downloadPageData() {
@@ -50,9 +58,11 @@ downloadPageData() {
     local pageDataUrl="http://cburgmer.github.io/rasterizeHTML.js/testData/${testReference}.tar.bz"
 
     if [[ ! -d "${targetDirectory}/${testReference}" ]]; then
-        echo "Downloading full page from ${pageUrl}"
-        # wget --directory-prefix="$targetDirectory" "$pageDataUrl"
+        echo "Downloading full page from ${pageDataUrl}"
+        wget --directory-prefix="$targetDirectory" "$pageDataUrl"
+        exitOnFail
         tar -xjf "${targetDirectory}/${testReference}.tar.bz"
+        exitOnFail
     fi
 }
 
