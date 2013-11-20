@@ -93,7 +93,7 @@ describe("The rendering process", function () {
 
                 svgCode = rasterizeHTML.getSvgForDocument(doc, 123, 987);
 
-                expect(svgCode).toMatch(/<style type="text\/css"><\!\[CDATA\[\s*span \{\}/);
+                expect(svgCode).toMatch(/<style type="text\/css">\s*span \{\}/);
             });
 
             ifNotInWebkitIt("should not add a workaround outside of WebKit", function () {
