@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.5.1 - 2013-11-20
+/*! rasterizeHTML.js - v0.5.1 - 2013-11-21
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2013 Christoph Burgmer; Licensed MIT */
 window.rasterizeHTMLInline = (function (module) {
@@ -1120,12 +1120,6 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow)
         return uniqueIdList.indexOf(element);
     };
 
-    module.util.log = function (msg) {
-        if (theWindow.console && theWindow.console.log) {
-            theWindow.console.log(msg);
-        }
-    };
-
     var cloneObject = function(object) {
         var newObject = {},
             i;
@@ -1474,12 +1468,23 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow)
         });
     };
 
+    var getImageSize = function (canvas, options) {
+        var defaultWidth = 300,
+            defaultHeight = 200,
+            fallbackWidth = canvas ? canvas.width : defaultWidth,
+            fallbackHeight = canvas ? canvas.height : defaultHeight,
+            width = options.width !== undefined ? options.width : fallbackWidth,
+            height = options.height !== undefined ? options.height : fallbackHeight;
+
+        return {
+            width: width,
+            height: height
+        };
+    };
+
     module.drawDocument = function (doc, canvas, options, callback) {
         var params = module.util.parseOptionalParameters(canvas, options, callback),
-            fallbackWidth = params.canvas ? params.canvas.width : 300,
-            fallbackHeight = params.canvas ? params.canvas.height : 200,
-            width = params.options.width !== undefined ? params.options.width : fallbackWidth,
-            height = params.options.height !== undefined ? params.options.height : fallbackHeight,
+            imageSize = getImageSize(params.canvas, params.options),
             executeJsTimeout = params.options.executeJsTimeout || 0,
             inlineOptions;
 
@@ -1489,10 +1494,10 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow)
         rasterizeHTMLInline.inlineReferences(doc, inlineOptions, function (allErrors) {
             if (params.options.executeJs) {
                 module.util.executeJavascript(doc, executeJsTimeout, function (doc, errors) {
-                    doDraw(doc, width, height, params.canvas, params.callback, allErrors.concat(errors));
+                    doDraw(doc, imageSize.width, imageSize.height, params.canvas, params.callback, allErrors.concat(errors));
                 });
             } else {
-                doDraw(doc, width, height, params.canvas, params.callback, allErrors);
+                doDraw(doc, imageSize.width, imageSize.height, params.canvas, params.callback, allErrors);
             }
         });
     };
