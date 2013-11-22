@@ -289,6 +289,7 @@ describe("Inline utilities function", function () {
 
                 expect(ajaxRequest.open.mostRecentCall.args[1]).toEqual('non_existing_url.html?_=42');
 
+                dateNowSpy.andReturn(43);
                 rasterizeHTMLInline.util.ajax("non_existing_url.html", {cache: 'repeated'}, function () {}, function () {});
                 expect(ajaxRequest.open.mostRecentCall.args[1]).toEqual('non_existing_url.html?_=42');
 

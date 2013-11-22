@@ -1,5 +1,6 @@
 var isWebkit = navigator.userAgent.indexOf("WebKit") >= 0,
     isPhantomJs = navigator.userAgent.indexOf("PhantomJS") >= 0,
+    isLocalRunner = document.baseURI.substr(0, 'file://'.length) === 'file://',
     ifNotInWebkitIt = function(text, functionHandle) {
         if (! isWebkit) {
             return it(text, functionHandle);
@@ -9,6 +10,13 @@ var isWebkit = navigator.userAgent.indexOf("WebKit") >= 0,
     },
     ifNotInPhantomJsIt = function(text, functionHandle) {
         if (! isPhantomJs) {
+            return it(text, functionHandle);
+        } else {
+            safeLog('Warning: "' + text + '" is disabled on this platform');
+        }
+    },
+    ifNotInPhantomJSAndNotLocalRunnerIt = function (text, functionHandle) {
+        if (! isPhantomJs && ! isLocalRunner) {
             return it(text, functionHandle);
         } else {
             safeLog('Warning: "' + text + '" is disabled on this platform');

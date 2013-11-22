@@ -136,6 +136,7 @@ module.exports = function (grunt) {
                         setFixtures: true,
                         ifNotInWebkitIt: true,
                         ifNotInPhantomJsIt: true,
+                        ifNotInPhantomJSAndNotLocalRunnerIt: true,
                         CSSOM: true,
                         url: true,
                         imagediff: true,

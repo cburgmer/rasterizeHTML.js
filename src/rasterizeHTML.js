@@ -154,6 +154,46 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow)
         return doc;
     };
 
+    var lastCacheDate = null;
+
+    var getUncachableURL = function (url, cache) {
+        if (cache === false || cache === 'none' || cache === 'repeated') {
+            if (lastCacheDate === null || cache !== 'repeated') {
+                lastCacheDate = Date.now();
+            }
+            return url + "?_=" + lastCacheDate;
+        } else {
+            return url;
+        }
+    };
+
+    module.util.loadDocument = function (url, options, successCallback, errorCallback) {
+        var ajaxRequest = new window.XMLHttpRequest(),
+            // TODO remove reference to rasterizeHTMLInline.util
+            joinedUrl = rasterizeHTMLInline.util.joinUrl(options.baseUrl, url),
+            augmentedUrl = getUncachableURL(joinedUrl, options.cache);
+
+        ajaxRequest.addEventListener("load", function () {
+            if (ajaxRequest.status === 200 || ajaxRequest.status === 0) {
+                successCallback(ajaxRequest.responseXML);
+            } else {
+                errorCallback();
+            }
+        }, false);
+
+        ajaxRequest.addEventListener("error", function () {
+            errorCallback();
+        }, false);
+
+        try {
+            ajaxRequest.open('GET', augmentedUrl, true);
+            ajaxRequest.responseType = "document";
+            ajaxRequest.send(null);
+        } catch (err) {
+            errorCallback();
+        }
+    };
+
     /* Rendering */
 
     var supportsBlobBuilding = function () {
@@ -407,15 +447,10 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow)
     };
 
     module.drawURL = function (url, canvas, options, callback) {
-        var params = module.util.parseOptionalParameters(canvas, options, callback),
-            inlineOptions;
+        var params = module.util.parseOptionalParameters(canvas, options, callback);
 
-        inlineOptions = rasterizeHTMLInline.util.clone(params.options);
-        inlineOptions.baseUrl = url;
-
-        // TODO remove reference to rasterizeHTMLInline.util
-        rasterizeHTMLInline.util.ajax(url, params.options, function (html) {
-            module.drawHTML(html, params.canvas, inlineOptions, params.callback);
+        module.util.loadDocument(url, params.options, function (doc) {
+            module.drawDocument(doc, params.canvas, params.options, params.callback);
         }, function () {
             if (params.callback) {
                 params.callback(null, [{

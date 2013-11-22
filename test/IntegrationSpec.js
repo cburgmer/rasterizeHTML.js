@@ -110,4 +110,25 @@ describe("Integration test", function () {
             // expect(callback.mostRecentCall.args[0]).toImageDiffEqual(referenceImg.get(0), 90);
         });
     });
+
+    ifNotInPhantomJSAndNotLocalRunnerIt("should take a URL and load non UTF-8 content", function () {
+        var inlineReferencesSpy = spyOn(rasterizeHTMLInline, 'inlineReferences');
+
+        runs(function () {
+            rasterizeHTML.drawURL(jasmine.getFixtures().fixturesPath + "nonUTF8Encoding.html", callback);
+        });
+
+        waitsFor(function () {
+            return inlineReferencesSpy.wasCalled;
+        });
+
+        runs(function () {
+            expect(inlineReferencesSpy).toHaveBeenCalled();
+
+            var doc = inlineReferencesSpy.mostRecentCall.args[0];
+
+            // This fails if SpecRunner is opened locally in Firefox. Open over a local webserver helps here.
+            expect(doc.body.innerHTML.trim()).toEqual('这是中文');
+        });
+    });
 });
