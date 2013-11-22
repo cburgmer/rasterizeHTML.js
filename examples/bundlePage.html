@@ -11,8 +11,7 @@
             }));
         };
         window.bundlePage = function (url) {
-            rasterizeHTMLInline.util.ajax(url, {}, function (html) {
-                var doc = rasterizeHTML.util.parseHTML(html);
+            rasterizeHTML.util.loadDocument(url, {}, function (doc) {
                 rasterizeHTMLInline.inlineReferences(doc, {baseUrl: url}, function (errors) {
                     var xhtml;
 

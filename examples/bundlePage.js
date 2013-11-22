@@ -20,6 +20,22 @@ var isBinaryFile = function (path) {
     return true;
 };
 
+var contentTypeMap = {
+    'html': 'text/html',
+    'htm': 'text/html',
+    'css': 'text/css',
+    'js': 'application/javascript'
+};
+
+var guessContentType = function (fileName) {
+    var extension;
+
+    if (fileName.lastIndexOf('.') >= 1) {
+        extension = fileName.substr(fileName.lastIndexOf('.') + 1);
+    }
+    return contentTypeMap[extension] || 'text/plain';
+};
+
 var startWebserver = function () {
     var fs = require('fs'),
         server = require('webserver').create();
@@ -34,6 +50,8 @@ var startWebserver = function () {
                 response.setEncoding('binary');
                 inputStream = fs.open(localPath, 'rb');
             } else {
+                // Content-Type to work around https://bugzilla.mozilla.org/show_bug.cgi?id=942138
+                response.setHeader('Content-Type', guessContentType(localPath));
                 inputStream = fs.open(localPath, 'r');
             }
             response.write(inputStream.read());
