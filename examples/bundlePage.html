@@ -12,7 +12,7 @@
         };
         window.bundlePage = function (url) {
             rasterizeHTML.util.loadDocument(url, {}, function (doc) {
-                rasterizeHTMLInline.inlineReferences(doc, {baseUrl: url}, function (errors) {
+                rasterizeHTMLInline.inlineReferences(doc, {}, function (errors) {
                     var xhtml;
 
                     errors.forEach(function (error) {
