@@ -1047,10 +1047,8 @@ window.rasterizeHTMLInline = (function (module, window, url) {
                 allArgs;
 
             if (memo[funcHash] && memo[funcHash][argumentHash]) {
-                window.console.log("Cache hit", argumentHash);
                 successCallback.apply(null, memo[funcHash][argumentHash]);
             } else {
-                window.console.log("Calculating", argumentHash);
                 allArgs = args.concat(function () {
                     memo[funcHash] = memo[funcHash] || {};
                     memo[funcHash][argumentHash] = arguments;
