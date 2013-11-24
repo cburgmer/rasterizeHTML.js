@@ -41,29 +41,29 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow)
         return typeof func === "function";
     };
 
-    module.util.parseOptionalParameters = function () { // args: canvas, options, callback
+    module.util.parseOptionalParameters = function (args) { // args: canvas, options, callback
         var parameters = {
             canvas: null,
             options: {},
             callback: null
         };
 
-        if (isFunction(arguments[0])) {
-            parameters.callback = arguments[0];
+        if (isFunction(args[0])) {
+            parameters.callback = args[0];
         } else {
-            if (arguments[0] == null || isCanvas(arguments[0])) {
-                parameters.canvas = arguments[0] || null;
+            if (args[0] == null || isCanvas(args[0])) {
+                parameters.canvas = args[0] || null;
 
-                if (isFunction(arguments[1])) {
-                    parameters.callback = arguments[1];
+                if (isFunction(args[1])) {
+                    parameters.callback = args[1];
                 } else {
-                    parameters.options = cloneObject(arguments[1]);
-                    parameters.callback = arguments[2] || null;
+                    parameters.options = cloneObject(args[1]);
+                    parameters.callback = args[2] || null;
                 }
 
             } else {
-                parameters.options = cloneObject(arguments[0]);
-                parameters.callback = arguments[1] || null;
+                parameters.options = cloneObject(args[0]);
+                parameters.callback = args[1] || null;
             }
         }
 
@@ -419,47 +419,79 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow)
         };
     };
 
-    module.drawDocument = function (doc, canvas, options, callback) {
-        var params = module.util.parseOptionalParameters(canvas, options, callback),
-            imageSize = getImageSize(params.canvas, params.options),
-            executeJsTimeout = params.options.executeJsTimeout || 0,
+    var drawDocument = function (doc, canvas, options, callback) {
+        var imageSize = getImageSize(canvas, options),
+            executeJsTimeout = options.executeJsTimeout || 0,
             inlineOptions;
 
-        inlineOptions = rasterizeHTMLInline.util.clone(params.options);
-        inlineOptions.inlineScripts = params.options.executeJs === true;
+        inlineOptions = rasterizeHTMLInline.util.clone(options);
+        inlineOptions.inlineScripts = options.executeJs === true;
 
         rasterizeHTMLInline.inlineReferences(doc, inlineOptions, function (allErrors) {
-            if (params.options.executeJs) {
+            if (options.executeJs) {
                 module.util.executeJavascript(doc, executeJsTimeout, function (doc, errors) {
-                    doDraw(doc, imageSize.width, imageSize.height, params.canvas, params.callback, allErrors.concat(errors));
+                    doDraw(doc, imageSize.width, imageSize.height, canvas, callback, allErrors.concat(errors));
                 });
             } else {
-                doDraw(doc, imageSize.width, imageSize.height, params.canvas, params.callback, allErrors);
+                doDraw(doc, imageSize.width, imageSize.height, canvas, callback, allErrors);
             }
         });
     };
 
-    module.drawHTML = function (html, canvas, options, callback) {
-        var params = module.util.parseOptionalParameters(canvas, options, callback),
-            doc = module.util.parseHTML(html);
+    /**
+     * Draws a Document to the canvas.
+     * rasterizeHTML.drawDocument( document [, canvas] [, options] [, callback] );
+     */
+    module.drawDocument = function () {
+        var doc = arguments[0],
+            optionalArguments = Array.prototype.slice.call(arguments, 1),
+            params = module.util.parseOptionalParameters(optionalArguments);
 
-        module.drawDocument(doc, params.canvas, params.options, params.callback);
+        drawDocument(doc, params.canvas, params.options, params.callback);
     };
 
-    module.drawURL = function (url, canvas, options, callback) {
-        var params = module.util.parseOptionalParameters(canvas, options, callback);
+    var drawHTML = function (html, canvas, options, callback) {
+        var doc = module.util.parseHTML(html);
 
-        module.util.loadDocument(url, params.options, function (doc) {
-            module.drawDocument(doc, params.canvas, params.options, params.callback);
+        module.drawDocument(doc, canvas, options, callback);
+    };
+
+    /**
+     * Draws a HTML string to the canvas.
+     * rasterizeHTML.drawHTML( html [, canvas] [, options] [, callback] );
+     */
+    module.drawHTML = function () {
+        var html = arguments[0],
+            optionalArguments = Array.prototype.slice.call(arguments, 1),
+            params = module.util.parseOptionalParameters(optionalArguments);
+
+        drawHTML(html, params.canvas, params.options, params.callback);
+    };
+
+    var drawURL = function (url, canvas, options, callback) {
+        module.util.loadDocument(url, options, function (doc) {
+            module.drawDocument(doc, canvas, options, callback);
         }, function () {
-            if (params.callback) {
-                params.callback(null, [{
+            if (callback) {
+                callback(null, [{
                     resourceType: "page",
                     url: url,
                     msg: "Unable to load page " + url
                 }]);
             }
         });
+    };
+
+    /**
+     * Draws a page to the canvas.
+     * rasterizeHTML.drawURL( url [, canvas] [, options] [, callback] );
+     */
+    module.drawURL = function () {
+        var url = arguments[0],
+            optionalArguments = Array.prototype.slice.call(arguments, 1),
+            params = module.util.parseOptionalParameters(optionalArguments);
+
+        drawURL(url, params.canvas, params.options, params.callback);
     };
 
     return module;
