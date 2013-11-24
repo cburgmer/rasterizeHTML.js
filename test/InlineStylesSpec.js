@@ -216,16 +216,6 @@ describe("Import styles", function () {
         expect(loadCSSImportsForRulesSpy).toHaveBeenCalled();
     });
 
-    it("should complain if the cache bucket has a hole", function () {
-        rasterizeHTMLTestHelper.addStyleToDocument(doc, 'background-image { url(anImage.png); }');
-        try {
-            rasterizeHTMLInline.loadAndInlineStyles(doc, {cacheBucket: 42}, callback);
-            expect(true).toBe(false);
-        } catch (e) {
-            expect(e.message).toEqual("cacheBucket is not an object");
-        }
-    });
-
     describe("error handling", function () {
 
         it("should report errors", function () {

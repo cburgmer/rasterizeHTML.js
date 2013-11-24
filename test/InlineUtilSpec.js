@@ -460,6 +460,192 @@ describe("Inline utilities function", function () {
 
     });
 
+    describe("memoize", function () {
+        var func, callback, aResult, anotherResult, memo, hasher;
+
+        beforeEach(function () {
+            memo = {};
+
+            aResult = "the function result";
+            anotherResult = "another function result";
+            func = jasmine.createSpy('func').andCallFake(function (_1, _2, _3, cllbck) {
+                cllbck(aResult, anotherResult);
+            });
+            callback = jasmine.createSpy('callback');
+            hasher = function (x) { return x; };
+        });
+
+        it("should call the memoized function for the first time", function () {
+            var memoized = rasterizeHTMLInline.util.memoize(func, hasher, memo);
+
+            expect(func).not.toHaveBeenCalled();
+            memoized('a parameter', 1, 'and a 3rd parameter', callback);
+
+            expect(func).toHaveBeenCalledWith('a parameter', 1, 'and a 3rd parameter', jasmine.any(Function));
+        });
+
+        it("should call the callback with the functions result", function () {
+            var memoized = rasterizeHTMLInline.util.memoize(func, hasher, memo);
+
+            memoized('a parameter', 1, 'and a 3rd parameter', callback);
+            expect(callback).toHaveBeenCalledWith(aResult, anotherResult);
+        });
+
+        it("should not call the memoized function for a second time with the same parameters", function () {
+            var memoized = rasterizeHTMLInline.util.memoize(func, hasher, memo);
+
+            memoized('a parameter', 1, 'and a 3rd parameter', callback);
+            func.reset();
+            memoized('a parameter', 1, 'and a 3rd parameter', callback);
+
+            expect(func).not.toHaveBeenCalled();
+        });
+
+        it("should call the callback with the functions results for the second time", function () {
+            var memoized = rasterizeHTMLInline.util.memoize(func, hasher, memo);
+
+            memoized('a parameter', 1, 'and a 3rd parameter', callback);
+            callback.reset();
+            memoized('a parameter', 1, 'and a 3rd parameter', callback);
+            expect(callback).toHaveBeenCalledWith(aResult, anotherResult);
+        });
+
+        it("should call the memoized function again with different parameters", function () {
+            var memoized = rasterizeHTMLInline.util.memoize(func, hasher, memo);
+
+            memoized('a parameter', 1, 'and a 3rd parameter', callback);
+            func.reset();
+            memoized('another parameter', 1, 2, callback);
+
+            expect(func).toHaveBeenCalledWith('another parameter', 1, 2, jasmine.any(Function));
+        });
+
+        it("should memoize different functions independently", function () {
+            var func2 = jasmine.createSpy('func2').andCallFake(function (_1, _2, _3, cllbck) {
+                    cllbck('yet another result');
+                }),
+                callback2 = jasmine.createSpy('callback2'),
+                memoized = rasterizeHTMLInline.util.memoize(func, hasher, memo),
+                memoized2 = rasterizeHTMLInline.util.memoize(func2, hasher, memo);
+
+            memoized('a parameter', 1, 'and a 3rd parameter', callback);
+            memoized2('a parameter', 1, 'and a 3rd parameter', callback2);
+
+            expect(func2).toHaveBeenCalled();
+            expect(callback2).toHaveBeenCalledWith('yet another result');
+        });
+
+        it("should memoize across the same memo objects", function () {
+            var memoized1 = rasterizeHTMLInline.util.memoize(func, hasher, memo),
+                memoized2 = rasterizeHTMLInline.util.memoize(func, hasher, memo);
+
+            memoized1('a parameter', 1, 'and a 3rd parameter', callback);
+            func.reset();
+            memoized2('a parameter', 1, 'and a 3rd parameter', callback);
+
+            expect(func).not.toHaveBeenCalled();
+        });
+
+        it("should not memoize across different memo objects", function () {
+            var memoized1 = rasterizeHTMLInline.util.memoize(func, hasher, memo),
+                memoized2 = rasterizeHTMLInline.util.memoize(func, hasher, {});
+
+            memoized1('a parameter', 1, 'and a 3rd parameter', callback);
+            func.reset();
+            memoized2('a parameter', 1, 'and a 3rd parameter', callback);
+
+            expect(func).toHaveBeenCalledWith('a parameter', 1, 'and a 3rd parameter', jasmine.any(Function));
+        });
+
+        it("should use hash function result when comparing parameter keys with disjunct values", function () {
+            var hasher = JSON.stringify,
+                memoized = rasterizeHTMLInline.util.memoize(func, hasher, memo);
+
+            memoized({a: 1}, 1, 2, callback);
+            func.reset();
+            memoized({b: 2}, 1, 2, callback);
+            expect(func).toHaveBeenCalled();
+        });
+
+        it("should use hash function result when comparing parameter keys with same values", function () {
+            var hasher = function (x) { return typeof x === 'object' ? {} : x; },
+                memoized = rasterizeHTMLInline.util.memoize(func, hasher, memo);
+
+            memoized({a: 1}, 1, 2, callback);
+            func.reset();
+            memoized({b: 2}, 1, 2, callback);
+            expect(func).not.toHaveBeenCalled();
+        });
+
+        it("should throw an error if the memo is not an object", function () {
+            try {
+                rasterizeHTMLInline.util.memoize(func, hasher, 42);
+                expect(true).toBe(false);
+            } catch (e) {
+                expect(e.message).toEqual("cacheBucket is not an object");
+            }
+        });
+
+        describe('(successCallback, errorCallback) style function', function () {
+            var errorCallback;
+
+            beforeEach(function () {
+                errorCallback = jasmine.createSpy('errorCallback');
+            });
+
+            it("should accept an errorCallback", function () {
+                var func = jasmine.createSpy('func').andCallFake(function (_1, _2, successCallback) {
+                        successCallback(aResult, anotherResult);
+                    }),
+                    memoized = rasterizeHTMLInline.util.memoize(func, hasher, memo);
+
+                memoized('a parameter', 1, callback, errorCallback);
+                expect(func).toHaveBeenCalledWith('a parameter', 1, jasmine.any(Function), jasmine.any(Function));
+                expect(callback).toHaveBeenCalledWith(aResult, anotherResult);
+                expect(errorCallback).not.toHaveBeenCalled();
+            });
+
+            it("should correctly memoize a successful call", function () {
+                var func = jasmine.createSpy('func').andCallFake(function (_1, _2, successCallback) {
+                        successCallback(aResult, anotherResult);
+                    }),
+                    memoized = rasterizeHTMLInline.util.memoize(func, hasher, memo);
+
+                memoized('a parameter', 1, callback, errorCallback);
+                expect(func).toHaveBeenCalledWith('a parameter', 1, jasmine.any(Function), jasmine.any(Function));
+
+                func.reset();
+                memoized('a parameter', 1, callback, function () {});
+                expect(func).not.toHaveBeenCalled();
+            });
+
+            it("should delegate the errorCallback", function () {
+                var func = jasmine.createSpy('func').andCallFake(function (_1, _2, successCallback, errorCallback) {
+                        errorCallback(aResult, anotherResult);
+                    }),
+                    memoized = rasterizeHTMLInline.util.memoize(func, hasher, memo);
+
+                memoized('a parameter', 1, callback, errorCallback);
+                expect(callback).not.toHaveBeenCalled();
+                expect(errorCallback).toHaveBeenCalledWith(aResult, anotherResult);
+            });
+
+            it("should not memoize the return value if the error callback is triggered", function () {
+                var func = jasmine.createSpy('func').andCallFake(function (_1, _2, successCallback, errorCallback) {
+                        errorCallback(aResult, anotherResult);
+                    }),
+                    memoized = rasterizeHTMLInline.util.memoize(func, hasher, memo);
+
+                memoized('a parameter', 1, callback, errorCallback);
+                expect(func).toHaveBeenCalled();
+
+                func.reset();
+                memoized('a parameter', 1, callback, errorCallback);
+                expect(func).toHaveBeenCalled();
+            });
+        });
+    });
+
     describe("parseOptionalParameters", function () {
         var options, callback;
 

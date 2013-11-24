@@ -1,8 +1,36 @@
-/*! rasterizeHTML.js - v0.5.1 - 2013-11-22
+/*! rasterizeHTML.js - v0.5.1 - 2013-11-24
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2013 Christoph Burgmer; Licensed MIT */
 window.rasterizeHTMLInline = (function (module) {
     "use strict";
+
+    var getUrlBasePath = function (url) {
+        return module.util.joinUrl(url, '.');
+    };
+
+    var parameterHashFunction = function (params) {
+        // HACK JSON.stringify is poor man's hashing;
+        // same objects might not receive same result as key order is not guaranteed
+        var a = params.map(function (param, idx) {
+            // Only include options relevant for method
+            if (idx === (params.length - 1)) {
+                param = {
+                    // Two different HTML pages on the same path level have the same base path, but a different URL
+                    baseUrl: getUrlBasePath(param.baseUrl)
+                };
+            }
+            return JSON.stringify(param);
+        });
+        return a;
+    };
+
+    var memoizeFunctionOnCaching = function (func, options) {
+        if ((options.cache !== false && options.cache !== 'none') && options.cacheBucket) {
+            return module.util.memoize(func, parameterHashFunction, options.cacheBucket);
+        } else {
+            return func;
+        }
+    };
 
     /* Img Inlining */
 
@@ -66,33 +94,7 @@ window.rasterizeHTMLInline = (function (module) {
 
     /* Style inlining */
 
-    var getUrlBasePath = function (url) {
-        return module.util.joinUrl(url, '.');
-    };
-
-    var getInlineCssCacheFor = function (bucket, baseUrl, content) {
-        var basePathUrl = getUrlBasePath(baseUrl);
-
-        if (typeof bucket !== "object") {
-            throw new Error("cacheBucket is not an object");
-        }
-
-        bucket.inlineCssCache = bucket.inlineCssCache || {};
-        bucket.inlineCssCache[basePathUrl] = bucket.inlineCssCache[basePathUrl] || {};
-
-        return bucket.inlineCssCache[basePathUrl][content];
-    };
-
-    var setInlineCssCacheFor = function (bucket, baseUrl, originalContent, value) {
-        var basePathUrl = getUrlBasePath(baseUrl);
-
-        bucket.inlineCssCache = bucket.inlineCssCache || {};
-        bucket.inlineCssCache[basePathUrl] = bucket.inlineCssCache[basePathUrl] || {};
-
-        bucket.inlineCssCache[basePathUrl][originalContent] = value;
-    };
-
-    var requestExternalsForStylesheet = function (styleContent, options, alreadyLoadedCssUrls, callback) {
+    var requestExternalsForStylesheet = function (styleContent, alreadyLoadedCssUrls, options, callback) {
         var cssRules = module.css.rulesForCssText(styleContent);
 
         module.css.loadCSSImportsForRules(cssRules, alreadyLoadedCssUrls, options, function (changedFromImports, importErrors) {
@@ -111,30 +113,12 @@ window.rasterizeHTMLInline = (function (module) {
 
     var loadAndInlineCssForStyle = function (style, options, alreadyLoadedCssUrls, callback) {
         var styleContent = style.textContent,
-            cachedValue;
+            processExternals = memoizeFunctionOnCaching(requestExternalsForStylesheet, options);
 
-        if (cacheInlinedContent(options)) {
-            cachedValue = getInlineCssCacheFor(options.cacheBucket, options.baseUrl, styleContent);
-            if (cachedValue) {
-                if (cachedValue.hasChanges) {
-                    style.childNodes[0].nodeValue = cachedValue.content;
-                }
-                callback(cachedValue.errors);
-                return;
-            }
-        }
-
-        requestExternalsForStylesheet(styleContent, options, alreadyLoadedCssUrls, function (hasChanges, inlinedStyleContent, errors) {
+        processExternals(styleContent, alreadyLoadedCssUrls, options, function (hasChanges, inlinedStyleContent, errors) {
+            errors = module.util.cloneArray(errors);
             if (hasChanges) {
                 style.childNodes[0].nodeValue = inlinedStyleContent;
-            }
-
-            if (cacheInlinedContent(options)) {
-                setInlineCssCacheFor(options.cacheBucket, options.baseUrl, styleContent, {
-                    content: inlinedStyleContent,
-                    hasChanges: hasChanges,
-                    errors: module.util.cloneArray(errors)
-                });
             }
 
             callback(errors);
@@ -197,29 +181,6 @@ window.rasterizeHTMLInline = (function (module) {
         parent.removeChild(oldLinkNode);
     };
 
-    var cacheInlinedContent = function (options) {
-        return (options.cache !== false && options.cache !== 'none') && options.cacheBucket;
-    };
-
-    var getLinkedCssCacheFor = function (bucket, baseUrl, url) {
-        var combinedUrl = module.util.joinUrl(baseUrl, url);
-
-        if (typeof bucket !== "object") {
-            throw new Error("cacheBucket is not an object");
-        }
-
-        bucket.linkedCssCache = bucket.linkedCssCache || {};
-
-        return bucket.linkedCssCache[combinedUrl];
-    };
-
-    var setLinkedCssCacheFor = function (bucket, baseUrl, url, value) {
-        var combinedUrl = module.util.joinUrl(baseUrl, url);
-
-        bucket.linkedCssCache = bucket.linkedCssCache || {};
-        bucket.linkedCssCache[combinedUrl] = value;
-    };
-
     var requestStylesheetAndInlineResources = function (url, options, successCallback, errorCallback) {
         module.util.ajax(url, options, function (content) {
             var cssRules = module.css.rulesForCssText(content),
@@ -243,28 +204,16 @@ window.rasterizeHTMLInline = (function (module) {
     var loadLinkedCSS = function (link, options, successCallback, errorCallback) {
         var cssHref = link.attributes.href.nodeValue,
             documentBaseUrl = module.util.getDocumentBaseUrl(link.ownerDocument),
-            ajaxOptions = module.util.clone(options),
-            cachedValue;
+            ajaxOptions = module.util.clone(options);
 
         if (!ajaxOptions.baseUrl && documentBaseUrl) {
             ajaxOptions.baseUrl = documentBaseUrl;
         }
 
-        if (cacheInlinedContent(options)) {
-            cachedValue = getLinkedCssCacheFor(options.cacheBucket, ajaxOptions.baseUrl, cssHref);
-            if (cachedValue) {
-                successCallback(cachedValue.content, cachedValue.errors);
-                return;
-            }
-        }
+        var processStylesheet = memoizeFunctionOnCaching(requestStylesheetAndInlineResources, options);
 
-        requestStylesheetAndInlineResources(cssHref, ajaxOptions, function (content, errors) {
-            if (cacheInlinedContent(options)) {
-                setLinkedCssCacheFor(options.cacheBucket, ajaxOptions.baseUrl, cssHref, {
-                    content: content,
-                    errors: module.util.cloneArray(errors)
-                });
-            }
+        processStylesheet(cssHref, ajaxOptions, function (content, errors) {
+            errors = module.util.cloneArray(errors);
 
             successCallback(content, errors);
         }, function () {
@@ -1065,6 +1014,54 @@ window.rasterizeHTMLInline = (function (module, window, url) {
         }, function () {
             errorCallback();
         });
+    };
+
+    var uniqueIdList = [];
+
+    var constantUniqueIdFor = function (element) {
+        // HACK, using a list results in O(n), but how do we hash a function?
+        if (uniqueIdList.indexOf(element) < 0) {
+            uniqueIdList.push(element);
+        }
+        return uniqueIdList.indexOf(element);
+    };
+
+    module.util.memoize = function (func, hasher, memo) {
+        if (typeof memo !== "object") {
+            throw new Error("cacheBucket is not an object");
+        }
+
+        return function () {
+            var args = Array.prototype.slice.call(arguments),
+                successCallback, errorCallback;
+
+            if (args.length > 2 && typeof args[args.length-2] === 'function') {
+                 errorCallback = args.pop();
+                 successCallback = args.pop();
+            } else {
+                successCallback = args.pop();
+            }
+
+            var argumentHash = hasher(args),
+                funcHash = constantUniqueIdFor(func),
+                allArgs;
+
+            if (memo[funcHash] && memo[funcHash][argumentHash]) {
+                window.console.log("Cache hit", argumentHash);
+                successCallback.apply(null, memo[funcHash][argumentHash]);
+            } else {
+                window.console.log("Calculating", argumentHash);
+                allArgs = args.concat(function () {
+                    memo[funcHash] = memo[funcHash] || {};
+                    memo[funcHash][argumentHash] = arguments;
+                    successCallback.apply(null, arguments);
+                });
+                if (errorCallback) {
+                    allArgs = allArgs.concat(errorCallback);
+                }
+                func.apply(null, allArgs);
+            }
+        };
     };
 
     var cloneObject = function(object) {

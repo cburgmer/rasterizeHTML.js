@@ -145,6 +145,54 @@ window.rasterizeHTMLInline = (function (module, window, url) {
         });
     };
 
+    var uniqueIdList = [];
+
+    var constantUniqueIdFor = function (element) {
+        // HACK, using a list results in O(n), but how do we hash a function?
+        if (uniqueIdList.indexOf(element) < 0) {
+            uniqueIdList.push(element);
+        }
+        return uniqueIdList.indexOf(element);
+    };
+
+    module.util.memoize = function (func, hasher, memo) {
+        if (typeof memo !== "object") {
+            throw new Error("cacheBucket is not an object");
+        }
+
+        return function () {
+            var args = Array.prototype.slice.call(arguments),
+                successCallback, errorCallback;
+
+            if (args.length > 2 && typeof args[args.length-2] === 'function') {
+                 errorCallback = args.pop();
+                 successCallback = args.pop();
+            } else {
+                successCallback = args.pop();
+            }
+
+            var argumentHash = hasher(args),
+                funcHash = constantUniqueIdFor(func),
+                allArgs;
+
+            if (memo[funcHash] && memo[funcHash][argumentHash]) {
+                window.console.log("Cache hit", argumentHash);
+                successCallback.apply(null, memo[funcHash][argumentHash]);
+            } else {
+                window.console.log("Calculating", argumentHash);
+                allArgs = args.concat(function () {
+                    memo[funcHash] = memo[funcHash] || {};
+                    memo[funcHash][argumentHash] = arguments;
+                    successCallback.apply(null, arguments);
+                });
+                if (errorCallback) {
+                    allArgs = allArgs.concat(errorCallback);
+                }
+                func.apply(null, allArgs);
+            }
+        };
+    };
+
     var cloneObject = function(object) {
         var newObject = {},
             i;

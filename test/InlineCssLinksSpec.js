@@ -275,7 +275,35 @@ describe("Inline CSS links", function () {
         loadAndInlineCSSResourcesForRulesSpy.reset();
 
         // second call
-        doc = rasterizeHTMLTestHelper.readDocumentFixture("externalCSS.html"); // use a document with different baseUrl
+        doc = document.implementation.createHTMLDocument("");
+        doc.head.appendChild(cssLink);
+
+        rasterizeHTMLInline.loadAndInlineCssLinks(doc, {cacheBucket: cacheBucket}, callback);
+
+        expect(ajaxSpy).not.toHaveBeenCalled();
+        expect(loadCSSImportsForRulesSpy).not.toHaveBeenCalled();
+        expect(loadAndInlineCSSResourcesForRulesSpy).not.toHaveBeenCalled();
+
+        expect(doc.getElementsByTagName("style")[0].textContent).toEqual("p { font-size: 14px; }");
+    });
+
+    it("should cache inlined content for different pages if baseUrl is the same", function () {
+        var cacheBucket = {};
+
+        joinUrlSpy.andCallThrough();
+
+        // first call
+        doc = rasterizeHTMLTestHelper.readDocumentFixture("empty1.html");
+        doc.getElementsByTagName("head")[0].appendChild(cssLink);
+
+        rasterizeHTMLInline.loadAndInlineCssLinks(doc, {cacheBucket: cacheBucket}, callback);
+
+        ajaxSpy.reset();
+        loadCSSImportsForRulesSpy.reset();
+        loadAndInlineCSSResourcesForRulesSpy.reset();
+
+        // second call
+        doc = rasterizeHTMLTestHelper.readDocumentFixture("empty2.html"); // use a document with different url, but same baseUrl
         doc.getElementsByTagName("head")[0].appendChild(cssLink);
 
         rasterizeHTMLInline.loadAndInlineCssLinks(doc, {cacheBucket: cacheBucket}, callback);
@@ -306,16 +334,6 @@ describe("Inline CSS links", function () {
         rasterizeHTMLInline.loadAndInlineCssLinks(doc, {cacheBucket: cacheBucket, cache: 'none'}, callback);
 
         expect(ajaxSpy).toHaveBeenCalled();
-    });
-
-    it("should complain if the cache bucket has a hole", function () {
-        doc.head.appendChild(cssLink);
-        try {
-            rasterizeHTMLInline.loadAndInlineCssLinks(doc, {cacheBucket: 42}, callback);
-            expect(true).toBe(false);
-        } catch (e) {
-            expect(e.message).toEqual("cacheBucket is not an object");
-        }
     });
 
     describe("error handling", function () {
