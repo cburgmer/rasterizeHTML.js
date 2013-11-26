@@ -8,11 +8,7 @@
     "HTML"
   ],
   "homepage": "http://www.github.com/cburgmer/rasterizeHTML.js",
-  "licenses": [
-    {
-      "type": "MIT"
-    }
-  ],
+  "license" : "MIT",
   "author": {
     "name": "Christoph Burgmer",
     "email": "christoph.burgmer@gmail.com"
