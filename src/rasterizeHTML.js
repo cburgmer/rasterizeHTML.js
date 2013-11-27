@@ -70,42 +70,14 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow)
         return parameters;
     };
 
-    var iframeJsErrorHandler = function (id) {
-        return ("" + function (msg) {
-            window.parent.rasterizeHTML.util.reportIframeJsError('put_unique_id_here', msg);
-        }).replace("put_unique_id_here", id);
-    };
-
-    var iframeJsErrors = {};
-
-    module.util.reportIframeJsError = function (id, msg) {
-        var messages = iframeJsErrors[id] || [];
-        messages.push(msg);
-        iframeJsErrors[id] = messages;
-    };
-
-    var collectIframeErrors = function (id) {
-        var errors = [];
-        if (iframeJsErrors[id]) {
-            iframeJsErrors[id].forEach(function (msg) {
-                errors.push({
-                    resourceType: "scriptExecution",
-                    msg: msg
-                });
-            });
-        }
-        return errors;
-    };
-
     module.util.executeJavascript = function (doc, timeout, callback) {
         var iframe = createHiddenElement(theWindow.document, "iframe"),
             html = doc.documentElement.outerHTML,
-            documentId = module.util.getConstantUniqueIdFor(doc),
-            injectErrorHandling = "<script>window.onerror = " + iframeJsErrorHandler(documentId) + ";</script>",
+            iframeErrorsMessages = [],
             doCallback = function () {
                 var doc = iframe.contentDocument;
                 theWindow.document.getElementsByTagName("body")[0].removeChild(iframe);
-                callback(doc, collectIframeErrors(documentId));
+                callback(doc, iframeErrorsMessages);
             };
 
         if (timeout > 0) {
@@ -117,7 +89,14 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow)
         }
 
         iframe.contentDocument.open();
-        iframe.contentDocument.write(injectErrorHandling + html);
+        iframe.contentWindow.onerror = function (msg) {
+            iframeErrorsMessages.push({
+                resourceType: "scriptExecution",
+                msg: msg
+            });
+        };
+
+        iframe.contentDocument.write(html);
         iframe.contentDocument.close();
     };
 
