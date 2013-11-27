@@ -254,6 +254,24 @@ describe("Utilities function", function () {
                 expect($('iframe')).not.toExist();
             });
         });
+
+        it("should not execute JavaScript", function () {
+            var height;
+
+            setHtml('<div></div><script>document.querySelector("div").style.height="100";</script>');
+
+            rasterizeHTML.util.calculateDocumentContentSize(doc, 300, 10, function (theWidth, theHeight) {
+                height = theHeight;
+            });
+
+            waitsFor(function () {
+                return height !== undefined;
+            });
+
+            runs(function () {
+                expect(height).toEqual(10);
+            });
+        });
     });
 
     describe("parseOptionalParameters", function () {

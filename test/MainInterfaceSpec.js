@@ -19,7 +19,12 @@ describe("Main interface of rasterizeHTML.js", function () {
     });
 
     describe("Rendering", function () {
-        var callback;
+        var callback,
+            setUpCalculateDocumentContentSize = function (width, height) {
+            rasterizeHTML.util.calculateDocumentContentSize.andCallFake(function (doc, viewportWidth, viewportHeight, callback) {
+                callback(width, height);
+            });
+        };
 
         beforeEach(function () {
             callback = jasmine.createSpy("drawCallback");
@@ -30,15 +35,21 @@ describe("Main interface of rasterizeHTML.js", function () {
                 callback(svgImage);
             });
             drawImageOnCanvas = spyOn(rasterizeHTML, "drawImageOnCanvas").andReturn(true);
+
+            spyOn(rasterizeHTML.util, 'calculateDocumentContentSize');
+            setUpCalculateDocumentContentSize(0, 0);
         });
 
         it("should take a document, inline all displayable content and render to the given canvas", function () {
             var doc = "doc";
 
+            setUpCalculateDocumentContentSize(47, 11);
+
             rasterizeHTML.drawDocument(doc, canvas, callback);
 
             expect(inlineReferences).toHaveBeenCalledWith(doc, {inlineScripts: false}, jasmine.any(Function));
-            expect(getSvgForDocument).toHaveBeenCalledWith(doc, canvas.width, canvas.height);
+            expect(rasterizeHTML.util.calculateDocumentContentSize).toHaveBeenCalledWith(doc, canvas.width, canvas.height, jasmine.any(Function));
+            expect(getSvgForDocument).toHaveBeenCalledWith(doc, 47, 11);
             expect(renderSvg).toHaveBeenCalledWith(svg, canvas, jasmine.any(Function), jasmine.any(Function));
             expect(drawImageOnCanvas).toHaveBeenCalledWith(svgImage, canvas);
 
@@ -52,7 +63,7 @@ describe("Main interface of rasterizeHTML.js", function () {
             rasterizeHTML.drawDocument(doc, callback);
 
             expect(inlineReferences).toHaveBeenCalledWith(doc, {inlineScripts : false}, jasmine.any(Function));
-            expect(getSvgForDocument).toHaveBeenCalledWith(doc, 300, 200);
+            expect(rasterizeHTML.util.calculateDocumentContentSize).toHaveBeenCalledWith(doc, 300, 200, jasmine.any(Function));
             expect(renderSvg).toHaveBeenCalledWith(svg, null, jasmine.any(Function), jasmine.any(Function));
             expect(drawImageOnCanvas).not.toHaveBeenCalled();
 
@@ -65,7 +76,7 @@ describe("Main interface of rasterizeHTML.js", function () {
 
             rasterizeHTML.drawDocument(doc, canvas, {width: 42, height: 4711}, callback);
 
-            expect(getSvgForDocument).toHaveBeenCalledWith(doc, 42, 4711);
+            expect(rasterizeHTML.util.calculateDocumentContentSize).toHaveBeenCalledWith(doc, 42, 4711, jasmine.any(Function));
 
             expect(callback).toHaveBeenCalledWith(svgImage, []);
         });
@@ -247,6 +258,9 @@ describe("Main interface of rasterizeHTML.js", function () {
         beforeEach(function () {
             callback = jasmine.createSpy("drawCallback");
 
+            spyOn(rasterizeHTML.util, 'calculateDocumentContentSize').andCallFake(function (doc, viewportWidth, viewportHeight, callback) {
+                callback(12, 34);
+            });
             getSvgForDocument = spyOn(rasterizeHTML, "getSvgForDocument").andReturn(svg);
             renderSvg = spyOn(rasterizeHTML, "renderSvg").andCallFake(function (svg, canvas, callback) {
                 callback(svgImage);
@@ -332,6 +346,9 @@ describe("Main interface of rasterizeHTML.js", function () {
 
             inlineReferences = spyOn(rasterizeHTMLInline, "inlineReferences").andCallFake(callbackCaller);
 
+            spyOn(rasterizeHTML.util, 'calculateDocumentContentSize').andCallFake(function (doc, viewportWidth, viewportHeight, callback) {
+                callback(12, 34);
+            });
             getSvgForDocument = spyOn(rasterizeHTML, "getSvgForDocument").andReturn(svg);
             renderSvg = spyOn(rasterizeHTML, "renderSvg");
             drawImageOnCanvas = spyOn(rasterizeHTML, "drawImageOnCanvas");

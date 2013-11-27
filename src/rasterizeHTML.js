@@ -121,12 +121,26 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow)
         iframe.contentDocument.close();
     };
 
-    module.util.calculateDocumentContentSize = function (doc, viewportWidth, viewportHeight, callback) {
-        var html = doc.documentElement.outerHTML,
-            iframe = createHiddenElement(theWindow.document, "iframe", viewportWidth, viewportHeight);
-
+    var createHiddenSandboxedIFrame = function (doc, width, height) {
+        var iframe = doc.createElement('iframe');
+        iframe.style.width = width + "px";
+        iframe.style.height = height + "px";
+        // 'display: none' doesn't cut it, as browsers seem to be lazy loading content
+        iframe.style.visibility = "hidden";
+        iframe.style.position = "absolute";
+        iframe.style.top = (-10000 - height) + "px";
+        iframe.style.left = (-10000 - width) + "px";
         // Don't execute JS, all we need from sandboxing is access to the iframe's document
         iframe.sandbox = 'allow-same-origin';
+        // We need to add the element to the document so that its content gets loaded
+        doc.getElementsByTagName("body")[0].appendChild(iframe);
+        return iframe;
+    };
+
+    module.util.calculateDocumentContentSize = function (doc, viewportWidth, viewportHeight, callback) {
+        var html = doc.documentElement.outerHTML,
+            iframe = createHiddenSandboxedIFrame(theWindow.document, viewportWidth, viewportHeight);
+
         iframe.onload = function () {
             var doc = iframe.contentDocument,
                 // clientWidth/clientHeight needed for PhantomJS
@@ -269,14 +283,12 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow)
         }
     };
 
-    var createHiddenElement = function (doc, tagName, width, height) {
+    var createHiddenElement = function (doc, tagName) {
         var element = doc.createElement(tagName);
-        width = width || 0;
-        height = height || 0;
         // 'display: none' doesn't cut it, as browsers seem to be lazy loading CSS
         element.style.visibility = "hidden";
-        element.style.width = width + "px";
-        element.style.height = height + "px";
+        element.style.width = "0px";
+        element.style.height = "0px";
         element.style.position = "absolute";
         element.style.top = "-10000px";
         element.style.left = "-10000px";
@@ -396,36 +408,38 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow)
 
     /* "Public" API */
 
-    var doDraw = function (doc, width, height, canvas, callback, allErrors) {
-        var svg = module.getSvgForDocument(doc, width, height),
-            handleInternalError = function (errors) {
-                errors.push({
-                    resourceType: "document",
-                    msg: "Error rendering page"
-                });
-            },
-            successful;
+    var doDraw = function (doc, canvasWidth, canvasHeight, canvas, callback, allErrors) {
+        module.util.calculateDocumentContentSize(doc, canvasWidth, canvasHeight, function (width, height) {
+            var svg = module.getSvgForDocument(doc, width, height),
+                handleInternalError = function (errors) {
+                    errors.push({
+                        resourceType: "document",
+                        msg: "Error rendering page"
+                    });
+                },
+                successful;
 
-        module.renderSvg(svg, canvas, function (image) {
-            if (canvas) {
-                successful = module.drawImageOnCanvas(image, canvas);
+            module.renderSvg(svg, canvas, function (image) {
+                if (canvas) {
+                    successful = module.drawImageOnCanvas(image, canvas);
 
-                if (!successful) {
-                    handleInternalError(allErrors);
-                    image = null;   // Set image to null so that Firefox behaves similar to Webkit
+                    if (!successful) {
+                        handleInternalError(allErrors);
+                        image = null;   // Set image to null so that Firefox behaves similar to Webkit
+                    }
                 }
-            }
 
-            if (callback) {
-                callback(image, allErrors);
-            }
-        }, function () {
-            handleInternalError(allErrors);
+                if (callback) {
+                    callback(image, allErrors);
+                }
+            }, function () {
+                handleInternalError(allErrors);
 
-            if (callback) {
-                callback(null, allErrors);
-            }
+                if (callback) {
+                    callback(null, allErrors);
+                }
 
+            });
         });
     };
 
