@@ -121,6 +121,28 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow)
         iframe.contentDocument.close();
     };
 
+    module.util.calculateDocumentContentSize = function (doc, viewportWidth, viewportHeight, callback) {
+        var html = doc.documentElement.outerHTML,
+            iframe = createHiddenElement(theWindow.document, "iframe", viewportWidth, viewportHeight);
+
+        // Don't execute JS, all we need from sandboxing is access to the iframe's document
+        iframe.sandbox = 'allow-same-origin';
+        iframe.onload = function () {
+            var doc = iframe.contentDocument,
+                // clientWidth/clientHeight needed for PhantomJS
+                canvasWidth = Math.max(doc.documentElement.scrollWidth, doc.body.clientWidth),
+                canvasHeight = Math.max(doc.documentElement.scrollHeight, doc.body.scrollHeight, doc.body.clientHeight);
+
+            theWindow.document.getElementsByTagName("body")[0].removeChild(iframe);
+            callback(canvasWidth, canvasHeight);
+        };
+
+        // srcdoc doesn't work in PhantomJS yet
+        iframe.contentDocument.open();
+        iframe.contentDocument.write(html);
+        iframe.contentDocument.close();
+    };
+
     var addHTMLTagAttributes = function (doc, html) {
         var attributeMatch = /<html((?:\s+[^>]*)?)>/im.exec(html),
             helperDoc = theWindow.document.implementation.createHTMLDocument(''),
@@ -247,12 +269,14 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow)
         }
     };
 
-    var createHiddenElement = function (doc, tagName) {
+    var createHiddenElement = function (doc, tagName, width, height) {
         var element = doc.createElement(tagName);
+        width = width || 0;
+        height = height || 0;
         // 'display: none' doesn't cut it, as browsers seem to be lazy loading CSS
         element.style.visibility = "hidden";
-        element.style.width = "0px";
-        element.style.height = "0px";
+        element.style.width = width + "px";
+        element.style.height = height + "px";
         element.style.position = "absolute";
         element.style.top = "-10000px";
         element.style.left = "-10000px";
