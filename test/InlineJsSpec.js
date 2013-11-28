@@ -17,6 +17,7 @@ describe("JS inline", function () {
         anotherExternalScript = window.document.createElement("script");
         anotherExternalScript.src = "url/someOther.js";
         anotherExternalScript.type = "text/javascript";
+        anotherExternalScript.id = "myScript";
 
         ajaxSpy.andCallFake(function (url, options, success, error) {
             if (url === externalScript.attributes.src.nodeValue) {
@@ -51,7 +52,17 @@ describe("JS inline", function () {
         expect(doc.head.getElementsByTagName("script")[0].src).not.toExist();
     });
 
-    it("should keep the script's type when inlining", function () {
+    it("should remove the src attribute from the inlined script", function () {
+        doc.head.appendChild(anotherExternalScript);
+
+        rasterizeHTMLInline.loadAndInlineScript(doc, callback);
+
+        expect(callback).toHaveBeenCalled();
+        expect(doc.head.getElementsByTagName("script").length).toEqual(1);
+        expect(doc.head.getElementsByTagName("script")[0].src).toBe('');
+    });
+
+    it("should keep all other script's attributes inlining", function () {
         doc.head.appendChild(anotherExternalScript);
 
         rasterizeHTMLInline.loadAndInlineScript(doc, callback);
@@ -59,6 +70,7 @@ describe("JS inline", function () {
         expect(callback).toHaveBeenCalled();
         expect(doc.head.getElementsByTagName("script").length).toEqual(1);
         expect(doc.head.getElementsByTagName("script")[0].type).toEqual("text/javascript");
+        expect(doc.head.getElementsByTagName("script")[0].id).toEqual("myScript");
     });
 
     it("should place the inlined script where the external node was", function () {

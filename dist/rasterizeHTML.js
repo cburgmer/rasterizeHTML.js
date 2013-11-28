@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.6.0 - 2013-11-27
+/*! rasterizeHTML.js - v0.6.0 - 2013-11-28
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2013 Christoph Burgmer; Licensed  */
 window.rasterizeHTMLInline = (function (module) {
@@ -279,9 +279,11 @@ window.rasterizeHTMLInline = (function (module) {
         var newScript = oldScriptNode.ownerDocument.createElement("script"),
             parent = oldScriptNode.parentNode;
 
-        if (oldScriptNode.attributes.type) {
-            newScript.type = oldScriptNode.attributes.type.nodeValue;
-        }
+        Array.prototype.forEach.call(oldScriptNode.attributes, function (attr) {
+            if (attr.nodeName !== 'src') {
+                newScript.setAttribute(attr.nodeName, attr.nodeValue);
+            }
+        });
 
         jsCode = escapeClosingTags(jsCode);
 

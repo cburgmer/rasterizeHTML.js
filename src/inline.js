@@ -276,9 +276,11 @@ window.rasterizeHTMLInline = (function (module) {
         var newScript = oldScriptNode.ownerDocument.createElement("script"),
             parent = oldScriptNode.parentNode;
 
-        if (oldScriptNode.attributes.type) {
-            newScript.type = oldScriptNode.attributes.type.nodeValue;
-        }
+        Array.prototype.forEach.call(oldScriptNode.attributes, function (attr) {
+            if (attr.nodeName !== 'src') {
+                newScript.setAttribute(attr.nodeName, attr.nodeValue);
+            }
+        });
 
         jsCode = escapeClosingTags(jsCode);
 
