@@ -1,5 +1,8 @@
 describe("JS inline", function () {
-    var doc, joinUrlSpy, ajaxSpy, callback, externalScript, internalScript, anotherExternalScript;
+    var doc, joinUrlSpy, ajaxSpy, callback,
+        externalScriptSrc, externalScript,
+        internalScript,
+        anotherExternalScriptSrc, anotherExternalScript;
 
     beforeEach(function () {
         doc = document.implementation.createHTMLDocument("");
@@ -8,21 +11,23 @@ describe("JS inline", function () {
         ajaxSpy = spyOn(rasterizeHTMLInline.util, "ajax");
         callback = jasmine.createSpy("callback");
 
+        externalScriptSrc = "url/some.js";
         externalScript = window.document.createElement("script");
-        externalScript.src = "url/some.js";
+        externalScript.src = externalScriptSrc;
 
         internalScript = window.document.createElement("script");
         internalScript.textContent = "function () {}";
 
+        anotherExternalScriptSrc = "url/someOther.js";
         anotherExternalScript = window.document.createElement("script");
-        anotherExternalScript.src = "url/someOther.js";
+        anotherExternalScript.src = anotherExternalScriptSrc;
         anotherExternalScript.type = "text/javascript";
         anotherExternalScript.id = "myScript";
 
         ajaxSpy.andCallFake(function (url, options, success, error) {
-            if (url === externalScript.attributes.src.nodeValue) {
+            if (url === externalScriptSrc) {
                 success("var b = 1;");
-            } else if (url === anotherExternalScript.attributes.src.nodeValue) {
+            } else if (url === anotherExternalScriptSrc) {
                 success("function something() {}");
             } else {
                 error(url);
@@ -127,7 +132,7 @@ describe("JS inline", function () {
         rasterizeHTMLInline.loadAndInlineScript(doc, {baseUrl: "some_base_url/"}, callback);
 
         expect(callback).toHaveBeenCalled();
-        expect(ajaxSpy).toHaveBeenCalledWith(externalScript.attributes.src.nodeValue, {baseUrl: "some_base_url/"}, jasmine.any(Function), jasmine.any(Function));
+        expect(ajaxSpy).toHaveBeenCalledWith(externalScriptSrc, {baseUrl: "some_base_url/"}, jasmine.any(Function), jasmine.any(Function));
     });
 
     it("should favour explicit baseUrl over document.baseURI when loading linked JS", function () {
@@ -146,7 +151,7 @@ describe("JS inline", function () {
 
         rasterizeHTMLInline.loadAndInlineScript(doc, {cache: 'none'}, callback);
 
-        expect(ajaxSpy).toHaveBeenCalledWith(externalScript.attributes.src.nodeValue, {
+        expect(ajaxSpy).toHaveBeenCalledWith(externalScriptSrc, {
             cache: 'none'
         }, jasmine.any(Function), jasmine.any(Function));
     });
@@ -156,7 +161,7 @@ describe("JS inline", function () {
 
         rasterizeHTMLInline.loadAndInlineScript(doc, callback);
 
-        expect(ajaxSpy).toHaveBeenCalledWith(externalScript.attributes.src.nodeValue, {}, jasmine.any(Function), jasmine.any(Function));
+        expect(ajaxSpy).toHaveBeenCalledWith(externalScriptSrc, {}, jasmine.any(Function), jasmine.any(Function));
     });
 
     describe("error handling", function () {

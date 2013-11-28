@@ -272,22 +272,9 @@ window.rasterizeHTMLInline = (function (module) {
         return text.replace(/<\//g, '<\\/');
     };
 
-    var substituteExternalScriptWithInline = function (oldScriptNode, jsCode) {
-        var newScript = oldScriptNode.ownerDocument.createElement("script"),
-            parent = oldScriptNode.parentNode;
-
-        Array.prototype.forEach.call(oldScriptNode.attributes, function (attr) {
-            if (attr.nodeName !== 'src') {
-                newScript.setAttribute(attr.nodeName, attr.nodeValue);
-            }
-        });
-
-        jsCode = escapeClosingTags(jsCode);
-
-        newScript.appendChild(oldScriptNode.ownerDocument.createTextNode(jsCode));
-
-        parent.insertBefore(newScript, oldScriptNode);
-        parent.removeChild(oldScriptNode);
+    var substituteExternalScriptWithInline = function (scriptNode, jsCode) {
+        scriptNode.attributes.removeNamedItem('src');
+        scriptNode.textContent = escapeClosingTags(jsCode);
     };
 
     module.loadAndInlineScript = function (doc, options, callback) {
