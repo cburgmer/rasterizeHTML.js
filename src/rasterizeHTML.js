@@ -70,7 +70,26 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow)
         return parameters;
     };
 
-    module.util.executeJavascript = function (doc, timeout, callback) {
+    var baseUrlRespectingXMLHttpRequestProxy = function (XHRObject, baseUrl) {
+        return function () {
+            var xhr = new XHRObject(),
+                open = xhr.open;
+
+            xhr.open = function () {
+                var args = Array.prototype.slice.call(arguments),
+                    method = args.shift(),
+                    url = args.shift(),
+                    // TODO remove reference to rasterizeHTMLInline.util
+                    joinedUrl = rasterizeHTMLInline.util.joinUrl(baseUrl, url);
+
+                return open.apply(this, [method, joinedUrl].concat(args));
+            };
+
+            return xhr;
+        };
+    };
+
+    module.util.executeJavascript = function (doc, baseUrl, timeout, callback) {
         var iframe = createHiddenElement(theWindow.document, "iframe"),
             html = doc.documentElement.outerHTML,
             iframeErrorsMessages = [],
@@ -89,6 +108,7 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow)
         }
 
         iframe.contentDocument.open();
+        iframe.contentWindow.XMLHttpRequest = baseUrlRespectingXMLHttpRequestProxy(iframe.contentWindow.XMLHttpRequest, baseUrl);
         iframe.contentWindow.onerror = function (msg) {
             iframeErrorsMessages.push({
                 resourceType: "scriptExecution",
@@ -446,7 +466,7 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow)
 
         rasterizeHTMLInline.inlineReferences(doc, inlineOptions, function (allErrors) {
             if (options.executeJs) {
-                module.util.executeJavascript(doc, executeJsTimeout, function (doc, errors) {
+                module.util.executeJavascript(doc, options.baseUrl, executeJsTimeout, function (doc, errors) {
                     doDraw(doc, imageSize.width, imageSize.height, canvas, callback, allErrors.concat(errors));
                 });
             } else {

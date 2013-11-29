@@ -97,13 +97,13 @@ describe("Main interface of rasterizeHTML.js", function () {
 
         it("should optionally execute JavaScript in the page", function () {
             var doc = "the document",
-                executeJavascript = spyOn(rasterizeHTML.util, "executeJavascript").andCallFake(function (doc, timeout, callback) {
+                executeJavascript = spyOn(rasterizeHTML.util, "executeJavascript").andCallFake(function (doc, baseUrl, timeout, callback) {
                     callback(doc);
                 });
 
             rasterizeHTML.drawDocument(doc, {executeJs: true}, callback);
 
-            expect(executeJavascript).toHaveBeenCalledWith(doc, 0, jasmine.any(Function));
+            expect(executeJavascript).toHaveBeenCalledWith(doc, undefined, 0, jasmine.any(Function));
             expect(callback).toHaveBeenCalled();
         });
 
@@ -118,13 +118,13 @@ describe("Main interface of rasterizeHTML.js", function () {
 
         it("should follow optional timeout when executing JavaScript", function () {
             var doc = "the document",
-                executeJavascript = spyOn(rasterizeHTML.util, "executeJavascript").andCallFake(function (doc, timeout, callback) {
+                executeJavascript = spyOn(rasterizeHTML.util, "executeJavascript").andCallFake(function (doc, baseUrl, timeout, callback) {
                     callback(doc);
                 });
 
             rasterizeHTML.drawDocument(doc, {executeJs: true, executeJsTimeout: 42}, callback);
 
-            expect(executeJavascript).toHaveBeenCalledWith(doc, 42, jasmine.any(Function));
+            expect(executeJavascript).toHaveBeenCalledWith(doc, undefined, 42, jasmine.any(Function));
             expect(callback).toHaveBeenCalled();
         });
 
@@ -417,7 +417,7 @@ describe("Main interface of rasterizeHTML.js", function () {
         it("should pass through a JS error", function () {
             var doc = "doc";
 
-            executeJavascript.andCallFake(function (doc, timeout, callback) {
+            executeJavascript.andCallFake(function (doc, baseUrl, timeout, callback) {
                 callback(doc, ["the error"]);
             });
             renderSvg.andCallFake(function (svg, canvas, successCallback) {

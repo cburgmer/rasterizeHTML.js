@@ -12,7 +12,7 @@ describe("Utilities function", function () {
             var the_result = null;
 
             doc.documentElement.innerHTML = "<body><script>document.body.innerHTML = 'dynamic content';</script></body>";
-            rasterizeHTML.util.executeJavascript(doc, 0, function (result) {
+            rasterizeHTML.util.executeJavascript(doc, undefined, 0, function (result) {
                 the_result = result;
             });
 
@@ -29,7 +29,7 @@ describe("Utilities function", function () {
             var finished = false;
 
             doc.documentElement.innerHTML = "<body></body>";
-            rasterizeHTML.util.executeJavascript(doc, 0, function () {
+            rasterizeHTML.util.executeJavascript(doc, undefined, 0, function () {
                 finished = true;
             });
 
@@ -46,7 +46,7 @@ describe("Utilities function", function () {
             var the_result = null;
 
             doc.documentElement.innerHTML = "<body onload=\"setTimeout(function () {document.body.innerHTML = 'dynamic content';}, 1);\"></body>";
-            rasterizeHTML.util.executeJavascript(doc, 20, function (result) {
+            rasterizeHTML.util.executeJavascript(doc, undefined, 20, function (result) {
                 the_result = result;
             });
 
@@ -63,7 +63,7 @@ describe("Utilities function", function () {
             var the_result = null;
 
             doc.documentElement.innerHTML = '<head><style>div { height: 20px; }</style></head><body onload="var elem = document.getElementById(\'elem\'); document.body.innerHTML = elem.offsetHeight;"><div id="elem"></div></body>';
-            rasterizeHTML.util.executeJavascript(doc, 0, function (result) {
+            rasterizeHTML.util.executeJavascript(doc, undefined, 0, function (result) {
                 the_result = result;
             });
 
@@ -80,7 +80,7 @@ describe("Utilities function", function () {
             var errors = null;
 
             doc.documentElement.innerHTML = "<body><script>undefinedVar.t = 42</script></body>";
-            rasterizeHTML.util.executeJavascript(doc, 0, function (result, theErrors) {
+            rasterizeHTML.util.executeJavascript(doc, undefined, 0, function (result, theErrors) {
                 errors = theErrors;
             });
 
@@ -103,7 +103,7 @@ describe("Utilities function", function () {
             doc.documentElement.innerHTML = '<head></head><body onload="document.body.innerHTML = document.querySelectorAll(\'[myattr]\').length;"></body>';
             doc.documentElement.setAttribute('myattr', 'myvalue');
 
-            rasterizeHTML.util.executeJavascript(doc, 0, function (result) {
+            rasterizeHTML.util.executeJavascript(doc, undefined, 0, function (result) {
                 the_result = result;
             });
 
@@ -113,6 +113,32 @@ describe("Utilities function", function () {
 
             runs(function () {
                 expect(the_result.body.innerHTML).toEqual('1');
+            });
+        });
+
+        ifNotInPhantomJsIt("should be able to load content via AJAX from the correct url", function () {
+            var doc, result;
+
+            rasterizeHTMLTestHelper.readHTMLDocumentFixture('ajax.html', function (theDoc) {
+                doc = theDoc;
+            });
+
+            waitsFor(function () {
+                return doc !== undefined;
+            });
+
+            runs(function () {
+                rasterizeHTML.util.executeJavascript(doc, jasmine.getFixtures().fixturesPath, 100, function (theResult) {
+                    result = theResult;
+                });
+            });
+
+            waitsFor(function () {
+                return result !== undefined;
+            });
+
+            runs(function () {
+                expect(result.querySelector('div').textContent.trim()).toEqual('The content');
             });
         });
     });

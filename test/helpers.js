@@ -31,6 +31,21 @@ var isWebkit = navigator.userAgent.indexOf("WebKit") >= 0,
 var rasterizeHTMLTestHelper = (function () {
     var module = {};
 
+    module.readHTMLDocumentFixture = function (url, callback) {
+        var fixtureUrl = jasmine.getFixtures().fixturesPath + url,
+            xhr = new window.XMLHttpRequest();
+
+        xhr.addEventListener("load", function () {
+            if (xhr.status === 200 || xhr.status === 0) {
+                callback(xhr.responseXML);
+            }
+        }, false);
+
+        xhr.open('GET', fixtureUrl, true);
+        xhr.responseType = "document";
+        xhr.send(null);
+    };
+
     module.readDocumentFixture = function (url) {
         var doc,
             fixtureUrl = jasmine.getFixtures().fixturesPath + url;
