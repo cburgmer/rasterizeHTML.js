@@ -38,6 +38,7 @@ describe("Main interface of rasterizeHTML.js", function () {
 
             spyOn(rasterizeHTML.util, 'calculateDocumentContentSize');
             setUpCalculateDocumentContentSize(0, 0);
+            spyOn(rasterizeHTML.util, 'persistInputValues');
         });
 
         it("should take a document, inline all displayable content and render to the given canvas", function () {
@@ -104,6 +105,7 @@ describe("Main interface of rasterizeHTML.js", function () {
             rasterizeHTML.drawDocument(doc, {executeJs: true}, callback);
 
             expect(executeJavascript).toHaveBeenCalledWith(doc, undefined, 0, jasmine.any(Function));
+            expect(rasterizeHTML.util.persistInputValues).toHaveBeenCalledWith(doc);
             expect(callback).toHaveBeenCalled();
         });
 
@@ -354,6 +356,7 @@ describe("Main interface of rasterizeHTML.js", function () {
             drawImageOnCanvas = spyOn(rasterizeHTML, "drawImageOnCanvas");
 
             executeJavascript = spyOn(rasterizeHTML.util, "executeJavascript");
+            spyOn(rasterizeHTML.util, 'persistInputValues');
         });
 
         it("should pass through an error from inlining when rendering the SVG on drawDocument", function () {

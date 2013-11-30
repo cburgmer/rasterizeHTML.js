@@ -181,6 +181,82 @@ describe("Utilities function", function () {
         });
     });
 
+    describe("persistInputValues", function () {
+        var doc,
+            setHtml = function (html) {
+                doc.documentElement.innerHTML = html;
+            };
+
+        beforeEach(function () {
+            doc = document.implementation.createHTMLDocument('');
+        });
+
+        it("should persist a text input's value", function () {
+            setHtml('<input type="text">');
+
+            doc.querySelector('input').value = 'my value';
+
+            rasterizeHTML.util.persistInputValues(doc);
+
+            expect(doc.querySelector('input').outerHTML).toMatch(/value="my value"/);
+        });
+
+        it("should persist a deleted text input's value", function () {
+            setHtml('<input type="text" value="original value">');
+            doc.querySelector('input').value = '';
+
+            rasterizeHTML.util.persistInputValues(doc);
+
+            expect(doc.querySelector('input').outerHTML).toMatch(/value=""/);
+        });
+
+        it("should keep a text input value if not changed", function () {
+            setHtml('<input type="text" value="original value">');
+
+            rasterizeHTML.util.persistInputValues(doc);
+
+            expect(doc.querySelector('input').outerHTML).toMatch(/value="original value"/);
+        });
+
+        it("should persist a checked checkbox", function () {
+            setHtml('<input value="pizza" type="checkbox">');
+
+            doc.querySelector('input').checked = true;
+
+            rasterizeHTML.util.persistInputValues(doc);
+
+            expect(doc.querySelector('input').outerHTML).toMatch(/checked="(checked)?"/);
+        });
+
+        it("should persist an unchecked checkbox", function () {
+            setHtml('<input value="pizza" type="checkbox" checked="checked">');
+
+            doc.querySelector('input').checked = false;
+
+            rasterizeHTML.util.persistInputValues(doc);
+
+            expect(doc.querySelector('input').outerHTML).not.toMatch(/checked/);
+        });
+
+        it("should persist a radio button", function () {
+            setHtml('<input value="pizza" type="radio">');
+
+            doc.querySelector('input').checked = true;
+
+            rasterizeHTML.util.persistInputValues(doc);
+
+            expect(doc.querySelector('input').outerHTML).toMatch(/checked="(checked)?"/);
+        });
+
+        it("should handle a file input", function () {
+            setHtml('<input type="file">');
+
+            rasterizeHTML.util.persistInputValues(doc);
+
+            expect(doc.querySelector('input').outerHTML).toMatch(/type="file"/);
+        });
+    });
+
     describe("calculateDocumentContentSize", function () {
         var doc,
             setHtml = function (html) {

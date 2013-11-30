@@ -347,6 +347,27 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow)
         }
     };
 
+    module.util.persistInputValues = function (doc) {
+        var inputs = Array.prototype.slice.call(doc.querySelectorAll('input')),
+            isCheckable = function (input) {
+                return input.type === 'checkbox' || input.type === 'radio';
+            };
+
+        inputs.filter(isCheckable)
+            .forEach(function (input) {
+                if (input.checked) {
+                    input.setAttribute('checked', '');
+                } else {
+                    input.removeAttribute('checked');
+                }
+            });
+
+        inputs.filter(function (input) { return !isCheckable(input); })
+            .forEach(function (input) {
+                input.setAttribute('value', input.value);
+            });
+    };
+
     module.getSvgForDocument = function (doc, width, height) {
         var xhtml;
 
@@ -467,6 +488,8 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow)
         rasterizeHTMLInline.inlineReferences(doc, inlineOptions, function (allErrors) {
             if (options.executeJs) {
                 module.util.executeJavascript(doc, options.baseUrl, executeJsTimeout, function (doc, errors) {
+                    module.util.persistInputValues(doc);
+
                     doDraw(doc, imageSize.width, imageSize.height, canvas, callback, allErrors.concat(errors));
                 });
             } else {
