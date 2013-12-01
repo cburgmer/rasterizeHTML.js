@@ -1571,8 +1571,12 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow)
 
     /* "Public" API */
 
-    var doDraw = function (doc, canvasWidth, canvasHeight, canvas, callback, allErrors) {
-        module.util.calculateDocumentContentSize(doc, canvasWidth, canvasHeight, function (width, height) {
+    var doDraw = function (doc, canvas, option, callback, allErrors) {
+        if (option.hover) {
+            module.util.fakeHover(doc, option.hover);
+        }
+
+        module.util.calculateDocumentContentSize(doc, option.width, option.height, function (width, height) {
             var svg = module.getSvgForDocument(doc, width, height),
                 handleInternalError = function (errors) {
                     errors.push({
@@ -1623,20 +1627,24 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow)
     var drawDocument = function (doc, canvas, options, callback) {
         var imageSize = getImageSize(canvas, options),
             executeJsTimeout = options.executeJsTimeout || 0,
-            inlineOptions;
+            inlineOptions, drawOptions;
 
         inlineOptions = rasterizeHTMLInline.util.clone(options);
         inlineOptions.inlineScripts = options.executeJs === true;
+
+        drawOptions = rasterizeHTMLInline.util.clone(options);
+        drawOptions.width = imageSize.width;
+        drawOptions.height = imageSize.height;
 
         rasterizeHTMLInline.inlineReferences(doc, inlineOptions, function (allErrors) {
             if (options.executeJs) {
                 module.util.executeJavascript(doc, options.baseUrl, executeJsTimeout, function (doc, errors) {
                     module.util.persistInputValues(doc);
 
-                    doDraw(doc, imageSize.width, imageSize.height, canvas, callback, allErrors.concat(errors));
+                    doDraw(doc, canvas, drawOptions, callback, allErrors.concat(errors));
                 });
             } else {
-                doDraw(doc, imageSize.width, imageSize.height, canvas, callback, allErrors);
+                doDraw(doc, canvas, drawOptions, callback, allErrors);
             }
         });
     };

@@ -39,6 +39,7 @@ describe("Main interface of rasterizeHTML.js", function () {
             spyOn(rasterizeHTML.util, 'calculateDocumentContentSize');
             setUpCalculateDocumentContentSize(0, 0);
             spyOn(rasterizeHTML.util, 'persistInputValues');
+            spyOn(rasterizeHTML.util, 'fakeHover');
         });
 
         it("should take a document, inline all displayable content and render to the given canvas", function () {
@@ -80,6 +81,22 @@ describe("Main interface of rasterizeHTML.js", function () {
             expect(rasterizeHTML.util.calculateDocumentContentSize).toHaveBeenCalledWith(doc, 42, 4711, jasmine.any(Function));
 
             expect(callback).toHaveBeenCalledWith(svgImage, []);
+        });
+
+        it("should trigger hover effect", function () {
+            var doc = "doc";
+
+            rasterizeHTML.drawDocument(doc, canvas, {hover: '.mySpan'}, callback);
+
+            expect(rasterizeHTML.util.fakeHover).toHaveBeenCalledWith(doc, '.mySpan');
+        });
+
+        it("should not trigger hover effect by default", function () {
+            var doc = "doc";
+
+            rasterizeHTML.drawDocument(doc, canvas, {}, callback);
+
+            expect(rasterizeHTML.util.fakeHover).not.toHaveBeenCalled();
         });
 
         it("should pass on options", function () {
