@@ -347,6 +347,62 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow)
         }
     };
 
+    var addClassNameRecursively = function (element, className) {
+        element.className += ' ' + className;
+
+        if (element.parentNode !== element.ownerDocument) {
+            addClassNameRecursively(element.parentNode, className);
+        }
+    };
+
+    var changeCssRule = function (rule, newRuleText) {
+        var styleSheet = rule.parentStyleSheet,
+            ruleIdx = Array.prototype.indexOf.call(styleSheet.cssRules, rule);
+
+        // Exchange rule with the new text
+        styleSheet.insertRule(newRuleText, ruleIdx+1);
+        styleSheet.deleteRule(ruleIdx);
+    };
+
+    var updateRuleSelector = function (rule, updatedSelector) {
+        var styleDefinitions = rule.cssText.replace(/^[^\{]+/, ''),
+            newRule = updatedSelector + ' ' + styleDefinitions;
+
+        changeCssRule(rule, newRule);
+    };
+
+    var cssRulesToText = function (cssRules) {
+        return Array.prototype.reduce.call(cssRules, function (cssText, rule) {
+            return cssText + rule.cssText;
+        }, '');
+    };
+
+    var rewriteStyleContent = function (styleElement) {
+        styleElement.textContent = cssRulesToText(styleElement.sheet.cssRules);
+    };
+
+    var rewriteHoverStyleRules = function (doc, className) {
+        Array.prototype.forEach.call(doc.querySelectorAll('style'), function (styleElement) {
+            Array.prototype.forEach.call(styleElement.sheet.cssRules, function (rule) {
+                var selector = rule.selectorText.replace(/:hover(\W|$)/g, '.' + className);
+
+                updateRuleSelector(rule, selector);
+            });
+            rewriteStyleContent(styleElement);
+        });
+    };
+
+    module.util.fakeHover = function (doc, hoverSelector) {
+        var elem = doc.querySelector(hoverSelector),
+            fakeHoverClass = 'rasterizehtmlhover';
+        if (! elem) {
+            return;
+        }
+
+        addClassNameRecursively(elem, fakeHoverClass);
+        rewriteHoverStyleRules(doc, fakeHoverClass);
+    };
+
     module.util.persistInputValues = function (doc) {
         var inputs = Array.prototype.slice.call(doc.querySelectorAll('input')),
             isCheckable = function (input) {

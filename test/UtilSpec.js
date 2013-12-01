@@ -257,6 +257,61 @@ describe("Utilities function", function () {
         });
     });
 
+    describe("fakeHover", function () {
+        var doc,
+            setHtml = function (html) {
+                doc.documentElement.innerHTML = html;
+            };
+
+        beforeEach(function () {
+            doc = document.implementation.createHTMLDocument('');
+        });
+
+        afterEach(function () {
+            $('iframe').remove();
+        });
+
+        it("should attach fake hover class to selected element", function () {
+            setHtml("<span>a span</span>");
+
+            rasterizeHTML.util.fakeHover(doc, 'span');
+
+            expect(doc.querySelector('span').className).toMatch(/rasterizehtmlhover/);
+        });
+
+        it("should attach the fake hover class to select the parent's elements", function () {
+            setHtml("<div><ol><li>a list entry</li></ol></div>");
+
+            rasterizeHTML.util.fakeHover(doc, 'li');
+
+            expect(doc.querySelector('ol').className).toMatch(/rasterizehtmlhover/);
+            expect(doc.querySelector('div').className).toMatch(/rasterizehtmlhover/);
+            expect(doc.querySelector('body').className).toMatch(/rasterizehtmlhover/);
+            expect(doc.querySelector('html').className).toMatch(/rasterizehtmlhover/);
+        });
+
+        it("should not attach the fake hover class to siblings or parent's siblings", function () {
+            setHtml("<div><span>a span</span><div><a>a list entry</a><i>text</i></div></div>");
+
+            rasterizeHTML.util.fakeHover(doc, 'a');
+
+            expect(doc.querySelector('i').className).toEqual('');
+            expect(doc.querySelector('span').className).toEqual('');
+        });
+
+        it("should ignore non-existant selector", function () {
+            rasterizeHTML.util.fakeHover(doc, 'div');
+        });
+
+        it("should rewrite CSS rules to trigger on fake hover", function () {
+            setHtml('<head><style type="text/css">a:hover { color: blue; }</style></head><body><span></span></body>');
+
+            rasterizeHTML.util.fakeHover(doc, 'span');
+
+            expect(doc.querySelector('style').textContent).toMatch(/a.rasterizehtmlhover \{\s*color: blue;\s*\}/);
+        });
+    });
+
     describe("calculateDocumentContentSize", function () {
         var doc,
             setHtml = function (html) {

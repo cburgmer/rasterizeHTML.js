@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.6.0 - 2013-11-30
+/*! rasterizeHTML.js - v0.6.0 - 2013-12-01
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2013 Christoph Burgmer; Licensed  */
 window.rasterizeHTMLInline = (function (module) {
@@ -1432,6 +1432,62 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow)
         if (div) {
             div.parentNode.removeChild(div);
         }
+    };
+
+    var addClassNameRecursively = function (element, className) {
+        element.className += ' ' + className;
+
+        if (element.parentNode !== element.ownerDocument) {
+            addClassNameRecursively(element.parentNode, className);
+        }
+    };
+
+    var changeCssRule = function (rule, newRuleText) {
+        var styleSheet = rule.parentStyleSheet,
+            ruleIdx = Array.prototype.indexOf.call(styleSheet.cssRules, rule);
+
+        // Exchange rule with the new text
+        styleSheet.insertRule(newRuleText, ruleIdx+1);
+        styleSheet.deleteRule(ruleIdx);
+    };
+
+    var updateRuleSelector = function (rule, updatedSelector) {
+        var styleDefinitions = rule.cssText.replace(/^[^\{]+/, ''),
+            newRule = updatedSelector + ' ' + styleDefinitions;
+
+        changeCssRule(rule, newRule);
+    };
+
+    var cssRulesToText = function (cssRules) {
+        return Array.prototype.reduce.call(cssRules, function (cssText, rule) {
+            return cssText + rule.cssText;
+        }, '');
+    };
+
+    var rewriteStyleContent = function (styleElement) {
+        styleElement.textContent = cssRulesToText(styleElement.sheet.cssRules);
+    };
+
+    var rewriteHoverStyleRules = function (doc, className) {
+        Array.prototype.forEach.call(doc.querySelectorAll('style'), function (styleElement) {
+            Array.prototype.forEach.call(styleElement.sheet.cssRules, function (rule) {
+                var selector = rule.selectorText.replace(/:hover(\W|$)/g, '.' + className);
+
+                updateRuleSelector(rule, selector);
+            });
+            rewriteStyleContent(styleElement);
+        });
+    };
+
+    module.util.fakeHover = function (doc, hoverSelector) {
+        var elem = doc.querySelector(hoverSelector),
+            fakeHoverClass = 'rasterizehtmlhover';
+        if (! elem) {
+            return;
+        }
+
+        addClassNameRecursively(elem, fakeHoverClass);
+        rewriteHoverStyleRules(doc, fakeHoverClass);
     };
 
     module.util.persistInputValues = function (doc) {
