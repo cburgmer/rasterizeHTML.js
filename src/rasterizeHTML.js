@@ -384,9 +384,11 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow)
     var rewriteHoverStyleRules = function (doc, className) {
         Array.prototype.forEach.call(doc.querySelectorAll('style'), function (styleElement) {
             Array.prototype.forEach.call(styleElement.sheet.cssRules, function (rule) {
-                var selector = rule.selectorText.replace(/:hover(\W|$)/g, '.' + className);
+                if (rule.selectorText) {
+                    var selector = rule.selectorText.replace(/:hover(?=\W|$)/g, '.' + className);
 
-                updateRuleSelector(rule, selector);
+                    updateRuleSelector(rule, selector);
+                }
             });
             rewriteStyleContent(styleElement);
         });
@@ -484,12 +486,12 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow)
 
     /* "Public" API */
 
-    var doDraw = function (doc, canvas, option, callback, allErrors) {
-        if (option.hover) {
-            module.util.fakeHover(doc, option.hover);
+    var doDraw = function (doc, canvas, options, callback, allErrors) {
+        if (options.hover) {
+            module.util.fakeHover(doc, options.hover);
         }
 
-        module.util.calculateDocumentContentSize(doc, option.width, option.height, function (width, height) {
+        module.util.calculateDocumentContentSize(doc, options.width, options.height, function (width, height) {
             var svg = module.getSvgForDocument(doc, width, height),
                 handleInternalError = function (errors) {
                     errors.push({

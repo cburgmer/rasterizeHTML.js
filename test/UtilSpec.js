@@ -310,6 +310,20 @@ describe("Utilities function", function () {
 
             expect(doc.querySelector('style').textContent).toMatch(/a.rasterizehtmlhover \{\s*color: blue;\s*\}/);
         });
+
+        it("should rewrite CSS rules to trigger on fake hover", function () {
+            setHtml('<style type="text/css">body:hover span { color: blue; }</style>');
+
+            rasterizeHTML.util.fakeHover(doc, 'body');
+
+            expect(doc.querySelector('style').textContent).toMatch(/body.rasterizehtmlhover span \{\s*color: blue;\s*\}/);
+        });
+
+        it("should rewrite CSS rules to trigger on fake hover", function () {
+            setHtml('<head><style type="text/css">@font-face { font-family: "RaphaelIcons"; src: url("raphaelicons-webfont.woff"); }</style></head><body><span></span></body>');
+
+            rasterizeHTML.util.fakeHover(doc, 'span');
+        });
     });
 
     describe("calculateDocumentContentSize", function () {
