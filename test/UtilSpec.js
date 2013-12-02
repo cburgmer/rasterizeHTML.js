@@ -257,7 +257,7 @@ describe("Utilities function", function () {
         });
     });
 
-    describe("fakeHover", function () {
+    describe("rewriteStyleRuleSelector", function () {
         var doc,
             setHtml = function (html) {
                 doc.documentElement.innerHTML = html;
@@ -267,58 +267,91 @@ describe("Utilities function", function () {
             doc = document.implementation.createHTMLDocument('');
         });
 
-        it("should attach fake hover class to selected element", function () {
-            setHtml("<span>a span</span>");
-
-            rasterizeHTML.util.fakeHover(doc, 'span');
-
-            expect(doc.querySelector('span').className).toMatch(/rasterizehtmlhover/);
-        });
-
-        it("should attach the fake hover class to select the parent's elements", function () {
-            setHtml("<div><ol><li>a list entry</li></ol></div>");
-
-            rasterizeHTML.util.fakeHover(doc, 'li');
-
-            expect(doc.querySelector('ol').className).toMatch(/rasterizehtmlhover/);
-            expect(doc.querySelector('div').className).toMatch(/rasterizehtmlhover/);
-            expect(doc.querySelector('body').className).toMatch(/rasterizehtmlhover/);
-            expect(doc.querySelector('html').className).toMatch(/rasterizehtmlhover/);
-        });
-
-        it("should not attach the fake hover class to siblings or parent's siblings", function () {
-            setHtml("<div><span>a span</span><div><a>a list entry</a><i>text</i></div></div>");
-
-            rasterizeHTML.util.fakeHover(doc, 'a');
-
-            expect(doc.querySelector('i').className).toEqual('');
-            expect(doc.querySelector('span').className).toEqual('');
-        });
-
-        it("should ignore non-existent selector", function () {
-            rasterizeHTML.util.fakeHover(doc, 'div');
-        });
-
-        it("should rewrite CSS rules to trigger on fake hover", function () {
+        it("should rewrite CSS rules with the new selector", function () {
             setHtml('<head><style type="text/css">a:hover { color: blue; }</style></head><body><span></span></body>');
 
-            rasterizeHTML.util.fakeHover(doc, 'span');
+            rasterizeHTML.util.rewriteStyleRuleSelector(doc, ':hover', '.myFakeHover');
 
-            expect(doc.querySelector('style').textContent).toMatch(/a.rasterizehtmlhover \{\s*color: blue;\s*\}/);
+            expect(doc.querySelector('style').textContent).toMatch(/a.myFakeHover \{\s*color: blue;\s*\}/);
         });
 
         it("should correctly handle complex selectors", function () {
             setHtml('<style type="text/css">body:hover span { color: blue; }</style>');
 
-            rasterizeHTML.util.fakeHover(doc, 'body');
+            rasterizeHTML.util.rewriteStyleRuleSelector(doc, ':hover', '.myFakeHover');
 
-            expect(doc.querySelector('style').textContent).toMatch(/body.rasterizehtmlhover span \{\s*color: blue;\s*\}/);
+            expect(doc.querySelector('style').textContent).toMatch(/body.myFakeHover span \{\s*color: blue;\s*\}/);
         });
 
         it("should cope with non CSSStyleRule", function () {
             setHtml('<head><style type="text/css">@font-face { font-family: "RaphaelIcons"; src: url("raphaelicons-webfont.woff"); }</style></head><body><span></span></body>');
 
+            rasterizeHTML.util.rewriteStyleRuleSelector(doc, ':hover', '.myFakeHover');
+        });
+    });
+
+    describe("addClassNameRecursively", function () {
+        var doc,
+            setHtml = function (html) {
+                doc.documentElement.innerHTML = html;
+            };
+
+        beforeEach(function () {
+            doc = document.implementation.createHTMLDocument('');
+        });
+
+        it("should attach class to selected element", function () {
+            setHtml("<span>a span</span>");
+
+            rasterizeHTML.util.addClassNameRecursively(doc.querySelector('span'), '.myClass');
+
+            expect(doc.querySelector('span').className).toMatch(/myClass/);
+        });
+
+        it("should attach the fake hover class to select the parent's elements", function () {
+            setHtml("<div><ol><li>a list entry</li></ol></div>");
+
+            rasterizeHTML.util.addClassNameRecursively(doc.querySelector('li'), '.myClass');
+
+            expect(doc.querySelector('ol').className).toMatch(/myClass/);
+            expect(doc.querySelector('div').className).toMatch(/myClass/);
+            expect(doc.querySelector('body').className).toMatch(/myClass/);
+            expect(doc.querySelector('html').className).toMatch(/myClass/);
+        });
+
+        it("should not attach the fake hover class to siblings or parent's siblings", function () {
+            setHtml("<div><span>a span</span><div><a>a list entry</a><i>text</i></div></div>");
+
+            rasterizeHTML.util.addClassNameRecursively(doc.querySelector('a'), '.myClass');
+
+            expect(doc.querySelector('i').className).toEqual('');
+            expect(doc.querySelector('span').className).toEqual('');
+        });
+    });
+
+    describe("fakeHover", function () {
+        var doc,
+            setHtml = function (html) {
+                doc.documentElement.innerHTML = html;
+            };
+
+        beforeEach(function () {
+            doc = document.implementation.createHTMLDocument('');
+
+            spyOn(rasterizeHTML.util, 'addClassNameRecursively');
+            spyOn(rasterizeHTML.util, 'rewriteStyleRuleSelector');
+        });
+
+        it("should add a fake class to the selected element and adapt the document's stylesheet", function () {
+            setHtml("<span>a span</span>");
             rasterizeHTML.util.fakeHover(doc, 'span');
+
+            expect(rasterizeHTML.util.addClassNameRecursively).toHaveBeenCalledWith(doc.querySelector('span'), 'rasterizehtmlhover');
+            expect(rasterizeHTML.util.rewriteStyleRuleSelector).toHaveBeenCalledWith(doc, ':hover', '.rasterizehtmlhover');
+        });
+
+        it("should ignore non-existent selector", function () {
+            rasterizeHTML.util.fakeHover(doc, 'div');
         });
     });
 
@@ -330,60 +363,21 @@ describe("Utilities function", function () {
 
         beforeEach(function () {
             doc = document.implementation.createHTMLDocument('');
+
+            spyOn(rasterizeHTML.util, 'addClassNameRecursively');
+            spyOn(rasterizeHTML.util, 'rewriteStyleRuleSelector');
         });
 
-        it("should attach fake active class to selected element", function () {
+        it("should add a fake class to the selected element and adapt the document's stylesheet", function () {
             setHtml("<span>a span</span>");
-
             rasterizeHTML.util.fakeActive(doc, 'span');
 
-            expect(doc.querySelector('span').className).toMatch(/rasterizehtmlactive/);
-        });
-
-        it("should attach the fake hover class to select the parent's elements", function () {
-            setHtml("<div><ol><li>a list entry</li></ol></div>");
-
-            rasterizeHTML.util.fakeActive(doc, 'li');
-
-            expect(doc.querySelector('ol').className).toMatch(/rasterizehtmlactive/);
-            expect(doc.querySelector('div').className).toMatch(/rasterizehtmlactive/);
-            expect(doc.querySelector('body').className).toMatch(/rasterizehtmlactive/);
-            expect(doc.querySelector('html').className).toMatch(/rasterizehtmlactive/);
-        });
-
-        it("should not attach the fake hover class to siblings or parent's siblings", function () {
-            setHtml("<div><span>a span</span><div><a>a list entry</a><i>text</i></div></div>");
-
-            rasterizeHTML.util.fakeActive(doc, 'a');
-
-            expect(doc.querySelector('i').className).toEqual('');
-            expect(doc.querySelector('span').className).toEqual('');
+            expect(rasterizeHTML.util.addClassNameRecursively).toHaveBeenCalledWith(doc.querySelector('span'), 'rasterizehtmlactive');
+            expect(rasterizeHTML.util.rewriteStyleRuleSelector).toHaveBeenCalledWith(doc, ':active', '.rasterizehtmlactive');
         });
 
         it("should ignore non-existent selector", function () {
             rasterizeHTML.util.fakeActive(doc, 'div');
-        });
-
-        it("should rewrite CSS rules to trigger on fake hover", function () {
-            setHtml('<head><style type="text/css">a:active { color: blue; }</style></head><body><span></span></body>');
-
-            rasterizeHTML.util.fakeActive(doc, 'span');
-
-            expect(doc.querySelector('style').textContent).toMatch(/a.rasterizehtmlactive \{\s*color: blue;\s*\}/);
-        });
-
-        it("should correctly handle complex selectors", function () {
-            setHtml('<style type="text/css">body:active span { color: blue; }</style>');
-
-            rasterizeHTML.util.fakeActive(doc, 'body');
-
-            expect(doc.querySelector('style').textContent).toMatch(/body.rasterizehtmlactive span \{\s*color: blue;\s*\}/);
-        });
-
-        it("should cope with non CSSStyleRule", function () {
-            setHtml('<head><style type="text/css">@font-face { font-family: "RaphaelIcons"; src: url("raphaelicons-webfont.woff"); }</style></head><body><span></span></body>');
-
-            rasterizeHTML.util.fakeActive(doc, 'span');
         });
     });
 

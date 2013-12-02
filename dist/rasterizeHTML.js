@@ -1434,11 +1434,11 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow)
         }
     };
 
-    var addClassNameRecursively = function (element, className) {
+    module.util.addClassNameRecursively = function (element, className) {
         element.className += ' ' + className;
 
         if (element.parentNode !== element.ownerDocument) {
-            addClassNameRecursively(element.parentNode, className);
+            module.util.addClassNameRecursively(element.parentNode, className);
         }
     };
 
@@ -1468,11 +1468,12 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow)
         styleElement.textContent = cssRulesToText(styleElement.sheet.cssRules);
     };
 
-    var rewriteStyleRuleSelector = function (doc, partialSelector, className) {
+    module.util.rewriteStyleRuleSelector = function (doc, oldSelector, newSelector) {
         Array.prototype.forEach.call(doc.querySelectorAll('style'), function (styleElement) {
             Array.prototype.forEach.call(styleElement.sheet.cssRules, function (rule) {
                 if (rule.selectorText) {
-                    var selector = rule.selectorText.replace(new RegExp(partialSelector + '(?=\\W|$)', 'g'), '.' + className);
+                    // Assume that oldSelector is always prepended with a ':' or '.' for now, so no special handling needed
+                    var selector = rule.selectorText.replace(new RegExp(oldSelector + '(?=\\W|$)', 'g'), newSelector);
 
                     updateRuleSelector(rule, selector);
                 }
@@ -1488,8 +1489,8 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow)
             return;
         }
 
-        addClassNameRecursively(elem, fakeHoverClass);
-        rewriteStyleRuleSelector(doc, ':hover', fakeHoverClass);
+        module.util.addClassNameRecursively(elem, fakeHoverClass);
+        module.util.rewriteStyleRuleSelector(doc, ':hover', '.' + fakeHoverClass);
     };
 
     module.util.fakeActive = function (doc, activeSelector) {
@@ -1499,8 +1500,8 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow)
             return;
         }
 
-        addClassNameRecursively(elem, fakeActiveClass);
-        rewriteStyleRuleSelector(doc, ':active', fakeActiveClass);
+        module.util.addClassNameRecursively(elem, fakeActiveClass);
+        module.util.rewriteStyleRuleSelector(doc, ':active', '.' + fakeActiveClass);
     };
 
     module.util.persistInputValues = function (doc) {
