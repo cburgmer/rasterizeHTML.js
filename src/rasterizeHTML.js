@@ -487,11 +487,13 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow)
     /* "Public" API */
 
     var doDraw = function (doc, canvas, options, callback, allErrors) {
+        var viewportSize = getViewportSize(canvas, options);
+
         if (options.hover) {
             module.util.fakeHover(doc, options.hover);
         }
 
-        module.util.calculateDocumentContentSize(doc, options.width, options.height, function (width, height) {
+        module.util.calculateDocumentContentSize(doc, viewportSize.width, viewportSize.height, function (width, height) {
             var svg = module.getSvgForDocument(doc, width, height),
                 handleInternalError = function (errors) {
                     errors.push({
@@ -525,7 +527,7 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow)
         });
     };
 
-    var getImageSize = function (canvas, options) {
+    var getViewportSize = function (canvas, options) {
         var defaultWidth = 300,
             defaultHeight = 200,
             fallbackWidth = canvas ? canvas.width : defaultWidth,
@@ -540,26 +542,21 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow)
     };
 
     var drawDocument = function (doc, canvas, options, callback) {
-        var imageSize = getImageSize(canvas, options),
-            executeJsTimeout = options.executeJsTimeout || 0,
-            inlineOptions, drawOptions;
+        var executeJsTimeout = options.executeJsTimeout || 0,
+            inlineOptions;
 
         inlineOptions = rasterizeHTMLInline.util.clone(options);
         inlineOptions.inlineScripts = options.executeJs === true;
-
-        drawOptions = rasterizeHTMLInline.util.clone(options);
-        drawOptions.width = imageSize.width;
-        drawOptions.height = imageSize.height;
 
         rasterizeHTMLInline.inlineReferences(doc, inlineOptions, function (allErrors) {
             if (options.executeJs) {
                 module.util.executeJavascript(doc, options.baseUrl, executeJsTimeout, function (doc, errors) {
                     module.util.persistInputValues(doc);
 
-                    doDraw(doc, canvas, drawOptions, callback, allErrors.concat(errors));
+                    doDraw(doc, canvas, options, callback, allErrors.concat(errors));
                 });
             } else {
-                doDraw(doc, canvas, drawOptions, callback, allErrors);
+                doDraw(doc, canvas, options, callback, allErrors);
             }
         });
     };
