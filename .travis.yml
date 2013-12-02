@@ -10,3 +10,11 @@ before_script:
   - "wget http://download.slimerjs.org/v0.8/0.8.4/slimerjs-0.8.4.zip"
   - "unzip slimerjs-0.8.4.zip"
   - "mv slimerjs-0.8.4 ./slimerjs"
+deploy:
+  provider: npm
+  email: christoph.burgmer@gmail.com
+  api_key:
+    secure: EsvyCKvVOxMZDU5yvIGiwpqWTGlHUWZtcFLTaXqdJB4PseJQpDoWohFL+aH/N3cc5DgxwtCTRunwQ1jesGsQb++AWMZ5TeWuYDQXvvU6vs5oGY7wChqb70Ksjbcyp4MIzyUEotfwt+PGlDKPEOb/S3wnBBRjF9m5fWfnS4RjVZQ=
+  on:
+    tags: true
+    repo: cburgmer/rasterizeHTML.js
