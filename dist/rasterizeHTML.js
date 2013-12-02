@@ -1571,9 +1571,7 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow)
         return true;
     };
 
-    /* "Public" API */
-
-    var doDraw = function (doc, canvas, options, callback, allErrors) {
+    module.drawDocumentImage = function (doc, canvas, options, successCallback, errorCallback) {
         var viewportSize = getViewportSize(canvas, options);
 
         if (options.hover) {
@@ -1581,36 +1579,45 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow)
         }
 
         module.util.calculateDocumentContentSize(doc, viewportSize.width, viewportSize.height, function (width, height) {
-            var svg = module.getSvgForDocument(doc, width, height),
-                handleInternalError = function (errors) {
-                    errors.push({
-                        resourceType: "document",
-                        msg: "Error rendering page"
-                    });
-                },
-                successful;
+            var svg = module.getSvgForDocument(doc, width, height);
 
             module.renderSvg(svg, canvas, function (image) {
-                if (canvas) {
-                    successful = module.drawImageOnCanvas(image, canvas);
+                successCallback(image);
+            }, errorCallback);
+        });
+    };
 
-                    if (!successful) {
-                        handleInternalError(allErrors);
-                        image = null;   // Set image to null so that Firefox behaves similar to Webkit
-                    }
+    /* "Public" API */
+
+    var doDraw = function (doc, canvas, options, callback, allErrors) {
+        var handleInternalError = function (errors) {
+                errors.push({
+                    resourceType: "document",
+                    msg: "Error rendering page"
+                });
+            };
+
+        module.drawDocumentImage(doc, canvas, options, function (image) {
+            var successful;
+
+            if (canvas) {
+                successful = module.drawImageOnCanvas(image, canvas);
+
+                if (!successful) {
+                    handleInternalError(allErrors);
+                    image = null;   // Set image to null so that Firefox behaves similar to Webkit
                 }
+            }
 
-                if (callback) {
-                    callback(image, allErrors);
-                }
-            }, function () {
-                handleInternalError(allErrors);
+            if (callback) {
+                callback(image, allErrors);
+            }
+        }, function () {
+            handleInternalError(allErrors);
 
-                if (callback) {
-                    callback(null, allErrors);
-                }
-
-            });
+            if (callback) {
+                callback(null, allErrors);
+            }
         });
     };
 

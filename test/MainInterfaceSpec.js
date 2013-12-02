@@ -1,10 +1,20 @@
 describe("Main interface of rasterizeHTML.js", function () {
     var callbackCaller = function (doc, options, callback) { callback([]); },
-        svg = "the svg",
         svgImage = "svg image",
         doc = {},
         canvas, ajaxSpy, parseHTMLSpy, parseOptionalParametersSpy,
-        inlineReferences, getSvgForDocument, renderSvg, drawImageOnCanvas;
+        inlineReferences, drawImageOnCanvas;
+
+    var setUpDrawDocumentImage = function (image) {
+            rasterizeHTML.drawDocumentImage.andCallFake(function (doc, canvas, options, successCallback) {
+                successCallback(image);
+            });
+        },
+        setUpDrawDocumentImageError = function () {
+            rasterizeHTML.drawDocumentImage.andCallFake(function (doc, canvas, options, successCallback, errorCallback) {
+                errorCallback();
+            });
+        };
 
     beforeEach(function () {
         ajaxSpy = spyOn(rasterizeHTML.util, "loadDocument");
@@ -16,97 +26,56 @@ describe("Main interface of rasterizeHTML.js", function () {
         canvas.height = 456;
 
         parseOptionalParametersSpy = spyOn(rasterizeHTML.util, "parseOptionalParameters").andCallThrough();
+
+        spyOn(rasterizeHTML, 'drawDocumentImage');
     });
 
     describe("Rendering", function () {
-        var callback,
-            setUpCalculateDocumentContentSize = function (width, height) {
-            rasterizeHTML.util.calculateDocumentContentSize.andCallFake(function (doc, viewportWidth, viewportHeight, callback) {
-                callback(width, height);
-            });
-        };
+        var callback;
 
         beforeEach(function () {
             callback = jasmine.createSpy("drawCallback");
 
             inlineReferences = spyOn(rasterizeHTMLInline, "inlineReferences").andCallFake(callbackCaller);
-            getSvgForDocument = spyOn(rasterizeHTML, "getSvgForDocument").andReturn(svg);
-            renderSvg = spyOn(rasterizeHTML, "renderSvg").andCallFake(function (svg, canvas, callback) {
-                callback(svgImage);
-            });
             drawImageOnCanvas = spyOn(rasterizeHTML, "drawImageOnCanvas").andReturn(true);
 
-            spyOn(rasterizeHTML.util, 'calculateDocumentContentSize');
-            setUpCalculateDocumentContentSize(0, 0);
             spyOn(rasterizeHTML.util, 'persistInputValues');
-            spyOn(rasterizeHTML.util, 'fakeHover');
+
+            setUpDrawDocumentImage(svgImage);
         });
 
         it("should take a document, inline all displayable content and render to the given canvas", function () {
             var doc = "doc";
 
-            setUpCalculateDocumentContentSize(47, 11);
-
             rasterizeHTML.drawDocument(doc, canvas, callback);
 
             expect(inlineReferences).toHaveBeenCalledWith(doc, {inlineScripts: false}, jasmine.any(Function));
-            expect(rasterizeHTML.util.calculateDocumentContentSize).toHaveBeenCalledWith(doc, canvas.width, canvas.height, jasmine.any(Function));
-            expect(getSvgForDocument).toHaveBeenCalledWith(doc, 47, 11);
-            expect(renderSvg).toHaveBeenCalledWith(svg, canvas, jasmine.any(Function), jasmine.any(Function));
+            expect(rasterizeHTML.drawDocumentImage).toHaveBeenCalledWith(doc, canvas, {}, jasmine.any(Function), jasmine.any(Function));
             expect(drawImageOnCanvas).toHaveBeenCalledWith(svgImage, canvas);
 
             expect(callback).toHaveBeenCalledWith(svgImage, []);
             expect(parseOptionalParametersSpy).toHaveBeenCalled();
         });
 
-        it("should make the canvas optional when drawing a document and apply default width and height", function () {
+        it("should make the canvas optional", function () {
             var doc = "doc";
 
             rasterizeHTML.drawDocument(doc, callback);
 
             expect(inlineReferences).toHaveBeenCalledWith(doc, {inlineScripts : false}, jasmine.any(Function));
-            expect(rasterizeHTML.util.calculateDocumentContentSize).toHaveBeenCalledWith(doc, 300, 200, jasmine.any(Function));
-            expect(renderSvg).toHaveBeenCalledWith(svg, null, jasmine.any(Function), jasmine.any(Function));
+            expect(rasterizeHTML.drawDocumentImage).toHaveBeenCalledWith(doc, null, {}, jasmine.any(Function), jasmine.any(Function));
             expect(drawImageOnCanvas).not.toHaveBeenCalled();
 
             expect(callback).toHaveBeenCalledWith(svgImage, []);
             expect(parseOptionalParametersSpy).toHaveBeenCalled();
         });
 
-        it("should take a document with optional width and height", function () {
-            var doc = "doc";
-
-            rasterizeHTML.drawDocument(doc, canvas, {width: 42, height: 4711}, callback);
-
-            expect(rasterizeHTML.util.calculateDocumentContentSize).toHaveBeenCalledWith(doc, 42, 4711, jasmine.any(Function));
-
-            expect(callback).toHaveBeenCalledWith(svgImage, []);
-        });
-
-        it("should trigger hover effect", function () {
-            var doc = "doc";
-
-            rasterizeHTML.drawDocument(doc, canvas, {hover: '.mySpan'}, callback);
-
-            expect(rasterizeHTML.util.fakeHover).toHaveBeenCalledWith(doc, '.mySpan');
-        });
-
-        it("should not trigger hover effect by default", function () {
-            var doc = "doc";
-
-            rasterizeHTML.drawDocument(doc, canvas, {}, callback);
-
-            expect(rasterizeHTML.util.fakeHover).not.toHaveBeenCalled();
-        });
-
-        it("should pass on options", function () {
+        it("should pass on AJAX options", function () {
             var doc = "doc";
 
             rasterizeHTML.drawDocument(doc, canvas, {baseUrl: "a_baseUrl", cache: 'none', cacheBucket: {}}, callback);
 
             expect(inlineReferences).toHaveBeenCalledWith(doc, {baseUrl: "a_baseUrl", cache: 'none', cacheBucket: {}, inlineScripts : false}, jasmine.any(Function));
-
-            expect(callback).toHaveBeenCalledWith(svgImage, []);
         });
 
         it("should make callback optional for drawDocument", function () {
@@ -277,18 +246,13 @@ describe("Main interface of rasterizeHTML.js", function () {
         beforeEach(function () {
             callback = jasmine.createSpy("drawCallback");
 
-            spyOn(rasterizeHTML.util, 'calculateDocumentContentSize').andCallFake(function (doc, viewportWidth, viewportHeight, callback) {
-                callback(12, 34);
-            });
-            getSvgForDocument = spyOn(rasterizeHTML, "getSvgForDocument").andReturn(svg);
-            renderSvg = spyOn(rasterizeHTML, "renderSvg").andCallFake(function (svg, canvas, callback) {
-                callback(svgImage);
-            });
             drawImageOnCanvas = spyOn(rasterizeHTML, "drawImageOnCanvas").andReturn(true);
         });
 
         it("should pass through an error from inlining on drawDocument", function () {
             var doc = "doc";
+
+            setUpDrawDocumentImage(svgImage);
 
             inlineReferences = spyOn(rasterizeHTMLInline, "inlineReferences").andCallFake(function (doc, options, callback) {
                 callback(["the error"]);
@@ -365,11 +329,6 @@ describe("Main interface of rasterizeHTML.js", function () {
 
             inlineReferences = spyOn(rasterizeHTMLInline, "inlineReferences").andCallFake(callbackCaller);
 
-            spyOn(rasterizeHTML.util, 'calculateDocumentContentSize').andCallFake(function (doc, viewportWidth, viewportHeight, callback) {
-                callback(12, 34);
-            });
-            getSvgForDocument = spyOn(rasterizeHTML, "getSvgForDocument").andReturn(svg);
-            renderSvg = spyOn(rasterizeHTML, "renderSvg");
             drawImageOnCanvas = spyOn(rasterizeHTML, "drawImageOnCanvas");
 
             executeJavascript = spyOn(rasterizeHTML.util, "executeJavascript");
@@ -379,14 +338,11 @@ describe("Main interface of rasterizeHTML.js", function () {
         it("should pass through an error from inlining when rendering the SVG on drawDocument", function () {
             var doc = "doc";
 
-            renderSvg.andCallFake(function (svg, canvas, successCallback, errorCallback) {
-                errorCallback();
-            });
+            setUpDrawDocumentImageError();
             drawImageOnCanvas.andReturn(true);
 
             rasterizeHTML.drawDocument(doc, canvas, callback);
 
-            expect(renderSvg).toHaveBeenCalled();
             expect(drawImageOnCanvas).not.toHaveBeenCalled();
             expect(callback).toHaveBeenCalledWith(null, [{
                 resourceType: "document",
@@ -397,14 +353,11 @@ describe("Main interface of rasterizeHTML.js", function () {
         it("should pass through an error from inlining when drawing the image on the canvas on drawDocument", function () {
             var doc = "doc";
 
-            renderSvg.andCallFake(function (svg, canvas, successCallback) {
-                successCallback(svgImage);
-            });
+            setUpDrawDocumentImage(svgImage);
             drawImageOnCanvas.andReturn(false);
 
             rasterizeHTML.drawDocument(doc, canvas, callback);
 
-            expect(renderSvg).toHaveBeenCalled();
             expect(drawImageOnCanvas).toHaveBeenCalled();
             expect(callback).toHaveBeenCalledWith(null, [{
                 resourceType: "document",
@@ -415,9 +368,7 @@ describe("Main interface of rasterizeHTML.js", function () {
         it("should work without a callback specified on error when rendering the SVG in drawDocument", function () {
             var doc = "doc";
 
-            renderSvg.andCallFake(function (svg, canvas, successCallback, errorCallback) {
-                errorCallback();
-            });
+            setUpDrawDocumentImageError();
             drawImageOnCanvas.andReturn(true);
 
             rasterizeHTML.drawDocument(doc, canvas);
@@ -426,9 +377,7 @@ describe("Main interface of rasterizeHTML.js", function () {
         it("should work without a callback specified on error when drawing the image on the canvas in drawDocument", function () {
             var doc = "doc";
 
-            renderSvg.andCallFake(function (svg, canvas, successCallback) {
-                successCallback(svgImage);
-            });
+            setUpDrawDocumentImage(svgImage);
             drawImageOnCanvas.andReturn(false);
 
             rasterizeHTML.drawDocument(doc, canvas);
@@ -440,9 +389,7 @@ describe("Main interface of rasterizeHTML.js", function () {
             executeJavascript.andCallFake(function (doc, baseUrl, timeout, callback) {
                 callback(doc, ["the error"]);
             });
-            renderSvg.andCallFake(function (svg, canvas, successCallback) {
-                successCallback(svgImage);
-            });
+            setUpDrawDocumentImage(svgImage);
             drawImageOnCanvas.andReturn(true);
 
             rasterizeHTML.drawDocument(doc, canvas, {executeJs: true}, callback);

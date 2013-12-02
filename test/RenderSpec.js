@@ -222,7 +222,89 @@ describe("The rendering process", function () {
                 expect(image.onload).toBeNull();
             });
         });
+    });
 
+    describe("drawDocumentImage", function () {
+        var doc = "doc",
+            canvas, callback, errorCallback;
+
+        beforeEach(function () {
+            spyOn(rasterizeHTML.util, 'fakeHover');
+            spyOn(rasterizeHTML.util, 'calculateDocumentContentSize');
+            spyOn(rasterizeHTML, 'getSvgForDocument');
+            spyOn(rasterizeHTML, 'renderSvg');
+
+            canvas = document.createElement("canvas");
+            canvas.width = 123;
+            canvas.height = 456;
+
+            callback = jasmine.createSpy("drawCallback");
+            errorCallback = jasmine.createSpy("drawCallback");
+        });
+
+        it("should draw the image", function () {
+            var svg = "the svg",
+                image = "the image";
+
+            rasterizeHTML.util.calculateDocumentContentSize.andCallFake(function (doc, w, h, callback) {
+                callback(47, 11);
+            });
+            rasterizeHTML.getSvgForDocument.andReturn(svg);
+            rasterizeHTML.renderSvg.andCallFake(function(svg, canvas, callback) {
+                callback(image);
+            });
+
+            rasterizeHTML.drawDocumentImage(doc, canvas, {}, callback, errorCallback);
+
+            expect(rasterizeHTML.util.calculateDocumentContentSize).toHaveBeenCalledWith(doc, jasmine.any(Number), jasmine.any(Number), jasmine.any(Function));
+            expect(rasterizeHTML.getSvgForDocument).toHaveBeenCalledWith(doc, 47, 11);
+            expect(rasterizeHTML.renderSvg).toHaveBeenCalledWith(svg, canvas, jasmine.any(Function), jasmine.any(Function));
+
+            expect(callback).toHaveBeenCalledWith(image);
+        });
+
+        it("should report an error when constructing the SVG image", function () {
+            rasterizeHTML.util.calculateDocumentContentSize.andCallFake(function (doc, w, h, callback) {
+                callback();
+            });
+            rasterizeHTML.renderSvg.andCallFake(function(svg, canvas, successCallback, errorCallback) {
+                errorCallback();
+            });
+
+            rasterizeHTML.drawDocumentImage(doc, canvas, {}, callback, errorCallback);
+
+            expect(errorCallback).toHaveBeenCalled();
+        });
+
+        it("should use the canvas width and height as viewport size", function () {
+            rasterizeHTML.drawDocumentImage(doc, canvas, {}, callback);
+
+            expect(rasterizeHTML.util.calculateDocumentContentSize).toHaveBeenCalledWith(doc, 123, 456, jasmine.any(Function));
+        });
+
+        it("should make the canvas optional and apply default viewport width and height", function () {
+            rasterizeHTML.drawDocumentImage(doc, null, {}, callback);
+
+            expect(rasterizeHTML.util.calculateDocumentContentSize).toHaveBeenCalledWith(doc, 300, 200, jasmine.any(Function));
+        });
+
+        it("should take an optional width and height", function () {
+            rasterizeHTML.drawDocumentImage(doc, canvas, {width: 42, height: 4711}, callback);
+
+            expect(rasterizeHTML.util.calculateDocumentContentSize).toHaveBeenCalledWith(doc, 42, 4711, jasmine.any(Function));
+        });
+
+        it("should trigger hover effect", function () {
+            rasterizeHTML.drawDocumentImage(doc, canvas, {hover: '.mySpan'}, callback);
+
+            expect(rasterizeHTML.util.fakeHover).toHaveBeenCalledWith(doc, '.mySpan');
+        });
+
+        it("should not trigger hover effect by default", function () {
+            rasterizeHTML.drawDocumentImage(doc, canvas, {}, callback);
+
+            expect(rasterizeHTML.util.fakeHover).not.toHaveBeenCalled();
+        });
     });
 
     describe("on drawing the image on the canvas", function () {
