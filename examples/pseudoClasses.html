@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>rasterizeHTML.js example</title>
+    <script type="text/javascript" src="../dist/rasterizeHTML.allinone.js"></script>
+    <style>
+        canvas, textarea {
+            display: block;
+            border: 1px solid gray;
+            margin: 3px 0;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" width="600" height="150"></canvas>
+
+    <label>
+        Hover selector:
+        <input type="text" id="hover" value=".link">
+    </label>
+    <label>
+        Active selector:
+        <input type="text" id="active">
+    </label>
+    <textarea id="input" cols="80" rows="10" style="width: 600px; height: 350px"></textarea>
+
+    <script type="text/template" id="template">
+        <a href="#" class="link">A link</a>
+        <div>A div</div>
+
+        <style type="text/css">
+            a {
+                text-decoration: none;
+            }
+            a:hover {
+                color: blue;
+                text-decoration: underline;
+            }
+            a:active {
+                color: green;
+            }
+            div:active:after, div:hover:after {
+                font-size: 8px;
+                color: green;
+                content: "hover or active"
+            }
+            body:active {
+                background-color: #ccc;
+            }
+        </style>
+    </script>
+
+    <script type="text/javascript">
+        var input = document.getElementById("input"),
+            hover = document.getElementById("hover"),
+            active = document.getElementById("active"),
+            canvas = document.getElementById("canvas"),
+            template = document.getElementById("template"),
+            oldText = input.value;
+
+        var render = function () {
+            var html = input.value,
+                hoverSelector = hover.value,
+                activeSelector = active.value;
+
+            canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+
+            rasterizeHTML.drawHTML(input.value, canvas, {
+                hover: hoverSelector,
+                active: activeSelector
+            });
+        };
+
+        input.onkeyup = function () {
+            if (input.value !== oldText) {
+                oldText = input.value;
+                render();
+            }
+        };
+        hover.onchange = render;
+        active.onchange = render;
+
+        if (!input.value) {
+            input.value = template.innerHTML.replace(/^ {8}/gm, "").replace(/^\n/g, "").replace(/\n +$/g, "\n");
+        }
+        render();
+    </script>
+</body>
+</html>
