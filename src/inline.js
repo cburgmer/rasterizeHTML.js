@@ -54,13 +54,9 @@ window.rasterizeHTMLInline = (function (module) {
     };
 
     var filterInputsForImageType = function (inputs) {
-        var imageTypeInputs = [];
-        Array.prototype.forEach.call(inputs, function (input) {
-            if (input.type === "image") {
-                imageTypeInputs.push(input);
-            }
+        return Array.prototype.filter.call(inputs, function (input) {
+            return input.type === "image";
         });
-        return imageTypeInputs;
     };
 
     module.loadAndInlineImages = function (doc, options, callback) {
@@ -122,21 +118,12 @@ window.rasterizeHTMLInline = (function (module) {
         });
     };
 
-    var getArrayForArrayLike = function (list) {
-        return Array.prototype.slice.call(list);
-    };
-
     var getCssStyleElements = function (doc) {
-        var styles = getArrayForArrayLike(doc.getElementsByTagName("style")),
-            cssStyles = [];
+        var styles = doc.getElementsByTagName("style");
 
-        styles.forEach(function (style) {
-            if (!style.attributes.type || style.attributes.type.nodeValue === "text/css") {
-                cssStyles.push(style);
-            }
+        return Array.prototype.filter.call(styles, function (style) {
+            return !style.attributes.type || style.attributes.type.nodeValue === "text/css";
         });
-
-        return cssStyles;
     };
 
     module.loadAndInlineStyles = function (doc, options, callback) {
@@ -218,32 +205,35 @@ window.rasterizeHTMLInline = (function (module) {
         });
     };
 
+    var getCssStylesheetLinks = function (doc) {
+        var links = doc.getElementsByTagName("link");
+
+        return Array.prototype.filter.call(links, function (link) {
+            return link.attributes.rel && link.attributes.rel.nodeValue === "stylesheet" &&
+                (!link.attributes.type || link.attributes.type.nodeValue === "text/css");
+        });
+    };
+
     module.loadAndInlineCssLinks = function (doc, options, callback) {
         var params = module.util.parseOptionalParameters(options, callback),
-            links = doc.getElementsByTagName("link"),
+            links = getCssStylesheetLinks(doc),
             errors = [];
 
         module.util.map(links, function (link, finish) {
-            if (link.attributes.rel && link.attributes.rel.nodeValue === "stylesheet" &&
-                (!link.attributes.type || link.attributes.type.nodeValue === "text/css")) {
-                loadLinkedCSS(link, params.options, function(css, moreErrors) {
-                    substituteLinkWithInlineStyle(link, css + "\n");
+            loadLinkedCSS(link, params.options, function(css, moreErrors) {
+                substituteLinkWithInlineStyle(link, css + "\n");
 
-                    errors = errors.concat(moreErrors);
-                    finish();
-                }, function (url) {
-                    errors.push({
-                        resourceType: "stylesheet",
-                        url: url,
-                        msg: "Unable to load stylesheet " + url
-                    });
-
-                    finish();
-                });
-            } else {
-                // We need to properly deal with non-stylesheet in this concurrent context
+                errors = errors.concat(moreErrors);
                 finish();
-            }
+            }, function (url) {
+                errors.push({
+                    resourceType: "stylesheet",
+                    url: url,
+                    msg: "Unable to load stylesheet " + url
+                });
+
+                finish();
+            });
         }, function () {
             if (params.callback) {
                 params.callback(errors);
@@ -277,29 +267,33 @@ window.rasterizeHTMLInline = (function (module) {
         scriptNode.textContent = escapeClosingTags(jsCode);
     };
 
+    var getScripts = function (doc) {
+        var scripts = doc.getElementsByTagName("script");
+
+        return Array.prototype.filter.call(scripts, function (script) {
+            return !!script.attributes.src;
+        });
+    };
+
     module.loadAndInlineScript = function (doc, options, callback) {
         var params = module.util.parseOptionalParameters(options, callback),
-            scripts = doc.getElementsByTagName("script"),
+            scripts = getScripts(doc),
             errors = [];
 
         module.util.map(scripts, function (script, finish) {
-            if (script.attributes.src) {
-                loadLinkedScript(script, params.options, function (jsCode) {
-                    substituteExternalScriptWithInline(script, jsCode);
+            loadLinkedScript(script, params.options, function (jsCode) {
+                substituteExternalScriptWithInline(script, jsCode);
 
-                    finish();
-                }, function (url) {
-                    errors.push({
-                        resourceType: "script",
-                        url: url,
-                        msg: "Unable to load script " + url
-                    });
-
-                    finish();
-                });
-            } else {
                 finish();
-            }
+            }, function (url) {
+                errors.push({
+                    resourceType: "script",
+                    url: url,
+                    msg: "Unable to load script " + url
+                });
+
+                finish();
+            });
         }, function () {
             if (params.callback) {
                 params.callback(errors);

@@ -3,10 +3,6 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
 
     module.css = {};
 
-    var getArrayForArrayLike = function (list) {
-        return Array.prototype.slice.call(list);
-    };
-
     var rulesForCssTextFromBrowser = function (styleContent) {
         var doc = document.implementation.createHTMLDocument(""),
             styleElement = document.createElement("style"),
@@ -17,7 +13,7 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
         doc.body.appendChild(styleElement);
         rules = styleElement.sheet.cssRules;
 
-        return getArrayForArrayLike(rules);
+        return Array.prototype.slice.call(rules);
     };
 
     var browserHasBackgroundImageUrlIssue = (function () {
@@ -35,36 +31,21 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
     };
 
     var findBackgroundImageRules = function (cssRules) {
-        var rulesToInline = [];
-
-        cssRules.forEach(function (rule) {
-            if (rule.type === window.CSSRule.STYLE_RULE && (rule.style.getPropertyValue('background-image') || rule.style.getPropertyValue('background'))) {
-                rulesToInline.push(rule);
-            }
+        return cssRules.filter(function (rule) {
+            return rule.type === window.CSSRule.STYLE_RULE && (rule.style.getPropertyValue('background-image') || rule.style.getPropertyValue('background'));
         });
-
-        return rulesToInline;
     };
 
     var findFontFaceRules = function (cssRules) {
-        var rulesToInline = [];
-
-        cssRules.forEach(function (rule) {
-            if (rule.type === window.CSSRule.FONT_FACE_RULE && rule.style.getPropertyValue("src")) {
-                rulesToInline.push(rule);
-            }
+        return cssRules.filter(function (rule) {
+            return rule.type === window.CSSRule.FONT_FACE_RULE && rule.style.getPropertyValue("src");
         });
-
-        return rulesToInline;
     };
 
     module.css.cssRulesToText = function (cssRules) {
-        var cssText = "";
-
-        cssRules.forEach(function (rule) {
-            cssText += rule.cssText;
-        });
-        return cssText;
+        return cssRules.reduce(function (cssText, rule) {
+            return cssText + rule.cssText;
+        }, '');
     };
 
     var unquoteString = function (quotedUrl) {
@@ -217,14 +198,9 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
     /* CSS import inlining */
 
     var findCSSImportRules = function (cssRules) {
-        var rulesToInline = [];
-
-        cssRules.forEach(function (rule) {
-            if (rule.type === window.CSSRule.IMPORT_RULE && rule.href) {
-                rulesToInline.push(rule);
-            }
+        return cssRules.filter(function (rule) {
+            return rule.type === window.CSSRule.IMPORT_RULE && rule.href;
         });
-        return rulesToInline;
     };
 
     var substituteRule = function (cssRules, rule, newCssRules) {
@@ -358,9 +334,8 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
     };
 
     var joinBackgroundDeclarations = function (valuesList) {
-        var backgroundDeclarations = [];
-        valuesList.forEach(function (values) {
-            backgroundDeclarations.push(values.join(' '));
+        var backgroundDeclarations = valuesList.map(function (values) {
+            return values.join(' ');
         });
         return backgroundDeclarations.join(', ');
     };
