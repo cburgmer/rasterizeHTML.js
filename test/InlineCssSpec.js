@@ -149,6 +149,33 @@ describe("Inline CSS content", function () {
             expect(rules[0].style.getPropertyValue('font-family')).toMatch(/["']test font["']/);
         });
 
+        it("should keep the font-style when inlining with Webkit", function () {
+            var rules = CSSOM.parse("@font-face { font-family: 'test font'; font-style: italic; src: url(\"fake.woff\"); }").cssRules;
+
+            joinUrlSpy.andCallFake(function (base, url) {
+                if (base === "some_url/some.css") {
+                    return "some_url/" + url;
+                }
+            });
+
+            rasterizeHTMLInline.css.adjustPathsOfCssResources("some_url/some.css", rules);
+
+            expect(rules[0].style.getPropertyValue('font-style')).toEqual('italic');
+        });
+
+        it("should keep the font-weight when inlining with Webkit", function () {
+            var rules = CSSOM.parse("@font-face { font-family: 'test font'; font-weight: 700; src: url(\"fake.woff\"); }").cssRules;
+
+            joinUrlSpy.andCallFake(function (base, url) {
+                if (base === "some_url/some.css") {
+                    return "some_url/" + url;
+                }
+            });
+
+            rasterizeHTMLInline.css.adjustPathsOfCssResources("some_url/some.css", rules);
+
+            expect(rules[0].style.getPropertyValue('font-weight')).toEqual('700');
+        });
     });
 
     describe("loadCSSImportsForRules", function () {

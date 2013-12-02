@@ -129,7 +129,18 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
 
     // Workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=443978
     var changeFontFaceRuleSrc = function (cssRules, rule, newSrc) {
-        exchangeRule(cssRules, rule, '@font-face { font-family: ' + rule.style.getPropertyValue("font-family") + '; src: ' + newSrc + '}');
+        var newRuleText = '@font-face { font-family: ' + rule.style.getPropertyValue("font-family") + '; ';
+
+        if (rule.style.getPropertyValue("font-style")) {
+            newRuleText += 'font-style: ' + rule.style.getPropertyValue("font-style") + '; ';
+        }
+
+        if (rule.style.getPropertyValue("font-weight")) {
+            newRuleText += 'font-weight: ' + rule.style.getPropertyValue("font-weight") + '; ';
+        }
+
+        newRuleText += 'src: ' + newSrc + '}';
+        exchangeRule(cssRules, rule, newRuleText);
     };
 
     var exchangeRule = function (cssRules, rule, newRuleText) {
