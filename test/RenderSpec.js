@@ -230,6 +230,7 @@ describe("The rendering process", function () {
 
         beforeEach(function () {
             spyOn(rasterizeHTML.util, 'fakeHover');
+            spyOn(rasterizeHTML.util, 'fakeActive');
             spyOn(rasterizeHTML.util, 'calculateDocumentContentSize');
             spyOn(rasterizeHTML, 'getSvgForDocument');
             spyOn(rasterizeHTML, 'renderSvg');
@@ -304,6 +305,18 @@ describe("The rendering process", function () {
             rasterizeHTML.drawDocumentImage(doc, canvas, {}, callback);
 
             expect(rasterizeHTML.util.fakeHover).not.toHaveBeenCalled();
+        });
+
+        it("should trigger active effect", function () {
+            rasterizeHTML.drawDocumentImage(doc, canvas, {active: '.mySpan'}, callback);
+
+            expect(rasterizeHTML.util.fakeActive).toHaveBeenCalledWith(doc, '.mySpan');
+        });
+
+        it("should not trigger active effect by default", function () {
+            rasterizeHTML.drawDocumentImage(doc, canvas, {}, callback);
+
+            expect(rasterizeHTML.util.fakeActive).not.toHaveBeenCalled();
         });
     });
 

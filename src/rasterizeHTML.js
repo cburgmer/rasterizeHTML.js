@@ -381,11 +381,11 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow)
         styleElement.textContent = cssRulesToText(styleElement.sheet.cssRules);
     };
 
-    var rewriteHoverStyleRules = function (doc, className) {
+    var rewriteStyleRuleSelector = function (doc, partialSelector, className) {
         Array.prototype.forEach.call(doc.querySelectorAll('style'), function (styleElement) {
             Array.prototype.forEach.call(styleElement.sheet.cssRules, function (rule) {
                 if (rule.selectorText) {
-                    var selector = rule.selectorText.replace(/:hover(?=\W|$)/g, '.' + className);
+                    var selector = rule.selectorText.replace(new RegExp(partialSelector + '(?=\\W|$)', 'g'), '.' + className);
 
                     updateRuleSelector(rule, selector);
                 }
@@ -402,7 +402,18 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow)
         }
 
         addClassNameRecursively(elem, fakeHoverClass);
-        rewriteHoverStyleRules(doc, fakeHoverClass);
+        rewriteStyleRuleSelector(doc, ':hover', fakeHoverClass);
+    };
+
+    module.util.fakeActive = function (doc, activeSelector) {
+        var elem = doc.querySelector(activeSelector),
+            fakeActiveClass = 'rasterizehtmlactive';
+        if (! elem) {
+            return;
+        }
+
+        addClassNameRecursively(elem, fakeActiveClass);
+        rewriteStyleRuleSelector(doc, ':active', fakeActiveClass);
     };
 
     module.util.persistInputValues = function (doc) {
@@ -489,6 +500,9 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow)
 
         if (options.hover) {
             module.util.fakeHover(doc, options.hover);
+        }
+        if (options.active) {
+            module.util.fakeActive(doc, options.active);
         }
 
         module.util.calculateDocumentContentSize(doc, viewportSize.width, viewportSize.height, function (width, height) {
