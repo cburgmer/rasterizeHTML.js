@@ -382,16 +382,23 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow)
     };
 
     module.util.rewriteStyleRuleSelector = function (doc, oldSelector, newSelector) {
+        // Assume that oldSelector is always prepended with a ':' or '.' for now, so no special handling needed
+        var oldSelectorRegExp = new RegExp(oldSelector + '(?=\\W|$)', 'g');
+
         Array.prototype.forEach.call(doc.querySelectorAll('style'), function (styleElement) {
-            Array.prototype.forEach.call(styleElement.sheet.cssRules, function (rule) {
-                if (rule.selectorText) {
-                    // Assume that oldSelector is always prepended with a ':' or '.' for now, so no special handling needed
-                    var selector = rule.selectorText.replace(new RegExp(oldSelector + '(?=\\W|$)', 'g'), newSelector);
+            var matchingRules = Array.prototype.filter.call(styleElement.sheet.cssRules, function (rule) {
+                    return rule.selectorText && oldSelectorRegExp.test(rule.selectorText);
+                });
+
+            if (matchingRules.length) {
+                matchingRules.forEach(function (rule) {
+                    var selector = rule.selectorText.replace(oldSelectorRegExp, newSelector);
 
                     updateRuleSelector(rule, selector);
-                }
-            });
-            rewriteStyleContent(styleElement);
+                });
+
+                rewriteStyleContent(styleElement);
+            }
         });
     };
 

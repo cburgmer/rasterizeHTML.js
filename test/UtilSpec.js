@@ -283,10 +283,43 @@ describe("Utilities function", function () {
             expect(doc.querySelector('style').textContent).toMatch(/body.myFakeHover span \{\s*color: blue;\s*\}/);
         });
 
+        it("should correctly handle simple selector occurrence", function () {
+            setHtml('<style type="text/css">:hover { color: blue; }</style>');
+
+            rasterizeHTML.util.rewriteStyleRuleSelector(doc, ':hover', '.myFakeHover');
+
+            expect(doc.querySelector('style').textContent).toMatch(/.myFakeHover \{\s*color: blue;\s*\}/);
+        });
+
+        it("should not match partial selector occurrence", function () {
+            setHtml('<style type="text/css">.myClass { color: blue; }</style>');
+
+            rasterizeHTML.util.rewriteStyleRuleSelector(doc, '.my', '.myFakeHover');
+
+            expect(doc.querySelector('style').textContent).toMatch(/.myClass \{\s*color: blue;\s*\}/);
+        });
+
+        it("should correctly handle multiple selector occurrence in same rule selector", function () {
+            setHtml('<style type="text/css">i:hover, a:hover { color: blue; }</style>');
+
+            rasterizeHTML.util.rewriteStyleRuleSelector(doc, ':hover', '.myFakeHover');
+
+            expect(doc.querySelector('style').textContent).toMatch(/i.myFakeHover, a.myFakeHover \{\s*color: blue;\s*\}/);
+        });
+
         it("should cope with non CSSStyleRule", function () {
             setHtml('<head><style type="text/css">@font-face { font-family: "RaphaelIcons"; src: url("raphaelicons-webfont.woff"); }</style></head><body><span></span></body>');
 
             rasterizeHTML.util.rewriteStyleRuleSelector(doc, ':hover', '.myFakeHover');
+        });
+
+        it("should not touch style elements without a matching selector", function () {
+            setHtml('<style type="text/css">a { color: blue; }/* a comment*/</style>');
+
+            rasterizeHTML.util.rewriteStyleRuleSelector(doc, ':hover', '.myFakeHover');
+
+            // Use the fact that comments are discarded when processing a style sheet
+            expect(doc.querySelector('style').textContent).toMatch(/a comment/);
         });
     });
 
