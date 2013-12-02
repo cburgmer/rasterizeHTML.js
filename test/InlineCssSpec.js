@@ -79,22 +79,46 @@ describe("Inline CSS content", function () {
             });
         });
 
-        it("should map resource paths relative to the stylesheet", function () {
-            var rules = CSSOM.parse('div { background-image: url("../green.png"); }\n' +
-                        '@font-face { font-family: "test font"; src: url("fake.woff"); }').cssRules;
+        it("should map background paths relative to the stylesheet", function () {
+            var rules = CSSOM.parse('div { background-image: url("../green.png"); }').cssRules;
 
             joinUrlSpy.andCallFake(function (base, url) {
                 if (url === "../green.png" && base === "below/some.css") {
                     return "green.png";
-                } else if (url === "fake.woff" && base === "below/some.css") {
-                    return "below/fake.woff";
                 }
             });
 
             rasterizeHTMLInline.css.adjustPathsOfCssResources("below/some.css", rules);
 
             expect(rules[0].style.getPropertyValue('background-image')).toMatch(/url\(\"?green\.png\"?\)/);
-            expect(rules[1].style.getPropertyValue('src')).toMatch(/url\(\"?below\/fake\.woff\"?\)/);
+        });
+
+        it("should map font paths relative to the stylesheet", function () {
+            var rules = CSSOM.parse('@font-face { font-family: "test font"; src: url("fake.woff"); }').cssRules;
+
+            joinUrlSpy.andCallFake(function (base, url) {
+                if (url === "fake.woff" && base === "below/some.css") {
+                    return "below/fake.woff";
+                }
+            });
+
+            rasterizeHTMLInline.css.adjustPathsOfCssResources("below/some.css", rules);
+
+            expect(rules[0].style.getPropertyValue('src')).toMatch(/url\(\"?below\/fake\.woff\"?\)/);
+        });
+
+        it("should map import paths relative to the stylesheet", function () {
+            var rules = CSSOM.parse('@import url(my.css);').cssRules;
+
+            joinUrlSpy.andCallFake(function (base, url) {
+                if (url === "my.css" && base === "below/some.css") {
+                    return "below/my.css";
+                }
+            });
+
+            rasterizeHTMLInline.css.adjustPathsOfCssResources("below/some.css", rules);
+
+            expect(rules[0].href).toEqual('below/my.css');
         });
 
         ifNotInPhantomJsIt("should keep all src references intact when mapping resource paths", function () {

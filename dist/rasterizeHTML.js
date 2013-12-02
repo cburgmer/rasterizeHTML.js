@@ -470,12 +470,15 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
 
     // Workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=443978
     var changeFontFaceRuleSrc = function (cssRules, rule, newSrc) {
+        exchangeRule(cssRules, rule, '@font-face { font-family: ' + rule.style.getPropertyValue("font-family") + '; src: ' + newSrc + '}');
+    };
+
+    var exchangeRule = function (cssRules, rule, newRuleText) {
         var ruleIdx = cssRules.indexOf(rule),
-            newRule = '@font-face { font-family: ' + rule.style.getPropertyValue("font-family") + '; src: ' + newSrc + '}',
             styleSheet = rule.parentStyleSheet;
 
         // Generate a new rule
-        styleSheet.insertRule(newRule, ruleIdx+1);
+        styleSheet.insertRule(newRuleText, ruleIdx+1);
         styleSheet.deleteRule(ruleIdx);
         // Exchange with the new
         cssRules[ruleIdx] = styleSheet.cssRules[ruleIdx];
@@ -528,6 +531,14 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
                 changeFontFaceRuleSrc(cssRules, rule, joinFontFaceSrcReferences(fontReferences));
             }
             change = change || declarationChanged;
+        });
+        findCSSImportRules(cssRules).forEach(function (rule) {
+            var cssUrl = rule.href,
+                url = module.util.joinUrl(baseUrl, cssUrl);
+
+            exchangeRule(cssRules, rule, "@import url(" + url + ");");
+
+            change = true;
         });
 
         return change;
