@@ -248,6 +248,16 @@ describe("Utilities function", function () {
             expect(doc.querySelector('input').outerHTML).toMatch(/checked="(checked)?"/);
         });
 
+        it("should persist a textarea", function () {
+            setHtml('<textarea>This is text</textarea>');
+
+            doc.querySelector('textarea').value = "Some new value";
+
+            rasterizeHTML.util.persistInputValues(doc);
+
+            expect(doc.querySelector('textarea').outerHTML).toMatch(/<textarea>Some new value<\/textarea>/);
+        });
+
         it("should handle a file input", function () {
             setHtml('<input type="file">');
 

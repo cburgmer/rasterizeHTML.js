@@ -1535,6 +1535,7 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow)
 
     module.util.persistInputValues = function (doc) {
         var inputs = Array.prototype.slice.call(doc.querySelectorAll('input')),
+            textareas = Array.prototype.slice.call(doc.querySelectorAll('textarea')),
             isCheckable = function (input) {
                 return input.type === 'checkbox' || input.type === 'radio';
             };
@@ -1551,6 +1552,11 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow)
         inputs.filter(function (input) { return !isCheckable(input); })
             .forEach(function (input) {
                 input.setAttribute('value', input.value);
+            });
+
+        textareas
+            .forEach(function (textarea) {
+                textarea.textContent = textarea.value;
             });
     };
 
