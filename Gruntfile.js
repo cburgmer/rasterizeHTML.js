@@ -51,7 +51,7 @@ module.exports = function (grunt) {
                     '<%= grunt.template.today("yyyy-mm-dd") %>\n' +
                     '* <%= pkg.homepage %>\n' +
                     '* Copyright (c) <%= grunt.template.today("yyyy") %> <%= pkg.author.name %>;' +
-                    ' Licensed <%= _.pluck(pkg.licenses, "type").join(", ") %> */\n'
+                    ' Licensed <%= pkg.license %> */\n'
             },
             dist: {
                 src: ['src/*.js'],
@@ -65,7 +65,7 @@ module.exports = function (grunt) {
                         '<%= grunt.template.today("yyyy-mm-dd") %>\n' +
                         '* <%= pkg.homepage %>\n' +
                         '* Copyright (c) <%= grunt.template.today("yyyy") %> <%= pkg.author.name %>;' +
-                        ' Licensed <%= _.pluck(pkg.licenses, "type").join(", ") %> */\n'
+                        ' Licensed <%= pkg.license %> */\n'
                 },
                 files: {
                     'dist/rasterizeHTML.min.js': ['dist/rasterizeHTML.js']
@@ -77,7 +77,8 @@ module.exports = function (grunt) {
                         '<%= grunt.template.today("yyyy-mm-dd") %>\n' +
                         '* <%= pkg.homepage %>\n' +
                         '* Copyright (c) <%= grunt.template.today("yyyy") %> <%= pkg.author.name %>;' +
-                        '\n/* Integrated dependencies:\n' +
+                        ' Licensed <%= pkg.license %> */\n' +
+                        '/* Integrated dependencies:\n' +
                         ' * url (MIT License),\n' +
                         ' * CSSOM (MIT License),\n' +
                         ' * xmlserializer (MIT License) */\n'
