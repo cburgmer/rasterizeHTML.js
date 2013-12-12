@@ -383,16 +383,16 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow)
 
     module.util.rewriteStyleRuleSelector = function (doc, oldSelector, newSelector) {
         // Assume that oldSelector is always prepended with a ':' or '.' for now, so no special handling needed
-        var oldSelectorRegExp = new RegExp(oldSelector + '(?=\\W|$)', 'g');
+        var oldSelectorRegex = oldSelector + '(?=\\W|$)';
 
         Array.prototype.forEach.call(doc.querySelectorAll('style'), function (styleElement) {
             var matchingRules = Array.prototype.filter.call(styleElement.sheet.cssRules, function (rule) {
-                    return rule.selectorText && oldSelectorRegExp.test(rule.selectorText);
+                    return rule.selectorText && new RegExp(oldSelectorRegex).test(rule.selectorText);
                 });
 
             if (matchingRules.length) {
                 matchingRules.forEach(function (rule) {
-                    var selector = rule.selectorText.replace(oldSelectorRegExp, newSelector);
+                    var selector = rule.selectorText.replace(new RegExp(oldSelectorRegex, 'g'), newSelector);
 
                     updateRuleSelector(rule, selector);
                 });

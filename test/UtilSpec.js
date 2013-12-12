@@ -317,6 +317,22 @@ describe("Utilities function", function () {
             expect(doc.querySelector('style').textContent).toMatch(/i.myFakeHover, a.myFakeHover \{\s*color: blue;\s*\}/);
         });
 
+        it("should correctly handle multiple sub-selector", function () {
+            setHtml('<style type="text/css">i:active::after { color: blue; }</style>');
+
+            rasterizeHTML.util.rewriteStyleRuleSelector(doc, ':active', '.myFakeActive');
+
+            expect(doc.querySelector('style').textContent).toMatch(/i.myFakeActive::?after \{\s*color: blue;\s*\}/);
+        });
+
+        it("should correctly handle multiple selector occurrences in different rules", function () {
+            setHtml('<style type="text/css">a:active {color: green;}i:active { color: blue; }</style>');
+
+            rasterizeHTML.util.rewriteStyleRuleSelector(doc, ':active', '.myFakeActive');
+
+            expect(doc.querySelector('style').textContent).toMatch(/i.myFakeActive \{\s*color: blue;\s*\}/);
+        });
+
         it("should cope with non CSSStyleRule", function () {
             setHtml('<head><style type="text/css">@font-face { font-family: "RaphaelIcons"; src: url("raphaelicons-webfont.woff"); }</style></head><body><span></span></body>');
 
