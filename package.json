@@ -1,5 +1,5 @@
 {
-  "name": "rasterizeHTML.js",
+  "name": "rasterizehtml",
   "title": "rasterizeHTML.js",
   "version": "0.7.0",
   "description": "Renders HTML into the browser's canvas.",
