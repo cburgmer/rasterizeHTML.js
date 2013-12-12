@@ -8,7 +8,7 @@ See the [API](https://github.com/cburgmer/rasterizeHTML.js/wiki/API).
 Example
 -------
 
-```html
+```js
 var canvas = document.getElementById("canvas");
 rasterizeHTML.drawHTML('Some <span style="color: green">HTML</span> with an image <img src="someimg.png" />', canvas);
 ```
