@@ -169,23 +169,24 @@ window.rasterizeHTMLInline = (function (module) {
     };
 
     var requestStylesheetAndInlineResources = function (url, options, successCallback, errorCallback) {
-        module.util.ajax(url, options, function (content) {
-            var cssRules = module.css.rulesForCssText(content),
-                changedFromPathAdjustment;
+        module.util.ajax(url, options)
+            .then(function (content) {
+                var cssRules = module.css.rulesForCssText(content),
+                    changedFromPathAdjustment;
 
-            changedFromPathAdjustment = module.css.adjustPathsOfCssResources(url, cssRules);
-            module.css.loadCSSImportsForRules(cssRules, [], options, function (changedFromImports, importErrors) {
-                module.css.loadAndInlineCSSResourcesForRules(cssRules, options, function (changedFromResources, resourceErrors) {
-                    var errors = importErrors.concat(resourceErrors);
+                changedFromPathAdjustment = module.css.adjustPathsOfCssResources(url, cssRules);
+                module.css.loadCSSImportsForRules(cssRules, [], options, function (changedFromImports, importErrors) {
+                    module.css.loadAndInlineCSSResourcesForRules(cssRules, options, function (changedFromResources, resourceErrors) {
+                        var errors = importErrors.concat(resourceErrors);
 
-                    if (changedFromPathAdjustment || changedFromImports || changedFromResources) {
-                        content = module.css.cssRulesToText(cssRules);
-                    }
+                        if (changedFromPathAdjustment || changedFromImports || changedFromResources) {
+                            content = module.css.cssRulesToText(cssRules);
+                        }
 
-                    successCallback(content, errors);
+                        successCallback(content, errors);
+                    });
                 });
-            });
-        }, errorCallback);
+            }, errorCallback);
     };
 
     var loadLinkedCSS = function (link, options, successCallback, errorCallback) {
@@ -255,9 +256,10 @@ window.rasterizeHTMLInline = (function (module) {
             ajaxOptions.baseUrl = documentBase;
         }
 
-        module.util.ajax(src, ajaxOptions, successCallback, function () {
-            errorCallback(module.util.joinUrl(ajaxOptions.baseUrl, src));
-        });
+        module.util.ajax(src, ajaxOptions)
+            .then(successCallback, function () {
+                errorCallback(module.util.joinUrl(ajaxOptions.baseUrl, src));
+            });
     };
 
     var escapeClosingTags = function (text) {
@@ -574,20 +576,21 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
             alreadyLoadedCssUrls.push(cssHrefRelativeToDoc);
         }
 
-        module.util.ajax(url, options, function (cssText) {
-            var externalCssRules = module.css.rulesForCssText(cssText);
+        module.util.ajax(url, options)
+            .then(function (cssText) {
+                var externalCssRules = module.css.rulesForCssText(cssText);
 
-            // Recursively follow @import statements
-            module.css.loadCSSImportsForRules(externalCssRules, alreadyLoadedCssUrls, options, function (hasChanges, errors) {
-                module.css.adjustPathsOfCssResources(url, externalCssRules);
+                // Recursively follow @import statements
+                module.css.loadCSSImportsForRules(externalCssRules, alreadyLoadedCssUrls, options, function (hasChanges, errors) {
+                    module.css.adjustPathsOfCssResources(url, externalCssRules);
 
-                substituteRule(cssRules, rule, externalCssRules);
+                    substituteRule(cssRules, rule, externalCssRules);
 
-                successCallback(errors);
+                    successCallback(errors);
+                });
+            }, function () {
+                errorCallback(cssHrefRelativeToDoc);
             });
-        }, function () {
-            errorCallback(cssHrefRelativeToDoc);
-        });
     };
 
     module.css.loadCSSImportsForRules = function (cssRules, alreadyLoadedCssUrls, options, callback) {
@@ -929,7 +932,7 @@ window.rasterizeHTMLInline = (function (module, window, ayepromise, url) {
         }
     };
 
-    module.util.ajax = function (url, options, successCallback, errorCallback) {
+    module.util.ajax = function (url, options) {
         var ajaxRequest = new window.XMLHttpRequest(),
             defer = ayepromise.defer(),
             joinedUrl = module.util.joinUrl(options.baseUrl, url),
@@ -955,23 +958,27 @@ window.rasterizeHTMLInline = (function (module, window, ayepromise, url) {
             defer.reject(err);
         }
 
-        defer.promise.then(successCallback, errorCallback);
-
         return defer.promise;
     };
 
     module.util.binaryAjax = function (url, options, successCallback, errorCallback) {
-        var binaryContent = "",
-            ajaxOptions = module.util.clone(options);
+        var ajaxOptions = module.util.clone(options),
+            promise;
 
         ajaxOptions.mimeType = 'text/plain; charset=x-user-defined';
 
-        module.util.ajax(url, ajaxOptions, function (content) {
-            for (var i = 0; i < content.length; i++) {
-                binaryContent += String.fromCharCode(content.charCodeAt(i) & 0xFF);
-            }
-            successCallback(binaryContent);
-        }, errorCallback);
+        promise = module.util.ajax(url, ajaxOptions)
+            .then(function (content) {
+                var binaryContent = "";
+
+                for (var i = 0; i < content.length; i++) {
+                    binaryContent += String.fromCharCode(content.charCodeAt(i) & 0xFF);
+                }
+
+                return binaryContent;
+            });
+
+        promise.then(successCallback, errorCallback);
     };
 
     var detectMimeType = function (content) {

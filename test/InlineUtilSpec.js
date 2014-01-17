@@ -302,6 +302,20 @@ describe("Inline utilities function", function () {
     });
 
     describe("binaryAjax", function () {
+        var mockAjaxWith = function (promise) {
+            return spyOn(rasterizeHTMLInline.util, "ajax").andReturn(promise);
+        };
+        var rejectedPromise = function () {
+            var defer = ayepromise.defer();
+            defer.reject();
+            return defer.promise;
+        };
+        var resolvedPromise = function () {
+            var defer = ayepromise.defer();
+            defer.resolve();
+            return defer.promise;
+        };
+
         beforeEach(function () {
             spyOn(rasterizeHTMLInline.util, "joinUrl").andCallFake(function (baseUrl, url) {
                 return url;
@@ -326,34 +340,32 @@ describe("Inline utilities function", function () {
             });
         });
 
-        it("should handle error", function () {
-            var errorCallback = jasmine.createSpy("errorCallback"),
-                successCallback = jasmine.createSpy("successCallback");
-            spyOn(rasterizeHTMLInline.util, "ajax").andCallFake(function (url, options, success, error) {
-                error();
-            });
-            rasterizeHTMLInline.util.binaryAjax("url", {}, successCallback, errorCallback);
+        it("should handle error", function (done) {
+            var successCallback = jasmine.createSpy("successCallback");
+
+            mockAjaxWith(rejectedPromise());
+            rasterizeHTMLInline.util.binaryAjax("url", {}, successCallback, done);
         });
 
         it("should circumvent caching if requested", function () {
-            var ajaxSpy = spyOn(rasterizeHTMLInline.util, "ajax");
+            var ajaxSpy = mockAjaxWith(resolvedPromise());
 
             rasterizeHTMLInline.util.binaryAjax("url", {cache: 'none'}, function () {}, function () {});
 
             expect(ajaxSpy).toHaveBeenCalledWith("url", {
                 mimeType : jasmine.any(String),
                 cache: 'none'
-            }, jasmine.any(Function), jasmine.any(Function));
+            });
         });
 
         it("should cache by default", function () {
-            var ajaxSpy = spyOn(rasterizeHTMLInline.util, "ajax");
+            var ajaxSpy = mockAjaxWith(resolvedPromise());
 
             rasterizeHTMLInline.util.binaryAjax("url", {}, function () {}, function () {});
 
             expect(ajaxSpy).toHaveBeenCalledWith("url", {
                 mimeType : jasmine.any(String)
-            }, jasmine.any(Function), jasmine.any(Function));
+            });
         });
     });
 

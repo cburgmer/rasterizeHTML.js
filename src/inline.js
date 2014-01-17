@@ -166,23 +166,24 @@ window.rasterizeHTMLInline = (function (module) {
     };
 
     var requestStylesheetAndInlineResources = function (url, options, successCallback, errorCallback) {
-        module.util.ajax(url, options, function (content) {
-            var cssRules = module.css.rulesForCssText(content),
-                changedFromPathAdjustment;
+        module.util.ajax(url, options)
+            .then(function (content) {
+                var cssRules = module.css.rulesForCssText(content),
+                    changedFromPathAdjustment;
 
-            changedFromPathAdjustment = module.css.adjustPathsOfCssResources(url, cssRules);
-            module.css.loadCSSImportsForRules(cssRules, [], options, function (changedFromImports, importErrors) {
-                module.css.loadAndInlineCSSResourcesForRules(cssRules, options, function (changedFromResources, resourceErrors) {
-                    var errors = importErrors.concat(resourceErrors);
+                changedFromPathAdjustment = module.css.adjustPathsOfCssResources(url, cssRules);
+                module.css.loadCSSImportsForRules(cssRules, [], options, function (changedFromImports, importErrors) {
+                    module.css.loadAndInlineCSSResourcesForRules(cssRules, options, function (changedFromResources, resourceErrors) {
+                        var errors = importErrors.concat(resourceErrors);
 
-                    if (changedFromPathAdjustment || changedFromImports || changedFromResources) {
-                        content = module.css.cssRulesToText(cssRules);
-                    }
+                        if (changedFromPathAdjustment || changedFromImports || changedFromResources) {
+                            content = module.css.cssRulesToText(cssRules);
+                        }
 
-                    successCallback(content, errors);
+                        successCallback(content, errors);
+                    });
                 });
-            });
-        }, errorCallback);
+            }, errorCallback);
     };
 
     var loadLinkedCSS = function (link, options, successCallback, errorCallback) {
@@ -252,9 +253,10 @@ window.rasterizeHTMLInline = (function (module) {
             ajaxOptions.baseUrl = documentBase;
         }
 
-        module.util.ajax(src, ajaxOptions, successCallback, function () {
-            errorCallback(module.util.joinUrl(ajaxOptions.baseUrl, src));
-        });
+        module.util.ajax(src, ajaxOptions)
+            .then(successCallback, function () {
+                errorCallback(module.util.joinUrl(ajaxOptions.baseUrl, src));
+            });
     };
 
     var escapeClosingTags = function (text) {

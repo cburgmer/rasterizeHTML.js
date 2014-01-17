@@ -239,20 +239,21 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
             alreadyLoadedCssUrls.push(cssHrefRelativeToDoc);
         }
 
-        module.util.ajax(url, options, function (cssText) {
-            var externalCssRules = module.css.rulesForCssText(cssText);
+        module.util.ajax(url, options)
+            .then(function (cssText) {
+                var externalCssRules = module.css.rulesForCssText(cssText);
 
-            // Recursively follow @import statements
-            module.css.loadCSSImportsForRules(externalCssRules, alreadyLoadedCssUrls, options, function (hasChanges, errors) {
-                module.css.adjustPathsOfCssResources(url, externalCssRules);
+                // Recursively follow @import statements
+                module.css.loadCSSImportsForRules(externalCssRules, alreadyLoadedCssUrls, options, function (hasChanges, errors) {
+                    module.css.adjustPathsOfCssResources(url, externalCssRules);
 
-                substituteRule(cssRules, rule, externalCssRules);
+                    substituteRule(cssRules, rule, externalCssRules);
 
-                successCallback(errors);
+                    successCallback(errors);
+                });
+            }, function () {
+                errorCallback(cssHrefRelativeToDoc);
             });
-        }, function () {
-            errorCallback(cssHrefRelativeToDoc);
-        });
     };
 
     module.css.loadCSSImportsForRules = function (cssRules, alreadyLoadedCssUrls, options, callback) {

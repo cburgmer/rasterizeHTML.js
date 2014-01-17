@@ -1,15 +1,18 @@
 describe("Inline CSS content (integration)", function () {
-    var doc, callback, ajaxSpy, ajaxSpyUrlMap = {};
+    var doc, ajaxSpyUrlMap = {};
 
     beforeEach(function () {
         doc = document.implementation.createHTMLDocument("");
-        callback = jasmine.createSpy("callback");
 
-        ajaxSpy = spyOn(rasterizeHTMLInline.util, "ajax").andCallFake(function (url, options, success) {
-            var respondWith = ajaxSpyUrlMap[url];
+        spyOn(rasterizeHTMLInline.util, "ajax").andCallFake(function (url, options, success) {
+            var defer = ayepromise.defer(),
+                respondWith = ajaxSpyUrlMap[url];
             if (respondWith) {
-                success(respondWith);
+                defer.resolve(respondWith);
             }
+            // TODO pp
+            defer.promise.then(success);
+            return defer.promise;
         });
     });
 
@@ -27,7 +30,7 @@ describe("Inline CSS content (integration)", function () {
     };
 
     // https://github.com/cburgmer/rasterizeHTML.js/issues/42
-    it("should correctly inline a font as second rule with CSSOM fallback", function () {
+    it("should correctly inline a font as second rule with CSSOM fallback", function (done) {
         mockAjaxWithSuccess({
             url: "some.html",
             respondWith: 'p { font-size: 14px; } @font-face { font-family: "test font"; src: url("fake.woff"); }'
@@ -39,12 +42,12 @@ describe("Inline CSS content (integration)", function () {
 
         appendStylesheetLink(doc, "some.html");
 
-        rasterizeHTMLInline.loadAndInlineCssLinks(doc, callback);
+        rasterizeHTMLInline.loadAndInlineCssLinks(doc, function () {
+            expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(
+                /p\s*\{\s*font-size:\s*14px;\s*\}\s*@font-face\s*\{\s*font-family:\s*["']test font["'];\s*src:\s*url\("?data:font\/woff;base64,dGhpcyBpcyBub3QgYSBmb250"?\);\s*\}/
+            );
 
-        expect(callback).toHaveBeenCalled();
-
-        expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(
-            /p\s*\{\s*font-size:\s*14px;\s*\}\s*@font-face\s*\{\s*font-family:\s*["']test font["'];\s*src:\s*url\("?data:font\/woff;base64,dGhpcyBpcyBub3QgYSBmb250"?\);\s*\}/
-        );
+            done();
+        });
     });
 });

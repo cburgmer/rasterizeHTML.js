@@ -78,7 +78,7 @@ window.rasterizeHTMLInline = (function (module, window, ayepromise, url) {
         }
     };
 
-    module.util.ajax = function (url, options, successCallback, errorCallback) {
+    module.util.ajax = function (url, options) {
         var ajaxRequest = new window.XMLHttpRequest(),
             defer = ayepromise.defer(),
             joinedUrl = module.util.joinUrl(options.baseUrl, url),
@@ -104,23 +104,27 @@ window.rasterizeHTMLInline = (function (module, window, ayepromise, url) {
             defer.reject(err);
         }
 
-        defer.promise.then(successCallback, errorCallback);
-
         return defer.promise;
     };
 
     module.util.binaryAjax = function (url, options, successCallback, errorCallback) {
-        var binaryContent = "",
-            ajaxOptions = module.util.clone(options);
+        var ajaxOptions = module.util.clone(options),
+            promise;
 
         ajaxOptions.mimeType = 'text/plain; charset=x-user-defined';
 
-        module.util.ajax(url, ajaxOptions, function (content) {
-            for (var i = 0; i < content.length; i++) {
-                binaryContent += String.fromCharCode(content.charCodeAt(i) & 0xFF);
-            }
-            successCallback(binaryContent);
-        }, errorCallback);
+        promise = module.util.ajax(url, ajaxOptions)
+            .then(function (content) {
+                var binaryContent = "";
+
+                for (var i = 0; i < content.length; i++) {
+                    binaryContent += String.fromCharCode(content.charCodeAt(i) & 0xFF);
+                }
+
+                return binaryContent;
+            });
+
+        promise.then(successCallback, errorCallback);
     };
 
     var detectMimeType = function (content) {
