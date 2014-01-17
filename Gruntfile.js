@@ -5,12 +5,14 @@ module.exports = function (grunt) {
         jasmine: {
             src: [
                 'build/*.js',
+                'node_modules/ayepromise/ayepromise.js',
                 'src/*.js'
             ],
             options: {
                 specs: 'test/*Spec.js',
                 helpers: [
                     'test/helpers.js',
+                    'test/diffHelper.js',
                     'bower_components/js-imagediff/imagediff.js',
                     'bower_components/jquery/jquery.js',
                     'bower_components/jasmine-jquery/lib/jasmine-jquery.js',
@@ -81,11 +83,13 @@ module.exports = function (grunt) {
                         '/* Integrated dependencies:\n' +
                         ' * url (MIT License),\n' +
                         ' * CSSOM (MIT License),\n' +
+                        ' * ayepromise (BSD License & WTFPL),\n' +
                         ' * xmlserializer (MIT License) */\n'
                 },
                 files: {
                     'dist/rasterizeHTML.allinone.js': [
                         'build/*.js',
+                        'node_modules/ayepromise/ayepromise.js',
                         'dist/rasterizeHTML.js'
                     ]
                 }
@@ -113,7 +117,8 @@ module.exports = function (grunt) {
                 browser: true,
                 globals: {
                     CSSOM: true,
-                    url: true
+                    url: true,
+                    ayepromise: true
                 }
             },
             uses_defaults: [
@@ -140,10 +145,12 @@ module.exports = function (grunt) {
                         ifNotInPhantomJSAndNotLocalRunnerIt: true,
                         CSSOM: true,
                         url: true,
+                        ayepromise: true,
                         imagediff: true,
                         rasterizeHTML: true,
                         rasterizeHTMLInline: true,
-                        rasterizeHTMLTestHelper: true
+                        rasterizeHTMLTestHelper: true,
+                        diffHelper: true
                     }
                 },
                 files: {

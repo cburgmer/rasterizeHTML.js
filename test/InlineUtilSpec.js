@@ -213,41 +213,18 @@ describe("Inline utilities function", function () {
     });
 
     describe("ajax", function () {
-        it("should load content from a URL", function () {
-            var finished = false,
-                loadedContent;
+        it("should load content from a URL", function (done) {
+            rasterizeHTMLInline.util.ajax(jasmine.getFixtures().fixturesPath + "some.css", {})
+                .then(function (loadedContent) {
+                    expect(loadedContent).toEqual("p { font-size: 14px; }");
 
-            rasterizeHTMLInline.util.ajax(jasmine.getFixtures().fixturesPath + "some.css", {}, function (content) {
-                loadedContent = content;
-                finished = true;
-            }, function () {});
-
-            waitsFor(function () {
-                return finished;
-            });
-
-            runs(function () {
-                expect(loadedContent).toEqual("p { font-size: 14px; }");
-            });
+                    done();
+                });
         });
 
-        it("should call error callback on fail", function () {
-            var finished = false,
-                successCallback = jasmine.createSpy("successCallback"),
-                errorCallback = jasmine.createSpy("errorCallback").andCallFake(function () {
-                    finished = true;
-                });
-
-            rasterizeHTMLInline.util.ajax("non_existing_url.html", {}, successCallback, errorCallback);
-
-            waitsFor(function () {
-                return finished;
-            });
-
-            runs(function () {
-                expect(successCallback).not.toHaveBeenCalled();
-                expect(errorCallback).toHaveBeenCalled();
-            });
+        it("should fail correctly", function (done) {
+            rasterizeHTMLInline.util.ajax("non_existing_url.html", {})
+                .fail(done);
         });
 
         describe("options", function () {
@@ -263,21 +240,21 @@ describe("Inline utilities function", function () {
             });
 
             it("should attach an unique parameter to the given URL to circumvent caching if requested", function () {
-                rasterizeHTMLInline.util.ajax("non_existing_url.html", {cache: 'none'}, function () {}, function () {});
+                rasterizeHTMLInline.util.ajax("non_existing_url.html", {cache: 'none'});
 
                 expect(ajaxRequest.open).toHaveBeenCalledWith('GET', jasmine.any(String), true);
                 expect(ajaxRequest.open.mostRecentCall.args[1]).toMatch(/^non_existing_url.html\?_=[0123456789]+$/);
             });
 
             it("should attach an unique parameter to the given URL to circumvent caching if requested (legacy: 'false')", function () {
-                rasterizeHTMLInline.util.ajax("non_existing_url.html", {cache: false}, function () {}, function () {});
+                rasterizeHTMLInline.util.ajax("non_existing_url.html", {cache: false});
 
                 expect(ajaxRequest.open).toHaveBeenCalledWith('GET', jasmine.any(String), true);
                 expect(ajaxRequest.open.mostRecentCall.args[1]).toMatch(/^non_existing_url.html\?_=[0123456789]+$/);
             });
 
             it("should not attach an unique parameter to the given URL by default", function () {
-                rasterizeHTMLInline.util.ajax("non_existing_url.html", {}, function () {}, function () {});
+                rasterizeHTMLInline.util.ajax("non_existing_url.html", {});
 
                 expect(ajaxRequest.open).toHaveBeenCalledWith('GET', "non_existing_url.html", true);
             });
@@ -285,12 +262,12 @@ describe("Inline utilities function", function () {
             it("should allow caching for repeated calls if requested", function () {
                 var dateNowSpy = spyOn(window.Date, 'now').andReturn(42);
 
-                rasterizeHTMLInline.util.ajax("non_existing_url.html", {cache: 'none'}, function () {}, function () {});
+                rasterizeHTMLInline.util.ajax("non_existing_url.html", {cache: 'none'});
 
                 expect(ajaxRequest.open.mostRecentCall.args[1]).toEqual('non_existing_url.html?_=42');
 
                 dateNowSpy.andReturn(43);
-                rasterizeHTMLInline.util.ajax("non_existing_url.html", {cache: 'repeated'}, function () {}, function () {});
+                rasterizeHTMLInline.util.ajax("non_existing_url.html", {cache: 'repeated'});
                 expect(ajaxRequest.open.mostRecentCall.args[1]).toEqual('non_existing_url.html?_=42');
 
                 expect(dateNowSpy.callCount).toEqual(1);
@@ -298,23 +275,23 @@ describe("Inline utilities function", function () {
 
             it("should not cache repeated calls by default", function () {
                 var dateNowSpy = spyOn(window.Date, 'now').andReturn(42);
-                rasterizeHTMLInline.util.ajax("non_existing_url.html", {cache: 'none'}, function () {}, function () {});
+                rasterizeHTMLInline.util.ajax("non_existing_url.html", {cache: 'none'});
 
                 expect(ajaxRequest.open.mostRecentCall.args[1]).toEqual('non_existing_url.html?_=42');
 
                 dateNowSpy.andReturn(43);
-                rasterizeHTMLInline.util.ajax("non_existing_url.html", {cache: 'none'}, function () {}, function () {});
+                rasterizeHTMLInline.util.ajax("non_existing_url.html", {cache: 'none'});
                 expect(ajaxRequest.open.mostRecentCall.args[1]).toEqual('non_existing_url.html?_=43');
             });
 
             it("should force mime type if requested", function () {
-                rasterizeHTMLInline.util.ajax("non_existing_url.html", {mimeType: "42"}, function () {}, function () {});
+                rasterizeHTMLInline.util.ajax("non_existing_url.html", {mimeType: "42"});
 
                 expect(ajaxRequest.overrideMimeType).toHaveBeenCalledWith('42');
             });
 
             it("should load URLs relative to baseUrl", function () {
-                rasterizeHTMLInline.util.ajax("relative/url.png", {baseUrl: "http://example.com/"}, function () {}, function () {});
+                rasterizeHTMLInline.util.ajax("relative/url.png", {baseUrl: "http://example.com/"});
 
                 expect(ajaxRequest.open.mostRecentCall.args[1]).toEqual('http://example.com/relative/url.png');
 

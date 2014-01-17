@@ -1,6 +1,6 @@
-/*! rasterizeHTML.js - v0.7.0 - 2013-12-12
+/*! rasterizeHTML.js - v0.7.0 - 2014-01-17
 * http://www.github.com/cburgmer/rasterizeHTML.js
-* Copyright (c) 2013 Christoph Burgmer; Licensed MIT */
+* Copyright (c) 2014 Christoph Burgmer; Licensed MIT */
 window.rasterizeHTMLInline = (function (module) {
     "use strict";
 
@@ -849,7 +849,7 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
     return module;
 }(window.rasterizeHTMLInline || {}, window, window.CSSOM || {}));
 
-window.rasterizeHTMLInline = (function (module, window, url) {
+window.rasterizeHTMLInline = (function (module, window, ayepromise, url) {
     "use strict";
 
     module.util = {};
@@ -931,6 +931,7 @@ window.rasterizeHTMLInline = (function (module, window, url) {
 
     module.util.ajax = function (url, options, successCallback, errorCallback) {
         var ajaxRequest = new window.XMLHttpRequest(),
+            defer = ayepromise.defer(),
             joinedUrl = module.util.joinUrl(options.baseUrl, url),
             augmentedUrl;
 
@@ -938,23 +939,25 @@ window.rasterizeHTMLInline = (function (module, window, url) {
 
         ajaxRequest.addEventListener("load", function () {
             if (ajaxRequest.status === 200 || ajaxRequest.status === 0) {
-                successCallback(ajaxRequest.response);
+                defer.resolve(ajaxRequest.response);
             } else {
-                errorCallback();
+                defer.reject();
             }
         }, false);
 
-        ajaxRequest.addEventListener("error", function () {
-            errorCallback();
-        }, false);
+        ajaxRequest.addEventListener("error", defer.reject, false);
 
         try {
             ajaxRequest.open('GET', augmentedUrl, true);
             ajaxRequest.overrideMimeType(options.mimeType);
             ajaxRequest.send(null);
         } catch (err) {
-            errorCallback();
+            defer.reject(err);
         }
+
+        defer.promise.then(successCallback, errorCallback);
+
+        return defer.promise;
     };
 
     module.util.binaryAjax = function (url, options, successCallback, errorCallback) {
@@ -1074,7 +1077,7 @@ window.rasterizeHTMLInline = (function (module, window, url) {
     };
 
     return module;
-}(window.rasterizeHTMLInline || {}, window, url));
+}(window.rasterizeHTMLInline || {}, window, ayepromise, url));
 
 window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow) {
     "use strict";

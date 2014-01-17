@@ -23,7 +23,7 @@ describe("Integration test", function () {
 
     beforeEach(function () {
         this.addMatchers(imagediff.jasmine);
-        this.addMatchers(rasterizeHTMLTestHelper.matcher);
+        this.addMatchers(diffHelper.matcher);
 
         canvas = $('<canvas width="' + width + '" height="' + height + '"></canvas>'); // Firefox adds a space between the divs and needs the canvas to fit horizontally for all content to be rendered
 
