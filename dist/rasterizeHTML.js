@@ -48,12 +48,13 @@ window.rasterizeHTMLInline = (function (module) {
             ajaxOptions.baseUrl = documentBase;
         }
 
-        module.util.getDataURIForImageURL(url, ajaxOptions, function (dataURI) {
-            image.attributes.src.nodeValue = dataURI;
-            successCallback();
-        }, function () {
-            errorCallback(module.util.joinUrl(ajaxOptions.baseUrl, url));
-        });
+        module.util.getDataURIForImageURL(url, ajaxOptions)
+            .then(function (dataURI) {
+                image.attributes.src.nodeValue = dataURI;
+                successCallback();
+            }, function () {
+                errorCallback(module.util.joinUrl(ajaxOptions.baseUrl, url));
+            });
     };
 
     var filterInputsForImageType = function (inputs) {
@@ -695,14 +696,15 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
                 return;
             }
 
-            module.util.getDataURIForImageURL(bgUrl.url, options, function (dataURI) {
-                singleBackgroundValues[bgUrl.idx] = 'url("' + dataURI + '")';
+            module.util.getDataURIForImageURL(bgUrl.url, options)
+                .then(function (dataURI) {
+                    singleBackgroundValues[bgUrl.idx] = 'url("' + dataURI + '")';
 
-                finish(true);
-            }, function () {
-                errorUrls.push(module.util.joinUrl(options.baseUrl, bgUrl.url));
-                finish(false);
-            });
+                    finish(true);
+                }, function () {
+                    errorUrls.push(module.util.joinUrl(options.baseUrl, bgUrl.url));
+                    finish(false);
+                });
         }, function (changedStates) {
             var changed = changedStates.indexOf(true) >= 0;
 
@@ -991,14 +993,14 @@ window.rasterizeHTMLInline = (function (module, window, ayepromise, url) {
         return 'image/png';
     };
 
-    module.util.getDataURIForImageURL = function (url, options, successCallback, errorCallback) {
-        module.util.binaryAjax(url, options)
+    module.util.getDataURIForImageURL = function (url, options) {
+        return module.util.binaryAjax(url, options)
             .then(function (content) {
                 var base64Content = btoa(content),
                     mimeType = detectMimeType(content);
 
-                successCallback('data:' + mimeType + ';base64,' + base64Content);
-            }, errorCallback);
+                return 'data:' + mimeType + ';base64,' + base64Content;
+            });
     };
 
     var uniqueIdList = [];

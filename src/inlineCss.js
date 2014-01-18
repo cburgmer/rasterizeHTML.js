@@ -358,14 +358,15 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
                 return;
             }
 
-            module.util.getDataURIForImageURL(bgUrl.url, options, function (dataURI) {
-                singleBackgroundValues[bgUrl.idx] = 'url("' + dataURI + '")';
+            module.util.getDataURIForImageURL(bgUrl.url, options)
+                .then(function (dataURI) {
+                    singleBackgroundValues[bgUrl.idx] = 'url("' + dataURI + '")';
 
-                finish(true);
-            }, function () {
-                errorUrls.push(module.util.joinUrl(options.baseUrl, bgUrl.url));
-                finish(false);
-            });
+                    finish(true);
+                }, function () {
+                    errorUrls.push(module.util.joinUrl(options.baseUrl, bgUrl.url));
+                    finish(false);
+                });
         }, function (changedStates) {
             var changed = changedStates.indexOf(true) >= 0;
 

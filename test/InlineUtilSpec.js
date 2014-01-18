@@ -379,12 +379,13 @@ describe("Inline utilities function", function () {
         it("should return an image as data: URI", function (done) {
             mockBinaryAjax('green.png', "fakeImageContent");
 
-            rasterizeHTMLInline.util.getDataURIForImageURL("green.png", {}, function (returnedDataURI) {
-                expect(returnedDataURI).toEqual('data:image/png;base64,' + btoa('fakeImageContent'));
-                expect(binaryAjaxSpy).toHaveBeenCalledWith('green.png', {});
+            rasterizeHTMLInline.util.getDataURIForImageURL("green.png", {})
+                .then(function (returnedDataURI) {
+                    expect(returnedDataURI).toEqual('data:image/png;base64,' + btoa('fakeImageContent'));
+                    expect(binaryAjaxSpy).toHaveBeenCalledWith('green.png', {});
 
-                done();
-            }, function () {});
+                    done();
+                });
         });
 
         it("should return a SVG as data: URI", function (done) {
@@ -392,11 +393,12 @@ describe("Inline utilities function", function () {
 
             mockBinaryAjax('green.svg', svgImageHead);
 
-            rasterizeHTMLInline.util.getDataURIForImageURL("green.svg", {}, function (returnedDataURI) {
-                expect(returnedDataURI).toEqual('data:image/svg+xml;base64,' + btoa(svgImageHead));
+            rasterizeHTMLInline.util.getDataURIForImageURL("green.svg", {})
+                .then(function (returnedDataURI) {
+                    expect(returnedDataURI).toEqual('data:image/svg+xml;base64,' + btoa(svgImageHead));
 
-                done();
-            }, function () {});
+                    done();
+                });
         });
 
         it("should return a SVG as data: URI without XML head", function (done) {
@@ -404,12 +406,12 @@ describe("Inline utilities function", function () {
 
             mockBinaryAjax('green.svg', svgImageHead);
 
-            rasterizeHTMLInline.util.getDataURIForImageURL("green.svg", {}, function (returnedDataURI) {
-                expect(returnedDataURI).toEqual('data:image/svg+xml;base64,' + btoa(svgImageHead));
+            rasterizeHTMLInline.util.getDataURIForImageURL("green.svg", {})
+                .then(function (returnedDataURI) {
+                    expect(returnedDataURI).toEqual('data:image/svg+xml;base64,' + btoa(svgImageHead));
 
-                done();
-            }, function () {});
-
+                    done();
+                });
         });
 
         it("should return an error if the image could not be located due to a REST error", function (done) {
@@ -421,17 +423,18 @@ describe("Inline utilities function", function () {
                 return defer.promise;
             });
 
-            rasterizeHTMLInline.util.getDataURIForImageURL("image_does_not_exist.png", {}, successCallback, function () {
-                expect(successCallback).not.toHaveBeenCalled();
+            rasterizeHTMLInline.util.getDataURIForImageURL("image_does_not_exist.png", {})
+                .fail(function () {
+                    expect(successCallback).not.toHaveBeenCalled();
 
-                done();
-            });
+                    done();
+                });
         });
 
         it("should circumvent caching if requested", function () {
             mockBinaryAjax('image.png', 'content');
 
-            rasterizeHTMLInline.util.getDataURIForImageURL("image.png", {cache: 'none'}, function () {}, function () {});
+            rasterizeHTMLInline.util.getDataURIForImageURL("image.png", {cache: 'none'});
 
             expect(binaryAjaxSpy).toHaveBeenCalledWith('image.png', {cache: 'none'});
         });

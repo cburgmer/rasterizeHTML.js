@@ -3,61 +3,68 @@ describe("Image and image input inline", function () {
         secondImage = "secondImage.png",
         firstImageDataURI = "mock_data_URI_of_the_first_image",
         secondImageDataURI = "mock_data_URI_of_the_second_image",
-        joinUrlSpy, getDataURIForImageURLSpy, doc;
+        joinUrlSpy, getDataURIForImageURLSpy, doc,
+        urlMocks = {};
+
+    var setupGetDataURIForImageURLMock = function () {
+        return spyOn(rasterizeHTMLInline.util, "getDataURIForImageURL").andCallFake(function (url) {
+            var defer = ayepromise.defer();
+            if (urlMocks[url] !== undefined) {
+                defer.resolve(urlMocks[url]);
+            } else {
+                defer.reject();
+            }
+            return defer.promise;
+        });
+    };
+
+    var mockGetDataURIForImageURL = function (imageUrl, imageDataUri) {
+        urlMocks[imageUrl] = imageDataUri;
+    };
 
     beforeEach(function () {
         joinUrlSpy = spyOn(rasterizeHTMLInline.util, "joinUrl");
-        getDataURIForImageURLSpy = spyOn(rasterizeHTMLInline.util, "getDataURIForImageURL").andCallFake(function (url, options, successCallback) {
-            if (url === firstImage) {
-                successCallback(firstImageDataURI);
-            } else if (url === secondImage) {
-                successCallback(secondImageDataURI);
-            } else {
-                successCallback();
-            }
-        });
+        getDataURIForImageURLSpy = setupGetDataURIForImageURLMock();
 
         doc = document.implementation.createHTMLDocument("");
     });
 
-    it("should load an external image", function () {
-        var callback = jasmine.createSpy("callback");
-
+    it("should load an external image", function (done) {
+        mockGetDataURIForImageURL(firstImage, firstImageDataURI);
         doc.body.innerHTML = '<img id="image" src="' + firstImage + '" alt="test image"/>';
 
-        rasterizeHTMLInline.loadAndInlineImages(doc, callback);
+        rasterizeHTMLInline.loadAndInlineImages(doc, function () {
+            expect(doc.getElementById("image").attributes.src.nodeValue).toEqual(firstImageDataURI);
 
-        expect(callback).toHaveBeenCalled();
-
-        expect(doc.getElementById("image").attributes.src.nodeValue).toEqual(firstImageDataURI);
+            done();
+        });
     });
 
-    it("should load an input with type image", function () {
-        var callback = jasmine.createSpy("callback");
-
+    it("should load an input with type image", function (done) {
+        mockGetDataURIForImageURL(firstImage, firstImageDataURI);
         doc.body.innerHTML = '<input type="image" id="input" src="' + firstImage + '" alt="test image"/>';
 
-        rasterizeHTMLInline.loadAndInlineImages(doc, callback);
+        rasterizeHTMLInline.loadAndInlineImages(doc, function () {
+            expect(doc.getElementById("input").attributes.src.nodeValue).toEqual(firstImageDataURI);
 
-        expect(callback).toHaveBeenCalled();
-
-        expect(doc.getElementById("input").attributes.src.nodeValue).toEqual(firstImageDataURI);
+            done();
+        });
     });
 
-    it("should load multiple external images", function () {
-        var callback = jasmine.createSpy("callback");
-
+    it("should load multiple external images", function (done) {
+        mockGetDataURIForImageURL(firstImage, firstImageDataURI);
+        mockGetDataURIForImageURL(secondImage, secondImageDataURI);
         doc.body.innerHTML = (
             '<img id="image1" src="' + firstImage + '" alt="test image"/>' +
             '<img id="image2" src="' + secondImage +'" alt="test image"/>'
         );
 
-        rasterizeHTMLInline.loadAndInlineImages(doc, callback);
+        rasterizeHTMLInline.loadAndInlineImages(doc, function () {
+            expect(doc.getElementById("image1").attributes.src.nodeValue).toEqual(firstImageDataURI);
+            expect(doc.getElementById("image2").attributes.src.nodeValue).toEqual(secondImageDataURI);
 
-        expect(callback).toHaveBeenCalled();
-
-        expect(doc.getElementById("image1").attributes.src.nodeValue).toEqual(firstImageDataURI);
-        expect(doc.getElementById("image2").attributes.src.nodeValue).toEqual(secondImageDataURI);
+            done();
+        });
     });
 
     it("should finish if no images found", function () {
@@ -100,8 +107,6 @@ describe("Image and image input inline", function () {
 
         rasterizeHTMLInline.loadAndInlineImages(doc, callback);
 
-        expect(callback).toHaveBeenCalled();
-
         expect(getDataURIForImageURLSpy.mostRecentCall.args[1].baseUrl).toEqual(doc.baseURI);
         expect(getDocumentBaseUrlSpy).toHaveBeenCalledWith(doc);
     });
@@ -112,8 +117,6 @@ describe("Image and image input inline", function () {
         doc = rasterizeHTMLTestHelper.readDocumentFixtureWithoutBaseURI("image.html");
 
         rasterizeHTMLInline.loadAndInlineImages(doc, {baseUrl: "aBaseUrl"}, callback);
-
-        expect(callback).toHaveBeenCalled();
 
         expect(getDataURIForImageURLSpy.mostRecentCall.args[1].baseUrl).toEqual("aBaseUrl");
     });
@@ -129,8 +132,6 @@ describe("Image and image input inline", function () {
 
         rasterizeHTMLInline.loadAndInlineImages(doc, {baseUrl: baseUrl}, callback);
 
-        expect(callback).toHaveBeenCalled();
-
         expect(getDataURIForImageURLSpy.mostRecentCall.args[1].baseUrl).toEqual(baseUrl);
     });
 
@@ -141,9 +142,7 @@ describe("Image and image input inline", function () {
 
         rasterizeHTMLInline.loadAndInlineImages(doc, {cache: 'none'}, callback);
 
-        expect(callback).toHaveBeenCalled();
-
-        expect(getDataURIForImageURLSpy).toHaveBeenCalledWith(jasmine.any(String), {cache: 'none'}, jasmine.any(Function), jasmine.any(Function));
+        expect(getDataURIForImageURLSpy).toHaveBeenCalledWith(jasmine.any(String), {cache: 'none'});
     });
 
     it("should not circumvent caching by default", function () {
@@ -153,9 +152,7 @@ describe("Image and image input inline", function () {
 
         rasterizeHTMLInline.loadAndInlineImages(doc, callback);
 
-        expect(callback).toHaveBeenCalled();
-
-        expect(getDataURIForImageURLSpy).toHaveBeenCalledWith(jasmine.any(String), {}, jasmine.any(Function), jasmine.any(Function));
+        expect(getDataURIForImageURLSpy).toHaveBeenCalledWith(jasmine.any(String), {});
     });
 
     describe("on errors", function () {
@@ -166,60 +163,63 @@ describe("Image and image input inline", function () {
             callback = jasmine.createSpy("callback");
 
             joinUrlSpy.andCallThrough();
-            getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback, errorCallback) {
-                if (url === imageThatDoesExist) {
-                    successCallback("theDataUri");
-                } else {
-                    errorCallback();
-                }
+
+            mockGetDataURIForImageURL(imageThatDoesExist, "theDataUri");
+        });
+
+        it("should report an error if an image could not be loaded", function (done) {
+            doc.body.innerHTML = '<img src="image_that_doesnt_exist.png" alt="test image"/>';
+
+            rasterizeHTMLInline.loadAndInlineImages(doc, {baseUrl: "some_base_url/"}, function (errors) {
+                expect(errors).toEqual([{
+                    resourceType: "image",
+                    url: "some_base_url/image_that_doesnt_exist.png",
+                    msg: "Unable to load image some_base_url/image_that_doesnt_exist.png"
+                }]);
+
+                done();
             });
         });
 
-        it("should report an error if an image could not be loaded", function () {
-            doc.body.innerHTML = '<img src="image_that_doesnt_exist.png" alt="test image"/>';
-
-            rasterizeHTMLInline.loadAndInlineImages(doc, {baseUrl: "some_base_url/"}, callback);
-
-            expect(callback).toHaveBeenCalledWith([{
-                resourceType: "image",
-                url: "some_base_url/image_that_doesnt_exist.png",
-                msg: "Unable to load image some_base_url/image_that_doesnt_exist.png"
-            }]);
-        });
-
-        it("should only report a failing image as error", function () {
+        it("should only report a failing image as error", function (done) {
             doc.body.innerHTML = (
                 '<img src="image_that_doesnt_exist.png" alt="test image"/>' +
                 '<img src="' + imageThatDoesExist + '" alt="test image"/>'
             );
 
-            rasterizeHTMLInline.loadAndInlineImages(doc, callback);
+            rasterizeHTMLInline.loadAndInlineImages(doc, function (errors) {
+                expect(errors).toEqual([{
+                    resourceType: "image",
+                    url: "image_that_doesnt_exist.png",
+                    msg: jasmine.any(String)
+                }]);
 
-            expect(callback).toHaveBeenCalledWith([{
-                resourceType: "image",
-                url: "image_that_doesnt_exist.png",
-                msg: jasmine.any(String)
-            }]);
+                done();
+            });
         });
 
-        it("should report multiple failing images as error", function () {
+        it("should report multiple failing images as error", function (done) {
             doc.body.innerHTML = (
                 '<img src="image_that_doesnt_exist.png" alt="test image"/>' +
                 '<img src="another_image_that_doesnt_exist.png" alt="test image"/>'
             );
 
-            rasterizeHTMLInline.loadAndInlineImages(doc, callback);
+            rasterizeHTMLInline.loadAndInlineImages(doc, function (errors) {
+                expect(errors).toEqual([jasmine.any(Object), jasmine.any(Object)]);
+                expect(errors[0]).not.toEqual(errors[1]);
 
-            expect(callback).toHaveBeenCalledWith([jasmine.any(Object), jasmine.any(Object)]);
-            expect(callback.mostRecentCall.args[0][0]).not.toEqual(callback.mostRecentCall.args[0][1]);
+                done();
+            });
         });
 
-        it("should report an empty list for a successful image", function () {
+        it("should report an empty list for a successful image", function (done) {
             doc.body.innerHTML = ('<img src="' + imageThatDoesExist + '" alt="test image"/>');
 
-            rasterizeHTMLInline.loadAndInlineImages(doc, callback);
+            rasterizeHTMLInline.loadAndInlineImages(doc, function (errors) {
+                expect(errors).toEqual([]);
 
-            expect(callback).toHaveBeenCalledWith([]);
+                done();
+            });
         });
     });
 });

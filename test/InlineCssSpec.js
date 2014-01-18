@@ -495,7 +495,24 @@ describe("Inline CSS content", function () {
     });
 
     describe("loadAndInlineCSSResourcesForRules", function () {
-        var extractCssUrlSpy;
+        var extractCssUrlSpy,
+            urlMocks = {};
+
+        var setupGetDataURIForImageURLMock = function () {
+            getDataURIForImageURLSpy.andCallFake(function (url) {
+                var defer = ayepromise.defer();
+                if (urlMocks[url] !== undefined) {
+                    defer.resolve(urlMocks[url]);
+                } else {
+                    defer.reject();
+                }
+                return defer.promise;
+            });
+        };
+
+        var mockGetDataURIForImageURL = function (imageUrl, imageDataUri) {
+            urlMocks[imageUrl] = imageDataUri;
+        };
 
         beforeEach(function () {
             extractCssUrlSpy = spyOn(rasterizeHTMLInline.css, "extractCssUrl").andCallFake(function (cssUrl) {
@@ -505,6 +522,8 @@ describe("Inline CSS content", function () {
                     throw "error";
                 }
             });
+
+            setupGetDataURIForImageURLMock();
         });
 
         it("should work with empty content", function () {
@@ -519,6 +538,7 @@ describe("Inline CSS content", function () {
 
                 rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, callback);
 
+                expect(callback).toHaveBeenCalledWith(false, []);
                 expect(rules[0].style.getPropertyValue('background-image')).toEqual('url("data:image/png;base64,soMEfAkebASE64=")');
             });
 
@@ -531,44 +551,43 @@ describe("Inline CSS content", function () {
 
                 rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, callback);
 
+                expect(callback).toHaveBeenCalledWith(false, []);
                 expect(rules[0].style.getPropertyValue('background-image')).toEqual('"invalid url"');
             });
 
-            it("should inline a background-image", function () {
+            it("should inline a background-image", function (done) {
                 var anImage = "anImage.png",
                     anImagesDataUri = "data:image/png;base64,someDataUri",
                     rules = CSSOM.parse('span { background-image: url("' + anImage + '"); }').cssRules;
 
-                getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback) {
-                    if (url === anImage) {
-                        successCallback(anImagesDataUri);
-                    }
+                mockGetDataURIForImageURL(anImage, anImagesDataUri);
+
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function (changed) {
+                    expect(changed).toBe(true);
+
+                    expect(extractCssUrlSpy.mostRecentCall.args[0]).toMatch(new RegExp('url\\("?' + anImage + '"?\\)'));
+
+                    expect(rules[0].style.getPropertyValue('background-image')).toEqual('url("' + anImagesDataUri + '")');
+
+                    done();
                 });
-
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, callback);
-
-                expect(extractCssUrlSpy.mostRecentCall.args[0]).toMatch(new RegExp('url\\("?' + anImage + '"?\\)'));
-
-                expect(rules[0].style.getPropertyValue('background-image')).toEqual('url("' + anImagesDataUri + '")');
             });
 
-            it("should inline a background declaration", function () {
+            it("should inline a background declaration", function (done) {
                 var anImage = "anImage.png",
                     anImagesDataUri = "data:image/png;base64,someDataUri",
                     rules = CSSOM.parse('span { background: url("' + anImage + '") top left, url("data:image/png;base64,someMoreDataUri") #FFF; }').cssRules;
 
-                getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback) {
-                    if (url === anImage) {
-                        successCallback(anImagesDataUri);
-                    }
+                mockGetDataURIForImageURL(anImage, anImagesDataUri);
+
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function () {
+                    expect(rules[0].cssText).toMatch(/(background: [^;]*url\("?data:image\/png;base64,someDataUri"?\).*\s*top\s*.*, .*url\("?data:image\/png;base64,someMoreDataUri"?\).*;)|(background-image:\s*url\("?data:image\/png;base64,someDataUri"?\)\s*,\s*url\("?data:image\/png;base64,someMoreDataUri"?\)\s*;)/);
+
+                    done();
                 });
-
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, callback);
-
-                expect(rules[0].cssText).toMatch(/(background: [^;]*url\("?data:image\/png;base64,someDataUri"?\).*\s*top\s*.*, .*url\("?data:image\/png;base64,someMoreDataUri"?\).*;)|(background-image:\s*url\("?data:image\/png;base64,someDataUri"?\)\s*,\s*url\("?data:image\/png;base64,someMoreDataUri"?\)\s*;)/);
             });
 
-            it("should inline multiple background-images in one rule", function () {
+            it("should inline multiple background-images in one rule", function (done) {
                 var backgroundImageRegex = /url\("?([^\)"]+)"?\)\s*,\s*url\("?([^\)"]+)"?\)/,
                     anImage = "anImage.png",
                     anImagesDataUri = "data:image/png;base64,someDataUri",
@@ -577,34 +596,31 @@ describe("Inline CSS content", function () {
                     rules = CSSOM.parse('span { background-image: url("' + anImage + '"), url("' + aSecondImage + '"); }').cssRules,
                     match;
 
-                getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback) {
-                    if (url === anImage) {
-                        successCallback(anImagesDataUri);
-                    } else if (url === aSecondImage) {
-                        successCallback(aSecondImagesDataUri);
-                    }
+                mockGetDataURIForImageURL(anImage, anImagesDataUri);
+                mockGetDataURIForImageURL(aSecondImage, aSecondImagesDataUri);
+
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function () {
+                    expect(extractCssUrlSpy.mostRecentCall.args[0]).toMatch(new RegExp('url\\("?' + aSecondImage + '"?\\)'));
+
+                    expect(rules[0].style.getPropertyValue('background-image')).toMatch(backgroundImageRegex);
+                    match = backgroundImageRegex.exec(rules[0].style.getPropertyValue('background-image'));
+                    expect(match[1]).toEqual(anImagesDataUri);
+                    expect(match[2]).toEqual(aSecondImagesDataUri);
+
+                    done();
                 });
-
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, callback);
-
-                expect(extractCssUrlSpy.mostRecentCall.args[0]).toMatch(new RegExp('url\\("?' + aSecondImage + '"?\\)'));
-
-                expect(rules[0].style.getPropertyValue('background-image')).toMatch(backgroundImageRegex);
-                match = backgroundImageRegex.exec(rules[0].style.getPropertyValue('background-image'));
-                expect(match[1]).toEqual(anImagesDataUri);
-                expect(match[2]).toEqual(aSecondImagesDataUri);
             });
 
-            it("should not break background-position (#30)", function () {
+            it("should not break background-position (#30)", function (done) {
                 var rules = CSSOM.parse('span { background-image: url("anImage.png"); background-position: 0 center, right center;}').cssRules;
 
-                getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback) {
-                    successCallback("data:image/png;base64,someDataUri");
+                mockGetDataURIForImageURL('anImage.png', "data:image/png;base64,someDataUri");
+
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function () {
+                    expect(rules[0].style.getPropertyValue('background-position')).toMatch(/0(px)? (center|50%), (right|100%) (center|50%)/);
+
+                    done();
                 });
-
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, callback);
-
-                expect(rules[0].style.getPropertyValue('background-position')).toMatch(/0(px)? (center|50%), (right|100%) (center|50%)/);
             });
 
             it("should handle a baseUrl", function () {
@@ -619,26 +635,18 @@ describe("Inline CSS content", function () {
                 var anImage = "anImage.png",
                     rules = CSSOM.parse('span { background-image: url("' + anImage + '"); }').cssRules;
 
-                getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback) {
-                    successCallback("uri");
-                });
-
                 rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {cache:  'none'}, callback);
 
-                expect(getDataURIForImageURLSpy).toHaveBeenCalledWith(anImage, {cache: 'none'}, jasmine.any(Function), jasmine.any(Function));
+                expect(getDataURIForImageURLSpy).toHaveBeenCalledWith(anImage, {cache: 'none'});
             });
 
             it("should not circumvent caching by default", function () {
                 var anImage = "anImage.png",
                     rules = CSSOM.parse('span { background-image: url("' + anImage + '"); }').cssRules;
 
-                getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback) {
-                    successCallback("uri");
-                });
-
                 rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, callback);
 
-                expect(getDataURIForImageURLSpy).toHaveBeenCalledWith(anImage, {}, jasmine.any(Function), jasmine.any(Function));
+                expect(getDataURIForImageURLSpy).toHaveBeenCalledWith(anImage, {});
             });
         });
 
@@ -646,78 +654,85 @@ describe("Inline CSS content", function () {
             var aBackgroundImageThatDoesExist = "a_backgroundImage_that_does_exist.png";
 
             beforeEach(function () {
-                getDataURIForImageURLSpy.andCallFake(function (url, options, successCallback, errorCallback) {
-                    if (url === aBackgroundImageThatDoesExist) {
-                        successCallback();
-                    } else {
-                        errorCallback();
-                    }
-                });
+                mockGetDataURIForImageURL(aBackgroundImageThatDoesExist, '');
                 joinUrlSpy.andCallThrough();
             });
 
-            it("should report an error if a backgroundImage could not be loaded", function () {
+            it("should report an error if a backgroundImage could not be loaded", function (done) {
                 var rules = CSSOM.parse('span { background-image: url("a_backgroundImage_that_doesnt_exist.png"); }').cssRules;
 
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {baseUrl:  'some_base_url/'}, callback);
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {baseUrl:  'some_base_url/'}, function (changed, errors) {
+                    expect(changed).toBe(false);
+                    expect(errors).toEqual([{
+                        resourceType: "backgroundImage",
+                        url: "some_base_url/a_backgroundImage_that_doesnt_exist.png",
+                        msg: "Unable to load background-image some_base_url/a_backgroundImage_that_doesnt_exist.png"
+                    }]);
 
-                expect(callback).toHaveBeenCalledWith(false, [{
-                    resourceType: "backgroundImage",
-                    url: "some_base_url/a_backgroundImage_that_doesnt_exist.png",
-                    msg: "Unable to load background-image some_base_url/a_backgroundImage_that_doesnt_exist.png"
-                }]);
+                    done();
+                });
             });
 
-            it("should only report a failing backgroundImage as error", function () {
+            it("should only report a failing backgroundImage as error", function (done) {
                 var rules = CSSOM.parse('span { background-image: url("a_backgroundImage_that_doesnt_exist.png"); }\n' +
                     'span { background-image: url("' + aBackgroundImageThatDoesExist + '"); }').cssRules;
 
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, callback);
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function (changed, errors) {
+                    expect(errors).toEqual([{
+                        resourceType: "backgroundImage",
+                        url: "a_backgroundImage_that_doesnt_exist.png",
+                        msg: jasmine.any(String)
+                    }]);
 
-                expect(callback).toHaveBeenCalledWith(true, [{
-                    resourceType: "backgroundImage",
-                    url: "a_backgroundImage_that_doesnt_exist.png",
-                    msg: jasmine.any(String)
-                }]);
+                    done();
+                });
             });
 
-            it("should report multiple failing backgroundImages as error", function () {
+            it("should report multiple failing backgroundImages as error", function (done) {
                 var rules = CSSOM.parse('span { background-image: url("a_backgroundImage_that_doesnt_exist.png"); }\n' +
                     'span { background-image: url("another_backgroundImage_that_doesnt_exist.png"); }').cssRules;
 
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, callback);
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function (changed, errors) {
+                    expect(errors).toEqual([jasmine.any(Object), jasmine.any(Object)]);
+                    expect(errors[0]).not.toEqual(errors[1]);
 
-                expect(callback).toHaveBeenCalledWith(false, [jasmine.any(Object), jasmine.any(Object)]);
-                expect(callback.mostRecentCall.args[1][0]).not.toEqual(callback.mostRecentCall.args[1][1]);
+                    done();
+                });
             });
 
-            it("should only report one failing backgroundImage for multiple in a rule", function () {
+            it("should only report one failing backgroundImage for multiple in a rule", function (done) {
                 var rules = CSSOM.parse('span { background-image: url("' + aBackgroundImageThatDoesExist + '"), url("a_backgroundImage_that_doesnt_exist.png"); }').cssRules;
 
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, callback);
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function (changed, errors) {
+                    expect(errors).toEqual([{
+                        resourceType: "backgroundImage",
+                        url: "a_backgroundImage_that_doesnt_exist.png",
+                        msg: jasmine.any(String)
+                    }]);
 
-                expect(callback).toHaveBeenCalledWith(true, [{
-                    resourceType: "backgroundImage",
-                    url: "a_backgroundImage_that_doesnt_exist.png",
-                    msg: jasmine.any(String)
-                }]);
+                    done();
+                });
             });
 
-            it("should report multiple failing backgroundImages in a rule as error", function () {
+            it("should report multiple failing backgroundImages in one rule as error", function (done) {
                 var rules = CSSOM.parse('span { background-image: url("a_backgroundImage_that_doesnt_exist.png"), url("another_backgroundImage_that_doesnt_exist.png"); }').cssRules;
 
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, callback);
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function (changed, errors) {
+                    expect(errors).toEqual([jasmine.any(Object), jasmine.any(Object)]);
+                    expect(errors[0]).not.toEqual(errors[1]);
 
-                expect(callback).toHaveBeenCalledWith(false, [jasmine.any(Object), jasmine.any(Object)]);
-                expect(callback.mostRecentCall.args[1][0]).not.toEqual(callback.mostRecentCall.args[1][1]);
+                    done();
+                });
             });
 
-            it("should report an empty list for a successful backgroundImage", function () {
+            it("should report an empty list for a successful backgroundImage", function (done) {
                 var rules = CSSOM.parse('span { background-image: url("' + aBackgroundImageThatDoesExist + '"); }').cssRules;
 
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, callback);
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function (changed, errors) {
+                    expect(errors).toEqual([]);
 
-                expect(callback).toHaveBeenCalledWith(true, []);
+                    done();
+                });
             });
         });
 

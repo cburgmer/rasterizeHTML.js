@@ -135,14 +135,14 @@ window.rasterizeHTMLInline = (function (module, window, ayepromise, url) {
         return 'image/png';
     };
 
-    module.util.getDataURIForImageURL = function (url, options, successCallback, errorCallback) {
-        module.util.binaryAjax(url, options)
+    module.util.getDataURIForImageURL = function (url, options) {
+        return module.util.binaryAjax(url, options)
             .then(function (content) {
                 var base64Content = btoa(content),
                     mimeType = detectMimeType(content);
 
-                successCallback('data:' + mimeType + ';base64,' + base64Content);
-            }, errorCallback);
+                return 'data:' + mimeType + ';base64,' + base64Content;
+            });
     };
 
     var uniqueIdList = [];

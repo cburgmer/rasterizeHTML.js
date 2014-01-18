@@ -45,12 +45,13 @@ window.rasterizeHTMLInline = (function (module) {
             ajaxOptions.baseUrl = documentBase;
         }
 
-        module.util.getDataURIForImageURL(url, ajaxOptions, function (dataURI) {
-            image.attributes.src.nodeValue = dataURI;
-            successCallback();
-        }, function () {
-            errorCallback(module.util.joinUrl(ajaxOptions.baseUrl, url));
-        });
+        module.util.getDataURIForImageURL(url, ajaxOptions)
+            .then(function (dataURI) {
+                image.attributes.src.nodeValue = dataURI;
+                successCallback();
+            }, function () {
+                errorCallback(module.util.joinUrl(ajaxOptions.baseUrl, url));
+            });
     };
 
     var filterInputsForImageType = function (inputs) {
