@@ -107,13 +107,12 @@ window.rasterizeHTMLInline = (function (module, window, ayepromise, url) {
         return defer.promise;
     };
 
-    module.util.binaryAjax = function (url, options, successCallback, errorCallback) {
-        var ajaxOptions = module.util.clone(options),
-            promise;
+    module.util.binaryAjax = function (url, options) {
+        var ajaxOptions = module.util.clone(options);
 
         ajaxOptions.mimeType = 'text/plain; charset=x-user-defined';
 
-        promise = module.util.ajax(url, ajaxOptions)
+        return module.util.ajax(url, ajaxOptions)
             .then(function (content) {
                 var binaryContent = "";
 
@@ -123,8 +122,6 @@ window.rasterizeHTMLInline = (function (module, window, ayepromise, url) {
 
                 return binaryContent;
             });
-
-        promise.then(successCallback, errorCallback);
     };
 
     var detectMimeType = function (content) {
@@ -139,17 +136,13 @@ window.rasterizeHTMLInline = (function (module, window, ayepromise, url) {
     };
 
     module.util.getDataURIForImageURL = function (url, options, successCallback, errorCallback) {
-        var base64Content, mimeType;
+        module.util.binaryAjax(url, options)
+            .then(function (content) {
+                var base64Content = btoa(content),
+                    mimeType = detectMimeType(content);
 
-        module.util.binaryAjax(url, options, function (content) {
-            base64Content = btoa(content);
-
-            mimeType = detectMimeType(content);
-
-            successCallback('data:' + mimeType + ';base64,' + base64Content);
-        }, function () {
-            errorCallback();
-        });
+                successCallback('data:' + mimeType + ';base64,' + base64Content);
+            }, errorCallback);
     };
 
     var uniqueIdList = [];

@@ -322,35 +322,25 @@ describe("Inline utilities function", function () {
             });
         });
 
-        it("should load binary data", function () {
-            var finished = false,
-                loadedContent;
+        it("should load binary data", function (done) {
+            rasterizeHTMLInline.util.binaryAjax(jasmine.getFixtures().fixturesPath + "green.png", {})
+                .then(function (loadedContent) {
+                    expect(btoa(loadedContent)).toEqual("iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAABFElEQVR4nO3OMQ0AAAjAMPybhnsKxrHUQGc2r+iBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YHAAV821mT1w27RAAAAAElFTkSuQmCC");
 
-            rasterizeHTMLInline.util.binaryAjax(jasmine.getFixtures().fixturesPath + "green.png", {}, function (content) {
-                loadedContent = content;
-                finished = true;
-            }, function () {});
-
-            waitsFor(function () {
-                return finished;
-            });
-
-            runs(function () {
-                expect(btoa(loadedContent)).toEqual("iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAABFElEQVR4nO3OMQ0AAAjAMPybhnsKxrHUQGc2r+iBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YHAAV821mT1w27RAAAAAElFTkSuQmCC");
-            });
+                    done();
+                });
         });
 
-        it("should handle error", function (done) {
-            var successCallback = jasmine.createSpy("successCallback");
-
+        it("should handle an error", function (done) {
             mockAjaxWith(rejectedPromise());
-            rasterizeHTMLInline.util.binaryAjax("url", {}, successCallback, done);
+            rasterizeHTMLInline.util.binaryAjax("url", {})
+                .fail(done);
         });
 
         it("should circumvent caching if requested", function () {
             var ajaxSpy = mockAjaxWith(resolvedPromise());
 
-            rasterizeHTMLInline.util.binaryAjax("url", {cache: 'none'}, function () {}, function () {});
+            rasterizeHTMLInline.util.binaryAjax("url", {cache: 'none'});
 
             expect(ajaxSpy).toHaveBeenCalledWith("url", {
                 mimeType : jasmine.any(String),
@@ -361,7 +351,7 @@ describe("Inline utilities function", function () {
         it("should cache by default", function () {
             var ajaxSpy = mockAjaxWith(resolvedPromise());
 
-            rasterizeHTMLInline.util.binaryAjax("url", {}, function () {}, function () {});
+            rasterizeHTMLInline.util.binaryAjax("url", {});
 
             expect(ajaxSpy).toHaveBeenCalledWith("url", {
                 mimeType : jasmine.any(String)
@@ -372,79 +362,78 @@ describe("Inline utilities function", function () {
     describe("getDataURIForImageURL", function () {
         var binaryAjaxSpy;
 
+        var mockBinaryAjax = function (targetUrl, content) {
+            binaryAjaxSpy.andCallFake(function (url) {
+                var defer = ayepromise.defer();
+                if (url === targetUrl) {
+                    defer.resolve(content);
+                }
+                return defer.promise;
+            });
+        };
+
         beforeEach(function () {
             binaryAjaxSpy = spyOn(rasterizeHTMLInline.util, "binaryAjax");
         });
 
-        it("should return an image as data: URI", function () {
-            var returnedDataURI = null;
+        it("should return an image as data: URI", function (done) {
+            mockBinaryAjax('green.png', "fakeImageContent");
 
-            binaryAjaxSpy.andCallFake(function (url, options, successCallback) {
-                if (url === 'green.png') {
-                    successCallback("fakeImageContent");
-                }
-            });
+            rasterizeHTMLInline.util.getDataURIForImageURL("green.png", {}, function (returnedDataURI) {
+                expect(returnedDataURI).toEqual('data:image/png;base64,' + btoa('fakeImageContent'));
+                expect(binaryAjaxSpy).toHaveBeenCalledWith('green.png', {});
 
-            rasterizeHTMLInline.util.getDataURIForImageURL("green.png", {}, function (dataURI) {
-                returnedDataURI = dataURI;
+                done();
             }, function () {});
-
-            expect(returnedDataURI).toEqual('data:image/png;base64,' + btoa('fakeImageContent'));
-            expect(binaryAjaxSpy).toHaveBeenCalledWith('green.png', {}, jasmine.any(Function), jasmine.any(Function));
         });
 
-        it("should return a SVG as data: URI", function () {
-            var returnedDataURI = null,
-                svgImageHead = '<?xml version="1.0" encoding="utf-8"?>';
+        it("should return a SVG as data: URI", function (done) {
+            var svgImageHead = '<?xml version="1.0" encoding="utf-8"?>';
 
-            binaryAjaxSpy.andCallFake(function (url, options, successCallback) {
-                if (url === 'green.svg') {
-                    successCallback(svgImageHead);
-                }
-            });
+            mockBinaryAjax('green.svg', svgImageHead);
 
-            rasterizeHTMLInline.util.getDataURIForImageURL("green.svg", {}, function (dataURI) {
-                returnedDataURI = dataURI;
+            rasterizeHTMLInline.util.getDataURIForImageURL("green.svg", {}, function (returnedDataURI) {
+                expect(returnedDataURI).toEqual('data:image/svg+xml;base64,' + btoa(svgImageHead));
+
+                done();
             }, function () {});
-
-            expect(returnedDataURI).toEqual('data:image/svg+xml;base64,' + btoa(svgImageHead));
         });
 
-        it("should return a SVG as data: URI without XML head", function () {
-            var returnedDataURI = null,
-                svgImageHead = '<svg xmlns="http://www.w3.org/2000/svg">';
+        it("should return a SVG as data: URI without XML head", function (done) {
+            var svgImageHead = '<svg xmlns="http://www.w3.org/2000/svg">';
 
-            binaryAjaxSpy.andCallFake(function (url, options, successCallback) {
-                if (url === 'green.svg') {
-                    successCallback(svgImageHead);
-                }
-            });
+            mockBinaryAjax('green.svg', svgImageHead);
 
-            rasterizeHTMLInline.util.getDataURIForImageURL("green.svg", {}, function (dataURI) {
-                returnedDataURI = dataURI;
+            rasterizeHTMLInline.util.getDataURIForImageURL("green.svg", {}, function (returnedDataURI) {
+                expect(returnedDataURI).toEqual('data:image/svg+xml;base64,' + btoa(svgImageHead));
+
+                done();
             }, function () {});
 
-            expect(returnedDataURI).toEqual('data:image/svg+xml;base64,' + btoa(svgImageHead));
         });
 
-        it("should return an error if the image could not be located due to a REST error", function () {
-            var errorCallback = jasmine.createSpy("errorCallback"),
-                successCallback = jasmine.createSpy("successCallback");
+        it("should return an error if the image could not be located due to a REST error", function (done) {
+            var successCallback = jasmine.createSpy("successCallback");
 
-            binaryAjaxSpy.andCallFake(function (url, options, successCallback, errorCallback) {
-                errorCallback();
+            binaryAjaxSpy.andCallFake(function () {
+                var defer = ayepromise.defer();
+                defer.reject();
+                return defer.promise;
             });
 
-            rasterizeHTMLInline.util.getDataURIForImageURL("image_does_not_exist.png", {}, successCallback, errorCallback);
+            rasterizeHTMLInline.util.getDataURIForImageURL("image_does_not_exist.png", {}, successCallback, function () {
+                expect(successCallback).not.toHaveBeenCalled();
 
-            expect(errorCallback).toHaveBeenCalled();
-            expect(successCallback).not.toHaveBeenCalled();
+                done();
+            });
         });
 
         it("should circumvent caching if requested", function () {
+            mockBinaryAjax('image.png', 'content');
+
             rasterizeHTMLInline.util.getDataURIForImageURL("image.png", {cache: 'none'}, function () {}, function () {});
 
-            expect(binaryAjaxSpy).toHaveBeenCalledWith('image.png', {cache: 'none'}, jasmine.any(Function), jasmine.any(Function));
+            expect(binaryAjaxSpy).toHaveBeenCalledWith('image.png', {cache: 'none'});
         });
 
     });

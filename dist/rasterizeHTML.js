@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.7.0 - 2014-01-17
+/*! rasterizeHTML.js - v0.7.0 - 2014-01-18
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2014 Christoph Burgmer; Licensed MIT */
 window.rasterizeHTMLInline = (function (module) {
@@ -782,12 +782,13 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
     };
 
     var loadAndInlineFontFace = function (cssRules, rule, options, successCallback) {
-        var fontReferences, fontSrc, format, base64Content,
+        var fontReferences,
             errors = [];
 
         fontReferences = sliceFontFaceSrcReferences(rule.style.getPropertyValue("src"));
         module.util.map(fontReferences, function (reference, finish) {
-            fontSrc = extractFontFaceSrcUrl(reference);
+            var fontSrc = extractFontFaceSrcUrl(reference),
+                format;
 
             if (!fontSrc || module.util.isDataUri(fontSrc.url)) {
                 finish(false);
@@ -796,15 +797,16 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
 
             format = fontSrc.format || "woff";
 
-            module.util.binaryAjax(fontSrc.url, options, function (content) {
-                base64Content = btoa(content);
-                reference[0] = 'url("data:font/' + format + ';base64,' + base64Content + '")';
+            module.util.binaryAjax(fontSrc.url, options)
+                .then(function (content) {
+                    var base64Content = btoa(content);
+                    reference[0] = 'url("data:font/' + format + ';base64,' + base64Content + '")';
 
-                finish(true);
-            }, function () {
-                errors.push(module.util.joinUrl(options.baseUrl, fontSrc.url));
-                finish(false);
-            });
+                    finish(true);
+                }, function () {
+                    errors.push(module.util.joinUrl(options.baseUrl, fontSrc.url));
+                    finish(false);
+                });
         }, function (changedStates) {
             var changed = changedStates.indexOf(true) >= 0;
 
@@ -961,13 +963,12 @@ window.rasterizeHTMLInline = (function (module, window, ayepromise, url) {
         return defer.promise;
     };
 
-    module.util.binaryAjax = function (url, options, successCallback, errorCallback) {
-        var ajaxOptions = module.util.clone(options),
-            promise;
+    module.util.binaryAjax = function (url, options) {
+        var ajaxOptions = module.util.clone(options);
 
         ajaxOptions.mimeType = 'text/plain; charset=x-user-defined';
 
-        promise = module.util.ajax(url, ajaxOptions)
+        return module.util.ajax(url, ajaxOptions)
             .then(function (content) {
                 var binaryContent = "";
 
@@ -977,8 +978,6 @@ window.rasterizeHTMLInline = (function (module, window, ayepromise, url) {
 
                 return binaryContent;
             });
-
-        promise.then(successCallback, errorCallback);
     };
 
     var detectMimeType = function (content) {
@@ -993,17 +992,13 @@ window.rasterizeHTMLInline = (function (module, window, ayepromise, url) {
     };
 
     module.util.getDataURIForImageURL = function (url, options, successCallback, errorCallback) {
-        var base64Content, mimeType;
+        module.util.binaryAjax(url, options)
+            .then(function (content) {
+                var base64Content = btoa(content),
+                    mimeType = detectMimeType(content);
 
-        module.util.binaryAjax(url, options, function (content) {
-            base64Content = btoa(content);
-
-            mimeType = detectMimeType(content);
-
-            successCallback('data:' + mimeType + ';base64,' + base64Content);
-        }, function () {
-            errorCallback();
-        });
+                successCallback('data:' + mimeType + ';base64,' + base64Content);
+            }, errorCallback);
     };
 
     var uniqueIdList = [];

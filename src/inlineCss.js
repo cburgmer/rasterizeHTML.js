@@ -445,12 +445,13 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
     };
 
     var loadAndInlineFontFace = function (cssRules, rule, options, successCallback) {
-        var fontReferences, fontSrc, format, base64Content,
+        var fontReferences,
             errors = [];
 
         fontReferences = sliceFontFaceSrcReferences(rule.style.getPropertyValue("src"));
         module.util.map(fontReferences, function (reference, finish) {
-            fontSrc = extractFontFaceSrcUrl(reference);
+            var fontSrc = extractFontFaceSrcUrl(reference),
+                format;
 
             if (!fontSrc || module.util.isDataUri(fontSrc.url)) {
                 finish(false);
@@ -459,15 +460,16 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
 
             format = fontSrc.format || "woff";
 
-            module.util.binaryAjax(fontSrc.url, options, function (content) {
-                base64Content = btoa(content);
-                reference[0] = 'url("data:font/' + format + ';base64,' + base64Content + '")';
+            module.util.binaryAjax(fontSrc.url, options)
+                .then(function (content) {
+                    var base64Content = btoa(content);
+                    reference[0] = 'url("data:font/' + format + ';base64,' + base64Content + '")';
 
-                finish(true);
-            }, function () {
-                errors.push(module.util.joinUrl(options.baseUrl, fontSrc.url));
-                finish(false);
-            });
+                    finish(true);
+                }, function () {
+                    errors.push(module.util.joinUrl(options.baseUrl, fontSrc.url));
+                    finish(false);
+                });
         }, function (changedStates) {
             var changed = changedStates.indexOf(true) >= 0;
 

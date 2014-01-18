@@ -722,7 +722,24 @@ describe("Inline CSS content", function () {
         });
 
         describe("on font-face", function () {
-            var fontFaceSrcRegex = /url\("?([^\)"]+)"?\)(\s*format\("?([^\)"]+)"?\))?/;
+            var fontFaceSrcRegex = /url\("?([^\)"]+)"?\)(\s*format\("?([^\)"]+)"?\))?/,
+                ajaxUrlMocks = {};
+
+            var setupAjaxMock = function () {
+                binaryAjaxSpy.andCallFake(function (url) {
+                    var defer = ayepromise.defer();
+                    if (ajaxUrlMocks[url] !== undefined) {
+                        defer.resolve(ajaxUrlMocks[url]);
+                    } else {
+                        defer.reject();
+                    }
+                    return defer.promise;
+                });
+            };
+
+            var mockBinaryAjaxUrl = function (url, content) {
+                ajaxUrlMocks[url] = content;
+            };
 
             var expectFontFaceUrlToMatch = function (rule, url, format) {
                 var extractedUrl, match;
@@ -734,6 +751,10 @@ describe("Inline CSS content", function () {
                     expect(match[3]).toEqual(format);
                 }
             };
+
+            beforeEach(function () {
+                setupAjaxMock();
+            });
 
             it("should not touch an already inlined font", function () {
                 var rules = CSSOM.parse('@font-face { font-family: "test font"; src: url("data:font/woff;base64,soMEfAkebASE64="); }').cssRules;
@@ -761,76 +782,78 @@ describe("Inline CSS content", function () {
                 expect(callback).toHaveBeenCalledWith(false, []);
             });
 
-            it("should inline a font", function () {
+            it("should inline a font", function (done) {
                 var rules = CSSOM.parse('@font-face { font-family: "test font"; src: url("fake.woff"); }').cssRules;
 
-                binaryAjaxSpy.andCallFake(function (url, options, success) {
-                    success("this is not a font");
+                mockBinaryAjaxUrl('fake.woff', "this is not a font");
+
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function (changed) {
+                    expect(changed).toBe(true);
+
+                    expect(extractCssUrlSpy.mostRecentCall.args[0]).toMatch(new RegExp('url\\("?fake.woff"?\\)'));
+
+                    expectFontFaceUrlToMatch(rules[0], "data:font/woff;base64,dGhpcyBpcyBub3QgYSBmb250");
+
+                    done();
                 });
-
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, callback);
-
-                expect(callback).toHaveBeenCalledWith(true, []);
-
-                expect(extractCssUrlSpy.mostRecentCall.args[0]).toMatch(new RegExp('url\\("?fake.woff"?\\)'));
-
-                expectFontFaceUrlToMatch(rules[0], "data:font/woff;base64,dGhpcyBpcyBub3QgYSBmb250");
             });
 
             it("should take a font from url with alternatives", function () {
                 var rules = CSSOM.parse('@font-face { font-family: "test font"; src: local("font name"), url("fake.woff"); }').cssRules;
+                mockBinaryAjaxUrl('fake.woff', '');
 
                 rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, callback);
 
                 expect(extractCssUrlSpy.mostRecentCall.args[0]).toMatch(new RegExp('url\\("?fake.woff"?\\)'));
             });
 
-            it("should detect a woff", function () {
+            it("should detect a woff", function (done) {
                 var rules = CSSOM.parse('@font-face { font-family: "test font"; src: url("fake.woff") format("woff"); }').cssRules;
 
-                binaryAjaxSpy.andCallFake(function (url, options, success) {
-                    success("font's content");
+                mockBinaryAjaxUrl('fake.woff', "font's content");
+
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function () {
+                    expectFontFaceUrlToMatch(rules[0], "data:font/woff;base64,Zm9udCdzIGNvbnRlbnQ=", 'woff');
+
+                    done();
                 });
-
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, callback);
-
-                expectFontFaceUrlToMatch(rules[0], "data:font/woff;base64,Zm9udCdzIGNvbnRlbnQ=", 'woff');
             });
 
-            it("should detect a truetype font", function () {
+            it("should detect a truetype font", function (done) {
                 var rules = CSSOM.parse('@font-face { font-family: "test font"; src: url("fake.ttf") format("truetype"); }').cssRules;
 
-                binaryAjaxSpy.andCallFake(function (url, options, success) {
-                    success("font's content");
+                mockBinaryAjaxUrl('fake.ttf', "font's content");
+
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function () {
+                    expectFontFaceUrlToMatch(rules[0], "data:font/truetype;base64,Zm9udCdzIGNvbnRlbnQ=", 'truetype');
+
+                    done();
                 });
-
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, callback);
-
-                expectFontFaceUrlToMatch(rules[0], "data:font/truetype;base64,Zm9udCdzIGNvbnRlbnQ=", 'truetype');
             });
 
-            it("should detect a opentype font", function () {
+            it("should detect a opentype font", function (done) {
                 var rules = CSSOM.parse('@font-face { font-family: "test font"; src: url("fake.otf") format("opentype"); }').cssRules;
 
-                binaryAjaxSpy.andCallFake(function (url, options, success) {
-                    success("font's content");
+                mockBinaryAjaxUrl('fake.otf', "font's content");
+
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function () {
+                    expectFontFaceUrlToMatch(rules[0], "data:font/opentype;base64,Zm9udCdzIGNvbnRlbnQ=", 'opentype');
+
+                    done();
                 });
-
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, callback);
-
-                expectFontFaceUrlToMatch(rules[0], "data:font/opentype;base64,Zm9udCdzIGNvbnRlbnQ=", 'opentype');
             });
 
-            ifNotInPhantomJsIt("should keep all src references intact", function () {
+            ifNotInPhantomJsIt("should keep all src references intact", function (done) {
                 var rules = CSSOM.parse('@font-face { font-family: "test font"; src: local("Fake Font"), url("fake.otf") format("opentype"), url("fake.woff"), local("Another Fake Font"); }').cssRules;
 
-                binaryAjaxSpy.andCallFake(function (url, options, success) {
-                    success("font");
+                mockBinaryAjaxUrl('fake.woff', "font");
+                mockBinaryAjaxUrl('fake.otf', "font");
+
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function () {
+                    expect(rules[0].style.getPropertyValue('src')).toMatch(/local\("?Fake Font"?\), url\("?data:font\/opentype;base64,Zm9udA=="?\) format\("?opentype"?\), url\("?data:font\/woff;base64,Zm9udA=="?\), local\("?Another Fake Font"?\)/);
+
+                    done();
                 });
-
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, callback);
-
-                expect(rules[0].style.getPropertyValue('src')).toMatch(/local\("?Fake Font"?\), url\("?data:font\/opentype;base64,Zm9udA=="?\) format\("?opentype"?\), url\("?data:font\/woff;base64,Zm9udA=="?\), local\("?Another Fake Font"?\)/);
             });
 
             it("should handle a baseUrl", function () {
@@ -845,26 +868,18 @@ describe("Inline CSS content", function () {
                 var fontUrl = "fake.woff",
                     rules = CSSOM.parse('@font-face { font-family: "test font"; src: url("' + fontUrl + '"); }').cssRules;
 
-                binaryAjaxSpy.andCallFake(function (url, options, success) {
-                    success("this is not a font");
-                });
-
                 rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {cache: 'none'}, callback);
 
-                expect(binaryAjaxSpy).toHaveBeenCalledWith(fontUrl, {cache: 'none'}, jasmine.any(Function), jasmine.any(Function));
+                expect(binaryAjaxSpy).toHaveBeenCalledWith(fontUrl, {cache: 'none'});
             });
 
             it("should not circumvent caching by default", function () {
                 var fontUrl = "fake.woff",
                     rules = CSSOM.parse('@font-face { font-family: "test font"; src: url("' + fontUrl + '"); }').cssRules;
 
-                binaryAjaxSpy.andCallFake(function (url, options, success) {
-                    success("this is not a font");
-                });
-
                 rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, callback);
 
-                expect(binaryAjaxSpy).toHaveBeenCalledWith(fontUrl, {}, jasmine.any(Function), jasmine.any(Function));
+                expect(binaryAjaxSpy).toHaveBeenCalledWith(fontUrl, {});
             });
         });
 
@@ -872,57 +887,68 @@ describe("Inline CSS content", function () {
             var aFontReferenceThatDoesExist = "a_font_that_does_exist.woff";
 
             beforeEach(function () {
-                binaryAjaxSpy.andCallFake(function (url, options, successCallback, errorCallback) {
+                binaryAjaxSpy.andCallFake(function (url) {
+                    var defer = ayepromise.defer();
                     if (url === aFontReferenceThatDoesExist) {
-                        successCallback();
+                        defer.resolve();
                     } else {
-                        errorCallback();
+                        defer.reject();
                     }
+                    return defer.promise;
                 });
                 joinUrlSpy.andCallThrough();
             });
 
-            it("should report an error if a font could not be loaded", function () {
+            it("should report an error if a font could not be loaded", function (done) {
                 var rules = CSSOM.parse('@font-face { font-family: "test font"; src: url("a_font_that_doesnt_exist.woff"); }').cssRules;
 
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {baseUrl:  'some_base_url/'}, callback);
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {baseUrl:  'some_base_url/'}, function (changed, errors) {
+                    expect(changed).toBe(false);
+                    expect(errors).toEqual([{
+                        resourceType: "fontFace",
+                        url: "some_base_url/a_font_that_doesnt_exist.woff",
+                        msg: "Unable to load font-face some_base_url/a_font_that_doesnt_exist.woff"
+                    }]);
 
-                expect(callback).toHaveBeenCalledWith(false, [{
-                    resourceType: "fontFace",
-                    url: "some_base_url/a_font_that_doesnt_exist.woff",
-                    msg: "Unable to load font-face some_base_url/a_font_that_doesnt_exist.woff"
-                }]);
+                    done();
+                });
             });
 
-            it("should only report a failing font as error", function () {
+            it("should only report a failing font as error", function (done) {
                 var rules = CSSOM.parse('@font-face { font-family: "test font1"; src: url("a_font_that_doesnt_exist.woff"); }\n' +
                     '@font-face { font-family: "test font2"; src: url("' + aFontReferenceThatDoesExist + '"); }').cssRules;
 
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, callback);
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function (changed, errors) {
+                    expect(errors).toEqual([{
+                        resourceType: "fontFace",
+                        url: "a_font_that_doesnt_exist.woff",
+                        msg: jasmine.any(String)
+                    }]);
 
-                expect(callback).toHaveBeenCalledWith(true, [{
-                    resourceType: "fontFace",
-                    url: "a_font_that_doesnt_exist.woff",
-                    msg: jasmine.any(String)
-                }]);
+                    done();
+                });
             });
 
-            it("should report multiple failing fonts as error", function () {
+            it("should report multiple failing fonts as error", function (done) {
                 var rules = CSSOM.parse('@font-face { font-family: "test font1"; src: url("a_font_that_doesnt_exist.woff"); }\n' +
                     '@font-face { font-family: "test font2"; src: url("another_font_that_doesnt_exist.woff"); }').cssRules;
 
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, callback);
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function (changed, errors) {
+                    expect(errors).toEqual([jasmine.any(Object), jasmine.any(Object)]);
+                    expect(errors[0]).not.toEqual(errors[1]);
 
-                expect(callback).toHaveBeenCalledWith(false, [jasmine.any(Object), jasmine.any(Object)]);
-                expect(callback.mostRecentCall.args[1][0]).not.toEqual(callback.mostRecentCall.args[1][1]);
+                    done();
+                });
             });
 
-            it("should report an empty list for a successful backgroundImage", function () {
+            it("should report an empty list for a successful backgroundImage", function (done) {
                 var rules = CSSOM.parse('@font-face { font-family: "test font2"; src: url("' + aFontReferenceThatDoesExist + '"); }').cssRules;
 
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, callback);
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function (changed, errors) {
+                    expect(errors).toEqual([]);
 
-                expect(callback).toHaveBeenCalledWith(true, []);
+                    done();
+                });
             });
         });
     });
