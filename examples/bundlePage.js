@@ -1,8 +1,14 @@
-var port = 8000;
+var port = 8000,
+    stderr = require("system").stderr;
 
 // https://github.com/ariya/phantomjs/issues/10150
 console.error = function () {
-    require("system").stderr.write(Array.prototype.join.call(arguments, ' ') + '\n');
+    var out = Array.prototype.join.call(arguments, ' ') + '\n';
+    try {
+        stderr.write(out);
+    } catch (e) {
+        // SlimerJS 0.9.0 throws an error here: 'JavaScript Error: "stderr is undefined"'
+    }
 };
 
 var textExtensions = ['html', 'htm', 'css', 'js'];
