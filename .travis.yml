@@ -4,12 +4,12 @@ node_js:
 env:
   - SLIMERJSLAUNCHER=$(which firefox) DISPLAY=:99.0 PATH=$TRAVIS_BUILD_DIR/slimerjs:$PATH
 addons:
-  firefox: "24.0"
+  firefox: "25.0"
 before_script:
   - "sh -e /etc/init.d/xvfb start"
-  - "wget http://download.slimerjs.org/v0.8/0.8.4/slimerjs-0.8.4.zip"
-  - "unzip slimerjs-0.8.4.zip"
-  - "mv slimerjs-0.8.4 ./slimerjs"
+  - "wget http://download.slimerjs.org/v0.9/0.9.0/slimerjs-0.9.0.zip"
+  - "unzip slimerjs-0.9.0.zip"
+  - "mv slimerjs-0.9.0 ./slimerjs"
 deploy:
   provider: npm
   email: christoph.burgmer@gmail.com
