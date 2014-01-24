@@ -31,27 +31,34 @@ window.rasterizeHTMLInline = (function (module) {
 
     /* Img Inlining */
 
-    var encodeImageAsDataURI = function (image, options, successCallback, errorCallback) {
+    var encodeImageAsDataURI = function (image, options) {
         var url = image.attributes.src ? image.attributes.src.nodeValue : null,
             documentBase = module.util.getDocumentBaseUrl(image.ownerDocument),
             ajaxOptions = module.util.clone(options);
-
-        if (url === null || module.util.isDataUri(url)) {
-            successCallback();
-            return;
-        }
 
         if (!ajaxOptions.baseUrl && documentBase) {
             ajaxOptions.baseUrl = documentBase;
         }
 
-        module.util.getDataURIForImageURL(url, ajaxOptions)
+        return module.util.getDataURIForImageURL(url, ajaxOptions)
             .then(function (dataURI) {
                 image.attributes.src.nodeValue = dataURI;
-                successCallback();
             }, function () {
-                errorCallback(module.util.joinUrl(ajaxOptions.baseUrl, url));
+                var fullUrl = module.util.joinUrl(ajaxOptions.baseUrl, url);
+                throw {
+                    resourceType: "image",
+                    url: fullUrl,
+                    msg: "Unable to load image " + fullUrl
+                };
             });
+    };
+
+    var filterExternalImages = function (images) {
+        return images.filter(function (image) {
+            var url = image.attributes.src ? image.attributes.src.nodeValue : null;
+
+            return url !== null && !module.util.isDataUri(url);
+        });
     };
 
     var filterInputsForImageType = function (inputs) {
@@ -60,30 +67,32 @@ window.rasterizeHTMLInline = (function (module) {
         });
     };
 
-    module.loadAndInlineImages = function (doc, options, callback) {
-        var params = module.util.parseOptionalParameters(options, callback),
-            images = doc.getElementsByTagName("img"),
-            inputs = doc.getElementsByTagName("input"),
-            imageLike = [],
-            errors = [];
+    var toArray = function (arrayLike) {
+        return Array.prototype.slice.call(arrayLike);
+    };
 
-        imageLike = Array.prototype.slice.call(images);
-        imageLike = imageLike.concat(filterInputsForImageType(inputs));
-
-        module.util.map(imageLike, function (image, finish) {
-            encodeImageAsDataURI(image, params.options, finish, function (url) {
-                errors.push({
-                    resourceType: "image",
-                    url: url,
-                    msg: "Unable to load image " + url
-                });
-                finish();
+    var joinAndCollectErrors = function (promises) {
+        return module.util.all(promises.map(function (promise) {
+            return promise.then(function () {}, function (e) {
+                return e;
             });
-        }, function () {
-            if (params.callback) {
-                params.callback(errors);
-            }
+        })).then(function (errorValues) {
+            var errors = errorValues.filter(function (e) {
+                return e !== undefined;
+            });
+
+            return errors;
         });
+    };
+
+    module.loadAndInlineImages = function (doc, options) {
+        var images = toArray(doc.getElementsByTagName("img")),
+            imageInputs = filterInputsForImageType(doc.getElementsByTagName("input")),
+            externalImages = filterExternalImages(images.concat(imageInputs));
+
+        return joinAndCollectErrors(externalImages.map(function (image) {
+            return encodeImageAsDataURI(image, options);
+        }));
     };
 
     /* Style inlining */
@@ -309,7 +318,7 @@ window.rasterizeHTMLInline = (function (module) {
     module.inlineReferences = function (doc, options, callback) {
         var allErrors = [];
 
-        module.loadAndInlineImages(doc, options, function (errors) {
+        module.loadAndInlineImages(doc, options).then(function (errors) {
             allErrors = allErrors.concat(errors);
             module.loadAndInlineStyles(doc, options, function (errors) {
                 allErrors = allErrors.concat(errors);

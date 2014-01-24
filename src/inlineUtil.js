@@ -34,6 +34,31 @@ window.rasterizeHTMLInline = (function (module, window, ayepromise, url) {
         return (/^data:/).test(url);
     };
 
+    module.util.all = function (promises) {
+        var defer = ayepromise.defer(),
+            pendingPromiseCount = promises.length,
+            resolvedValues = [];
+
+        if (promises.length === 0) {
+            defer.resolve([]);
+            return defer.promise;
+        }
+
+        promises.forEach(function (promise, idx) {
+            promise.then(function (value) {
+                pendingPromiseCount -= 1;
+                resolvedValues[idx] = value;
+
+                if (pendingPromiseCount === 0) {
+                    defer.resolve(resolvedValues);
+                }
+            }, function (e) {
+                defer.reject(e);
+            });
+        });
+        return defer.promise;
+    };
+
     module.util.map = function (list, func, callback) {
         var completedCount = 0,
             // Operating inline on array-like structures like document.getElementByTagName() (e.g. deleting a node),

@@ -33,7 +33,7 @@ describe("Image and image input inline", function () {
         mockGetDataURIForImageURL(firstImage, firstImageDataURI);
         doc.body.innerHTML = '<img id="image" src="' + firstImage + '" alt="test image"/>';
 
-        rasterizeHTMLInline.loadAndInlineImages(doc, function () {
+        rasterizeHTMLInline.loadAndInlineImages(doc, {}).then(function () {
             expect(doc.getElementById("image").attributes.src.nodeValue).toEqual(firstImageDataURI);
 
             done();
@@ -44,7 +44,7 @@ describe("Image and image input inline", function () {
         mockGetDataURIForImageURL(firstImage, firstImageDataURI);
         doc.body.innerHTML = '<input type="image" id="input" src="' + firstImage + '" alt="test image"/>';
 
-        rasterizeHTMLInline.loadAndInlineImages(doc, function () {
+        rasterizeHTMLInline.loadAndInlineImages(doc, {}).then(function () {
             expect(doc.getElementById("input").attributes.src.nodeValue).toEqual(firstImageDataURI);
 
             done();
@@ -59,7 +59,7 @@ describe("Image and image input inline", function () {
             '<img id="image2" src="' + secondImage +'" alt="test image"/>'
         );
 
-        rasterizeHTMLInline.loadAndInlineImages(doc, function () {
+        rasterizeHTMLInline.loadAndInlineImages(doc, {}).then(function () {
             expect(doc.getElementById("image1").attributes.src.nodeValue).toEqual(firstImageDataURI);
             expect(doc.getElementById("image2").attributes.src.nodeValue).toEqual(secondImageDataURI);
 
@@ -67,101 +67,94 @@ describe("Image and image input inline", function () {
         });
     });
 
-    it("should finish if no images found", function () {
-        var callback = jasmine.createSpy("callback");
-
-        rasterizeHTMLInline.loadAndInlineImages(doc, callback);
-
-        expect(callback).toHaveBeenCalled();
+    it("should finish if no images found", function (done) {
+        rasterizeHTMLInline.loadAndInlineImages(doc, {}).then(done);
     });
 
-    it("should not touch an already inlined image", function () {
-        var callback = jasmine.createSpy("callback");
-
+    it("should not touch an already inlined image", function (done) {
         doc.body.innerHTML = '<img id="image" src="data:image/png;base64,soMEfAkebASE64=" alt="test image"/>';
 
-        rasterizeHTMLInline.loadAndInlineImages(doc, callback);
+        rasterizeHTMLInline.loadAndInlineImages(doc, {}).then(function () {
+            expect(doc.getElementById("image").src).toEqual('data:image/png;base64,soMEfAkebASE64=');
 
-        expect(callback).toHaveBeenCalled();
-
-        expect(doc.getElementById("image").src).toEqual('data:image/png;base64,soMEfAkebASE64=');
+            done();
+        });
     });
 
-    it("should not touch an image without a src", function () {
-        var callback = jasmine.createSpy("callback");
-
+    it("should not touch an image without a src", function (done) {
         doc.body.innerHTML = '<img id="image">';
 
-        rasterizeHTMLInline.loadAndInlineImages(doc, callback);
+        rasterizeHTMLInline.loadAndInlineImages(doc, {}).then(function () {
+            expect(doc.getElementById("image").parentNode.innerHTML).toEqual('<img id="image">');
 
-        expect(callback).toHaveBeenCalled();
-
-        expect(doc.getElementById("image").parentNode.innerHTML).toEqual('<img id="image">');
+            done();
+        });
     });
 
     it("should respect the document's baseURI when loading the image", function () {
-        var callback = jasmine.createSpy("callback"),
-            getDocumentBaseUrlSpy = spyOn(rasterizeHTMLInline.util, 'getDocumentBaseUrl').andCallThrough();
+        var getDocumentBaseUrlSpy = spyOn(rasterizeHTMLInline.util, 'getDocumentBaseUrl').andCallThrough();
 
         doc = rasterizeHTMLTestHelper.readDocumentFixture("image.html");
 
-        rasterizeHTMLInline.loadAndInlineImages(doc, callback);
+        rasterizeHTMLInline.loadAndInlineImages(doc, {});
 
         expect(getDataURIForImageURLSpy.mostRecentCall.args[1].baseUrl).toEqual(doc.baseURI);
         expect(getDocumentBaseUrlSpy).toHaveBeenCalledWith(doc);
     });
 
     it("should respect optional baseUrl when loading the image", function () {
-        var callback = jasmine.createSpy("callback");
-
         doc = rasterizeHTMLTestHelper.readDocumentFixtureWithoutBaseURI("image.html");
 
-        rasterizeHTMLInline.loadAndInlineImages(doc, {baseUrl: "aBaseUrl"}, callback);
+        rasterizeHTMLInline.loadAndInlineImages(doc, {baseUrl: "aBaseUrl"});
 
         expect(getDataURIForImageURLSpy.mostRecentCall.args[1].baseUrl).toEqual("aBaseUrl");
     });
 
     it("should favour explicit baseUrl over document.baseURI when loading the image", function () {
-        var callback = jasmine.createSpy("callback"),
-            baseUrl = "aBaseUrl";
+        var baseUrl = "aBaseUrl";
 
         doc = rasterizeHTMLTestHelper.readDocumentFixture("image.html");
         expect(doc.baseURI).not.toBeNull();
         expect(doc.baseURI).not.toEqual("about:blank");
         expect(doc.baseURI).not.toEqual(baseUrl);
 
-        rasterizeHTMLInline.loadAndInlineImages(doc, {baseUrl: baseUrl}, callback);
+        rasterizeHTMLInline.loadAndInlineImages(doc, {baseUrl: baseUrl});
 
         expect(getDataURIForImageURLSpy.mostRecentCall.args[1].baseUrl).toEqual(baseUrl);
     });
 
     it("should circumvent caching if requested", function () {
-        var callback = jasmine.createSpy("callback");
-
         doc.body.innerHTML = '<img id="image" src="' + firstImage + '" alt="test image"/>';
 
-        rasterizeHTMLInline.loadAndInlineImages(doc, {cache: 'none'}, callback);
+        rasterizeHTMLInline.loadAndInlineImages(doc, {cache: 'none'});
 
         expect(getDataURIForImageURLSpy).toHaveBeenCalledWith(jasmine.any(String), {cache: 'none'});
     });
 
     it("should not circumvent caching by default", function () {
-        var callback = jasmine.createSpy("callback");
-
         doc.body.innerHTML = '<img id="image" src="' + firstImage + '" alt="test image"/>';
 
-        rasterizeHTMLInline.loadAndInlineImages(doc, callback);
+        rasterizeHTMLInline.loadAndInlineImages(doc, {});
 
         expect(getDataURIForImageURLSpy).toHaveBeenCalledWith(jasmine.any(String), {});
     });
 
     describe("on errors", function () {
-        var callback,
-            imageThatDoesExist = "image_that_does_exist.png";
+        var imageThatDoesExist = "image_that_does_exist.png";
+
+        var deleteAdditionalFieldsFromErrorsUnderPhantomJS = function (error) {
+            var newErrorObject = {},
+                additionalKeys = ['sourceId', 'sourceURL', 'stack', 'stackArray', 'line'];
+
+            Object.keys(error).forEach(function (key) {
+                if (additionalKeys.indexOf(key) === -1) {
+                    newErrorObject[key] = error[key];
+                }
+            });
+            return newErrorObject;
+        };
 
         beforeEach(function () {
-            callback = jasmine.createSpy("callback");
-
             joinUrlSpy.andCallThrough();
 
             mockGetDataURIForImageURL(imageThatDoesExist, "theDataUri");
@@ -170,7 +163,9 @@ describe("Image and image input inline", function () {
         it("should report an error if an image could not be loaded", function (done) {
             doc.body.innerHTML = '<img src="image_that_doesnt_exist.png" alt="test image"/>';
 
-            rasterizeHTMLInline.loadAndInlineImages(doc, {baseUrl: "some_base_url/"}, function (errors) {
+            rasterizeHTMLInline.loadAndInlineImages(doc, {baseUrl: "some_base_url/"}).then(function (errors) {
+                errors[0] = deleteAdditionalFieldsFromErrorsUnderPhantomJS(errors[0]);
+
                 expect(errors).toEqual([{
                     resourceType: "image",
                     url: "some_base_url/image_that_doesnt_exist.png",
@@ -187,7 +182,9 @@ describe("Image and image input inline", function () {
                 '<img src="' + imageThatDoesExist + '" alt="test image"/>'
             );
 
-            rasterizeHTMLInline.loadAndInlineImages(doc, function (errors) {
+            rasterizeHTMLInline.loadAndInlineImages(doc, {}).then(function (errors) {
+                errors[0] = deleteAdditionalFieldsFromErrorsUnderPhantomJS(errors[0]);
+
                 expect(errors).toEqual([{
                     resourceType: "image",
                     url: "image_that_doesnt_exist.png",
@@ -204,7 +201,7 @@ describe("Image and image input inline", function () {
                 '<img src="another_image_that_doesnt_exist.png" alt="test image"/>'
             );
 
-            rasterizeHTMLInline.loadAndInlineImages(doc, function (errors) {
+            rasterizeHTMLInline.loadAndInlineImages(doc, {}).then(function (errors) {
                 expect(errors).toEqual([jasmine.any(Object), jasmine.any(Object)]);
                 expect(errors[0]).not.toEqual(errors[1]);
 
@@ -215,7 +212,7 @@ describe("Image and image input inline", function () {
         it("should report an empty list for a successful image", function (done) {
             doc.body.innerHTML = ('<img src="' + imageThatDoesExist + '" alt="test image"/>');
 
-            rasterizeHTMLInline.loadAndInlineImages(doc, function (errors) {
+            rasterizeHTMLInline.loadAndInlineImages(doc, {}).then(function (errors) {
                 expect(errors).toEqual([]);
 
                 done();

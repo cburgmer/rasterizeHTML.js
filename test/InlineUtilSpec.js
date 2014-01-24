@@ -106,6 +106,99 @@ describe("Inline utilities function", function () {
         });
     });
 
+    describe("all", function () {
+        it("should fulfill once a passed promise is fulfilled", function (done) {
+            var defer = ayepromise.defer(),
+                resolved = false;
+
+            rasterizeHTMLInline.util.all([defer.promise])
+                .then(function () {
+                    expect(resolved).toBe(true);
+                    done();
+                });
+
+            defer.resolve();
+
+            resolved = true;
+        });
+
+        it("should fulfill once multiple passed promises are fulfilled", function (done) {
+            var deferOne = ayepromise.defer(),
+                deferTwo = ayepromise.defer(),
+                resolvedCount = 0;
+
+            var incResolveCount = function () {
+                resolvedCount += 1;
+            };
+
+            deferOne.promise.then(incResolveCount);
+            deferTwo.promise.then(function () {
+                setTimeout(incResolveCount, 1);
+            });
+
+            rasterizeHTMLInline.util.all([deferOne.promise, deferTwo.promise])
+                .then(function () {
+                    expect(resolvedCount).toBe(2);
+                    done();
+                });
+
+            deferOne.resolve();
+            deferTwo.resolve();
+        });
+
+        it("should return the promises value", function (done) {
+            var defer = ayepromise.defer();
+
+            rasterizeHTMLInline.util.all([defer.promise])
+                .then(function (values) {
+                    expect(values).toEqual([42]);
+                    done();
+                });
+
+            defer.resolve(42);
+        });
+
+        it("should return the promises' values in the correct order", function (done) {
+            var deferOne = ayepromise.defer(),
+                deferTwo = ayepromise.defer();
+
+            rasterizeHTMLInline.util.all([deferOne.promise, deferTwo.promise])
+                .then(function (values) {
+                    expect(values).toEqual(['12', '34']);
+                    done();
+                });
+
+            setTimeout(function () {
+                deferOne.resolve('12');
+
+            }, 1);
+            deferTwo.resolve('34');
+        });
+
+        it("should resolve with an empty input list", function (done) {
+            rasterizeHTMLInline.util.all([])
+                .then(function (values) {
+                    expect(values).toEqual([]);
+                    done();
+                });
+        });
+
+        it("should fail if one of the promises fails", function (done) {
+            var deferOne = ayepromise.defer(),
+                deferTwo = ayepromise.defer(),
+                error = new Error("fail");
+
+            rasterizeHTMLInline.util.all([deferOne.promise, deferTwo.promise])
+                .fail(function (e) {
+                    expect(e).toBe(error);
+                    done();
+                });
+
+            deferOne.resolve('1');
+            deferTwo.reject(error);
+        });
+    });
+
     describe("map", function () {
         it("should map each value to one function call and then call complete function", function () {
             var completedValues = [],
