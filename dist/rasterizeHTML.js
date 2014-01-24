@@ -46,12 +46,11 @@ window.rasterizeHTMLInline = (function (module) {
         return module.util.getDataURIForImageURL(url, ajaxOptions)
             .then(function (dataURI) {
                 image.attributes.src.nodeValue = dataURI;
-            }, function () {
-                var fullUrl = module.util.joinUrl(ajaxOptions.baseUrl, url);
+            }, function (e) {
                 throw {
                     resourceType: "image",
-                    url: fullUrl,
-                    msg: "Unable to load image " + fullUrl
+                    url: e.url,
+                    msg: "Unable to load image " + e.url
                 };
             });
     };
@@ -976,24 +975,31 @@ window.rasterizeHTMLInline = (function (module, window, ayepromise, url) {
             joinedUrl = module.util.joinUrl(options.baseUrl, url),
             augmentedUrl;
 
+        var doReject = function () {
+            defer.reject({
+                msg: 'Unable to load url',
+                url: joinedUrl
+            });
+        };
+
         augmentedUrl = getUncachableURL(joinedUrl, options.cache);
 
         ajaxRequest.addEventListener("load", function () {
             if (ajaxRequest.status === 200 || ajaxRequest.status === 0) {
                 defer.resolve(ajaxRequest.response);
             } else {
-                defer.reject();
+                doReject();
             }
         }, false);
 
-        ajaxRequest.addEventListener("error", defer.reject, false);
+        ajaxRequest.addEventListener("error", doReject, false);
 
         try {
             ajaxRequest.open('GET', augmentedUrl, true);
             ajaxRequest.overrideMimeType(options.mimeType);
             ajaxRequest.send(null);
-        } catch (err) {
-            defer.reject(err);
+        } catch (e) {
+            doReject();
         }
 
         return defer.promise;

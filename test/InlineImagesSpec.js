@@ -12,7 +12,9 @@ describe("Image and image input inline", function () {
             if (urlMocks[url] !== undefined) {
                 defer.resolve(urlMocks[url]);
             } else {
-                defer.reject();
+                defer.reject({
+                    url: 'THEURL' + url
+                });
             }
             return defer.promise;
         });
@@ -163,13 +165,13 @@ describe("Image and image input inline", function () {
         it("should report an error if an image could not be loaded", function (done) {
             doc.body.innerHTML = '<img src="image_that_doesnt_exist.png" alt="test image"/>';
 
-            rasterizeHTMLInline.loadAndInlineImages(doc, {baseUrl: "some_base_url/"}).then(function (errors) {
+            rasterizeHTMLInline.loadAndInlineImages(doc, {}).then(function (errors) {
                 errors[0] = deleteAdditionalFieldsFromErrorsUnderPhantomJS(errors[0]);
 
                 expect(errors).toEqual([{
                     resourceType: "image",
-                    url: "some_base_url/image_that_doesnt_exist.png",
-                    msg: "Unable to load image some_base_url/image_that_doesnt_exist.png"
+                    url: 'THEURL' + "image_that_doesnt_exist.png",
+                    msg: "Unable to load image " + "THEURL" + "image_that_doesnt_exist.png"
                 }]);
 
                 done();
@@ -187,7 +189,7 @@ describe("Image and image input inline", function () {
 
                 expect(errors).toEqual([{
                     resourceType: "image",
-                    url: "image_that_doesnt_exist.png",
+                    url: 'THEURL' + "image_that_doesnt_exist.png",
                     msg: jasmine.any(String)
                 }]);
 

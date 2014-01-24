@@ -43,12 +43,11 @@ window.rasterizeHTMLInline = (function (module) {
         return module.util.getDataURIForImageURL(url, ajaxOptions)
             .then(function (dataURI) {
                 image.attributes.src.nodeValue = dataURI;
-            }, function () {
-                var fullUrl = module.util.joinUrl(ajaxOptions.baseUrl, url);
+            }, function (e) {
                 throw {
                     resourceType: "image",
-                    url: fullUrl,
-                    msg: "Unable to load image " + fullUrl
+                    url: e.url,
+                    msg: "Unable to load image " + e.url
                 };
             });
     };

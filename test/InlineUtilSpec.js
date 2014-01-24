@@ -320,6 +320,18 @@ describe("Inline utilities function", function () {
                 .fail(done);
         });
 
+        it("should include msg and url in error", function (done) {
+            var url = 'non_existing_url.html';
+
+            rasterizeHTMLInline.util.ajax(url, {})
+                .fail(function (e) {
+                    expect(e.msg).toEqual('Unable to load url');
+                    expect(e.url).toEqual(url);
+
+                    done();
+                });
+        });
+
         describe("options", function () {
             var ajaxRequest;
 
@@ -390,6 +402,22 @@ describe("Inline utilities function", function () {
 
                 expect(rasterizeHTMLInline.util.joinUrl).toHaveBeenCalledWith("http://example.com/", "relative/url.png");
             });
+
+            it("should report url relative to baseUrl in error", function (done) {
+                var url = 'non_existing_url.html',
+                    baseUrl = 'http://example.com/';
+
+                ajaxRequest.open.andThrow(new Error('a'));
+                rasterizeHTMLInline.util.ajax(url, {baseUrl: baseUrl})
+                    .fail(function (e) {
+                        expect(rasterizeHTMLInline.util.joinUrl).toHaveBeenCalledWith(baseUrl, url);
+
+                        expect(e.msg).toEqual('Unable to load url');
+                        expect(e.url).toEqual(baseUrl + url);
+
+                        done();
+                    });
+            });
         });
 
     });
@@ -398,9 +426,9 @@ describe("Inline utilities function", function () {
         var mockAjaxWith = function (promise) {
             return spyOn(rasterizeHTMLInline.util, "ajax").andReturn(promise);
         };
-        var rejectedPromise = function () {
+        var rejectedPromise = function (e) {
             var defer = ayepromise.defer();
-            defer.reject();
+            defer.reject(e);
             return defer.promise;
         };
         var resolvedPromise = function () {
@@ -428,6 +456,17 @@ describe("Inline utilities function", function () {
             mockAjaxWith(rejectedPromise());
             rasterizeHTMLInline.util.binaryAjax("url", {})
                 .fail(done);
+        });
+
+        it("should hand through the error object", function (done) {
+            var e = new Error('oh my');
+
+            mockAjaxWith(rejectedPromise(e));
+            rasterizeHTMLInline.util.binaryAjax("url", {})
+                .fail(function (error) {
+                    expect(error).toBe(e);
+                    done();
+                });
         });
 
         it("should circumvent caching if requested", function () {
@@ -508,8 +547,6 @@ describe("Inline utilities function", function () {
         });
 
         it("should return an error if the image could not be located due to a REST error", function (done) {
-            var successCallback = jasmine.createSpy("successCallback");
-
             binaryAjaxSpy.andCallFake(function () {
                 var defer = ayepromise.defer();
                 defer.reject();
@@ -517,9 +554,21 @@ describe("Inline utilities function", function () {
             });
 
             rasterizeHTMLInline.util.getDataURIForImageURL("image_does_not_exist.png", {})
-                .fail(function () {
-                    expect(successCallback).not.toHaveBeenCalled();
+                .fail(done);
+        });
 
+        it("should hand through the error object", function (done) {
+            var e = new Error('not good');
+
+            binaryAjaxSpy.andCallFake(function () {
+                var defer = ayepromise.defer();
+                defer.reject(e);
+                return defer.promise;
+            });
+
+            rasterizeHTMLInline.util.getDataURIForImageURL("image_does_not_exist.png", {})
+                .fail(function (error) {
+                    expect(error).toBe(e);
                     done();
                 });
         });
