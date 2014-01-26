@@ -1,4 +1,4 @@
-window.rasterizeHTMLInline = (function (module, window, CSSOM) {
+window.rasterizeHTMLInline = (function (module, window, CSSOM, ayepromise) {
     "use strict";
 
     module.css = {};
@@ -220,7 +220,13 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
         return doubleQuoteRegex.test(string) || singleQuoteRegex.test(string);
     };
 
-    var loadAndInlineCSSImport = function (cssRules, rule, alreadyLoadedCssUrls, options, successCallback, errorCallback) {
+    var fulfilledPromise = function (value) {
+        var defer = ayepromise.defer();
+        defer.resolve(value);
+        return defer.promise;
+    };
+
+    var loadAndInlineCSSImport = function (cssRules, rule, alreadyLoadedCssUrls, options) {
         var url = rule.href,
             cssHrefRelativeToDoc;
 
@@ -233,53 +239,51 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
         if (alreadyLoadedCssUrls.indexOf(cssHrefRelativeToDoc) >= 0) {
             // Remove URL by adding empty string
             substituteRule(cssRules, rule, []);
-            successCallback([]);
-            return;
+            return fulfilledPromise([]);
         } else {
             alreadyLoadedCssUrls.push(cssHrefRelativeToDoc);
         }
 
-        module.util.ajax(url, options)
+        return module.util.ajax(url, options)
             .then(function (cssText) {
                 var externalCssRules = module.css.rulesForCssText(cssText);
 
                 // Recursively follow @import statements
-                module.css.loadCSSImportsForRules(externalCssRules, alreadyLoadedCssUrls, options, function (hasChanges, errors) {
-                    module.css.adjustPathsOfCssResources(url, externalCssRules);
+                return module.css.loadCSSImportsForRules(externalCssRules, alreadyLoadedCssUrls, options)
+                    .then(function (result) {
+                        module.css.adjustPathsOfCssResources(url, externalCssRules);
 
-                    substituteRule(cssRules, rule, externalCssRules);
+                        substituteRule(cssRules, rule, externalCssRules);
 
-                    successCallback(errors);
-                });
+                        return result.errors;
+                    });
             }, function () {
-                errorCallback(cssHrefRelativeToDoc);
+                throw {
+                    resourceType: "stylesheet",
+                    url: cssHrefRelativeToDoc,
+                    msg: "Unable to load stylesheet " + cssHrefRelativeToDoc
+                };
             });
     };
 
-    module.css.loadCSSImportsForRules = function (cssRules, alreadyLoadedCssUrls, options, callback) {
-        var errors = [],
-            rulesToInline;
+    module.css.loadCSSImportsForRules = function (cssRules, alreadyLoadedCssUrls, options) {
+        var rulesToInline = findCSSImportRules(cssRules),
+            errors = [],
+            hasChanges = false;
 
-        rulesToInline = findCSSImportRules(cssRules);
-
-        module.util.map(rulesToInline, function (rule, finish) {
-            loadAndInlineCSSImport(cssRules, rule, alreadyLoadedCssUrls, options, function (moreErrors) {
+        return module.util.all(rulesToInline.map(function (rule) {
+            return loadAndInlineCSSImport(cssRules, rule, alreadyLoadedCssUrls, options).then(function (moreErrors) {
                 errors = errors.concat(moreErrors);
 
-                finish(true);
-            }, function (url) {
-                errors.push({
-                    resourceType: "stylesheet",
-                    url: url,
-                    msg: "Unable to load stylesheet " + url
-                });
-
-                finish(false);
+                hasChanges = true;
+            }, function (e) {
+                errors.push(e);
             });
-        }, function (changeStatus) {
-            var hasChanges = changeStatus.indexOf(true) >= 0;
-
-            callback(hasChanges, errors);
+        })).then(function () {
+            return {
+                hasChanges: hasChanges,
+                errors: errors
+            };
         });
     };
 
@@ -516,4 +520,4 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM) {
     };
 
     return module;
-}(window.rasterizeHTMLInline || {}, window, window.CSSOM || {}));
+}(window.rasterizeHTMLInline || {}, window, window.CSSOM || {}, ayepromise));

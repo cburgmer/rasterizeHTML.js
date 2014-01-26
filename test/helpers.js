@@ -165,5 +165,19 @@ var rasterizeHTMLTestHelper = (function () {
         img.src = url;
     };
 
+    module.deleteAdditionalFieldsFromErrorsUnderPhantomJS = function (errors) {
+        return errors.map(function (error) {
+            var newErrorObject = {},
+                additionalKeys = ['sourceId', 'sourceURL', 'stack', 'stackArray', 'line'];
+
+            Object.keys(error).forEach(function (key) {
+                if (additionalKeys.indexOf(key) === -1) {
+                    newErrorObject[key] = error[key];
+                }
+            });
+            return newErrorObject;
+        });
+    };
+
     return module;
 }());

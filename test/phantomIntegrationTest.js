@@ -16,7 +16,7 @@ var renderPage = function (url, successCallback) {
             imgURI = getDataUriForBase64PNG(base64PNG);
 
             successCallback(imgURI);
-        }, 100);
+        }, 200);
     });
 };
 

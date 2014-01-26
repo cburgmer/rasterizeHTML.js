@@ -46,6 +46,12 @@ describe("Inline CSS links", function () {
         return cssLink;
     };
 
+    var fulfilled = function (value) {
+        var defer = ayepromise.defer();
+        defer.resolve(value);
+        return defer.promise;
+    };
+
     beforeEach(function () {
         doc = document.implementation.createHTMLDocument("");
 
@@ -58,9 +64,10 @@ describe("Inline CSS links", function () {
         });
         joinUrlSpy = spyOn(rasterizeHTMLInline.util, "joinUrl");
         adjustPathsOfCssResourcesSpy = spyOn(rasterizeHTMLInline.css, 'adjustPathsOfCssResources');
-        loadCSSImportsForRulesSpy = spyOn(rasterizeHTMLInline.css, 'loadCSSImportsForRules').andCallFake(function (cssRules, alreadyLoadedCssUrls, options, callback) {
-            callback(false, []);
-        });
+        loadCSSImportsForRulesSpy = spyOn(rasterizeHTMLInline.css, 'loadCSSImportsForRules').andReturn(fulfilled({
+            hasChanges: false,
+            errors: []
+        }));
         loadAndInlineCSSResourcesForRulesSpy = spyOn(rasterizeHTMLInline.css, 'loadAndInlineCSSResourcesForRules').andCallFake(function (cssRules, options, callback) {
             callback(false, []);
         });
@@ -441,9 +448,10 @@ describe("Inline CSS links", function () {
         it("should report errors from inlining resources", function (done) {
             doc.head.appendChild(aCssLink());
 
-            loadCSSImportsForRulesSpy.andCallFake(function (cssRules, alreadyLoadedCssUrls, options, callback) {
-                callback(false, ["import inline error"]);
-            });
+            loadCSSImportsForRulesSpy.andReturn(fulfilled({
+                hasChanges: false,
+                errors: ["import inline error"]
+            }));
             loadAndInlineCSSResourcesForRulesSpy.andCallFake(function (cssRules, options, callback) {
                 callback(false, ["resource inline error"]);
             });
@@ -468,9 +476,10 @@ describe("Inline CSS links", function () {
         it("should cache errors alongside if a cache bucket is given", function (done) {
             var cacheBucket = {};
 
-            loadCSSImportsForRulesSpy.andCallFake(function (cssRules, alreadyLoadedCssUrls, options, callback) {
-                callback(false, ["import inline error"]);
-            });
+            loadCSSImportsForRulesSpy.andReturn(fulfilled({
+                hasChanges: false,
+                errors: ["import inline error"]
+            }));
 
             // first call
             doc = document.implementation.createHTMLDocument("");

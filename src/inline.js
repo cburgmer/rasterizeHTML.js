@@ -99,10 +99,10 @@ window.rasterizeHTMLInline = (function (module) {
     var requestExternalsForStylesheet = function (styleContent, alreadyLoadedCssUrls, options, callback) {
         var cssRules = module.css.rulesForCssText(styleContent);
 
-        module.css.loadCSSImportsForRules(cssRules, alreadyLoadedCssUrls, options, function (changedFromImports, importErrors) {
+        module.css.loadCSSImportsForRules(cssRules, alreadyLoadedCssUrls, options).then(function (cssImportResult) {
             module.css.loadAndInlineCSSResourcesForRules(cssRules, options, function (changedFromResources, resourceErrors) {
-                var errors = importErrors.concat(resourceErrors),
-                    hasChanges = changedFromImports || changedFromResources;
+                var errors = cssImportResult.errors.concat(resourceErrors),
+                    hasChanges = cssImportResult.hasChanges || changedFromResources;
 
                 if (hasChanges) {
                     styleContent = module.css.cssRulesToText(cssRules);
@@ -181,11 +181,11 @@ window.rasterizeHTMLInline = (function (module) {
                     changedFromPathAdjustment;
 
                 changedFromPathAdjustment = module.css.adjustPathsOfCssResources(url, cssRules);
-                module.css.loadCSSImportsForRules(cssRules, [], options, function (changedFromImports, importErrors) {
+                module.css.loadCSSImportsForRules(cssRules, [], options).then(function (cssImportResult) {
                     module.css.loadAndInlineCSSResourcesForRules(cssRules, options, function (changedFromResources, resourceErrors) {
-                        var errors = importErrors.concat(resourceErrors);
+                        var errors = cssImportResult.errors.concat(resourceErrors);
 
-                        if (changedFromPathAdjustment || changedFromImports || changedFromResources) {
+                        if (changedFromPathAdjustment || cssImportResult.hasChanges || changedFromResources) {
                             content = module.css.cssRulesToText(cssRules);
                         }
 

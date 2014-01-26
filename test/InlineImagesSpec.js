@@ -144,18 +144,6 @@ describe("Image and image input inline", function () {
     describe("on errors", function () {
         var imageThatDoesExist = "image_that_does_exist.png";
 
-        var deleteAdditionalFieldsFromErrorsUnderPhantomJS = function (error) {
-            var newErrorObject = {},
-                additionalKeys = ['sourceId', 'sourceURL', 'stack', 'stackArray', 'line'];
-
-            Object.keys(error).forEach(function (key) {
-                if (additionalKeys.indexOf(key) === -1) {
-                    newErrorObject[key] = error[key];
-                }
-            });
-            return newErrorObject;
-        };
-
         beforeEach(function () {
             joinUrlSpy.andCallThrough();
 
@@ -166,7 +154,7 @@ describe("Image and image input inline", function () {
             doc.body.innerHTML = '<img src="image_that_doesnt_exist.png" alt="test image"/>';
 
             rasterizeHTMLInline.loadAndInlineImages(doc, {}).then(function (errors) {
-                errors[0] = deleteAdditionalFieldsFromErrorsUnderPhantomJS(errors[0]);
+                errors = rasterizeHTMLTestHelper.deleteAdditionalFieldsFromErrorsUnderPhantomJS(errors);
 
                 expect(errors).toEqual([{
                     resourceType: "image",
@@ -185,7 +173,7 @@ describe("Image and image input inline", function () {
             );
 
             rasterizeHTMLInline.loadAndInlineImages(doc, {}).then(function (errors) {
-                errors[0] = deleteAdditionalFieldsFromErrorsUnderPhantomJS(errors[0]);
+                errors = rasterizeHTMLTestHelper.deleteAdditionalFieldsFromErrorsUnderPhantomJS(errors);
 
                 expect(errors).toEqual([{
                     resourceType: "image",

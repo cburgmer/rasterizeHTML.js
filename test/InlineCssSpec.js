@@ -209,8 +209,8 @@ describe("Inline CSS content", function () {
 
             mockAjaxUrl('that.css', "p { font-size: 10px; }");
 
-            rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {}, function (changed) {
-                expect(changed).toBe(true);
+            rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {}).then(function (result) {
+                expect(result.hasChanges).toBe(true);
 
                 expect(rules.length).toEqual(1);
                 expect(rules[0].cssText).toMatch(/p \{\s*font-size: 10px;\s*\}/);
@@ -226,7 +226,7 @@ describe("Inline CSS content", function () {
             mockAjaxUrl('this.css', "div { display: inline-block; }");
             mockAjaxUrl('that.css', "p { font-size: 10px; }");
 
-            rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {}, function () {
+            rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {}).then(function () {
                 expect(rules[0].cssText).toMatch(/div \{\s*display: inline-block;\s*\}/);
                 expect(rules[1].cssText).toMatch(/p \{\s*font-size: 10px;\s*\}/);
 
@@ -240,7 +240,7 @@ describe("Inline CSS content", function () {
 
             mockAjaxUrl('that.css', "");
 
-            rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {}, function () {
+            rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {}).then(function () {
                 expect(ajaxSpy).toHaveBeenCalledWith("that.css", jasmine.any(Object));
 
                 done();
@@ -253,7 +253,7 @@ describe("Inline CSS content", function () {
 
             mockAjaxUrl('that.css', "");
 
-            rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {}, function () {
+            rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {}).then(function () {
                 expect(rules.length).toEqual(0);
 
                 done();
@@ -268,7 +268,7 @@ describe("Inline CSS content", function () {
             mockAjaxUrl('that.css', "");
             mockAjaxUrl('this.css', "span { font-weight: bold; }");
 
-            rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {}, function () {
+            rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {}).then(function () {
                 expect(rules.length).toEqual(1);
 
                 done();
@@ -279,8 +279,8 @@ describe("Inline CSS content", function () {
         it("should ignore invalid values", function (done) {
             var rules = CSSOM.parse('@import   invalid url;').cssRules;
 
-            rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {}, function (changed) {
-                expect(changed).toBe(false);
+            rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {}).then(function (result) {
+                expect(result.hasChanges).toBe(false);
 
                 done();
             });
@@ -289,8 +289,8 @@ describe("Inline CSS content", function () {
         it("should not touch unrelated CSS", function (done) {
             var rules = CSSOM.parse('span {   padding-left: 0; }').cssRules;
 
-            rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {}, function (changed) {
-                expect(changed).toBe(false);
+            rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {}).then(function (result) {
+                expect(result.hasChanges).toBe(false);
 
                 done();
             });
@@ -302,7 +302,7 @@ describe("Inline CSS content", function () {
 
             mockAjaxUrl('that.css', 'p { font-size: 12px; }');
 
-            rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {}, function () {
+            rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {}).then(function () {
                 expect(ajaxSpy.callCount).toEqual(1);
                 expect(rules.length).toEqual(1);
 
@@ -317,7 +317,7 @@ describe("Inline CSS content", function () {
             mockAjaxUrl("this.css", '@import url("that.css");');
             mockAjaxUrl("that.css", 'p { font-weight: bold; }');
 
-            rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {}, function () {
+            rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {}).then(function () {
                 expect(rules.length).toEqual(1);
                 expect(rules[0].cssText).toMatch(/p \{\s*font-weight: bold;\s*\}/);
 
@@ -335,7 +335,7 @@ describe("Inline CSS content", function () {
                 '@import url("this.css");\n' +
                 'p { font-weight: bold; }');
 
-            rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {}, function () {
+            rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {}).then(function () {
                 expect(rules[0].cssText).toMatch(/p \{\s*font-weight: bold;\s*\}/);
                 expect(rules[1].cssText).toMatch(/span \{\s*font-weight: 300;\s*\}/);
 
@@ -348,7 +348,7 @@ describe("Inline CSS content", function () {
 
             mockAjaxUrl("this.css", '@import url("this.css");');
 
-            rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {}, function () {
+            rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {}).then(function () {
                 expect(ajaxSpy.callCount).toEqual(1);
                 expect(rules.length).toEqual(0);
 
@@ -356,12 +356,14 @@ describe("Inline CSS content", function () {
             });
         });
 
-        it("should handle a baseUrl", function () {
+        it("should handle a baseUrl", function (done) {
             var rules = CSSOM.parse('@import url("that.css");').cssRules;
 
-            rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {baseUrl: 'url_base/page.html'}, callback);
+            rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {baseUrl: 'url_base/page.html'}).then(function () {
+                expect(joinUrlSpy).toHaveBeenCalledWith('url_base/page.html', "that.css");
 
-            expect(joinUrlSpy).toHaveBeenCalledWith('url_base/page.html', "that.css");
+                done();
+            });
         });
 
         it("should map resource paths relative to the stylesheet", function (done) {
@@ -376,7 +378,7 @@ describe("Inline CSS content", function () {
                 'div { background-image: url("../green.png"); }\n' +
                 '@font-face { font-family: "test font"; src: url("fake.woff"); }');
 
-            rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {}, function () {
+            rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {}).then(function () {
                 expect(adjustPathsOfCssResourcesSpy).toHaveBeenCalledWith('url_base/that.css', jasmine.any(Object));
                 expect(adjustPathsOfCssResourcesSpy.mostRecentCall.args[1][0].style.getPropertyValue('background-image')).toMatch(/url\(\"?\.\.\/green\.png\"?\)/);
 
@@ -384,22 +386,26 @@ describe("Inline CSS content", function () {
             });
         });
 
-        it("should circumvent caching if requested", function () {
+        it("should circumvent caching if requested", function (done) {
             var rules = CSSOM.parse('@import url("that.css");').cssRules;
 
-            rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {cache: 'none'}, callback);
+            rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {cache: 'none'}).then(function () {
+                expect(ajaxSpy).toHaveBeenCalledWith("that.css", {
+                    cache: 'none'
+                });
 
-            expect(ajaxSpy).toHaveBeenCalledWith("that.css", {
-                cache: 'none'
+                done();
             });
         });
 
-        it("should not circumvent caching by default", function () {
+        it("should not circumvent caching by default", function (done) {
             var rules = CSSOM.parse('@import url("that.css");').cssRules;
 
-            rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {}, callback);
+            rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {}).then(function () {
+                expect(ajaxSpy).toHaveBeenCalledWith("that.css", {});
 
-            expect(ajaxSpy).toHaveBeenCalledWith("that.css", {});
+                done();
+            });
         });
 
         describe("error handling", function () {
@@ -414,8 +420,9 @@ describe("Inline CSS content", function () {
             it("should report an error if a stylesheet could not be loaded", function (done) {
                 var rules = CSSOM.parse('@import url("does_not_exist.css");').cssRules;
 
-                rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {}, function (changed, errors) {
-                    expect(changed).toEqual(false);
+                rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {}).then(function (result) {
+                    var errors = rasterizeHTMLTestHelper.deleteAdditionalFieldsFromErrorsUnderPhantomJS(result.errors);
+                    expect(result.hasChanges).toEqual(false);
                     expect(errors).toEqual([{
                         resourceType: "stylesheet",
                         url: "does_not_exist.css",
@@ -429,7 +436,8 @@ describe("Inline CSS content", function () {
             it("should include the base URI in the reported url", function (done) {
                 var rules = CSSOM.parse('@import url("missing.css");').cssRules;
 
-                rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {baseUrl: 'some_url/'}, function (changed, errors) {
+                rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {baseUrl: 'some_url/'}).then(function (result) {
+                    var errors = rasterizeHTMLTestHelper.deleteAdditionalFieldsFromErrorsUnderPhantomJS(result.errors);
                     expect(errors).toEqual([{
                         resourceType: "stylesheet",
                         url: "some_url/missing.css",
@@ -444,7 +452,8 @@ describe("Inline CSS content", function () {
                 var rules = CSSOM.parse('@import url("existing_document.css");\n' +
                     '@import url("does_not_exist.css");').cssRules;
 
-                rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {}, function (changed, errors) {
+                rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {}).then(function (result) {
+                    var errors = rasterizeHTMLTestHelper.deleteAdditionalFieldsFromErrorsUnderPhantomJS(result.errors);
                     expect(errors).toEqual([{
                         resourceType: "stylesheet",
                         url: "does_not_exist.css",
@@ -459,9 +468,9 @@ describe("Inline CSS content", function () {
                 var rules = CSSOM.parse('@import url("does_not_exist.css");\n' +
                     '@import url("also_does_not_exist.css");').cssRules;
 
-                rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {}, function (changed, errors) {
-                    expect(errors).toEqual([jasmine.any(Object), jasmine.any(Object)]);
-                    expect(errors[0]).not.toEqual(errors[1]);
+                rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {}).then(function (result) {
+                    expect(result.errors).toEqual([jasmine.any(Object), jasmine.any(Object)]);
+                    expect(result.errors[0]).not.toEqual(result.errors[1]);
 
                     done();
                 });
@@ -470,7 +479,8 @@ describe("Inline CSS content", function () {
             it("should report errors from second level @imports", function (done) {
                 var rules = CSSOM.parse('@import url("existing_with_second_level_nonexisting.css");').cssRules;
 
-                rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {}, function (changed, errors) {
+                rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {}).then(function (result) {
+                    var errors = rasterizeHTMLTestHelper.deleteAdditionalFieldsFromErrorsUnderPhantomJS(result.errors);
                     expect(errors).toEqual([{
                             resourceType: "stylesheet",
                             url: "nonexisting.css",
@@ -485,8 +495,8 @@ describe("Inline CSS content", function () {
             it("should report an empty list for a successful stylesheet", function (done) {
                 var rules = CSSOM.parse('@import url("existing_document.css");').cssRules;
 
-                rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {}, function (changed, errors) {
-                    expect(errors).toEqual([]);
+                rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {}).then(function (result) {
+                    expect(result.errors).toEqual([]);
 
                     done();
                 });
