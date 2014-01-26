@@ -45,7 +45,7 @@ window.rasterizeHTMLInline = (function (module) {
 
         return module.util.getDataURIForImageURL(url, ajaxOptions)
             .then(function (dataURI) {
-                image.attributes.src.nodeValue = dataURI;
+                return dataURI;
             }, function (e) {
                 throw {
                     resourceType: "image",
@@ -73,16 +73,14 @@ window.rasterizeHTMLInline = (function (module) {
         return Array.prototype.slice.call(arrayLike);
     };
 
-    var joinAndCollectErrors = function (promises) {
-        return module.util.all(promises.map(function (promise) {
-            return promise.then(function () {}, function (e) {
-                return e;
-            });
-        })).then(function (errorValues) {
-            var errors = errorValues.filter(function (e) {
-                return e !== undefined;
-            });
+    var collectAndReportErrors = function (promises) {
+        var errors = [];
 
+        return module.util.all(promises.map(function (promise) {
+            return promise.fail(function (e) {
+                errors.push(e);
+            });
+        })).then(function () {
             return errors;
         });
     };
@@ -92,8 +90,10 @@ window.rasterizeHTMLInline = (function (module) {
             imageInputs = filterInputsForImageType(doc.getElementsByTagName("input")),
             externalImages = filterExternalImages(images.concat(imageInputs));
 
-        return joinAndCollectErrors(externalImages.map(function (image) {
-            return encodeImageAsDataURI(image, options);
+        return collectAndReportErrors(externalImages.map(function (image) {
+            return encodeImageAsDataURI(image, options).then(function (dataURI) {
+                image.attributes.src.nodeValue = dataURI;
+            });
         }));
     };
 
@@ -294,18 +294,13 @@ window.rasterizeHTMLInline = (function (module) {
     };
 
     module.loadAndInlineScript = function (doc, options) {
-        var scripts = getScripts(doc),
-            errors = [];
+        var scripts = getScripts(doc);
 
-        return module.util.all(scripts.map(function (script) {
+        return collectAndReportErrors(scripts.map(function (script) {
             return loadLinkedScript(script, options).then(function (jsCode) {
                 substituteExternalScriptWithInline(script, jsCode);
-            }, function (e) {
-                errors.push(e);
             });
-        })).then(function () {
-            return errors;
-        });
+        }));
     };
 
     /* Main */
