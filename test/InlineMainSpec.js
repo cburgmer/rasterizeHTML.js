@@ -25,7 +25,7 @@ describe("Inline main", function () {
         loadAndInlineImages.andReturn(withoutErrors());
         loadAndInlineCssLinks.andCallFake(callbackCaller);
         loadAndInlineStyles.andCallFake(callbackCaller);
-        loadAndInlineScript.andCallFake(callbackCaller);
+        loadAndInlineScript.andReturn(withoutErrors());
 
         rasterizeHTMLInline.inlineReferences(doc, {}, function (errors) {
             expect(errors).toEqual([]);
@@ -33,7 +33,7 @@ describe("Inline main", function () {
             expect(loadAndInlineImages).toHaveBeenCalledWith(doc, {});
             expect(loadAndInlineCssLinks).toHaveBeenCalledWith(doc, {}, jasmine.any(Function));
             expect(loadAndInlineStyles).toHaveBeenCalledWith(doc, {}, jasmine.any(Function));
-            expect(loadAndInlineScript).toHaveBeenCalledWith(doc, {}, jasmine.any(Function));
+            expect(loadAndInlineScript).toHaveBeenCalledWith(doc, {});
 
             done();
         });
@@ -45,13 +45,13 @@ describe("Inline main", function () {
         loadAndInlineImages.andReturn(withoutErrors());
         loadAndInlineCssLinks.andCallFake(callbackCaller);
         loadAndInlineStyles.andCallFake(callbackCaller);
-        loadAndInlineScript.andCallFake(callbackCaller);
+        loadAndInlineScript.andReturn(withoutErrors());
 
         rasterizeHTMLInline.inlineReferences(doc, {baseUrl: "a_baseUrl", cache: 'none'}, function () {
             expect(loadAndInlineImages).toHaveBeenCalledWith(doc, {baseUrl: "a_baseUrl", cache: 'none'});
             expect(loadAndInlineCssLinks).toHaveBeenCalledWith(doc, {baseUrl: "a_baseUrl", cache: 'none'}, jasmine.any(Function));
             expect(loadAndInlineStyles).toHaveBeenCalledWith(doc, {baseUrl: "a_baseUrl", cache: 'none'}, jasmine.any(Function));
-            expect(loadAndInlineScript).toHaveBeenCalledWith(doc, {baseUrl: "a_baseUrl", cache: 'none'}, jasmine.any(Function));
+            expect(loadAndInlineScript).toHaveBeenCalledWith(doc, {baseUrl: "a_baseUrl", cache: 'none'});
 
             done();
         });
@@ -63,7 +63,7 @@ describe("Inline main", function () {
         loadAndInlineImages.andReturn(withErrors(["the error"]));
         loadAndInlineCssLinks.andCallFake(callbackCaller);
         loadAndInlineStyles.andCallFake(callbackCaller);
-        loadAndInlineScript.andCallFake(callbackCaller);
+        loadAndInlineScript.andReturn(withoutErrors());
 
         rasterizeHTMLInline.inlineReferences(doc, {}, function (errors) {
             expect(errors).toEqual(["the error"]);
@@ -82,9 +82,7 @@ describe("Inline main", function () {
         loadAndInlineCssLinks.andCallFake(function (doc, options, callback) {
             callback(["another error"]);
         });
-        loadAndInlineScript.andCallFake(function (doc, options, callback) {
-            callback(["error from script"]);
-        });
+        loadAndInlineScript.andReturn(withErrors(["error from script"]));
 
         rasterizeHTMLInline.inlineReferences(doc, {}, function (errors) {
             expect(errors).toEqual(["the error", "more error", "another error", "error from script"]);

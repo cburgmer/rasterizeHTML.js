@@ -256,7 +256,7 @@ window.rasterizeHTMLInline = (function (module) {
 
     /* Script inlining */
 
-    var loadLinkedScript = function (script, options, successCallback, errorCallback) {
+    var loadLinkedScript = function (script, options) {
         var src = script.attributes.src.nodeValue,
             documentBase = module.util.getDocumentBaseUrl(script.ownerDocument),
             ajaxOptions = module.util.clone(options);
@@ -265,9 +265,13 @@ window.rasterizeHTMLInline = (function (module) {
             ajaxOptions.baseUrl = documentBase;
         }
 
-        module.util.ajax(src, ajaxOptions)
-            .then(successCallback, function () {
-                errorCallback(module.util.joinUrl(ajaxOptions.baseUrl, src));
+        return module.util.ajax(src, ajaxOptions)
+            .fail(function (e) {
+                throw {
+                    resourceType: "script",
+                    url: e.url,
+                    msg: "Unable to load script " + e.url
+                };
             });
     };
 
@@ -289,29 +293,18 @@ window.rasterizeHTMLInline = (function (module) {
         });
     };
 
-    module.loadAndInlineScript = function (doc, options, callback) {
-        var params = module.util.parseOptionalParameters(options, callback),
-            scripts = getScripts(doc),
+    module.loadAndInlineScript = function (doc, options) {
+        var scripts = getScripts(doc),
             errors = [];
 
-        module.util.map(scripts, function (script, finish) {
-            loadLinkedScript(script, params.options, function (jsCode) {
+        return module.util.all(scripts.map(function (script) {
+            return loadLinkedScript(script, options).then(function (jsCode) {
                 substituteExternalScriptWithInline(script, jsCode);
-
-                finish();
-            }, function (url) {
-                errors.push({
-                    resourceType: "script",
-                    url: url,
-                    msg: "Unable to load script " + url
-                });
-
-                finish();
+            }, function (e) {
+                errors.push(e);
             });
-        }, function () {
-            if (params.callback) {
-                params.callback(errors);
-            }
+        })).then(function () {
+            return errors;
         });
     };
 
@@ -330,7 +323,7 @@ window.rasterizeHTMLInline = (function (module) {
                     if (options.inlineScripts === false) {
                         callback(allErrors);
                     } else {
-                        module.loadAndInlineScript(doc, options, function (errors) {
+                        module.loadAndInlineScript(doc, options).then(function (errors) {
                             allErrors = allErrors.concat(errors);
 
                             callback(allErrors);

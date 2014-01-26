@@ -9,7 +9,9 @@ describe("JS inline", function () {
             if (ajaxUrlMocks[url] !== undefined) {
                 defer.resolve(ajaxUrlMocks[url]);
             } else {
-                defer.reject();
+                defer.reject({
+                    url: 'THEURL' + url
+                });
             }
             return defer.promise;
         });
@@ -55,17 +57,18 @@ describe("JS inline", function () {
         });
     });
 
-    it("should do nothing if no linked JS is found", function () {
-        rasterizeHTMLInline.loadAndInlineScript(doc, callback);
+    it("should do nothing if no linked JS is found", function (done) {
+        rasterizeHTMLInline.loadAndInlineScript(doc, {}).then(function () {
+            expect(doc.getElementsByTagName("script").length).toEqual(0);
 
-        expect(callback).toHaveBeenCalled();
-        expect(doc.getElementsByTagName("script").length).toEqual(0);
+            done();
+        });
     });
 
     it("should inline linked JS", function (done) {
         doc.head.appendChild(anExternalScript());
 
-        rasterizeHTMLInline.loadAndInlineScript(doc, function () {
+        rasterizeHTMLInline.loadAndInlineScript(doc, {}).then(function () {
             expect(doc.head.getElementsByTagName("script").length).toEqual(1);
             expect(doc.head.getElementsByTagName("script")[0].textContent).toEqual("var b = 1;");
             expect(doc.head.getElementsByTagName("script")[0].src).not.toExist();
@@ -77,7 +80,7 @@ describe("JS inline", function () {
     it("should remove the src attribute from the inlined script", function (done) {
         doc.head.appendChild(anotherExternalScript());
 
-        rasterizeHTMLInline.loadAndInlineScript(doc, function () {
+        rasterizeHTMLInline.loadAndInlineScript(doc, {}).then(function () {
             expect(doc.head.getElementsByTagName("script").length).toEqual(1);
             expect(doc.head.getElementsByTagName("script")[0].src).toBe('');
 
@@ -88,7 +91,7 @@ describe("JS inline", function () {
     it("should keep all other script's attributes inlining", function (done) {
         doc.head.appendChild(anotherExternalScript());
 
-        rasterizeHTMLInline.loadAndInlineScript(doc, function () {
+        rasterizeHTMLInline.loadAndInlineScript(doc, {}).then(function () {
             expect(doc.head.getElementsByTagName("script").length).toEqual(1);
             expect(doc.head.getElementsByTagName("script")[0].type).toEqual("text/javascript");
             expect(doc.head.getElementsByTagName("script")[0].id).toEqual("myScript");
@@ -101,7 +104,7 @@ describe("JS inline", function () {
         doc.head.appendChild(anExternalScript());
         doc.body.appendChild(anotherExternalScript());
 
-        rasterizeHTMLInline.loadAndInlineScript(doc, function () {
+        rasterizeHTMLInline.loadAndInlineScript(doc, {}).then(function () {
             expect(doc.getElementsByTagName("script").length).toEqual(2);
             expect(doc.head.getElementsByTagName("script")[0].textContent).toEqual("var b = 1;");
             expect(doc.body.getElementsByTagName("script")[0].textContent).toEqual("function something() {}");
@@ -110,15 +113,16 @@ describe("JS inline", function () {
         });
     });
 
-    it("should not touch internal scripts", function () {
+    it("should not touch internal scripts", function (done) {
         doc.head.appendChild(internalScript);
 
-        rasterizeHTMLInline.loadAndInlineScript(doc, callback);
+        rasterizeHTMLInline.loadAndInlineScript(doc, {}).then(function () {
+            expect(ajaxSpy).not.toHaveBeenCalled();
+            expect(doc.head.getElementsByTagName("script").length).toEqual(1);
+            expect(doc.head.getElementsByTagName("script")[0]).toEqual(internalScript);
 
-        expect(callback).toHaveBeenCalled();
-        expect(ajaxSpy).not.toHaveBeenCalled();
-        expect(doc.head.getElementsByTagName("script").length).toEqual(1);
-        expect(doc.head.getElementsByTagName("script")[0]).toEqual(internalScript);
+            done();
+        });
     });
 
     it("should correctly quote closing HTML tags in the script", function (done) {
@@ -128,7 +132,7 @@ describe("JS inline", function () {
         mockAjaxUrl("some_url.js", 'var closingScriptTag = "</script>";');
         doc.head.appendChild(script);
 
-        rasterizeHTMLInline.loadAndInlineScript(doc, function () {
+        rasterizeHTMLInline.loadAndInlineScript(doc, {}).then(function () {
             expect(doc.head.getElementsByTagName("script")[0].textContent).toEqual('var closingScriptTag = "<\\/script>";');
 
             done();
@@ -140,7 +144,7 @@ describe("JS inline", function () {
 
         doc = rasterizeHTMLTestHelper.readDocumentFixture("externalJS.html");
 
-        rasterizeHTMLInline.loadAndInlineScript(doc, function () {
+        rasterizeHTMLInline.loadAndInlineScript(doc, {}).then(function () {
             expect(ajaxSpy).toHaveBeenCalledWith("some.js", {baseUrl: doc.baseURI});
             expect(getDocumentBaseUrlSpy).toHaveBeenCalledWith(doc);
 
@@ -151,7 +155,7 @@ describe("JS inline", function () {
     it("should respect optional baseUrl when loading linked JS", function (done) {
         doc.head.appendChild(anExternalScriptWith('externalScript.js', ''));
 
-        rasterizeHTMLInline.loadAndInlineScript(doc, {baseUrl: "some_base_url/"}, function () {
+        rasterizeHTMLInline.loadAndInlineScript(doc, {baseUrl: "some_base_url/"}).then(function () {
             expect(ajaxSpy).toHaveBeenCalledWith('externalScript.js', {baseUrl: "some_base_url/"});
 
             done();
@@ -163,29 +167,33 @@ describe("JS inline", function () {
         expect(doc.baseURI).not.toBeNull();
         expect(doc.baseURI).not.toEqual("about:blank");
 
-        rasterizeHTMLInline.loadAndInlineScript(doc, {baseUrl: "some_base_url/"}, function () {
+        rasterizeHTMLInline.loadAndInlineScript(doc, {baseUrl: "some_base_url/"}).then(function () {
             expect(ajaxSpy).toHaveBeenCalledWith("some.js", {baseUrl: "some_base_url/"});
 
             done();
         });
     });
 
-    it("should circumvent caching if requested", function () {
+    it("should circumvent caching if requested", function (done) {
         doc.head.appendChild(anExternalScript());
 
-        rasterizeHTMLInline.loadAndInlineScript(doc, {cache: 'none'}, callback);
+        rasterizeHTMLInline.loadAndInlineScript(doc, {cache: 'none'}).then(function () {
+            expect(ajaxSpy).toHaveBeenCalledWith(jasmine.any(String), {
+                cache: 'none'
+            });
 
-        expect(ajaxSpy).toHaveBeenCalledWith(jasmine.any(String), {
-            cache: 'none'
+            done();
         });
     });
 
-    it("should not circumvent caching by default", function () {
+    it("should not circumvent caching by default", function (done) {
         doc.head.appendChild(anExternalScript());
 
-        rasterizeHTMLInline.loadAndInlineScript(doc, callback);
+        rasterizeHTMLInline.loadAndInlineScript(doc, {}).then(function () {
+            expect(ajaxSpy).toHaveBeenCalledWith(jasmine.any(String), {});
 
-        expect(ajaxSpy).toHaveBeenCalledWith(jasmine.any(String), {});
+            done();
+        });
     });
 
     describe("error handling", function () {
@@ -204,11 +212,12 @@ describe("JS inline", function () {
         it("should report an error if a script could not be loaded", function (done) {
             doc.head.appendChild(brokenJsScript);
 
-            rasterizeHTMLInline.loadAndInlineScript(doc, {baseUrl: "some_base_url/"}, function (errors) {
+            rasterizeHTMLInline.loadAndInlineScript(doc, {}).then(function (errors) {
+                errors = rasterizeHTMLTestHelper.deleteAdditionalFieldsFromErrorsUnderPhantomJS(errors);
                 expect(errors).toEqual([{
                     resourceType: "script",
-                    url: "some_base_url/a_document_that_doesnt_exist.js",
-                    msg: "Unable to load script some_base_url/a_document_that_doesnt_exist.js"
+                    url: 'THEURL' + "a_document_that_doesnt_exist.js",
+                    msg: "Unable to load script " + 'THEURL' + "a_document_that_doesnt_exist.js"
                 }]);
 
                 done();
@@ -219,10 +228,11 @@ describe("JS inline", function () {
             doc.head.appendChild(brokenJsScript);
             doc.head.appendChild(anExternalScript());
 
-            rasterizeHTMLInline.loadAndInlineScript(doc, function (errors) {
+            rasterizeHTMLInline.loadAndInlineScript(doc, {}).then(function (errors) {
+                errors = rasterizeHTMLTestHelper.deleteAdditionalFieldsFromErrorsUnderPhantomJS(errors);
                 expect(errors).toEqual([{
                     resourceType: "script",
-                    url: "a_document_that_doesnt_exist.js",
+                    url: 'THEURL' + "a_document_that_doesnt_exist.js",
                     msg: jasmine.any(String)
                 }]);
 
@@ -234,7 +244,7 @@ describe("JS inline", function () {
             doc.head.appendChild(brokenJsScript);
             doc.head.appendChild(anotherBrokenJsScript);
 
-            rasterizeHTMLInline.loadAndInlineScript(doc, function (errors) {
+            rasterizeHTMLInline.loadAndInlineScript(doc, {}).then(function (errors) {
                 expect(errors).toEqual([jasmine.any(Object), jasmine.any(Object)]);
                 expect(errors[0]).not.toEqual(errors[1]);
 
@@ -245,7 +255,7 @@ describe("JS inline", function () {
         it("should report an empty list for a successful script", function (done) {
             doc.head.appendChild(anExternalScript());
 
-            rasterizeHTMLInline.loadAndInlineScript(doc, function (errors) {
+            rasterizeHTMLInline.loadAndInlineScript(doc, {}).then(function (errors) {
                 expect(errors).toEqual([]);
 
                 done();
