@@ -603,11 +603,11 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM, ayepromise) {
 
                         return result.errors;
                     });
-            }, function () {
+            }, function (e) {
                 throw {
                     resourceType: "stylesheet",
-                    url: cssHrefRelativeToDoc,
-                    msg: "Unable to load stylesheet " + cssHrefRelativeToDoc
+                    url: e.url,
+                    msg: "Unable to load stylesheet " + e.url
                 };
             });
     };

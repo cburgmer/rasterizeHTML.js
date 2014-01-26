@@ -188,7 +188,9 @@ describe("Inline CSS content", function () {
                 if (ajaxUrlMocks[url] !== undefined) {
                     defer.resolve(ajaxUrlMocks[url]);
                 } else {
-                    defer.reject();
+                    defer.reject({
+                        url: 'THEURL' + url
+                    });
                 }
                 return defer.promise;
             });
@@ -425,23 +427,8 @@ describe("Inline CSS content", function () {
                     expect(result.hasChanges).toEqual(false);
                     expect(errors).toEqual([{
                         resourceType: "stylesheet",
-                        url: "does_not_exist.css",
-                        msg: "Unable to load stylesheet does_not_exist.css"
-                    }]);
-
-                    done();
-                });
-            });
-
-            it("should include the base URI in the reported url", function (done) {
-                var rules = CSSOM.parse('@import url("missing.css");').cssRules;
-
-                rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {baseUrl: 'some_url/'}).then(function (result) {
-                    var errors = rasterizeHTMLTestHelper.deleteAdditionalFieldsFromErrorsUnderPhantomJS(result.errors);
-                    expect(errors).toEqual([{
-                        resourceType: "stylesheet",
-                        url: "some_url/missing.css",
-                        msg: "Unable to load stylesheet some_url/missing.css"
+                        url: "THEURL" + "does_not_exist.css",
+                        msg: "Unable to load stylesheet " + "THEURL" + "does_not_exist.css"
                     }]);
 
                     done();
@@ -456,7 +443,7 @@ describe("Inline CSS content", function () {
                     var errors = rasterizeHTMLTestHelper.deleteAdditionalFieldsFromErrorsUnderPhantomJS(result.errors);
                     expect(errors).toEqual([{
                         resourceType: "stylesheet",
-                        url: "does_not_exist.css",
+                        url: "THEURL" + "does_not_exist.css",
                         msg: jasmine.any(String)
                     }]);
 
@@ -483,7 +470,7 @@ describe("Inline CSS content", function () {
                     var errors = rasterizeHTMLTestHelper.deleteAdditionalFieldsFromErrorsUnderPhantomJS(result.errors);
                     expect(errors).toEqual([{
                             resourceType: "stylesheet",
-                            url: "nonexisting.css",
+                            url: "THEURL" + "nonexisting.css",
                             msg: jasmine.any(String)
                         }
                     ]);
