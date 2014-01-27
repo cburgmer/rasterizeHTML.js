@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.7.0 - 2014-01-26
+/*! rasterizeHTML.js - v0.7.0 - 2014-01-27
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2014 Christoph Burgmer; Licensed MIT */
 window.rasterizeHTMLInline = (function (module) {
@@ -470,32 +470,29 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM, ayepromise) {
     };
 
     module.css.adjustPathsOfCssResources = function (baseUrl, cssRules) {
-        var change = false,
-            joinedBackgroundDeclarations;
+        var change = false;
 
         findBackgroundImageRules(cssRules).forEach(function (rule) {
             var backgroundValue = rule.style.getPropertyValue('background-image') || rule.style.getPropertyValue('background'),
-                backgroundDeclarations = sliceBackgroundDeclarations(backgroundValue),
-                declarationChanged = false;
+                parsedBackground = parseBackgroundDeclaration(backgroundValue),
+                externalBackgroundIndices = findExternalBackgroundUrls(parsedBackground);
 
-            backgroundDeclarations.forEach(function (singleBackgroundValues) {
-                var bgUrl = findBackgroundImageUrlInValues(singleBackgroundValues),
-                    url;
+            if (externalBackgroundIndices.length > 0) {
+                externalBackgroundIndices.forEach(function (backgroundLayerIndex) {
+                    var relativeUrl = parsedBackground[backgroundLayerIndex].url,
+                        url = module.util.joinUrl(baseUrl, relativeUrl);
+                    parsedBackground[backgroundLayerIndex].url = url;
+                });
 
-                if (bgUrl && !module.util.isDataUri(bgUrl.url)) {
-                    url = module.util.joinUrl(baseUrl, bgUrl.url);
-                    singleBackgroundValues[bgUrl.idx] = 'url("' + url + '")';
-                    declarationChanged = true;
+                backgroundValue = parsedBackgroundDeclarationToText(parsedBackground);
+                if (rule.style.getPropertyValue('background-image')) {
+                    rule.style.setProperty('background-image', backgroundValue);
+                } else {
+                    rule.style.setProperty('background', backgroundValue);
                 }
-            });
 
-            joinedBackgroundDeclarations = joinBackgroundDeclarations(backgroundDeclarations);
-            if (rule.style.getPropertyValue('background-image')) {
-                rule.style.setProperty('background-image', joinedBackgroundDeclarations);
-            } else {
-                rule.style.setProperty('background', joinedBackgroundDeclarations);
+                change = true;
             }
-            change = change || declarationChanged;
         });
         findFontFaceRules(cssRules).forEach(function (rule) {
             var fontReferences = sliceFontFaceSrcReferences(rule.style.getPropertyValue("src")),
@@ -623,7 +620,7 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM, ayepromise) {
 
     /* CSS linked resource inlining */
 
-    var sliceBackgroundDeclarations = function (backgroundDeclarationText) {
+    var sliceBackgroundDeclaration = function (backgroundDeclarationText) {
         var functionParamRegexS = "\\s*(?:\"[^\"]*\"|'[^']*'|[^\\(]+)\\s*",
             valueRegexS = "(" + "url\\(" + functionParamRegexS + "\\)" + "|" + "[^,\\s]+" + ")",
             simpleSingularBackgroundRegexS = "(?:\\s*" + valueRegexS + ")+",
@@ -632,7 +629,7 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM, ayepromise) {
                                       "\\s*$",
             simpleSingularBackgroundRegex = new RegExp(simpleSingularBackgroundRegexS, "g"),
             outerRepeatedMatch,
-            backgroundDeclarations = [],
+            backgroundLayers = [],
             getValues = function (singularBackgroundDeclaration) {
                 var valueRegex = new RegExp(valueRegexS, "g"),
                     backgroundValues = [],
@@ -649,11 +646,11 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM, ayepromise) {
         if (backgroundDeclarationText.match(new RegExp(simpleBackgroundRegexS))) {
             outerRepeatedMatch = simpleSingularBackgroundRegex.exec(backgroundDeclarationText);
             while (outerRepeatedMatch) {
-                backgroundDeclarations.push(getValues(outerRepeatedMatch[0]));
+                backgroundLayers.push(getValues(outerRepeatedMatch[0]));
                 outerRepeatedMatch = simpleSingularBackgroundRegex.exec(backgroundDeclarationText);
             }
 
-            return backgroundDeclarations;
+            return backgroundLayers;
         }
         return [];
     };
@@ -672,48 +669,82 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM, ayepromise) {
         }
     };
 
-    var joinBackgroundDeclarations = function (valuesList) {
-        var backgroundDeclarations = valuesList.map(function (values) {
-            return values.join(' ');
+    var parseBackgroundDeclaration = function (backgroundValue) {
+        var backgroundLayers = sliceBackgroundDeclaration(backgroundValue);
+
+        return backgroundLayers.map(function (backgroundLayerValues) {
+            var urlMatch = findBackgroundImageUrlInValues(backgroundLayerValues);
+
+            if (urlMatch) {
+                return {
+                    preUrl: backgroundLayerValues.slice(0, urlMatch.idx),
+                    url: urlMatch.url,
+                    postUrl: backgroundLayerValues.slice(urlMatch.idx+1),
+                };
+            } else {
+                return {
+                    preUrl: backgroundLayerValues
+                };
+            }
         });
-        return backgroundDeclarations.join(', ');
     };
 
+    var findExternalBackgroundUrls = function (parsedBackground) {
+        var matchIndices = [];
 
-    var loadAndInlineBackgroundImage = function (rule, options, callback) {
-        var errorUrls = [],
-            backgroundDeclarations,
-            backgroundValue = rule.style.getPropertyValue('background-image') || rule.style.getPropertyValue('background'),
-            joinedBackgroundDeclarations;
+        parsedBackground.forEach(function (backgroundLayer, i) {
+            if (backgroundLayer.url && !module.util.isDataUri(backgroundLayer.url)) {
+                matchIndices.push(i);
+            }
+        });
 
-        backgroundDeclarations = sliceBackgroundDeclarations(backgroundValue);
+        return matchIndices;
+    };
 
-        module.util.map(backgroundDeclarations, function (singleBackgroundValues, finish) {
-            var bgUrl = findBackgroundImageUrlInValues(singleBackgroundValues);
+    var parsedBackgroundDeclarationToText = function (parsedBackground) {
+        var backgroundLayers = parsedBackground.map(function (backgroundLayer) {
+            var values = [].concat(backgroundLayer.preUrl);
 
-            if (!bgUrl || module.util.isDataUri(bgUrl.url)) {
-                finish(false);
-                return;
+            if (backgroundLayer.url) {
+                values.push('url("' + backgroundLayer.url + '")');
+            }
+            if (backgroundLayer.postUrl) {
+                values = values.concat(backgroundLayer.postUrl);
             }
 
-            module.util.getDataURIForImageURL(bgUrl.url, options)
+            return values.join(' ');
+        });
+
+        return backgroundLayers.join(', ');
+    };
+
+    var loadAndInlineBackgroundImage = function (rule, options, callback) {
+        var backgroundValue = rule.style.getPropertyValue('background-image') || rule.style.getPropertyValue('background'),
+            parsedBackground = parseBackgroundDeclaration(backgroundValue),
+            externalBackgroundIndices = findExternalBackgroundUrls(parsedBackground),
+            errorUrls = [];
+
+        module.util.map(externalBackgroundIndices, function (backgroundLayerIndex, finish) {
+            var url = parsedBackground[backgroundLayerIndex].url;
+
+            module.util.getDataURIForImageURL(url, options)
                 .then(function (dataURI) {
-                    singleBackgroundValues[bgUrl.idx] = 'url("' + dataURI + '")';
+                    parsedBackground[backgroundLayerIndex].url = dataURI;
 
                     finish(true);
                 }, function () {
-                    errorUrls.push(module.util.joinUrl(options.baseUrl, bgUrl.url));
+                    errorUrls.push(module.util.joinUrl(options.baseUrl, url));
                     finish(false);
                 });
         }, function (changedStates) {
             var changed = changedStates.indexOf(true) >= 0;
 
             if (changed) {
-                joinedBackgroundDeclarations = joinBackgroundDeclarations(backgroundDeclarations);
+                backgroundValue = parsedBackgroundDeclarationToText(parsedBackground);
                 if (rule.style.getPropertyValue('background-image')) {
-                    rule.style.setProperty('background-image', joinedBackgroundDeclarations);
+                    rule.style.setProperty('background-image', backgroundValue);
                 } else {
-                    rule.style.setProperty('background', joinedBackgroundDeclarations);
+                    rule.style.setProperty('background', backgroundValue);
                 }
             }
 
