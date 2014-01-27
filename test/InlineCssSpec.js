@@ -121,6 +121,26 @@ describe("Inline CSS content", function () {
             expect(rules[0].href).toEqual('below/my.css');
         });
 
+        it("should report changes", function () {
+            var rules = CSSOM.parse('@import url(my.css);').cssRules;
+
+            joinUrlSpy.andCallFake(function () {
+                return "below/my.css";
+            });
+
+            var hasChanges = rasterizeHTMLInline.css.adjustPathsOfCssResources("below/some.css", rules);
+
+            expect(hasChanges).toBe(true);
+        });
+
+        it("should report no changes", function () {
+            var rules = CSSOM.parse('div { background-image: url("data:image/png;base64,someDataUri");').cssRules;
+
+            var hasChanges = rasterizeHTMLInline.css.adjustPathsOfCssResources("below/some.css", rules);
+
+            expect(hasChanges).toBe(false);
+        });
+
         ifNotInPhantomJsIt("should keep all src references intact when mapping resource paths", function () {
             var rules = CSSOM.parse('@font-face { font-family: "test font"; src: local("some font"), url("fake.woff"); }').cssRules;
 
