@@ -388,13 +388,12 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM, ayepromise) {
         return backgroundLayers.join(', ');
     };
 
-    var loadAndInlineBackgroundImage = function (rule, options) {
-        var backgroundValue = rule.style.getPropertyValue('background-image') || rule.style.getPropertyValue('background'),
-            parsedBackground = parseBackgroundDeclaration(backgroundValue),
-            externalBackgroundIndices = findExternalBackgroundUrls(parsedBackground),
+    var loadAndInlineBackgroundImages = function (backgroundValue, options) {
+        var parsedBackground = parseBackgroundDeclaration(backgroundValue),
+            externalBackgroundLayerIndices = findExternalBackgroundUrls(parsedBackground),
             changed = false;
 
-        return module.util.collectAndReportErrors(externalBackgroundIndices.map(function (backgroundLayerIndex) {
+        return module.util.collectAndReportErrors(externalBackgroundLayerIndices.map(function (backgroundLayerIndex) {
             var url = parsedBackground[backgroundLayerIndex].url;
 
             return module.util.getDataURIForImageURL(url, options)
@@ -410,32 +409,36 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM, ayepromise) {
                     };
                 });
         })).then(function (errors) {
-            if (changed) {
-                backgroundValue = parsedBackgroundDeclarationToText(parsedBackground);
-                if (rule.style.getPropertyValue('background-image')) {
-                    updateCssPropertyValue(rule, 'background-image', backgroundValue);
-                } else {
-                    updateCssPropertyValue(rule, 'background', backgroundValue);
-                }
-            }
-
             return {
+                backgroundValue: parsedBackgroundDeclarationToText(parsedBackground),
                 hasChanges: changed,
                 errors: errors
             };
         });
     };
 
-    var iterateOverRulesAndInlineBackgroundImage = function (cssRules, options) {
+    var iterateOverRulesAndInlineBackgroundImages = function (cssRules, options) {
         var rulesToInline = findBackgroundImageRules(cssRules),
             errors = [],
             cssHasChanges = false;
 
         return module.util.all(rulesToInline.map(function (rule) {
-            return loadAndInlineBackgroundImage(rule, options).then(function (result) {
-                errors = errors.concat(result.errors);
-                cssHasChanges = cssHasChanges || result.hasChanges;
-            });
+            var backgroundValue = rule.style.getPropertyValue('background-image') || rule.style.getPropertyValue('background');
+
+            return loadAndInlineBackgroundImages(backgroundValue, options)
+                .then(function (result) {
+                    if (result.hasChanges) {
+                        if (rule.style.getPropertyValue('background-image')) {
+                            updateCssPropertyValue(rule, 'background-image', result.backgroundValue);
+                        } else {
+                            updateCssPropertyValue(rule, 'background', result.backgroundValue);
+                        }
+
+                        cssHasChanges = true;
+                    }
+
+                    errors = errors.concat(result.errors);
+                });
         })).then(function () {
             return {
                 hasChanges: cssHasChanges,
@@ -544,7 +547,7 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM, ayepromise) {
     };
 
     module.css.loadAndInlineCSSResourcesForRules = function (cssRules, options, callback) {
-        iterateOverRulesAndInlineBackgroundImage(cssRules, options).then(function (bgImageResult) {
+        iterateOverRulesAndInlineBackgroundImages(cssRules, options).then(function (bgImageResult) {
             iterateOverRulesAndInlineFontFace(cssRules, options, function (fontsHaveChanges, fontFaceErrors) {
                 var hasChanges = bgImageResult.hasChanges || fontsHaveChanges;
 
