@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.7.0 - 2014-01-27
+/*! rasterizeHTML.js - v0.7.0 - 2014-01-28
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2014 Christoph Burgmer; Licensed MIT */
 window.rasterizeHTMLInline = (function (module) {
@@ -337,6 +337,10 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM, ayepromise) {
 
     module.css = {};
 
+    var updateCssPropertyValue = function (rule, property, value) {
+        rule.style.setProperty(property, value, rule.style.getPropertyPriority(property));
+    };
+
     var rulesForCssTextFromBrowser = function (styleContent) {
         var doc = document.implementation.createHTMLDocument(""),
             styleElement = document.createElement("style"),
@@ -486,9 +490,9 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM, ayepromise) {
 
                 backgroundValue = parsedBackgroundDeclarationToText(parsedBackground);
                 if (rule.style.getPropertyValue('background-image')) {
-                    rule.style.setProperty('background-image', backgroundValue);
+                    updateCssPropertyValue(rule, 'background-image', backgroundValue);
                 } else {
-                    rule.style.setProperty('background', backgroundValue);
+                    updateCssPropertyValue(rule, 'background', backgroundValue);
                 }
 
                 change = true;
@@ -742,9 +746,9 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM, ayepromise) {
             if (changed) {
                 backgroundValue = parsedBackgroundDeclarationToText(parsedBackground);
                 if (rule.style.getPropertyValue('background-image')) {
-                    rule.style.setProperty('background-image', backgroundValue);
+                    updateCssPropertyValue(rule, 'background-image', backgroundValue);
                 } else {
-                    rule.style.setProperty('background', backgroundValue);
+                    updateCssPropertyValue(rule, 'background', backgroundValue);
                 }
             }
 

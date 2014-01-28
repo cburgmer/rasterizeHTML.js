@@ -196,6 +196,19 @@ describe("Inline CSS content", function () {
 
             expect(rules[0].style.getPropertyValue('font-weight')).toEqual('700');
         });
+
+        it("should keep the !important specifity override", function () {
+            var rules = CSSOM.parse('div { background-image: url("../green.png") !important; }').cssRules;
+
+            joinUrlSpy.andCallFake(function () {
+                return "green.png";
+            });
+
+            rasterizeHTMLInline.css.adjustPathsOfCssResources("below/some.css", rules);
+
+            expect(rules[0].cssText).toMatch(/\!important/);
+        });
+
     });
 
     describe("loadCSSImportsForRules", function () {
@@ -664,6 +677,21 @@ describe("Inline CSS content", function () {
                 rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, callback);
 
                 expect(getDataURIForImageURLSpy).toHaveBeenCalledWith(anImage, {});
+            });
+
+            it("should keep the !important specifity override", function (done) {
+                var anImage = "anImage.png",
+                    rules = CSSOM.parse('span { background-image: url("' + anImage + '") !important; }').cssRules;
+
+                mockGetDataURIForImageURL(anImage, "data:image/png;base64,someDataUri");
+
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function (changed) {
+                    expect(changed).toBe(true);
+
+                    expect(rules[0].cssText).toMatch(/\!important/);
+
+                    done();
+                });
             });
         });
 
