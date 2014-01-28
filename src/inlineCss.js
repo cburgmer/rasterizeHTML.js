@@ -40,6 +40,29 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM, ayepromise) {
         });
     };
 
+    var findBackgroundDeclarations = function (rules) {
+        var backgroundDeclarations = [];
+
+        rules.forEach(function (rule) {
+            if (rule.style.getPropertyValue('background-image')) {
+                backgroundDeclarations.push({
+                    property: 'background-image',
+                    value: rule.style.getPropertyValue('background-image'),
+                    rule: rule
+                });
+            }
+            if (rule.style.getPropertyValue('background')) {
+                backgroundDeclarations.push({
+                    property: 'background',
+                    value: rule.style.getPropertyValue('background'),
+                    rule: rule
+                });
+            }
+        });
+
+        return backgroundDeclarations;
+    };
+
     var findFontFaceRules = function (cssRules) {
         return cssRules.filter(function (rule) {
             return rule.type === window.CSSRule.FONT_FACE_RULE && rule.style.getPropertyValue("src");
@@ -140,12 +163,14 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM, ayepromise) {
     };
 
     module.css.adjustPathsOfCssResources = function (baseUrl, cssRules) {
-        var change = false;
+        var backgroundRules = findBackgroundImageRules(cssRules),
+            backgroundDeclarations = findBackgroundDeclarations(backgroundRules),
+            change = false;
 
-        findBackgroundImageRules(cssRules).forEach(function (rule) {
-            var backgroundValue = rule.style.getPropertyValue('background-image') || rule.style.getPropertyValue('background'),
-                parsedBackground = parseBackgroundDeclaration(backgroundValue),
-                externalBackgroundIndices = findExternalBackgroundUrls(parsedBackground);
+        backgroundDeclarations.forEach(function (declaration) {
+            var parsedBackground = parseBackgroundDeclaration(declaration.value),
+                externalBackgroundIndices = findExternalBackgroundUrls(parsedBackground),
+                backgroundValue;
 
             if (externalBackgroundIndices.length > 0) {
                 externalBackgroundIndices.forEach(function (backgroundLayerIndex) {
@@ -155,11 +180,8 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM, ayepromise) {
                 });
 
                 backgroundValue = parsedBackgroundDeclarationToText(parsedBackground);
-                if (rule.style.getPropertyValue('background-image')) {
-                    updateCssPropertyValue(rule, 'background-image', backgroundValue);
-                } else {
-                    updateCssPropertyValue(rule, 'background', backgroundValue);
-                }
+
+                updateCssPropertyValue(declaration.rule, declaration.property, backgroundValue);
 
                 change = true;
             }
@@ -419,20 +441,15 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM, ayepromise) {
 
     var iterateOverRulesAndInlineBackgroundImages = function (cssRules, options) {
         var rulesToInline = findBackgroundImageRules(cssRules),
+            backgroundDeclarations = findBackgroundDeclarations(rulesToInline),
             errors = [],
             cssHasChanges = false;
 
-        return module.util.all(rulesToInline.map(function (rule) {
-            var backgroundValue = rule.style.getPropertyValue('background-image') || rule.style.getPropertyValue('background');
-
-            return loadAndInlineBackgroundImages(backgroundValue, options)
+        return module.util.all(backgroundDeclarations.map(function (declaration) {
+            return loadAndInlineBackgroundImages(declaration.value, options)
                 .then(function (result) {
                     if (result.hasChanges) {
-                        if (rule.style.getPropertyValue('background-image')) {
-                            updateCssPropertyValue(rule, 'background-image', result.backgroundValue);
-                        } else {
-                            updateCssPropertyValue(rule, 'background', result.backgroundValue);
-                        }
+                        updateCssPropertyValue(declaration.rule, declaration.property, result.backgroundValue);
 
                         cssHasChanges = true;
                     }

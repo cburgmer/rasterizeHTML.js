@@ -209,6 +209,23 @@ describe("Inline CSS content", function () {
             expect(rules[0].cssText).toMatch(/\!important/);
         });
 
+
+        it("should inline both backgroundImage and background when in the same rule to catch CSSOM.js way of handling the shorthand form", function () {
+            var rules = CSSOM.parse('span { background: url("../green.png"); background-image: url("../blue.png"); }').cssRules;
+
+            joinUrlSpy.andCallFake(function (base, url) {
+                if (url === "../green.png" && base === "below/some.css") {
+                    return "green.png";
+                } else if (url === "../blue.png" && base === "below/some.css") {
+                    return "blue.png";
+                }
+            });
+
+            rasterizeHTMLInline.css.adjustPathsOfCssResources("below/some.css", rules);
+
+            expect(rules[0].style.getPropertyValue('background')).toEqual('url("green.png")');
+            expect(rules[0].style.getPropertyValue('background-image')).toEqual('url("blue.png")');
+        });
     });
 
     describe("loadCSSImportsForRules", function () {
@@ -693,6 +710,26 @@ describe("Inline CSS content", function () {
                     expect(changed).toBe(true);
 
                     expect(rules[0].cssText).toMatch(/\!important/);
+
+                    done();
+                });
+            });
+
+            it("should inline both backgroundImage and background when in the same rule to catch CSSOM.js way of handling the shorthand form", function (done) {
+                var anImage = "anImage.png",
+                    anImagesDataUri = "data:image/png;base64,someDataUri",
+                    anotherImage = "anotherImage.png",
+                    anotherImagesDataUri = "data:image/png;base64,otherDataUri",
+                    rules = CSSOM.parse('span { background: url("' + anotherImage + '"); background-image: url("' + anImage + '"); }').cssRules;
+
+                mockGetDataURIForImageURL(anImage, anImagesDataUri);
+                mockGetDataURIForImageURL(anotherImage, anotherImagesDataUri);
+
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function (changed) {
+                    expect(changed).toBe(true);
+
+                    expect(rules[0].style.getPropertyValue('background')).toEqual('url("' + anotherImagesDataUri + '")');
+                    expect(rules[0].style.getPropertyValue('background-image')).toEqual('url("' + anImagesDataUri + '")');
 
                     done();
                 });
