@@ -59,6 +59,18 @@ window.rasterizeHTMLInline = (function (module, window, ayepromise, url) {
         return defer.promise;
     };
 
+    module.util.collectAndReportErrors = function (promises) {
+        var errors = [];
+
+        return module.util.all(promises.map(function (promise) {
+            return promise.fail(function (e) {
+                errors.push(e);
+            });
+        })).then(function () {
+            return errors;
+        });
+    };
+
     module.util.map = function (list, func, callback) {
         var completedCount = 0,
             // Operating inline on array-like structures like document.getElementByTagName() (e.g. deleting a node),

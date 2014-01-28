@@ -73,24 +73,12 @@ window.rasterizeHTMLInline = (function (module) {
         return Array.prototype.slice.call(arrayLike);
     };
 
-    var collectAndReportErrors = function (promises) {
-        var errors = [];
-
-        return module.util.all(promises.map(function (promise) {
-            return promise.fail(function (e) {
-                errors.push(e);
-            });
-        })).then(function () {
-            return errors;
-        });
-    };
-
     module.loadAndInlineImages = function (doc, options) {
         var images = toArray(doc.getElementsByTagName("img")),
             imageInputs = filterInputsForImageType(doc.getElementsByTagName("input")),
             externalImages = filterExternalImages(images.concat(imageInputs));
 
-        return collectAndReportErrors(externalImages.map(function (image) {
+        return module.util.collectAndReportErrors(externalImages.map(function (image) {
             return encodeImageAsDataURI(image, options).then(function (dataURI) {
                 image.attributes.src.nodeValue = dataURI;
             });
@@ -296,7 +284,7 @@ window.rasterizeHTMLInline = (function (module) {
     module.loadAndInlineScript = function (doc, options) {
         var scripts = getScripts(doc);
 
-        return collectAndReportErrors(scripts.map(function (script) {
+        return module.util.collectAndReportErrors(scripts.map(function (script) {
             return loadLinkedScript(script, options).then(function (jsCode) {
                 substituteExternalScriptWithInline(script, jsCode);
             });
@@ -722,27 +710,28 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM, ayepromise) {
         return backgroundLayers.join(', ');
     };
 
-    var loadAndInlineBackgroundImage = function (rule, options, callback) {
+    var loadAndInlineBackgroundImage = function (rule, options) {
         var backgroundValue = rule.style.getPropertyValue('background-image') || rule.style.getPropertyValue('background'),
             parsedBackground = parseBackgroundDeclaration(backgroundValue),
             externalBackgroundIndices = findExternalBackgroundUrls(parsedBackground),
-            errorUrls = [];
+            changed = false;
 
-        module.util.map(externalBackgroundIndices, function (backgroundLayerIndex, finish) {
+        return module.util.collectAndReportErrors(externalBackgroundIndices.map(function (backgroundLayerIndex) {
             var url = parsedBackground[backgroundLayerIndex].url;
 
-            module.util.getDataURIForImageURL(url, options)
+            return module.util.getDataURIForImageURL(url, options)
                 .then(function (dataURI) {
                     parsedBackground[backgroundLayerIndex].url = dataURI;
 
-                    finish(true);
-                }, function () {
-                    errorUrls.push(module.util.joinUrl(options.baseUrl, url));
-                    finish(false);
+                    changed = true;
+                }, function (e) {
+                    throw {
+                        resourceType: "backgroundImage",
+                        url: e.url,
+                        msg: "Unable to load background-image " + e.url
+                    };
                 });
-        }, function (changedStates) {
-            var changed = changedStates.indexOf(true) >= 0;
-
+        })).then(function (errors) {
             if (changed) {
                 backgroundValue = parsedBackgroundDeclarationToText(parsedBackground);
                 if (rule.style.getPropertyValue('background-image')) {
@@ -752,30 +741,28 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM, ayepromise) {
                 }
             }
 
-            callback(changed, errorUrls);
+            return {
+                hasChanges: changed,
+                errors: errors
+            };
         });
     };
 
-    var iterateOverRulesAndInlineBackgroundImage = function (cssRules, options, callback) {
+    var iterateOverRulesAndInlineBackgroundImage = function (cssRules, options) {
         var rulesToInline = findBackgroundImageRules(cssRules),
             errors = [],
-            cssHasChanges;
+            cssHasChanges = false;
 
-        module.util.map(rulesToInline, function (rule, finish) {
-            loadAndInlineBackgroundImage(rule, options, function (changed, errorUrls) {
-                errorUrls.forEach(function (url) {
-                    errors.push({
-                        resourceType: "backgroundImage",
-                        url: url,
-                        msg: "Unable to load background-image " + url
-                    });
-                });
-                finish(changed);
+        return module.util.all(rulesToInline.map(function (rule) {
+            return loadAndInlineBackgroundImage(rule, options).then(function (result) {
+                errors = errors.concat(result.errors);
+                cssHasChanges = cssHasChanges || result.hasChanges;
             });
-
-        }, function (changedStates) {
-            cssHasChanges = changedStates.indexOf(true) >= 0;
-            callback(cssHasChanges, errors);
+        })).then(function () {
+            return {
+                hasChanges: cssHasChanges,
+                errors: errors
+            };
         });
     };
 
@@ -879,11 +866,11 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM, ayepromise) {
     };
 
     module.css.loadAndInlineCSSResourcesForRules = function (cssRules, options, callback) {
-        iterateOverRulesAndInlineBackgroundImage(cssRules, options, function (bgImagesHaveChanges, bgImageErrors) {
+        iterateOverRulesAndInlineBackgroundImage(cssRules, options).then(function (bgImageResult) {
             iterateOverRulesAndInlineFontFace(cssRules, options, function (fontsHaveChanges, fontFaceErrors) {
-                var hasChanges = bgImagesHaveChanges || fontsHaveChanges;
+                var hasChanges = bgImageResult.hasChanges || fontsHaveChanges;
 
-                callback(hasChanges, bgImageErrors.concat(fontFaceErrors));
+                callback(hasChanges, bgImageResult.errors.concat(fontFaceErrors));
             });
         });
     };
@@ -950,6 +937,18 @@ window.rasterizeHTMLInline = (function (module, window, ayepromise, url) {
             });
         });
         return defer.promise;
+    };
+
+    module.util.collectAndReportErrors = function (promises) {
+        var errors = [];
+
+        return module.util.all(promises.map(function (promise) {
+            return promise.fail(function (e) {
+                errors.push(e);
+            });
+        })).then(function () {
+            return errors;
+        });
     };
 
     module.util.map = function (list, func, callback) {

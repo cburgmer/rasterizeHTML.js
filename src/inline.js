@@ -70,24 +70,12 @@ window.rasterizeHTMLInline = (function (module) {
         return Array.prototype.slice.call(arrayLike);
     };
 
-    var collectAndReportErrors = function (promises) {
-        var errors = [];
-
-        return module.util.all(promises.map(function (promise) {
-            return promise.fail(function (e) {
-                errors.push(e);
-            });
-        })).then(function () {
-            return errors;
-        });
-    };
-
     module.loadAndInlineImages = function (doc, options) {
         var images = toArray(doc.getElementsByTagName("img")),
             imageInputs = filterInputsForImageType(doc.getElementsByTagName("input")),
             externalImages = filterExternalImages(images.concat(imageInputs));
 
-        return collectAndReportErrors(externalImages.map(function (image) {
+        return module.util.collectAndReportErrors(externalImages.map(function (image) {
             return encodeImageAsDataURI(image, options).then(function (dataURI) {
                 image.attributes.src.nodeValue = dataURI;
             });
@@ -293,7 +281,7 @@ window.rasterizeHTMLInline = (function (module) {
     module.loadAndInlineScript = function (doc, options) {
         var scripts = getScripts(doc);
 
-        return collectAndReportErrors(scripts.map(function (script) {
+        return module.util.collectAndReportErrors(scripts.map(function (script) {
             return loadLinkedScript(script, options).then(function (jsCode) {
                 substituteExternalScriptWithInline(script, jsCode);
             });
