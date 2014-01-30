@@ -226,6 +226,7 @@ describe("Inline CSS content", function () {
             expect(rules[0].style.getPropertyValue('background')).toEqual('url("green.png")');
             expect(rules[0].style.getPropertyValue('background-image')).toEqual('url("blue.png")');
         });
+
     });
 
     describe("loadCSSImportsForRules", function () {
@@ -967,7 +968,7 @@ describe("Inline CSS content", function () {
                 mockBinaryAjaxUrl('fake.otf', "font");
 
                 rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function () {
-                    expect(rules[0].style.getPropertyValue('src')).toMatch(/local\("?Fake Font"?\), url\("?data:font\/opentype;base64,Zm9udA=="?\) format\("?opentype"?\), url\("?data:font\/woff;base64,Zm9udA=="?\), local\("?Another Fake Font"?\)/);
+                    expect(rules[0].style.getPropertyValue('src')).toMatch(/local\("Fake Font"\), url\("?data:font\/opentype;base64,Zm9udA=="?\) format\("opentype"\), url\("?data:font\/woff;base64,Zm9udA=="?\), local\("Another Fake Font"\)/);
 
                     done();
                 });

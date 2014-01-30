@@ -187,24 +187,22 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM, ayepromise) {
             }
         });
         findFontFaceRules(cssRules).forEach(function (rule) {
-            var fontReferences = sliceFontFaceSrcReferences(rule.style.getPropertyValue("src")),
-                declarationChanged = false;
+            var fontFaceSrcDeclaration = rule.style.getPropertyValue("src"),
+                parsedFontFaceSources = parseFontFaceSrcDeclaration(fontFaceSrcDeclaration),
+                externalFontFaceUrlIndices = findExternalFontFaceUrls(parsedFontFaceSources);
 
-            fontReferences.forEach(function (reference) {
-                var fontSrc = extractFontFaceSrcUrl(reference),
-                    url;
+            if (externalFontFaceUrlIndices.length > 0) {
+                externalFontFaceUrlIndices.forEach(function (fontFaceUrlIndex) {
+                    var relativeUrl = parsedFontFaceSources[fontFaceUrlIndex].url,
+                        url = module.util.joinUrl(baseUrl, relativeUrl);
 
-                if (fontSrc && !module.util.isDataUri(fontSrc.url)) {
-                    url = module.util.joinUrl(baseUrl, fontSrc.url);
-                    reference[0] = 'url("' + url + '")';
-                    declarationChanged = true;
-                }
-            });
+                    parsedFontFaceSources[fontFaceUrlIndex].url = url;
+                });
 
-            if (declarationChanged) {
-                changeFontFaceRuleSrc(cssRules, rule, joinFontFaceSrcReferences(fontReferences));
+                changeFontFaceRuleSrc(cssRules, rule, parsedFontFaceSrcDeclarationToText(parsedFontFaceSources));
+
+                change = true;
             }
-            change = change || declarationChanged;
         });
         findCSSImportRules(cssRules).forEach(function (rule) {
             var cssUrl = rule.href,
@@ -495,34 +493,62 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM, ayepromise) {
         return [];
     };
 
-    var joinFontFaceSrcReferences = function (references) {
-        var fontFaceReferences = [];
-        references.forEach(function (reference) {
-            fontFaceReferences.push(reference.join(' '));
+    var parseFontFaceSrcDeclaration = function (fontFaceSourceValue) {
+        var fontReferences = sliceFontFaceSrcReferences(fontFaceSourceValue);
+
+        return fontReferences.map(function (reference) {
+            var fontSrc = extractFontFaceSrcUrl(reference);
+
+            if (fontSrc) {
+                return fontSrc;
+            } else {
+                return {
+                    local: reference
+                };
+            }
         });
-        return fontFaceReferences.join(', ');
+    };
+
+    var findExternalFontFaceUrls = function (parsedFontFaceSources) {
+        var sourceIndices = [];
+        parsedFontFaceSources.forEach(function (sourceItem, i) {
+            if (sourceItem.url && !module.util.isDataUri(sourceItem.url)) {
+                sourceIndices.push(i);
+            }
+        });
+        return sourceIndices;
+    };
+
+    var parsedFontFaceSrcDeclarationToText = function (parsedFontFaceSources) {
+        return parsedFontFaceSources.map(function (sourceItem) {
+            var itemValue;
+
+            if (sourceItem.url) {
+                itemValue = 'url("' + sourceItem.url + '")';
+                if (sourceItem.format) {
+                    itemValue += ' format("' + sourceItem.format + '")';
+                }
+            } else {
+                itemValue = sourceItem.local;
+            }
+            return itemValue;
+        }).join(', ');
     };
 
     var loadAndInlineFontFace = function (cssRules, rule, options, successCallback) {
-        var fontReferences,
+        var fontFaceSrcDeclaration = rule.style.getPropertyValue("src"),
+            parsedFontFaceSources = parseFontFaceSrcDeclaration(fontFaceSrcDeclaration),
+            externalFontFaceUrlIndices = findExternalFontFaceUrls(parsedFontFaceSources),
             errors = [];
 
-        fontReferences = sliceFontFaceSrcReferences(rule.style.getPropertyValue("src"));
-        module.util.map(fontReferences, function (reference, finish) {
-            var fontSrc = extractFontFaceSrcUrl(reference),
-                format;
-
-            if (!fontSrc || module.util.isDataUri(fontSrc.url)) {
-                finish(false);
-                return;
-            }
-
-            format = fontSrc.format || "woff";
+        module.util.map(externalFontFaceUrlIndices, function (urlIndex, finish) {
+            var fontSrc = parsedFontFaceSources[urlIndex],
+                format = fontSrc.format || "woff";
 
             module.util.binaryAjax(fontSrc.url, options)
                 .then(function (content) {
                     var base64Content = btoa(content);
-                    reference[0] = 'url("data:font/' + format + ';base64,' + base64Content + '")';
+                    fontSrc.url = 'data:font/' + format + ';base64,' + base64Content;
 
                     finish(true);
                 }, function () {
@@ -530,10 +556,12 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM, ayepromise) {
                     finish(false);
                 });
         }, function (changedStates) {
-            var changed = changedStates.indexOf(true) >= 0;
+            var changed = changedStates.indexOf(true) >= 0,
+                newFontFaceSrcDeclarationValue;
 
             if (changed) {
-                changeFontFaceRuleSrc(cssRules, rule, joinFontFaceSrcReferences(fontReferences));
+                newFontFaceSrcDeclarationValue = parsedFontFaceSrcDeclarationToText(parsedFontFaceSources);
+                changeFontFaceRuleSrc(cssRules, rule, newFontFaceSrcDeclarationValue);
             }
 
             successCallback(changed, errors);
