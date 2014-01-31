@@ -1016,7 +1016,9 @@ describe("Inline CSS content", function () {
                     if (url === aFontReferenceThatDoesExist) {
                         defer.resolve();
                     } else {
-                        defer.reject();
+                        defer.reject({
+                            url: 'THEURL' + url
+                        });
                     }
                     return defer.promise;
                 });
@@ -1026,12 +1028,13 @@ describe("Inline CSS content", function () {
             it("should report an error if a font could not be loaded", function (done) {
                 var rules = CSSOM.parse('@font-face { font-family: "test font"; src: url("a_font_that_doesnt_exist.woff"); }').cssRules;
 
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {baseUrl:  'some_base_url/'}, function (changed, errors) {
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function (changed, errors) {
+                    errors = rasterizeHTMLTestHelper.deleteAdditionalFieldsFromErrorsUnderPhantomJS(errors);
                     expect(changed).toBe(false);
                     expect(errors).toEqual([{
                         resourceType: "fontFace",
-                        url: "some_base_url/a_font_that_doesnt_exist.woff",
-                        msg: "Unable to load font-face some_base_url/a_font_that_doesnt_exist.woff"
+                        url: "THEURL" + "a_font_that_doesnt_exist.woff",
+                        msg: "Unable to load font-face " + "THEURL" + "a_font_that_doesnt_exist.woff"
                     }]);
 
                     done();
@@ -1043,9 +1046,10 @@ describe("Inline CSS content", function () {
                     '@font-face { font-family: "test font2"; src: url("' + aFontReferenceThatDoesExist + '"); }').cssRules;
 
                 rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function (changed, errors) {
+                    errors = rasterizeHTMLTestHelper.deleteAdditionalFieldsFromErrorsUnderPhantomJS(errors);
                     expect(errors).toEqual([{
                         resourceType: "fontFace",
-                        url: "a_font_that_doesnt_exist.woff",
+                        url: "THEURL" + "a_font_that_doesnt_exist.woff",
                         msg: jasmine.any(String)
                     }]);
 

@@ -733,7 +733,7 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM, ayepromise) {
     var loadAndInlineBackgroundImages = function (backgroundValue, options) {
         var parsedBackground = parseBackgroundDeclaration(backgroundValue),
             externalBackgroundLayerIndices = findExternalBackgroundUrls(parsedBackground),
-            changed = false;
+            hasChanges = false;
 
         return module.util.collectAndReportErrors(externalBackgroundLayerIndices.map(function (backgroundLayerIndex) {
             var url = parsedBackground[backgroundLayerIndex].url;
@@ -742,7 +742,7 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM, ayepromise) {
                 .then(function (dataURI) {
                     parsedBackground[backgroundLayerIndex].url = dataURI;
 
-                    changed = true;
+                    hasChanges = true;
                 }, function (e) {
                     throw {
                         resourceType: "backgroundImage",
@@ -753,7 +753,7 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM, ayepromise) {
         })).then(function (errors) {
             return {
                 backgroundValue: parsedBackgroundDeclarationToText(parsedBackground),
-                hasChanges: changed,
+                hasChanges: hasChanges,
                 errors: errors
             };
         });
@@ -857,68 +857,69 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM, ayepromise) {
         }).join(', ');
     };
 
-    var loadAndInlineFontFace = function (cssRules, rule, options, successCallback) {
-        var fontFaceSrcDeclaration = rule.style.getPropertyValue("src"),
-            parsedFontFaceSources = parseFontFaceSrcDeclaration(fontFaceSrcDeclaration),
+    var loadAndInlineFontFace = function (srcDeclarationValue, options) {
+        var parsedFontFaceSources = parseFontFaceSrcDeclaration(srcDeclarationValue),
             externalFontFaceUrlIndices = findExternalFontFaceUrls(parsedFontFaceSources),
-            errors = [];
+            hasChanges = false;
 
-        module.util.map(externalFontFaceUrlIndices, function (urlIndex, finish) {
+        return module.util.collectAndReportErrors(externalFontFaceUrlIndices.map(function (urlIndex) {
             var fontSrc = parsedFontFaceSources[urlIndex],
                 format = fontSrc.format || "woff";
 
-            module.util.binaryAjax(fontSrc.url, options)
+            return module.util.binaryAjax(fontSrc.url, options)
                 .then(function (content) {
                     var base64Content = btoa(content);
                     fontSrc.url = 'data:font/' + format + ';base64,' + base64Content;
 
-                    finish(true);
-                }, function () {
-                    errors.push(module.util.joinUrl(options.baseUrl, fontSrc.url));
-                    finish(false);
+                    hasChanges = true;
+                }, function (e) {
+                    throw {
+                        resourceType: "fontFace",
+                        url: e.url,
+                        msg: "Unable to load font-face " + e.url
+                    };
                 });
-        }, function (changedStates) {
-            var changed = changedStates.indexOf(true) >= 0,
-                newFontFaceSrcDeclarationValue;
-
-            if (changed) {
-                newFontFaceSrcDeclarationValue = parsedFontFaceSrcDeclarationToText(parsedFontFaceSources);
-                changeFontFaceRuleSrc(cssRules, rule, newFontFaceSrcDeclarationValue);
-            }
-
-            successCallback(changed, errors);
+        })).then(function (errors) {
+            return {
+                srcDeclarationValue: parsedFontFaceSrcDeclarationToText(parsedFontFaceSources),
+                hasChanges: hasChanges,
+                errors: errors
+            };
         });
     };
 
-    var iterateOverRulesAndInlineFontFace = function (cssRules, options, callback) {
+    var iterateOverRulesAndInlineFontFace = function (cssRules, options) {
         var rulesToInline = findFontFaceRules(cssRules),
             errors = [],
-            cssHasChanges;
+            hasChanges = false;
 
-        module.util.map(rulesToInline, function (rule, finish) {
-            loadAndInlineFontFace(cssRules, rule, options, function (changed, errorUrls) {
-                errorUrls.forEach(function (url) {
-                    errors.push({
-                        resourceType: "fontFace",
-                        url: url,
-                        msg: "Unable to load font-face " + url
-                    });
-                });
-                finish(changed);
+        return module.util.all(rulesToInline.map(function (rule) {
+            var srcDeclarationValue = rule.style.getPropertyValue("src");
+
+            return loadAndInlineFontFace(srcDeclarationValue, options).then(function (result) {
+                if (result.hasChanges) {
+                    changeFontFaceRuleSrc(cssRules, rule, result.srcDeclarationValue);
+
+                    hasChanges = true;
+                }
+
+                errors = errors.concat(result.errors);
             });
 
-        }, function (changedStates) {
-            cssHasChanges = changedStates.indexOf(true) >= 0;
-            callback(cssHasChanges, errors);
+        })).then(function () {
+            return {
+                hasChanges: hasChanges,
+                errors: errors
+            };
         });
     };
 
     module.css.loadAndInlineCSSResourcesForRules = function (cssRules, options, callback) {
         iterateOverRulesAndInlineBackgroundImages(cssRules, options).then(function (bgImageResult) {
-            iterateOverRulesAndInlineFontFace(cssRules, options, function (fontsHaveChanges, fontFaceErrors) {
-                var hasChanges = bgImageResult.hasChanges || fontsHaveChanges;
+            iterateOverRulesAndInlineFontFace(cssRules, options).then(function (fontFaceResult) {
+                var hasChanges = bgImageResult.hasChanges || fontFaceResult.hasChanges;
 
-                callback(hasChanges, bgImageResult.errors.concat(fontFaceErrors));
+                callback(hasChanges, bgImageResult.errors.concat(fontFaceResult.errors));
             });
         });
     };
