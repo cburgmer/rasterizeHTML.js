@@ -68,33 +68,36 @@ describe("Inline CSS links", function () {
             hasChanges: false,
             errors: []
         }));
-        loadAndInlineCSSResourcesForRulesSpy = spyOn(rasterizeHTMLInline.css, 'loadAndInlineCSSResourcesForRules').andCallFake(function (cssRules, options, callback) {
-            callback(false, []);
-        });
+        loadAndInlineCSSResourcesForRulesSpy = spyOn(rasterizeHTMLInline.css, 'loadAndInlineCSSResourcesForRules').andReturn(fulfilled({
+            hasChanges: false,
+            errors: []
+        }));
         setupAjaxMock();
 
         callback = jasmine.createSpy("loadAndInlineCssCallback");
     });
 
-    it("should do nothing if no linked CSS is found", function () {
-        rasterizeHTMLInline.loadAndInlineCssLinks(doc, callback);
+    it("should do nothing if no linked CSS is found", function (done) {
+        rasterizeHTMLInline.loadAndInlineCssLinks(doc, function () {
+            expect(doc.head.getElementsByTagName("style").length).toEqual(0);
 
-        expect(callback).toHaveBeenCalled();
-        expect(doc.head.getElementsByTagName("style").length).toEqual(0);
+            done();
+        });
     });
 
-    it("should not touch non-CSS links", function () {
+    it("should not touch non-CSS links", function (done) {
         var faviconLink = window.document.createElement("link");
         faviconLink.href = "favicon.ico";
         faviconLink.type = "image/x-icon";
 
         doc.head.appendChild(faviconLink);
 
-        rasterizeHTMLInline.loadAndInlineCssLinks(doc, callback);
+        rasterizeHTMLInline.loadAndInlineCssLinks(doc, function () {
+            expect(doc.head.getElementsByTagName("style").length).toEqual(0);
+            expect(doc.head.getElementsByTagName("link").length).toEqual(1);
 
-        expect(callback).toHaveBeenCalled();
-        expect(doc.head.getElementsByTagName("style").length).toEqual(0);
-        expect(doc.head.getElementsByTagName("link").length).toEqual(1);
+            done();
+        });
     });
 
     it("should inline linked CSS", function (done) {
@@ -452,9 +455,10 @@ describe("Inline CSS links", function () {
                 hasChanges: false,
                 errors: ["import inline error"]
             }));
-            loadAndInlineCSSResourcesForRulesSpy.andCallFake(function (cssRules, options, callback) {
-                callback(false, ["resource inline error"]);
-            });
+            loadAndInlineCSSResourcesForRulesSpy.andReturn(fulfilled({
+                hasChanges: false,
+                errors: ["resource inline error"]
+            }));
 
             rasterizeHTMLInline.loadAndInlineCssLinks(doc, function (errors) {
                 expect(errors).toEqual(["import inline error", "resource inline error"]);

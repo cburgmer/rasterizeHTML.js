@@ -1,6 +1,5 @@
 describe("Inline CSS content", function () {
-    var joinUrlSpy, ajaxSpy, binaryAjaxSpy, getDataURIForImageURLSpy,
-        callback;
+    var joinUrlSpy, ajaxSpy, binaryAjaxSpy, getDataURIForImageURLSpy;
 
     beforeEach(function () {
         joinUrlSpy = spyOn(rasterizeHTMLInline.util, "joinUrl").andCallFake(function (base, url) {
@@ -9,8 +8,6 @@ describe("Inline CSS content", function () {
         ajaxSpy = spyOn(rasterizeHTMLInline.util, "ajax");
         binaryAjaxSpy = spyOn(rasterizeHTMLInline.util, "binaryAjax");
         getDataURIForImageURLSpy = spyOn(rasterizeHTMLInline.util, "getDataURIForImageURL");
-
-        callback = jasmine.createSpy("callback");
     });
 
     describe("extractCssUrl", function () {
@@ -577,15 +574,15 @@ describe("Inline CSS content", function () {
         });
 
         it("should work with empty content", function (done) {
-            rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules([], {}, done);
+            rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules([], {}).then(done);
         });
 
         describe("on background-image", function () {
             it("should not touch an already inlined background-image", function (done) {
                 var rules = CSSOM.parse('span { background-image: url("data:image/png;base64,soMEfAkebASE64="); }').cssRules;
 
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function (change) {
-                    expect(change).toBe(false);
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}).then(function (result) {
+                    expect(result.hasChanges).toBe(false);
                     expect(rules[0].style.getPropertyValue('background-image')).toEqual('url("data:image/png;base64,soMEfAkebASE64=")');
 
                     done();
@@ -599,8 +596,8 @@ describe("Inline CSS content", function () {
                     throw new Error("Invalid url");
                 });
 
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function (change) {
-                    expect(change).toBe(false);
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}).then(function (result) {
+                    expect(result.hasChanges).toBe(false);
                     expect(rules[0].style.getPropertyValue('background-image')).toEqual('"invalid url"');
 
                     done();
@@ -614,8 +611,8 @@ describe("Inline CSS content", function () {
 
                 mockGetDataURIForImageURL(anImage, anImagesDataUri);
 
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function (changed) {
-                    expect(changed).toBe(true);
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}).then(function (result) {
+                    expect(result.hasChanges).toBe(true);
 
                     expect(extractCssUrlSpy.mostRecentCall.args[0]).toMatch(new RegExp('url\\("?' + anImage + '"?\\)'));
 
@@ -632,7 +629,7 @@ describe("Inline CSS content", function () {
 
                 mockGetDataURIForImageURL(anImage, anImagesDataUri);
 
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function () {
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}).then(function () {
                     expect(rules[0].cssText).toMatch(/(background: [^;]*url\("?data:image\/png;base64,someDataUri"?\).*\s*top\s*.*, .*url\("?data:image\/png;base64,someMoreDataUri"?\).*;)|(background-image:\s*url\("?data:image\/png;base64,someDataUri"?\)\s*,\s*url\("?data:image\/png;base64,someMoreDataUri"?\)\s*;)/);
 
                     done();
@@ -651,7 +648,7 @@ describe("Inline CSS content", function () {
                 mockGetDataURIForImageURL(anImage, anImagesDataUri);
                 mockGetDataURIForImageURL(aSecondImage, aSecondImagesDataUri);
 
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function () {
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}).then(function () {
                     expect(extractCssUrlSpy.mostRecentCall.args[0]).toMatch(new RegExp('url\\("?' + aSecondImage + '"?\\)'));
 
                     expect(rules[0].style.getPropertyValue('background-image')).toMatch(backgroundImageRegex);
@@ -668,7 +665,7 @@ describe("Inline CSS content", function () {
 
                 mockGetDataURIForImageURL('anImage.png', "data:image/png;base64,someDataUri");
 
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function () {
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}).then(function () {
                     expect(rules[0].style.getPropertyValue('background-position')).toMatch(/0(px)? (center|50%), (right|100%) (center|50%)/);
 
                     done();
@@ -678,7 +675,7 @@ describe("Inline CSS content", function () {
             it("should handle a baseUrl", function () {
                 var rules = CSSOM.parse('span { background-image: url("image.png"); }').cssRules;
 
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {baseUrl:  'url_base/page.html'}, callback);
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {baseUrl:  'url_base/page.html'});
 
                 expect(getDataURIForImageURLSpy.mostRecentCall.args[1].baseUrl).toEqual('url_base/page.html');
             });
@@ -687,7 +684,7 @@ describe("Inline CSS content", function () {
                 var anImage = "anImage.png",
                     rules = CSSOM.parse('span { background-image: url("' + anImage + '"); }').cssRules;
 
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {cache:  'none'}, callback);
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {cache:  'none'});
 
                 expect(getDataURIForImageURLSpy).toHaveBeenCalledWith(anImage, {cache: 'none'});
             });
@@ -696,7 +693,7 @@ describe("Inline CSS content", function () {
                 var anImage = "anImage.png",
                     rules = CSSOM.parse('span { background-image: url("' + anImage + '"); }').cssRules;
 
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, callback);
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {});
 
                 expect(getDataURIForImageURLSpy).toHaveBeenCalledWith(anImage, {});
             });
@@ -707,8 +704,8 @@ describe("Inline CSS content", function () {
 
                 mockGetDataURIForImageURL(anImage, "data:image/png;base64,someDataUri");
 
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function (changed) {
-                    expect(changed).toBe(true);
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}).then(function (result) {
+                    expect(result.hasChanges).toBe(true);
 
                     expect(rules[0].cssText).toMatch(/\!important/);
 
@@ -726,8 +723,8 @@ describe("Inline CSS content", function () {
                 mockGetDataURIForImageURL(anImage, anImagesDataUri);
                 mockGetDataURIForImageURL(anotherImage, anotherImagesDataUri);
 
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function (changed) {
-                    expect(changed).toBe(true);
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}).then(function (result) {
+                    expect(result.hasChanges).toBe(true);
 
                     expect(rules[0].style.getPropertyValue('background')).toEqual('url("' + anotherImagesDataUri + '")');
                     expect(rules[0].style.getPropertyValue('background-image')).toEqual('url("' + anImagesDataUri + '")');
@@ -748,10 +745,10 @@ describe("Inline CSS content", function () {
             it("should report an error if a backgroundImage could not be loaded", function (done) {
                 var rules = CSSOM.parse('span { background-image: url("a_backgroundImage_that_doesnt_exist.png"); }').cssRules;
 
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function (changed, errors) {
-                    errors = rasterizeHTMLTestHelper.deleteAdditionalFieldsFromErrorsUnderPhantomJS(errors);
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}).then(function (result) {
+                    var errors = rasterizeHTMLTestHelper.deleteAdditionalFieldsFromErrorsUnderPhantomJS(result.errors);
 
-                    expect(changed).toBe(false);
+                    expect(result.hasChanges).toBe(false);
                     expect(errors).toEqual([{
                         resourceType: "backgroundImage",
                         url: "THEURL" + "a_backgroundImage_that_doesnt_exist.png",
@@ -766,8 +763,8 @@ describe("Inline CSS content", function () {
                 var rules = CSSOM.parse('span { background-image: url("a_backgroundImage_that_doesnt_exist.png"); }\n' +
                     'span { background-image: url("' + aBackgroundImageThatDoesExist + '"); }').cssRules;
 
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function (changed, errors) {
-                    errors = rasterizeHTMLTestHelper.deleteAdditionalFieldsFromErrorsUnderPhantomJS(errors);
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}).then(function (result) {
+                    var errors = rasterizeHTMLTestHelper.deleteAdditionalFieldsFromErrorsUnderPhantomJS(result.errors);
                     expect(errors).toEqual([{
                         resourceType: "backgroundImage",
                         url: "THEURL" + "a_backgroundImage_that_doesnt_exist.png",
@@ -782,7 +779,8 @@ describe("Inline CSS content", function () {
                 var rules = CSSOM.parse('span { background-image: url("a_backgroundImage_that_doesnt_exist.png"); }\n' +
                     'span { background-image: url("another_backgroundImage_that_doesnt_exist.png"); }').cssRules;
 
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function (changed, errors) {
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}).then(function (result) {
+                    var errors = result.errors;
                     expect(errors).toEqual([jasmine.any(Object), jasmine.any(Object)]);
                     expect(errors[0]).not.toEqual(errors[1]);
 
@@ -793,8 +791,8 @@ describe("Inline CSS content", function () {
             it("should only report one failing backgroundImage for multiple in a rule", function (done) {
                 var rules = CSSOM.parse('span { background-image: url("' + aBackgroundImageThatDoesExist + '"), url("a_backgroundImage_that_doesnt_exist.png"); }').cssRules;
 
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function (changed, errors) {
-                    errors = rasterizeHTMLTestHelper.deleteAdditionalFieldsFromErrorsUnderPhantomJS(errors);
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}).then(function (result) {
+                    var errors = rasterizeHTMLTestHelper.deleteAdditionalFieldsFromErrorsUnderPhantomJS(result.errors);
                     expect(errors).toEqual([{
                         resourceType: "backgroundImage",
                         url: "THEURL" + "a_backgroundImage_that_doesnt_exist.png",
@@ -808,7 +806,8 @@ describe("Inline CSS content", function () {
             it("should report multiple failing backgroundImages in one rule as error", function (done) {
                 var rules = CSSOM.parse('span { background-image: url("a_backgroundImage_that_doesnt_exist.png"), url("another_backgroundImage_that_doesnt_exist.png"); }').cssRules;
 
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function (changed, errors) {
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}).then(function (result) {
+                    var errors = result.errors;
                     expect(errors).toEqual([jasmine.any(Object), jasmine.any(Object)]);
                     expect(errors[0]).not.toEqual(errors[1]);
 
@@ -819,8 +818,8 @@ describe("Inline CSS content", function () {
             it("should report an empty list for a successful backgroundImage", function (done) {
                 var rules = CSSOM.parse('span { background-image: url("' + aBackgroundImageThatDoesExist + '"); }').cssRules;
 
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function (changed, errors) {
-                    expect(errors).toEqual([]);
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}).then(function (result) {
+                    expect(result.errors).toEqual([]);
 
                     done();
                 });
@@ -865,7 +864,8 @@ describe("Inline CSS content", function () {
             it("should not touch an already inlined font", function (done) {
                 var rules = CSSOM.parse('@font-face { font-family: "test font"; src: url("data:font/woff;base64,soMEfAkebASE64="); }').cssRules;
 
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function () {
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}).then(function (result) {
+                    expect(result.hasChanges).toBe(false);
                     expectFontFaceUrlToMatch(rules[0], "data:font/woff;base64,soMEfAkebASE64=");
 
                     done();
@@ -875,9 +875,8 @@ describe("Inline CSS content", function () {
             it("should ignore invalid values", function (done) {
                 var rules = CSSOM.parse('@font-face { font-family: "test font"; src: "invalid url"; }').cssRules;
 
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function (changed, errors) {
-                    expect(changed).toBe(false);
-                    expect(errors).toEqual([]);
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}).then(function (result) {
+                    expect(result.hasChanges).toBe(false);
 
                     expect(binaryAjaxSpy).not.toHaveBeenCalled();
 
@@ -888,8 +887,8 @@ describe("Inline CSS content", function () {
             it("should ignore a local font", function (done) {
                 var rules = CSSOM.parse('@font-face { font-family: "test font"; src: local("font name"); }').cssRules;
 
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function (changed) {
-                    expect(changed).toBe(false);
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}).then(function (result) {
+                    expect(result.hasChanges).toBe(false);
 
                     expect(binaryAjaxSpy).not.toHaveBeenCalled();
 
@@ -903,8 +902,8 @@ describe("Inline CSS content", function () {
 
                 mockBinaryAjaxUrl('fake.woff', "this is not a font");
 
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function (changed) {
-                    expect(changed).toBe(true);
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}).then(function (result) {
+                    expect(result.hasChanges).toBe(true);
 
                     expect(extractCssUrlSpy.mostRecentCall.args[0]).toMatch(new RegExp('url\\("?fake.woff"?\\)'));
 
@@ -918,7 +917,7 @@ describe("Inline CSS content", function () {
                 var rules = CSSOM.parse('@font-face { font-family: "test font"; src: local("font name"), url("fake.woff"); }').cssRules;
                 mockBinaryAjaxUrl('fake.woff', '');
 
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function () {
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}).then(function () {
                     expect(extractCssUrlSpy.mostRecentCall.args[0]).toMatch(new RegExp('url\\("?fake.woff"?\\)'));
 
                     done();
@@ -930,7 +929,7 @@ describe("Inline CSS content", function () {
 
                 mockBinaryAjaxUrl('fake.woff', "font's content");
 
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function () {
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}).then(function () {
                     expectFontFaceUrlToMatch(rules[0], "data:font/woff;base64,Zm9udCdzIGNvbnRlbnQ=", 'woff');
 
                     done();
@@ -942,7 +941,7 @@ describe("Inline CSS content", function () {
 
                 mockBinaryAjaxUrl('fake.ttf', "font's content");
 
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function () {
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}).then(function () {
                     expectFontFaceUrlToMatch(rules[0], "data:font/truetype;base64,Zm9udCdzIGNvbnRlbnQ=", 'truetype');
 
                     done();
@@ -954,7 +953,7 @@ describe("Inline CSS content", function () {
 
                 mockBinaryAjaxUrl('fake.otf', "font's content");
 
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function () {
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}).then(function () {
                     expectFontFaceUrlToMatch(rules[0], "data:font/opentype;base64,Zm9udCdzIGNvbnRlbnQ=", 'opentype');
 
                     done();
@@ -967,7 +966,7 @@ describe("Inline CSS content", function () {
                 mockBinaryAjaxUrl('fake.woff', "font");
                 mockBinaryAjaxUrl('fake.otf', "font");
 
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function () {
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}).then(function () {
                     expect(rules[0].style.getPropertyValue('src')).toMatch(/local\("Fake Font"\), url\("?data:font\/opentype;base64,Zm9udA=="?\) format\("opentype"\), url\("?data:font\/woff;base64,Zm9udA=="?\), local\("Another Fake Font"\)/);
 
                     done();
@@ -977,7 +976,7 @@ describe("Inline CSS content", function () {
             it("should handle a baseUrl", function (done) {
                 var rules = CSSOM.parse('@font-face { font-family: "test font"; src: url("fake.woff"); }').cssRules;
 
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {baseUrl:  'url_base/page.html'}, function () {
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {baseUrl:  'url_base/page.html'}).then(function () {
                     expect(binaryAjaxSpy.mostRecentCall.args[1].baseUrl).toEqual('url_base/page.html');
 
                     done();
@@ -988,7 +987,7 @@ describe("Inline CSS content", function () {
                 var fontUrl = "fake.woff",
                     rules = CSSOM.parse('@font-face { font-family: "test font"; src: url("' + fontUrl + '"); }').cssRules;
 
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {cache: 'none'}, function () {
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {cache: 'none'}).then(function () {
                     expect(binaryAjaxSpy).toHaveBeenCalledWith(fontUrl, {cache: 'none'});
 
                     done();
@@ -999,7 +998,7 @@ describe("Inline CSS content", function () {
                 var fontUrl = "fake.woff",
                     rules = CSSOM.parse('@font-face { font-family: "test font"; src: url("' + fontUrl + '"); }').cssRules;
 
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function () {
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}).then(function () {
                     expect(binaryAjaxSpy).toHaveBeenCalledWith(fontUrl, {});
 
                     done();
@@ -1028,9 +1027,9 @@ describe("Inline CSS content", function () {
             it("should report an error if a font could not be loaded", function (done) {
                 var rules = CSSOM.parse('@font-face { font-family: "test font"; src: url("a_font_that_doesnt_exist.woff"); }').cssRules;
 
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function (changed, errors) {
-                    errors = rasterizeHTMLTestHelper.deleteAdditionalFieldsFromErrorsUnderPhantomJS(errors);
-                    expect(changed).toBe(false);
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}).then(function (result) {
+                    var errors = rasterizeHTMLTestHelper.deleteAdditionalFieldsFromErrorsUnderPhantomJS(result.errors);
+                    expect(result.hasChanges).toBe(false);
                     expect(errors).toEqual([{
                         resourceType: "fontFace",
                         url: "THEURL" + "a_font_that_doesnt_exist.woff",
@@ -1045,8 +1044,8 @@ describe("Inline CSS content", function () {
                 var rules = CSSOM.parse('@font-face { font-family: "test font1"; src: url("a_font_that_doesnt_exist.woff"); }\n' +
                     '@font-face { font-family: "test font2"; src: url("' + aFontReferenceThatDoesExist + '"); }').cssRules;
 
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function (changed, errors) {
-                    errors = rasterizeHTMLTestHelper.deleteAdditionalFieldsFromErrorsUnderPhantomJS(errors);
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}).then(function (result) {
+                    var errors = rasterizeHTMLTestHelper.deleteAdditionalFieldsFromErrorsUnderPhantomJS(result.errors);
                     expect(errors).toEqual([{
                         resourceType: "fontFace",
                         url: "THEURL" + "a_font_that_doesnt_exist.woff",
@@ -1061,7 +1060,8 @@ describe("Inline CSS content", function () {
                 var rules = CSSOM.parse('@font-face { font-family: "test font1"; src: url("a_font_that_doesnt_exist.woff"); }\n' +
                     '@font-face { font-family: "test font2"; src: url("another_font_that_doesnt_exist.woff"); }').cssRules;
 
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function (changed, errors) {
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}).then(function (result) {
+                    var errors = result.errors;
                     expect(errors).toEqual([jasmine.any(Object), jasmine.any(Object)]);
                     expect(errors[0]).not.toEqual(errors[1]);
 
@@ -1072,8 +1072,8 @@ describe("Inline CSS content", function () {
             it("should report an empty list for a successful backgroundImage", function (done) {
                 var rules = CSSOM.parse('@font-face { font-family: "test font2"; src: url("' + aFontReferenceThatDoesExist + '"); }').cssRules;
 
-                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}, function (changed, errors) {
-                    expect(errors).toEqual([]);
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}).then(function (result) {
+                    expect(result.errors).toEqual([]);
 
                     done();
                 });

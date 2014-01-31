@@ -88,9 +88,9 @@ window.rasterizeHTMLInline = (function (module) {
         var cssRules = module.css.rulesForCssText(styleContent);
 
         module.css.loadCSSImportsForRules(cssRules, alreadyLoadedCssUrls, options).then(function (cssImportResult) {
-            module.css.loadAndInlineCSSResourcesForRules(cssRules, options, function (changedFromResources, resourceErrors) {
-                var errors = cssImportResult.errors.concat(resourceErrors),
-                    hasChanges = cssImportResult.hasChanges || changedFromResources;
+            module.css.loadAndInlineCSSResourcesForRules(cssRules, options).then(function (cssResourcesResult) {
+                var errors = cssImportResult.errors.concat(cssResourcesResult.errors),
+                    hasChanges = cssImportResult.hasChanges || cssResourcesResult.hasChanges;
 
                 if (hasChanges) {
                     styleContent = module.css.cssRulesToText(cssRules);
@@ -170,10 +170,10 @@ window.rasterizeHTMLInline = (function (module) {
 
                 changedFromPathAdjustment = module.css.adjustPathsOfCssResources(url, cssRules);
                 module.css.loadCSSImportsForRules(cssRules, [], options).then(function (cssImportResult) {
-                    module.css.loadAndInlineCSSResourcesForRules(cssRules, options, function (changedFromResources, resourceErrors) {
-                        var errors = cssImportResult.errors.concat(resourceErrors);
+                    module.css.loadAndInlineCSSResourcesForRules(cssRules, options).then(function (cssResourcesResult) {
+                        var errors = cssImportResult.errors.concat(cssResourcesResult.errors);
 
-                        if (changedFromPathAdjustment || cssImportResult.hasChanges || changedFromResources) {
+                        if (changedFromPathAdjustment || cssImportResult.hasChanges || cssResourcesResult.hasChanges) {
                             content = module.css.cssRulesToText(cssRules);
                         }
 

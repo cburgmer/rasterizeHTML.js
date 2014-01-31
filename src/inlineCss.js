@@ -591,13 +591,21 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM, ayepromise) {
         });
     };
 
-    module.css.loadAndInlineCSSResourcesForRules = function (cssRules, options, callback) {
-        iterateOverRulesAndInlineBackgroundImages(cssRules, options).then(function (bgImageResult) {
-            iterateOverRulesAndInlineFontFace(cssRules, options).then(function (fontFaceResult) {
-                var hasChanges = bgImageResult.hasChanges || fontFaceResult.hasChanges;
+    module.css.loadAndInlineCSSResourcesForRules = function (cssRules, options) {
+        var hasChanges = false,
+            errors = [];
 
-                callback(hasChanges, bgImageResult.errors.concat(fontFaceResult.errors));
-            });
+        return module.util.all([iterateOverRulesAndInlineBackgroundImages, iterateOverRulesAndInlineFontFace].map(function (func) {
+            return func(cssRules, options)
+                .then(function (result) {
+                    hasChanges = hasChanges || result.hasChanges;
+                    errors = errors.concat(result.errors);
+                });
+        })).then(function () {
+            return {
+                hasChanges: hasChanges,
+                errors: errors
+            };
         });
     };
 

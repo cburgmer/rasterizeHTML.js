@@ -91,9 +91,9 @@ window.rasterizeHTMLInline = (function (module) {
         var cssRules = module.css.rulesForCssText(styleContent);
 
         module.css.loadCSSImportsForRules(cssRules, alreadyLoadedCssUrls, options).then(function (cssImportResult) {
-            module.css.loadAndInlineCSSResourcesForRules(cssRules, options, function (changedFromResources, resourceErrors) {
-                var errors = cssImportResult.errors.concat(resourceErrors),
-                    hasChanges = cssImportResult.hasChanges || changedFromResources;
+            module.css.loadAndInlineCSSResourcesForRules(cssRules, options).then(function (cssResourcesResult) {
+                var errors = cssImportResult.errors.concat(cssResourcesResult.errors),
+                    hasChanges = cssImportResult.hasChanges || cssResourcesResult.hasChanges;
 
                 if (hasChanges) {
                     styleContent = module.css.cssRulesToText(cssRules);
@@ -173,10 +173,10 @@ window.rasterizeHTMLInline = (function (module) {
 
                 changedFromPathAdjustment = module.css.adjustPathsOfCssResources(url, cssRules);
                 module.css.loadCSSImportsForRules(cssRules, [], options).then(function (cssImportResult) {
-                    module.css.loadAndInlineCSSResourcesForRules(cssRules, options, function (changedFromResources, resourceErrors) {
-                        var errors = cssImportResult.errors.concat(resourceErrors);
+                    module.css.loadAndInlineCSSResourcesForRules(cssRules, options).then(function (cssResourcesResult) {
+                        var errors = cssImportResult.errors.concat(cssResourcesResult.errors);
 
-                        if (changedFromPathAdjustment || cssImportResult.hasChanges || changedFromResources) {
+                        if (changedFromPathAdjustment || cssImportResult.hasChanges || cssResourcesResult.hasChanges) {
                             content = module.css.cssRulesToText(cssRules);
                         }
 
@@ -905,7 +905,6 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM, ayepromise) {
 
                 errors = errors.concat(result.errors);
             });
-
         })).then(function () {
             return {
                 hasChanges: hasChanges,
@@ -914,13 +913,21 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM, ayepromise) {
         });
     };
 
-    module.css.loadAndInlineCSSResourcesForRules = function (cssRules, options, callback) {
-        iterateOverRulesAndInlineBackgroundImages(cssRules, options).then(function (bgImageResult) {
-            iterateOverRulesAndInlineFontFace(cssRules, options).then(function (fontFaceResult) {
-                var hasChanges = bgImageResult.hasChanges || fontFaceResult.hasChanges;
+    module.css.loadAndInlineCSSResourcesForRules = function (cssRules, options) {
+        var hasChanges = false,
+            errors = [];
 
-                callback(hasChanges, bgImageResult.errors.concat(fontFaceResult.errors));
-            });
+        return module.util.all([iterateOverRulesAndInlineBackgroundImages, iterateOverRulesAndInlineFontFace].map(function (func) {
+            return func(cssRules, options)
+                .then(function (result) {
+                    hasChanges = hasChanges || result.hasChanges;
+                    errors = errors.concat(result.errors);
+                });
+        })).then(function () {
+            return {
+                hasChanges: hasChanges,
+                errors: errors
+            };
         });
     };
 
