@@ -9,6 +9,32 @@
             padding: 0;
         }
     </style>
+    <script>
+    /* Add missing support for .bind() to PhantomJS */
+    if (!Function.prototype.bind) {
+      Function.prototype.bind = function (oThis) {
+        if (typeof this !== "function") {
+          // closest thing possible to the ECMAScript 5 internal IsCallable function
+          throw new TypeError("Function.prototype.bind - what is trying to be bound is not callable");
+        }
+
+        var aArgs = Array.prototype.slice.call(arguments, 1),
+            fToBind = this,
+            fNOP = function () {},
+            fBound = function () {
+              return fToBind.apply(this instanceof fNOP && oThis
+                                     ? this
+                                     : oThis,
+                                   aArgs.concat(Array.prototype.slice.call(arguments)));
+            };
+
+        fNOP.prototype = this.prototype;
+        fBound.prototype = new fNOP();
+
+        return fBound;
+      };
+    }
+    </script>
 </head>
 <body>
     <canvas id="canvas" width="204" height="100"></canvas>
@@ -20,7 +46,13 @@
         rasterizeHTMLInline.util.ajax("fixtures/testWithJs.html", {cache: false})
             .then(function (html) {
                 rasterizeHTML.drawHTML(html, canvas,
-                    {cache: false, executeJs: true, baseUrl: "fixtures/"});
+                    {cache: false, executeJs: true, baseUrl: "fixtures/"}, function (img, errors) {
+                        if (errors.length > 0) {
+                            console.log("Could not load the following resources: ", errors.map(function (e) {
+                                return e.msg;
+                            }).join(', '));
+                        }
+                    });
             });
         // rasterizeHTML.drawURL("fixtures/testWithJs.html", canvas, {cache: false, executeJs: true});
     </script>

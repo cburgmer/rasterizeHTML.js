@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.7.0 - 2014-01-31
+/*! rasterizeHTML.js - v0.7.0 - 2014-02-02
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2014 Christoph Burgmer; Licensed MIT */
 window.rasterizeHTMLInline = (function (module) {
@@ -168,21 +168,56 @@ window.rasterizeHTMLInline = (function (module) {
     var requestStylesheetAndInlineResources = function (url, options, successCallback, errorCallback) {
         module.util.ajax(url, options)
             .then(function (content) {
-                var cssRules = module.css.rulesForCssText(content),
-                    changedFromPathAdjustment;
+                var cssRules = module.css.rulesForCssText(content);
 
-                changedFromPathAdjustment = module.css.adjustPathsOfCssResources(url, cssRules);
-                module.css.loadCSSImportsForRules(cssRules, [], options).then(function (cssImportResult) {
-                    module.css.loadAndInlineCSSResourcesForRules(cssRules, options).then(function (cssResourcesResult) {
-                        var errors = cssImportResult.errors.concat(cssResourcesResult.errors);
+                return {
+                    content: content,
+                    cssRules: cssRules
+                };
+            })
+            .then(function (result) {
+                var hasChangesFromPathAdjustment = module.css.adjustPathsOfCssResources(url, result.cssRules);
 
-                        if (changedFromPathAdjustment || cssImportResult.hasChanges || cssResourcesResult.hasChanges) {
-                            content = module.css.cssRulesToText(cssRules);
-                        }
-
-                        successCallback(content, errors);
+                return {
+                    content: result.content,
+                    cssRules: result.cssRules,
+                    hasChanges: hasChangesFromPathAdjustment
+                };
+            })
+            .then(function (result) {
+                return module.css.loadCSSImportsForRules(result.cssRules, [], options)
+                    .then(function (cssImportResult) {
+                        return {
+                            content: result.content,
+                            cssRules: result.cssRules,
+                            hasChanges: result.hasChanges || cssImportResult.hasChanges,
+                            errors: cssImportResult.errors
+                        };
                     });
-                });
+            })
+            .then(function (result) {
+                return module.css.loadAndInlineCSSResourcesForRules(result.cssRules, options)
+                    .then(function (cssResourcesResult) {
+                        return {
+                            content: result.content,
+                            cssRules: result.cssRules,
+                            hasChanges: result.hasChanges || cssResourcesResult.hasChanges,
+                            errors: result.errors.concat(cssResourcesResult.errors)
+                        };
+                    });
+            })
+            .then(function (result) {
+                var content = result.content;
+                if (result.hasChanges) {
+                    content = module.css.cssRulesToText(result.cssRules);
+                }
+                return {
+                    content: content,
+                    errors: result.errors
+                };
+            })
+            .then(function (result) {
+                successCallback(result.content, result.errors);
             }, errorCallback);
     };
 
