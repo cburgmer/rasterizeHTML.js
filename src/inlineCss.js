@@ -490,6 +490,7 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM, ayepromise) {
             }
             return fontFaceSrcReferences;
         }
+        // we should probably throw an exception here
         return [];
     };
 

@@ -604,6 +604,27 @@ describe("Inline CSS content", function () {
                 });
             });
 
+            it("should ignore an invalid value together with a valid url", function (done) {
+                var rules = CSSOM.parse('span { background-image: "invalid url", url("valid/url.png"); }').cssRules;
+
+                extractCssUrlSpy.andCallFake(function (value) {
+                    if (value === 'url("valid/url.png")') {
+                        return "valid/url.png";
+                    } else {
+                        throw new Error("Invalid url");
+                    }
+                });
+                mockGetDataURIForImageURL("valid/url.png", "data:image/png;base64,someDataUri");
+
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}).then(function (result) {
+                    expect(result.hasChanges).toBe(true);
+                    // actually we don't really care whether the valid image is inlined, the rule itself should be invalid in all browsers
+                    expect(rules[0].style.getPropertyValue('background-image')).toEqual('"invalid url", url("data:image/png;base64,someDataUri")');
+
+                    done();
+                });
+            });
+
             it("should inline a background-image", function (done) {
                 var anImage = "anImage.png",
                     anImagesDataUri = "data:image/png;base64,someDataUri",
@@ -872,13 +893,27 @@ describe("Inline CSS content", function () {
                 });
             });
 
-            it("should ignore invalid values", function (done) {
+            it("should ignore an invalid source", function (done) {
                 var rules = CSSOM.parse('@font-face { font-family: "test font"; src: "invalid url"; }').cssRules;
 
                 rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}).then(function (result) {
                     expect(result.hasChanges).toBe(false);
 
                     expect(binaryAjaxSpy).not.toHaveBeenCalled();
+
+                    done();
+                });
+            });
+
+            it("should ignore an invalid source together with a valid one", function (done) {
+                var rules = CSSOM.parse('@font-face { font-family: "test font"; src: "invalid url", url("fake.woff"); }').cssRules;
+
+                mockBinaryAjaxUrl('fake.woff', "this is not a font");
+
+                rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}).then(function (result) {
+                    expect(result.hasChanges).toBe(false);
+                    // actually we don't really care whether the valid font is inlined or not, the rule itself should be invalid in all browsers
+                    expect(rules[0].style.getPropertyValue('src')).toMatch(/"invalid url", url\("?fake.woff"?\)/);
 
                     done();
                 });
