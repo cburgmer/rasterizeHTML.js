@@ -42,7 +42,7 @@ describe("Inline CSS content (integration)", function () {
 
         appendStylesheetLink(doc, "some.html");
 
-        rasterizeHTMLInline.loadAndInlineCssLinks(doc, function () {
+        rasterizeHTMLInline.loadAndInlineCssLinks(doc, {}).then(function () {
             expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(
                 /p\s*\{\s*font-size:\s*14px;\s*\}\s*@font-face\s*\{\s*font-family:\s*["']test font["'];\s*src:\s*url\("?data:font\/woff;base64,dGhpcyBpcyBub3QgYSBmb250"?\);\s*\}/
             );

@@ -165,8 +165,8 @@ window.rasterizeHTMLInline = (function (module) {
         parent.removeChild(oldLinkNode);
     };
 
-    var requestStylesheetAndInlineResources = function (url, options, successCallback, errorCallback) {
-        module.util.ajax(url, options)
+    var requestStylesheetAndInlineResources = function (url, options) {
+        return module.util.ajax(url, options)
             .then(function (content) {
                 var cssRules = module.css.rulesForCssText(content);
 
@@ -215,13 +215,10 @@ window.rasterizeHTMLInline = (function (module) {
                     content: content,
                     errors: result.errors
                 };
-            })
-            .then(function (result) {
-                successCallback(result.content, result.errors);
-            }, errorCallback);
+            });
     };
 
-    var loadLinkedCSS = function (link, options, successCallback, errorCallback) {
+    var loadLinkedCSS = function (link, options) {
         var cssHref = link.attributes.href.nodeValue,
             documentBaseUrl = module.util.getDocumentBaseUrl(link.ownerDocument),
             ajaxOptions = module.util.clone(options);
@@ -232,12 +229,11 @@ window.rasterizeHTMLInline = (function (module) {
 
         var processStylesheet = memoizeFunctionOnCaching(requestStylesheetAndInlineResources, options);
 
-        processStylesheet(cssHref, ajaxOptions, function (content, errors) {
-            errors = module.util.cloneArray(errors);
-
-            successCallback(content, errors);
-        }, function () {
-            errorCallback(module.util.joinUrl(ajaxOptions.baseUrl, cssHref));
+        return processStylesheet(cssHref, ajaxOptions).then(function (result) {
+            return {
+                content: result.content,
+                errors: module.util.cloneArray(result.errors)
+            };
         });
     };
 
@@ -250,30 +246,24 @@ window.rasterizeHTMLInline = (function (module) {
         });
     };
 
-    module.loadAndInlineCssLinks = function (doc, options, callback) {
-        var params = module.util.parseOptionalParameters(options, callback),
-            links = getCssStylesheetLinks(doc),
+    module.loadAndInlineCssLinks = function (doc, options) {
+        var links = getCssStylesheetLinks(doc),
             errors = [];
 
-        module.util.map(links, function (link, finish) {
-            loadLinkedCSS(link, params.options, function(css, moreErrors) {
-                substituteLinkWithInlineStyle(link, css + "\n");
+        return module.util.all(links.map(function (link) {
+            return loadLinkedCSS(link, options).then(function(result) {
+                substituteLinkWithInlineStyle(link, result.content + "\n");
 
-                errors = errors.concat(moreErrors);
-                finish();
-            }, function (url) {
+                errors = errors.concat(result.errors);
+            }, function (e) {
                 errors.push({
                     resourceType: "stylesheet",
-                    url: url,
-                    msg: "Unable to load stylesheet " + url
+                    url: e.url,
+                    msg: "Unable to load stylesheet " + e.url
                 });
-
-                finish();
             });
-        }, function () {
-            if (params.callback) {
-                params.callback(errors);
-            }
+        })).then(function () {
+            return errors;
         });
     };
 
@@ -335,7 +325,7 @@ window.rasterizeHTMLInline = (function (module) {
             allErrors = allErrors.concat(errors);
             module.loadAndInlineStyles(doc, options, function (errors) {
                 allErrors = allErrors.concat(errors);
-                module.loadAndInlineCssLinks(doc, options, function (errors) {
+                module.loadAndInlineCssLinks(doc, options).then(function (errors) {
                     allErrors = allErrors.concat(errors);
 
                     if (options.inlineScripts === false) {
@@ -1183,26 +1173,42 @@ window.rasterizeHTMLInline = (function (module, window, ayepromise, url) {
             if (args.length > 2 && typeof args[args.length-2] === 'function') {
                  errorCallback = args.pop();
                  successCallback = args.pop();
-            } else {
+            } else if (args.length > 1 && typeof args[args.length-1] === 'function') {
                 successCallback = args.pop();
             }
 
             var argumentHash = hasher(args),
                 funcHash = constantUniqueIdFor(func),
-                allArgs;
+                allArgs, retValue;
 
             if (memo[funcHash] && memo[funcHash][argumentHash]) {
-                successCallback.apply(null, memo[funcHash][argumentHash]);
-            } else {
-                allArgs = args.concat(function () {
-                    memo[funcHash] = memo[funcHash] || {};
-                    memo[funcHash][argumentHash] = arguments;
-                    successCallback.apply(null, arguments);
-                });
-                if (errorCallback) {
-                    allArgs = allArgs.concat(errorCallback);
+                if (successCallback) {
+                    successCallback.apply(null, memo[funcHash][argumentHash]);
+                } else {
+                    // We can only return the first value, but there should be only one anyway :>
+                    return memo[funcHash][argumentHash][0];
                 }
-                func.apply(null, allArgs);
+            } else {
+                memo[funcHash] = memo[funcHash] || {};
+
+                allArgs = args;
+                if (successCallback) {
+                    allArgs = allArgs.concat(function () {
+                        memo[funcHash][argumentHash] = arguments;
+                        successCallback.apply(null, arguments);
+                    });
+                    if (errorCallback) {
+                        allArgs = allArgs.concat(errorCallback);
+                    }
+
+                    func.apply(null, allArgs);
+                } else {
+                    retValue = func.apply(null, allArgs);
+
+                    memo[funcHash][argumentHash] = [retValue];
+
+                    return retValue;
+                }
             }
         };
     };

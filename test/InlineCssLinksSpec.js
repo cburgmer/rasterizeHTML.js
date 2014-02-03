@@ -14,7 +14,9 @@ describe("Inline CSS links", function () {
             } else if (ajaxUrlMocks[url] !== undefined) {
                 defer.resolve(ajaxUrlMocks[url]);
             } else {
-                defer.reject();
+                defer.reject({
+                    url: 'THEURL' + url
+                });
             }
             return defer.promise;
         });
@@ -78,7 +80,7 @@ describe("Inline CSS links", function () {
     });
 
     it("should do nothing if no linked CSS is found", function (done) {
-        rasterizeHTMLInline.loadAndInlineCssLinks(doc, function () {
+        rasterizeHTMLInline.loadAndInlineCssLinks(doc, {}).then(function () {
             expect(doc.head.getElementsByTagName("style").length).toEqual(0);
 
             done();
@@ -92,7 +94,7 @@ describe("Inline CSS links", function () {
 
         doc.head.appendChild(faviconLink);
 
-        rasterizeHTMLInline.loadAndInlineCssLinks(doc, function () {
+        rasterizeHTMLInline.loadAndInlineCssLinks(doc, {}).then(function () {
             expect(doc.head.getElementsByTagName("style").length).toEqual(0);
             expect(doc.head.getElementsByTagName("link").length).toEqual(1);
 
@@ -103,7 +105,7 @@ describe("Inline CSS links", function () {
     it("should inline linked CSS", function (done) {
         doc.head.appendChild(aCssLink());
 
-        rasterizeHTMLInline.loadAndInlineCssLinks(doc, function () {
+        rasterizeHTMLInline.loadAndInlineCssLinks(doc, {}).then(function () {
             expect(doc.head.getElementsByTagName("style").length).toEqual(1);
             expect(doc.head.getElementsByTagName("style")[0].textContent).toEqual("p { font-size: 14px; }");
             expect(doc.head.getElementsByTagName("link").length).toEqual(0);
@@ -123,7 +125,7 @@ describe("Inline CSS links", function () {
         // href will return absolute path, attributes.href.nodeValue relative one in Chrome
         mockAjaxUrl(noTypeCssLink.attributes.href.nodeValue, "p { font-size: 14px; }");
 
-        rasterizeHTMLInline.loadAndInlineCssLinks(doc, function () {
+        rasterizeHTMLInline.loadAndInlineCssLinks(doc, {}).then(function () {
             expect(doc.head.getElementsByTagName("style").length).toEqual(1);
             expect(doc.head.getElementsByTagName("style")[0].textContent).toEqual("p { font-size: 14px; }");
             expect(doc.head.getElementsByTagName("link").length).toEqual(0);
@@ -143,7 +145,7 @@ describe("Inline CSS links", function () {
         doc.head.appendChild(inlineCss);
         doc.head.appendChild(anotherCssLink);
 
-        rasterizeHTMLInline.loadAndInlineCssLinks(doc, function () {
+        rasterizeHTMLInline.loadAndInlineCssLinks(doc, {}).then(function () {
             expect(doc.head.getElementsByTagName("style").length).toEqual(3);
             expect(doc.head.getElementsByTagName("style")[0].textContent.trim()).toEqual("p { font-size: 14px; }");
             expect(doc.head.getElementsByTagName("style")[1].textContent.trim()).toEqual("span { margin: 0; }");
@@ -159,7 +161,7 @@ describe("Inline CSS links", function () {
 
         doc.head.appendChild(emptyCssLink);
 
-        rasterizeHTMLInline.loadAndInlineCssLinks(doc, function () {
+        rasterizeHTMLInline.loadAndInlineCssLinks(doc, {}).then(function () {
             expect(doc.head.getElementsByTagName("style").length).toEqual(0);
             expect(doc.head.getElementsByTagName("link").length).toEqual(0);
 
@@ -170,7 +172,7 @@ describe("Inline CSS links", function () {
     it("should inline CSS imports", function (done) {
         doc.head.appendChild(aCssLink());
 
-        rasterizeHTMLInline.loadAndInlineCssLinks(doc, function () {
+        rasterizeHTMLInline.loadAndInlineCssLinks(doc, {}).then(function () {
             expect(loadCSSImportsForRulesSpy).toHaveBeenCalled();
             expect(loadCSSImportsForRulesSpy.mostRecentCall.args[0][0].cssText).toMatch(/p \{\s*font-size: 14px;\s*\}/);
 
@@ -181,7 +183,7 @@ describe("Inline CSS links", function () {
     it("should inline CSS resources", function (done) {
         doc.head.appendChild(aCssLink());
 
-        rasterizeHTMLInline.loadAndInlineCssLinks(doc, function () {
+        rasterizeHTMLInline.loadAndInlineCssLinks(doc, {}).then(function () {
             expect(loadAndInlineCSSResourcesForRulesSpy).toHaveBeenCalled();
             expect(loadAndInlineCSSResourcesForRulesSpy.mostRecentCall.args[0][0].cssText).toMatch(/p \{\s*font-size: 14px;\s*\}/);
 
@@ -196,7 +198,7 @@ describe("Inline CSS links", function () {
 
         mockAjaxUrl("some.css", "p { font-size: 14px; }");
 
-        rasterizeHTMLInline.loadAndInlineCssLinks(doc, function () {
+        rasterizeHTMLInline.loadAndInlineCssLinks(doc, {}).then(function () {
             expect(doc.getElementsByTagName("style").length).toEqual(1);
             expect(doc.getElementsByTagName("style")[0].textContent).toEqual("p { font-size: 14px; }");
             expect(doc.getElementsByTagName("link").length).toEqual(0);
@@ -215,7 +217,7 @@ describe("Inline CSS links", function () {
 
         doc = rasterizeHTMLTestHelper.readDocumentFixtureWithoutBaseURI("externalCSS.html");
 
-        rasterizeHTMLInline.loadAndInlineCssLinks(doc, {baseUrl: jasmine.getFixtures().fixturesPath}, function () {
+        rasterizeHTMLInline.loadAndInlineCssLinks(doc, {baseUrl: jasmine.getFixtures().fixturesPath}).then(function () {
             expect(ajaxSpy.mostRecentCall.args[1].baseUrl).toEqual(jasmine.getFixtures().fixturesPath);
 
             expect(loadCSSImportsForRulesSpy.mostRecentCall.args[2].baseUrl).toEqual(jasmine.getFixtures().fixturesPath);
@@ -235,7 +237,7 @@ describe("Inline CSS links", function () {
 
         mockAjaxUrl("some.css", "p { font-size: 14px; }");
 
-        rasterizeHTMLInline.loadAndInlineCssLinks(doc, {baseUrl: jasmine.getFixtures().fixturesPath}, function () {
+        rasterizeHTMLInline.loadAndInlineCssLinks(doc, {baseUrl: jasmine.getFixtures().fixturesPath}).then(function () {
             expect(ajaxSpy.mostRecentCall.args[1].baseUrl).toEqual(jasmine.getFixtures().fixturesPath);
 
             expect(loadCSSImportsForRulesSpy.mostRecentCall.args[2].baseUrl).toEqual(jasmine.getFixtures().fixturesPath);
@@ -259,7 +261,7 @@ describe("Inline CSS links", function () {
             'div { background-image: url("../green.png"); }\n' +
             '@font-face { font-family: "test font"; src: url("fake.woff"); }');
 
-        rasterizeHTMLInline.loadAndInlineCssLinks(doc, {baseUrl: "some_url/"}, function () {
+        rasterizeHTMLInline.loadAndInlineCssLinks(doc, {baseUrl: "some_url/"}).then(function () {
             expect(adjustPathsOfCssResourcesSpy).toHaveBeenCalledWith("below/some.css", jasmine.any(Object));
 
             done();
@@ -270,7 +272,7 @@ describe("Inline CSS links", function () {
         var cssLink = aCssLink();
         doc.head.appendChild(cssLink);
 
-        rasterizeHTMLInline.loadAndInlineCssLinks(doc, {cache: 'none'}, function () {
+        rasterizeHTMLInline.loadAndInlineCssLinks(doc, {cache: 'none'}).then(function () {
             expect(ajaxSpy).toHaveBeenCalledWith(cssLink.attributes.href.nodeValue, {
                 cache: 'none'
             });
@@ -286,7 +288,7 @@ describe("Inline CSS links", function () {
         var cssLink = aCssLink();
         doc.head.appendChild(cssLink);
 
-        rasterizeHTMLInline.loadAndInlineCssLinks(doc, function () {
+        rasterizeHTMLInline.loadAndInlineCssLinks(doc, {}).then(function () {
             expect(ajaxSpy).toHaveBeenCalledWith(cssLink.attributes.href.nodeValue, {});
 
             expect(loadCSSImportsForRulesSpy.mostRecentCall.args[2].cache).not.toBe(false);
@@ -296,21 +298,16 @@ describe("Inline CSS links", function () {
         });
     });
 
-    it("should cache inlined content if a cache bucket is given", function () {
+    it("should cache inlined content if a cache bucket is given", function (done) {
         var cacheBucket = {};
 
         // first call
         doc = document.implementation.createHTMLDocument("");
         doc.head.appendChild(aCssLink());
 
-        rasterizeHTMLInline.loadAndInlineCssLinks(doc, {cacheBucket: cacheBucket}, callback);
-        expect(ajaxSpy).toHaveBeenCalled();
+        rasterizeHTMLInline.loadAndInlineCssLinks(doc, {cacheBucket: cacheBucket}).then(function () {
+            expect(ajaxSpy).toHaveBeenCalled();
 
-        waitsFor(function () {
-            return callback.wasCalled;
-        });
-
-        runs(function () {
             ajaxSpy.reset();
             loadCSSImportsForRulesSpy.reset();
             loadAndInlineCSSResourcesForRulesSpy.reset();
@@ -319,17 +316,19 @@ describe("Inline CSS links", function () {
             doc = document.implementation.createHTMLDocument("");
             doc.head.appendChild(aCssLink());
 
-            rasterizeHTMLInline.loadAndInlineCssLinks(doc, {cacheBucket: cacheBucket}, callback);
+            rasterizeHTMLInline.loadAndInlineCssLinks(doc, {cacheBucket: cacheBucket}).then(function () {
+                expect(ajaxSpy).not.toHaveBeenCalled();
+                expect(loadCSSImportsForRulesSpy).not.toHaveBeenCalled();
+                expect(loadAndInlineCSSResourcesForRulesSpy).not.toHaveBeenCalled();
 
-            expect(ajaxSpy).not.toHaveBeenCalled();
-            expect(loadCSSImportsForRulesSpy).not.toHaveBeenCalled();
-            expect(loadAndInlineCSSResourcesForRulesSpy).not.toHaveBeenCalled();
+                expect(doc.getElementsByTagName("style")[0].textContent).toEqual("p { font-size: 14px; }");
 
-            expect(doc.getElementsByTagName("style")[0].textContent).toEqual("p { font-size: 14px; }");
+                done();
+            });
         });
     });
 
-    it("should cache inlined content for different pages if baseUrl is the same", function () {
+    it("should cache inlined content for different pages if baseUrl is the same", function (done) {
         var cacheBucket = {};
 
         joinUrlSpy.andCallThrough();
@@ -338,13 +337,7 @@ describe("Inline CSS links", function () {
         doc = rasterizeHTMLTestHelper.readDocumentFixture("empty1.html");
         doc.getElementsByTagName("head")[0].appendChild(aCssLink());
 
-        rasterizeHTMLInline.loadAndInlineCssLinks(doc, {cacheBucket: cacheBucket}, callback);
-
-        waitsFor(function () {
-            return callback.wasCalled;
-        });
-
-        runs(function () {
+        rasterizeHTMLInline.loadAndInlineCssLinks(doc, {cacheBucket: cacheBucket}).then(function () {
             ajaxSpy.reset();
             loadCSSImportsForRulesSpy.reset();
             loadAndInlineCSSResourcesForRulesSpy.reset();
@@ -353,40 +346,39 @@ describe("Inline CSS links", function () {
             doc = rasterizeHTMLTestHelper.readDocumentFixture("empty2.html"); // use a document with different url, but same baseUrl
             doc.getElementsByTagName("head")[0].appendChild(aCssLink());
 
-            rasterizeHTMLInline.loadAndInlineCssLinks(doc, {cacheBucket: cacheBucket}, callback);
+            rasterizeHTMLInline.loadAndInlineCssLinks(doc, {cacheBucket: cacheBucket}).then(function () {
+                expect(ajaxSpy).not.toHaveBeenCalled();
+                expect(loadCSSImportsForRulesSpy).not.toHaveBeenCalled();
+                expect(loadAndInlineCSSResourcesForRulesSpy).not.toHaveBeenCalled();
 
-            expect(ajaxSpy).not.toHaveBeenCalled();
-            expect(loadCSSImportsForRulesSpy).not.toHaveBeenCalled();
-            expect(loadAndInlineCSSResourcesForRulesSpy).not.toHaveBeenCalled();
+                expect(doc.getElementsByTagName("style")[0].textContent).toEqual("p { font-size: 14px; }");
 
-            expect(doc.getElementsByTagName("style")[0].textContent).toEqual("p { font-size: 14px; }");
+                done();
+            });
         });
     });
 
-    it("should not cache inlined content if caching turned off", function () {
+    it("should not cache inlined content if caching turned off", function (done) {
         var cacheBucket = {};
 
         // first call
         doc = document.implementation.createHTMLDocument("");
         doc.head.appendChild(aCssLink());
 
-        rasterizeHTMLInline.loadAndInlineCssLinks(doc, {cacheBucket: cacheBucket, cache: 'none'}, callback);
-        expect(ajaxSpy).toHaveBeenCalled();
+        rasterizeHTMLInline.loadAndInlineCssLinks(doc, {cacheBucket: cacheBucket, cache: 'none'}).then(function () {
+            expect(ajaxSpy).toHaveBeenCalled();
 
-        waitsFor(function () {
-            return callback.wasCalled;
-        });
-
-        runs(function () {
             ajaxSpy.reset();
 
             // second call
             doc = document.implementation.createHTMLDocument("");
             doc.head.appendChild(aCssLink());
 
-            rasterizeHTMLInline.loadAndInlineCssLinks(doc, {cacheBucket: cacheBucket, cache: 'none'}, callback);
+            rasterizeHTMLInline.loadAndInlineCssLinks(doc, {cacheBucket: cacheBucket, cache: 'none'}).then(function () {
+                expect(ajaxSpy).toHaveBeenCalled();
 
-            expect(ajaxSpy).toHaveBeenCalled();
+                done();
+            });
         });
     });
 
@@ -410,11 +402,11 @@ describe("Inline CSS links", function () {
         it("should report an error if a stylesheet could not be loaded", function (done) {
             doc.head.appendChild(brokenCssLink);
 
-            rasterizeHTMLInline.loadAndInlineCssLinks(doc, {baseUrl: "some_base_url/"}, function (errors) {
+            rasterizeHTMLInline.loadAndInlineCssLinks(doc, {}).then(function (errors) {
                 expect(errors).toEqual([{
                     resourceType: "stylesheet",
-                    url: "some_base_url/a_document_that_doesnt_exist.css",
-                    msg: "Unable to load stylesheet some_base_url/a_document_that_doesnt_exist.css"
+                    url: "THEURL" + "a_document_that_doesnt_exist.css",
+                    msg: "Unable to load stylesheet " + "THEURL" + "a_document_that_doesnt_exist.css"
                 }]);
 
                 done();
@@ -425,10 +417,10 @@ describe("Inline CSS links", function () {
             doc.head.appendChild(brokenCssLink);
             doc.head.appendChild(aCssLink());
 
-            rasterizeHTMLInline.loadAndInlineCssLinks(doc, function (errors) {
+            rasterizeHTMLInline.loadAndInlineCssLinks(doc, {}).then(function (errors) {
                 expect(errors).toEqual([{
                     resourceType: "stylesheet",
-                    url: "a_document_that_doesnt_exist.css",
+                    url: "THEURL" + "a_document_that_doesnt_exist.css",
                     msg: jasmine.any(String)
                 }]);
 
@@ -440,7 +432,7 @@ describe("Inline CSS links", function () {
             doc.head.appendChild(brokenCssLink);
             doc.head.appendChild(anotherBrokenCssLink);
 
-            rasterizeHTMLInline.loadAndInlineCssLinks(doc, function (errors) {
+            rasterizeHTMLInline.loadAndInlineCssLinks(doc, {}).then(function (errors) {
                 expect(errors).toEqual([jasmine.any(Object), jasmine.any(Object)]);
                 expect(errors[0]).not.toEqual(errors[1]);
 
@@ -460,7 +452,7 @@ describe("Inline CSS links", function () {
                 errors: ["resource inline error"]
             }));
 
-            rasterizeHTMLInline.loadAndInlineCssLinks(doc, function (errors) {
+            rasterizeHTMLInline.loadAndInlineCssLinks(doc, {}).then(function (errors) {
                 expect(errors).toEqual(["import inline error", "resource inline error"]);
 
                 done();
@@ -470,7 +462,7 @@ describe("Inline CSS links", function () {
         it("should report an empty list for a successful stylesheet", function (done) {
             doc.head.appendChild(aCssLink());
 
-            rasterizeHTMLInline.loadAndInlineCssLinks(doc, function (errors) {
+            rasterizeHTMLInline.loadAndInlineCssLinks(doc, {}).then(function (errors) {
                 expect(errors).toEqual([]);
 
                 done();
@@ -489,13 +481,13 @@ describe("Inline CSS links", function () {
             doc = document.implementation.createHTMLDocument("");
             doc.head.appendChild(aCssLink());
 
-            rasterizeHTMLInline.loadAndInlineCssLinks(doc, {cacheBucket: cacheBucket}, function () {
+            rasterizeHTMLInline.loadAndInlineCssLinks(doc, {cacheBucket: cacheBucket}).then(function () {
 
                 // second call
                 doc = document.implementation.createHTMLDocument("");
                 doc.head.appendChild(aCssLink());
 
-                rasterizeHTMLInline.loadAndInlineCssLinks(doc, {cacheBucket: cacheBucket}, function (errors) {
+                rasterizeHTMLInline.loadAndInlineCssLinks(doc, {cacheBucket: cacheBucket}).then(function (errors) {
                     expect(errors).toEqual(["import inline error"]);
 
                     done();

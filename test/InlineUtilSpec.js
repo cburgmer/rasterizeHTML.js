@@ -598,6 +598,37 @@ describe("Inline utilities function", function () {
             hasher = function (x) { return x; };
         });
 
+        it("should deal with a function without a callback", function () {
+            var func = jasmine.createSpy('func').andCallFake(function () {}),
+                memoized = rasterizeHTMLInline.util.memoize(func, hasher, memo);
+
+            memoized('param1');
+            expect(func).toHaveBeenCalledWith('param1');
+        });
+
+        it("should return the return value", function () {
+            var returnValue = 'return value',
+                func = jasmine.createSpy('func').andCallFake(function () {
+                    return returnValue;
+                }),
+                memoized = rasterizeHTMLInline.util.memoize(func, hasher, memo);
+
+            var ret = memoized('param1');
+            expect(ret).toBe(returnValue);
+        });
+
+        it("should memoize the return value", function () {
+            var returnValue = 'return value',
+                func = jasmine.createSpy('func').andCallFake(function () {
+                    return returnValue;
+                }),
+                memoized = rasterizeHTMLInline.util.memoize(func, hasher, memo);
+
+            memoized('param1');
+            var ret = memoized('param1');
+            expect(ret).toBe(returnValue);
+        });
+
         it("should call the memoized function for the first time", function () {
             var memoized = rasterizeHTMLInline.util.memoize(func, hasher, memo);
 

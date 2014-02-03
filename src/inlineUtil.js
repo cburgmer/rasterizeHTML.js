@@ -211,26 +211,42 @@ window.rasterizeHTMLInline = (function (module, window, ayepromise, url) {
             if (args.length > 2 && typeof args[args.length-2] === 'function') {
                  errorCallback = args.pop();
                  successCallback = args.pop();
-            } else {
+            } else if (args.length > 1 && typeof args[args.length-1] === 'function') {
                 successCallback = args.pop();
             }
 
             var argumentHash = hasher(args),
                 funcHash = constantUniqueIdFor(func),
-                allArgs;
+                allArgs, retValue;
 
             if (memo[funcHash] && memo[funcHash][argumentHash]) {
-                successCallback.apply(null, memo[funcHash][argumentHash]);
-            } else {
-                allArgs = args.concat(function () {
-                    memo[funcHash] = memo[funcHash] || {};
-                    memo[funcHash][argumentHash] = arguments;
-                    successCallback.apply(null, arguments);
-                });
-                if (errorCallback) {
-                    allArgs = allArgs.concat(errorCallback);
+                if (successCallback) {
+                    successCallback.apply(null, memo[funcHash][argumentHash]);
+                } else {
+                    // We can only return the first value, but there should be only one anyway :>
+                    return memo[funcHash][argumentHash][0];
                 }
-                func.apply(null, allArgs);
+            } else {
+                memo[funcHash] = memo[funcHash] || {};
+
+                allArgs = args;
+                if (successCallback) {
+                    allArgs = allArgs.concat(function () {
+                        memo[funcHash][argumentHash] = arguments;
+                        successCallback.apply(null, arguments);
+                    });
+                    if (errorCallback) {
+                        allArgs = allArgs.concat(errorCallback);
+                    }
+
+                    func.apply(null, allArgs);
+                } else {
+                    retValue = func.apply(null, allArgs);
+
+                    memo[funcHash][argumentHash] = [retValue];
+
+                    return retValue;
+                }
             }
         };
     };
