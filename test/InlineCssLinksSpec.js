@@ -1,8 +1,7 @@
 describe("Inline CSS links", function () {
     var doc, extractCssUrlSpy, joinUrlSpy, ajaxSpy,
         adjustPathsOfCssResourcesSpy, loadCSSImportsForRulesSpy, loadAndInlineCSSResourcesForRulesSpy,
-        ajaxUrlMocks = {},
-        callback;
+        ajaxUrlMocks = {};
 
     var setupAjaxMock = function () {
         ajaxSpy = spyOn(rasterizeHTMLInline.util, "ajax").andCallFake(function (url, options) {
@@ -75,8 +74,6 @@ describe("Inline CSS links", function () {
             errors: []
         }));
         setupAjaxMock();
-
-        callback = jasmine.createSpy("loadAndInlineCssCallback");
     });
 
     it("should do nothing if no linked CSS is found", function (done) {

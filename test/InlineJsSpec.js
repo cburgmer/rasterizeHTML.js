@@ -1,5 +1,5 @@
 describe("JS inline", function () {
-    var doc, joinUrlSpy, ajaxSpy, callback,
+    var doc, joinUrlSpy, ajaxSpy,
         internalScript,
         ajaxUrlMocks = {};
 
@@ -47,7 +47,6 @@ describe("JS inline", function () {
 
         joinUrlSpy = spyOn(rasterizeHTMLInline.util, "joinUrl");
         ajaxSpy = setupAjaxMock();
-        callback = jasmine.createSpy("callback");
 
         internalScript = window.document.createElement("script");
         internalScript.textContent = "function () {}";
