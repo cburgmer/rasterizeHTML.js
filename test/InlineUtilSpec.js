@@ -199,112 +199,6 @@ describe("Inline utilities function", function () {
         });
     });
 
-    describe("map", function () {
-        it("should map each value to one function call and then call complete function", function () {
-            var completedValues = [],
-                completed = false;
-
-            rasterizeHTMLInline.util.map([1, 2, 3], function (val, callback) {
-                completedValues.push(val);
-
-                callback();
-            }, function () {
-                completed = true;
-            });
-
-            expect(completed).toBeTruthy();
-            expect(completedValues).toEqual([1, 2, 3]);
-        });
-
-        it("should pass computed results as array to complete function", function () {
-            var computedResults = null;
-
-            rasterizeHTMLInline.util.map([1, 2, 3], function (val, callback) {
-                callback(val + 1);
-            }, function (results) {
-                computedResults = results;
-            });
-
-            expect(computedResults).toEqual([2, 3, 4]);
-        });
-
-        it("should pass computed results in the right order to complete function", function () {
-            var computedResults = null,
-                late2ndCallback = null;
-
-            rasterizeHTMLInline.util.map([1, 2, 3], function (val, callback) {
-
-                if (val === 2) {
-                    late2ndCallback = callback;
-                } else {
-                    callback(val + 1);
-                }
-            }, function (results) {
-                computedResults = results;
-            });
-
-            late2ndCallback(2 + 1);
-
-            expect(computedResults).toEqual([2, 3, 4]);
-        });
-
-        it("should call complete if empty list is passed", function () {
-            var completed = false,
-                computedResults = null;
-
-            rasterizeHTMLInline.util.map([], function () {}, function (results) {
-                completed = true;
-                computedResults = results;
-            });
-
-            expect(completed).toBeTruthy();
-            expect(computedResults).toEqual([]);
-        });
-
-        it("should not call complete until last value is handled", function () {
-            var completedValues = [],
-                completed = false,
-                lastCallback = null;
-
-            rasterizeHTMLInline.util.map([1, 2, 3], function (val, callback) {
-                completedValues.push(val);
-
-                if (val < 3) {
-                    callback();
-                } else {
-                    lastCallback = callback;
-                }
-            }, function () {
-                completed = true;
-            });
-
-            expect(completed).toBeFalsy();
-
-            lastCallback();
-
-            expect(completed).toBeTruthy();
-        });
-
-        it("should cope with parallel changes to the input list", function () {
-            var input = [1, 2, 3],
-                computedResults = null;
-
-            rasterizeHTMLInline.util.map(input, function (val, callback) {
-
-                if (val === 2) {
-                    // Remove middle element
-                    input.splice(1, 1);
-                }
-                callback(val);
-            }, function (results) {
-                computedResults = results;
-            });
-
-            expect(computedResults).toEqual([1, 2, 3]);
-        });
-
-    });
-
     describe("ajax", function () {
         it("should load content from a URL", function (done) {
             rasterizeHTMLInline.util.ajax(jasmine.getFixtures().fixturesPath + "some.css", {})
@@ -584,118 +478,84 @@ describe("Inline utilities function", function () {
     });
 
     describe("memoize", function () {
-        var func, callback, aResult, anotherResult, memo, hasher;
+        var func, aResult, memo, hasher;
 
         beforeEach(function () {
             memo = {};
 
             aResult = "the function result";
-            anotherResult = "another function result";
-            func = jasmine.createSpy('func').andCallFake(function (_1, _2, _3, cllbck) {
-                cllbck(aResult, anotherResult);
+            func = jasmine.createSpy('func').andCallFake(function () {
+                return aResult;
             });
-            callback = jasmine.createSpy('callback');
             hasher = function (x) { return x; };
-        });
-
-        it("should deal with a function without a callback", function () {
-            var func = jasmine.createSpy('func').andCallFake(function () {}),
-                memoized = rasterizeHTMLInline.util.memoize(func, hasher, memo);
-
-            memoized('param1');
-            expect(func).toHaveBeenCalledWith('param1');
-        });
-
-        it("should return the return value", function () {
-            var returnValue = 'return value',
-                func = jasmine.createSpy('func').andCallFake(function () {
-                    return returnValue;
-                }),
-                memoized = rasterizeHTMLInline.util.memoize(func, hasher, memo);
-
-            var ret = memoized('param1');
-            expect(ret).toBe(returnValue);
-        });
-
-        it("should memoize the return value", function () {
-            var returnValue = 'return value',
-                func = jasmine.createSpy('func').andCallFake(function () {
-                    return returnValue;
-                }),
-                memoized = rasterizeHTMLInline.util.memoize(func, hasher, memo);
-
-            memoized('param1');
-            var ret = memoized('param1');
-            expect(ret).toBe(returnValue);
         });
 
         it("should call the memoized function for the first time", function () {
             var memoized = rasterizeHTMLInline.util.memoize(func, hasher, memo);
 
             expect(func).not.toHaveBeenCalled();
-            memoized('a parameter', 1, 'and a 3rd parameter', callback);
+            memoized('a parameter', 1, 'and a 3rd parameter');
 
-            expect(func).toHaveBeenCalledWith('a parameter', 1, 'and a 3rd parameter', jasmine.any(Function));
-        });
-
-        it("should call the callback with the functions result", function () {
-            var memoized = rasterizeHTMLInline.util.memoize(func, hasher, memo);
-
-            memoized('a parameter', 1, 'and a 3rd parameter', callback);
-            expect(callback).toHaveBeenCalledWith(aResult, anotherResult);
+            expect(func).toHaveBeenCalledWith('a parameter', 1, 'and a 3rd parameter');
         });
 
         it("should not call the memoized function for a second time with the same parameters", function () {
             var memoized = rasterizeHTMLInline.util.memoize(func, hasher, memo);
 
-            memoized('a parameter', 1, 'and a 3rd parameter', callback);
+            memoized('a parameter', 1, 'and a 3rd parameter');
             func.reset();
-            memoized('a parameter', 1, 'and a 3rd parameter', callback);
+            memoized('a parameter', 1, 'and a 3rd parameter');
 
             expect(func).not.toHaveBeenCalled();
         });
 
-        it("should call the callback with the functions results for the second time", function () {
+        it("should return the return value", function () {
             var memoized = rasterizeHTMLInline.util.memoize(func, hasher, memo);
 
-            memoized('a parameter', 1, 'and a 3rd parameter', callback);
-            callback.reset();
-            memoized('a parameter', 1, 'and a 3rd parameter', callback);
-            expect(callback).toHaveBeenCalledWith(aResult, anotherResult);
+            var ret = memoized('param1');
+            expect(ret).toBe(aResult);
+        });
+
+        it("should memoize the return value", function () {
+            var memoized = rasterizeHTMLInline.util.memoize(func, hasher, memo);
+
+            memoized('param1');
+            var ret = memoized('param1');
+            expect(ret).toBe(aResult);
         });
 
         it("should call the memoized function again with different parameters", function () {
             var memoized = rasterizeHTMLInline.util.memoize(func, hasher, memo);
 
-            memoized('a parameter', 1, 'and a 3rd parameter', callback);
+            memoized('a parameter', 1, 'and a 3rd parameter');
             func.reset();
-            memoized('another parameter', 1, 2, callback);
+            memoized('another parameter', 1, 2);
 
-            expect(func).toHaveBeenCalledWith('another parameter', 1, 2, jasmine.any(Function));
+            expect(func).toHaveBeenCalledWith('another parameter', 1, 2);
         });
 
         it("should memoize different functions independently", function () {
-            var func2 = jasmine.createSpy('func2').andCallFake(function (_1, _2, _3, cllbck) {
-                    cllbck('yet another result');
+            var yetAnotherResult = 'yet another result',
+                func2 = jasmine.createSpy('func2').andCallFake(function () {
+                    return yetAnotherResult;
                 }),
-                callback2 = jasmine.createSpy('callback2'),
                 memoized = rasterizeHTMLInline.util.memoize(func, hasher, memo),
                 memoized2 = rasterizeHTMLInline.util.memoize(func2, hasher, memo);
 
-            memoized('a parameter', 1, 'and a 3rd parameter', callback);
-            memoized2('a parameter', 1, 'and a 3rd parameter', callback2);
+            memoized('a parameter', 1, 'and a 3rd parameter');
+            var ret = memoized2('a parameter', 1, 'and a 3rd parameter');
 
             expect(func2).toHaveBeenCalled();
-            expect(callback2).toHaveBeenCalledWith('yet another result');
+            expect(ret).toBe(yetAnotherResult);
         });
 
         it("should memoize across the same memo objects", function () {
             var memoized1 = rasterizeHTMLInline.util.memoize(func, hasher, memo),
                 memoized2 = rasterizeHTMLInline.util.memoize(func, hasher, memo);
 
-            memoized1('a parameter', 1, 'and a 3rd parameter', callback);
+            memoized1('a parameter', 1, 'and a 3rd parameter');
             func.reset();
-            memoized2('a parameter', 1, 'and a 3rd parameter', callback);
+            memoized2('a parameter', 1, 'and a 3rd parameter');
 
             expect(func).not.toHaveBeenCalled();
         });
@@ -704,20 +564,20 @@ describe("Inline utilities function", function () {
             var memoized1 = rasterizeHTMLInline.util.memoize(func, hasher, memo),
                 memoized2 = rasterizeHTMLInline.util.memoize(func, hasher, {});
 
-            memoized1('a parameter', 1, 'and a 3rd parameter', callback);
+            memoized1('a parameter', 1, 'and a 3rd parameter');
             func.reset();
-            memoized2('a parameter', 1, 'and a 3rd parameter', callback);
+            memoized2('a parameter', 1, 'and a 3rd parameter');
 
-            expect(func).toHaveBeenCalledWith('a parameter', 1, 'and a 3rd parameter', jasmine.any(Function));
+            expect(func).toHaveBeenCalledWith('a parameter', 1, 'and a 3rd parameter');
         });
 
         it("should use hash function result when comparing parameter keys with disjunct values", function () {
             var hasher = JSON.stringify,
                 memoized = rasterizeHTMLInline.util.memoize(func, hasher, memo);
 
-            memoized({a: 1}, 1, 2, callback);
+            memoized({a: 1}, 1, 2);
             func.reset();
-            memoized({b: 2}, 1, 2, callback);
+            memoized({b: 2}, 1, 2);
             expect(func).toHaveBeenCalled();
         });
 
@@ -725,9 +585,9 @@ describe("Inline utilities function", function () {
             var hasher = function (x) { return typeof x === 'object' ? {} : x; },
                 memoized = rasterizeHTMLInline.util.memoize(func, hasher, memo);
 
-            memoized({a: 1}, 1, 2, callback);
+            memoized({a: 1}, 1, 2);
             func.reset();
-            memoized({b: 2}, 1, 2, callback);
+            memoized({b: 2}, 1, 2);
             expect(func).not.toHaveBeenCalled();
         });
 
@@ -739,104 +599,5 @@ describe("Inline utilities function", function () {
                 expect(e.message).toEqual("cacheBucket is not an object");
             }
         });
-
-        describe('(successCallback, errorCallback) style function', function () {
-            var errorCallback;
-
-            beforeEach(function () {
-                errorCallback = jasmine.createSpy('errorCallback');
-            });
-
-            it("should accept an errorCallback", function () {
-                var func = jasmine.createSpy('func').andCallFake(function (_1, _2, successCallback) {
-                        successCallback(aResult, anotherResult);
-                    }),
-                    memoized = rasterizeHTMLInline.util.memoize(func, hasher, memo);
-
-                memoized('a parameter', 1, callback, errorCallback);
-                expect(func).toHaveBeenCalledWith('a parameter', 1, jasmine.any(Function), jasmine.any(Function));
-                expect(callback).toHaveBeenCalledWith(aResult, anotherResult);
-                expect(errorCallback).not.toHaveBeenCalled();
-            });
-
-            it("should correctly memoize a successful call", function () {
-                var func = jasmine.createSpy('func').andCallFake(function (_1, _2, successCallback) {
-                        successCallback(aResult, anotherResult);
-                    }),
-                    memoized = rasterizeHTMLInline.util.memoize(func, hasher, memo);
-
-                memoized('a parameter', 1, callback, errorCallback);
-                expect(func).toHaveBeenCalledWith('a parameter', 1, jasmine.any(Function), jasmine.any(Function));
-
-                func.reset();
-                memoized('a parameter', 1, callback, function () {});
-                expect(func).not.toHaveBeenCalled();
-            });
-
-            it("should delegate the errorCallback", function () {
-                var func = jasmine.createSpy('func').andCallFake(function (_1, _2, successCallback, errorCallback) {
-                        errorCallback(aResult, anotherResult);
-                    }),
-                    memoized = rasterizeHTMLInline.util.memoize(func, hasher, memo);
-
-                memoized('a parameter', 1, callback, errorCallback);
-                expect(callback).not.toHaveBeenCalled();
-                expect(errorCallback).toHaveBeenCalledWith(aResult, anotherResult);
-            });
-
-            it("should not memoize the return value if the error callback is triggered", function () {
-                var func = jasmine.createSpy('func').andCallFake(function (_1, _2, successCallback, errorCallback) {
-                        errorCallback(aResult, anotherResult);
-                    }),
-                    memoized = rasterizeHTMLInline.util.memoize(func, hasher, memo);
-
-                memoized('a parameter', 1, callback, errorCallback);
-                expect(func).toHaveBeenCalled();
-
-                func.reset();
-                memoized('a parameter', 1, callback, errorCallback);
-                expect(func).toHaveBeenCalled();
-            });
-        });
-    });
-
-    describe("parseOptionalParameters", function () {
-        var options, callback;
-
-        beforeEach(function () {
-            options = {opt: "ions"};
-            callback = jasmine.createSpy("callback");
-        });
-
-        it("should copy options", function () {
-            var params = rasterizeHTMLInline.util.parseOptionalParameters(options, callback);
-            expect(params.options).toEqual(options);
-            expect(params.options).not.toBe(options);
-        });
-
-        it("should return all parameters", function () {
-            var params = rasterizeHTMLInline.util.parseOptionalParameters(options, callback);
-            expect(params.options).toEqual(options);
-            expect(params.callback).toBe(callback);
-        });
-
-        it("should make options optional", function () {
-            var params = rasterizeHTMLInline.util.parseOptionalParameters(callback);
-            expect(params.options).toEqual({});
-            expect(params.callback).toBe(callback);
-        });
-
-        it("should make callback optional", function () {
-            var params = rasterizeHTMLInline.util.parseOptionalParameters(options);
-            expect(params.options).toEqual(options);
-            expect(params.callback).toBe(null);
-        });
-
-        it("should work with empty parameter list", function () {
-            var params = rasterizeHTMLInline.util.parseOptionalParameters();
-            expect(params.options).toEqual({});
-            expect(params.callback).toBe(null);
-        });
-
     });
 });

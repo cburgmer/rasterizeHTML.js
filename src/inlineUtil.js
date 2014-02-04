@@ -71,37 +71,6 @@ window.rasterizeHTMLInline = (function (module, window, ayepromise, url) {
         });
     };
 
-    module.util.map = function (list, func, callback) {
-        var completedCount = 0,
-            // Operating inline on array-like structures like document.getElementByTagName() (e.g. deleting a node),
-            // will change the original list
-            clonedList = module.util.cloneArray(list),
-            results = [],
-            i;
-
-        if (clonedList.length === 0) {
-            callback(results);
-        }
-
-        var callForItem = function (idx) {
-            function funcFinishCallback(result) {
-                completedCount += 1;
-
-                results[idx] = result;
-
-                if (completedCount === clonedList.length) {
-                    callback(results);
-                }
-            }
-
-            func(clonedList[idx], funcFinishCallback);
-        };
-
-        for(i = 0; i < clonedList.length; i++) {
-            callForItem(i);
-        }
-    };
-
     var lastCacheDate = null;
 
     var getUncachableURL = function (url, cache) {
@@ -205,81 +174,23 @@ window.rasterizeHTMLInline = (function (module, window, ayepromise, url) {
         }
 
         return function () {
-            var args = Array.prototype.slice.call(arguments),
-                successCallback, errorCallback;
-
-            if (args.length > 2 && typeof args[args.length-2] === 'function') {
-                 errorCallback = args.pop();
-                 successCallback = args.pop();
-            } else if (args.length > 1 && typeof args[args.length-1] === 'function') {
-                successCallback = args.pop();
-            }
+            var args = Array.prototype.slice.call(arguments);
 
             var argumentHash = hasher(args),
                 funcHash = constantUniqueIdFor(func),
-                allArgs, retValue;
+                retValue;
 
             if (memo[funcHash] && memo[funcHash][argumentHash]) {
-                if (successCallback) {
-                    successCallback.apply(null, memo[funcHash][argumentHash]);
-                } else {
-                    // We can only return the first value, but there should be only one anyway :>
-                    return memo[funcHash][argumentHash][0];
-                }
+                return memo[funcHash][argumentHash];
             } else {
+                retValue = func.apply(null, args);
+
                 memo[funcHash] = memo[funcHash] || {};
+                memo[funcHash][argumentHash] = retValue;
 
-                allArgs = args;
-                if (successCallback) {
-                    allArgs = allArgs.concat(function () {
-                        memo[funcHash][argumentHash] = arguments;
-                        successCallback.apply(null, arguments);
-                    });
-                    if (errorCallback) {
-                        allArgs = allArgs.concat(errorCallback);
-                    }
-
-                    func.apply(null, allArgs);
-                } else {
-                    retValue = func.apply(null, allArgs);
-
-                    memo[funcHash][argumentHash] = [retValue];
-
-                    return retValue;
-                }
+                return retValue;
             }
         };
-    };
-
-    var cloneObject = function(object) {
-        var newObject = {},
-            i;
-        for (i in object) {
-            if (object.hasOwnProperty(i)) {
-                newObject[i] = object[i];
-            }
-        }
-        return newObject;
-    };
-
-    var isFunction = function (func) {
-        return typeof func === "function";
-    };
-
-    module.util.parseOptionalParameters = function () { // args: options, callback
-        var parameters = {
-            options: {},
-            callback: null
-        };
-
-        if (isFunction(arguments[0])) {
-            parameters.callback = arguments[0];
-        } else {
-            parameters.options = cloneObject(arguments[0]);
-            parameters.callback = arguments[1] || null;
-        }
-
-        return parameters;
     };
 
     return module;

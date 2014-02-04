@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.7.0 - 2014-02-03
+/*! rasterizeHTML.js - v0.7.0 - 2014-02-04
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2014 Christoph Burgmer; Licensed MIT */
 window.rasterizeHTMLInline = (function (module) {
@@ -87,11 +87,11 @@ window.rasterizeHTMLInline = (function (module) {
 
     /* Style inlining */
 
-    var requestExternalsForStylesheet = function (styleContent, alreadyLoadedCssUrls, options, callback) {
+    var requestExternalsForStylesheet = function (styleContent, alreadyLoadedCssUrls, options) {
         var cssRules = module.css.rulesForCssText(styleContent);
 
-        module.css.loadCSSImportsForRules(cssRules, alreadyLoadedCssUrls, options).then(function (cssImportResult) {
-            module.css.loadAndInlineCSSResourcesForRules(cssRules, options).then(function (cssResourcesResult) {
+        return module.css.loadCSSImportsForRules(cssRules, alreadyLoadedCssUrls, options).then(function (cssImportResult) {
+            return module.css.loadAndInlineCSSResourcesForRules(cssRules, options).then(function (cssResourcesResult) {
                 var errors = cssImportResult.errors.concat(cssResourcesResult.errors),
                     hasChanges = cssImportResult.hasChanges || cssResourcesResult.hasChanges;
 
@@ -99,22 +99,25 @@ window.rasterizeHTMLInline = (function (module) {
                     styleContent = module.css.cssRulesToText(cssRules);
                 }
 
-                callback(hasChanges, styleContent, errors);
+                return {
+                    hasChanges: hasChanges,
+                    content: styleContent,
+                    errors: errors
+                };
             });
         });
     };
 
-    var loadAndInlineCssForStyle = function (style, options, alreadyLoadedCssUrls, callback) {
+    var loadAndInlineCssForStyle = function (style, options, alreadyLoadedCssUrls) {
         var styleContent = style.textContent,
             processExternals = memoizeFunctionOnCaching(requestExternalsForStylesheet, options);
 
-        processExternals(styleContent, alreadyLoadedCssUrls, options, function (hasChanges, inlinedStyleContent, errors) {
-            errors = module.util.cloneArray(errors);
-            if (hasChanges) {
-                style.childNodes[0].nodeValue = inlinedStyleContent;
+        return processExternals(styleContent, alreadyLoadedCssUrls, options).then(function (result) {
+            if (result.hasChanges) {
+                style.childNodes[0].nodeValue = result.content;
             }
 
-            callback(errors);
+            return module.util.cloneArray(result.errors);
         });
     };
 
@@ -126,24 +129,21 @@ window.rasterizeHTMLInline = (function (module) {
         });
     };
 
-    module.loadAndInlineStyles = function (doc, options, callback) {
-        var params = module.util.parseOptionalParameters(options, callback),
-            styles = getCssStyleElements(doc),
+    module.loadAndInlineStyles = function (doc, options) {
+        var styles = getCssStyleElements(doc),
             allErrors = [],
             alreadyLoadedCssUrls = [],
             inlineOptions;
 
-        inlineOptions = module.util.clone(params.options);
+        inlineOptions = module.util.clone(options);
         inlineOptions.baseUrl = inlineOptions.baseUrl || module.util.getDocumentBaseUrl(doc);
 
-        module.util.map(styles, function (style, finish) {
-            loadAndInlineCssForStyle(style, inlineOptions, alreadyLoadedCssUrls, function (errors) {
+        return module.util.all(styles.map(function (style) {
+            return loadAndInlineCssForStyle(style, inlineOptions, alreadyLoadedCssUrls).then(function (errors) {
                 allErrors = allErrors.concat(errors);
-
-                finish();
             });
-        }, function () {
-            params.callback(allErrors);
+        })).then(function () {
+            return allErrors;
         });
     };
 
@@ -323,7 +323,7 @@ window.rasterizeHTMLInline = (function (module) {
 
         module.loadAndInlineImages(doc, options).then(function (errors) {
             allErrors = allErrors.concat(errors);
-            module.loadAndInlineStyles(doc, options, function (errors) {
+            module.loadAndInlineStyles(doc, options).then(function (errors) {
                 allErrors = allErrors.concat(errors);
                 module.loadAndInlineCssLinks(doc, options).then(function (errors) {
                     allErrors = allErrors.concat(errors);
@@ -1033,37 +1033,6 @@ window.rasterizeHTMLInline = (function (module, window, ayepromise, url) {
         });
     };
 
-    module.util.map = function (list, func, callback) {
-        var completedCount = 0,
-            // Operating inline on array-like structures like document.getElementByTagName() (e.g. deleting a node),
-            // will change the original list
-            clonedList = module.util.cloneArray(list),
-            results = [],
-            i;
-
-        if (clonedList.length === 0) {
-            callback(results);
-        }
-
-        var callForItem = function (idx) {
-            function funcFinishCallback(result) {
-                completedCount += 1;
-
-                results[idx] = result;
-
-                if (completedCount === clonedList.length) {
-                    callback(results);
-                }
-            }
-
-            func(clonedList[idx], funcFinishCallback);
-        };
-
-        for(i = 0; i < clonedList.length; i++) {
-            callForItem(i);
-        }
-    };
-
     var lastCacheDate = null;
 
     var getUncachableURL = function (url, cache) {
@@ -1167,81 +1136,23 @@ window.rasterizeHTMLInline = (function (module, window, ayepromise, url) {
         }
 
         return function () {
-            var args = Array.prototype.slice.call(arguments),
-                successCallback, errorCallback;
-
-            if (args.length > 2 && typeof args[args.length-2] === 'function') {
-                 errorCallback = args.pop();
-                 successCallback = args.pop();
-            } else if (args.length > 1 && typeof args[args.length-1] === 'function') {
-                successCallback = args.pop();
-            }
+            var args = Array.prototype.slice.call(arguments);
 
             var argumentHash = hasher(args),
                 funcHash = constantUniqueIdFor(func),
-                allArgs, retValue;
+                retValue;
 
             if (memo[funcHash] && memo[funcHash][argumentHash]) {
-                if (successCallback) {
-                    successCallback.apply(null, memo[funcHash][argumentHash]);
-                } else {
-                    // We can only return the first value, but there should be only one anyway :>
-                    return memo[funcHash][argumentHash][0];
-                }
+                return memo[funcHash][argumentHash];
             } else {
+                retValue = func.apply(null, args);
+
                 memo[funcHash] = memo[funcHash] || {};
+                memo[funcHash][argumentHash] = retValue;
 
-                allArgs = args;
-                if (successCallback) {
-                    allArgs = allArgs.concat(function () {
-                        memo[funcHash][argumentHash] = arguments;
-                        successCallback.apply(null, arguments);
-                    });
-                    if (errorCallback) {
-                        allArgs = allArgs.concat(errorCallback);
-                    }
-
-                    func.apply(null, allArgs);
-                } else {
-                    retValue = func.apply(null, allArgs);
-
-                    memo[funcHash][argumentHash] = [retValue];
-
-                    return retValue;
-                }
+                return retValue;
             }
         };
-    };
-
-    var cloneObject = function(object) {
-        var newObject = {},
-            i;
-        for (i in object) {
-            if (object.hasOwnProperty(i)) {
-                newObject[i] = object[i];
-            }
-        }
-        return newObject;
-    };
-
-    var isFunction = function (func) {
-        return typeof func === "function";
-    };
-
-    module.util.parseOptionalParameters = function () { // args: options, callback
-        var parameters = {
-            options: {},
-            callback: null
-        };
-
-        if (isFunction(arguments[0])) {
-            parameters.callback = arguments[0];
-        } else {
-            parameters.options = cloneObject(arguments[0]);
-            parameters.callback = arguments[1] || null;
-        }
-
-        return parameters;
     };
 
     return module;

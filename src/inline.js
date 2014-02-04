@@ -84,11 +84,11 @@ window.rasterizeHTMLInline = (function (module) {
 
     /* Style inlining */
 
-    var requestExternalsForStylesheet = function (styleContent, alreadyLoadedCssUrls, options, callback) {
+    var requestExternalsForStylesheet = function (styleContent, alreadyLoadedCssUrls, options) {
         var cssRules = module.css.rulesForCssText(styleContent);
 
-        module.css.loadCSSImportsForRules(cssRules, alreadyLoadedCssUrls, options).then(function (cssImportResult) {
-            module.css.loadAndInlineCSSResourcesForRules(cssRules, options).then(function (cssResourcesResult) {
+        return module.css.loadCSSImportsForRules(cssRules, alreadyLoadedCssUrls, options).then(function (cssImportResult) {
+            return module.css.loadAndInlineCSSResourcesForRules(cssRules, options).then(function (cssResourcesResult) {
                 var errors = cssImportResult.errors.concat(cssResourcesResult.errors),
                     hasChanges = cssImportResult.hasChanges || cssResourcesResult.hasChanges;
 
@@ -96,22 +96,25 @@ window.rasterizeHTMLInline = (function (module) {
                     styleContent = module.css.cssRulesToText(cssRules);
                 }
 
-                callback(hasChanges, styleContent, errors);
+                return {
+                    hasChanges: hasChanges,
+                    content: styleContent,
+                    errors: errors
+                };
             });
         });
     };
 
-    var loadAndInlineCssForStyle = function (style, options, alreadyLoadedCssUrls, callback) {
+    var loadAndInlineCssForStyle = function (style, options, alreadyLoadedCssUrls) {
         var styleContent = style.textContent,
             processExternals = memoizeFunctionOnCaching(requestExternalsForStylesheet, options);
 
-        processExternals(styleContent, alreadyLoadedCssUrls, options, function (hasChanges, inlinedStyleContent, errors) {
-            errors = module.util.cloneArray(errors);
-            if (hasChanges) {
-                style.childNodes[0].nodeValue = inlinedStyleContent;
+        return processExternals(styleContent, alreadyLoadedCssUrls, options).then(function (result) {
+            if (result.hasChanges) {
+                style.childNodes[0].nodeValue = result.content;
             }
 
-            callback(errors);
+            return module.util.cloneArray(result.errors);
         });
     };
 
@@ -123,24 +126,21 @@ window.rasterizeHTMLInline = (function (module) {
         });
     };
 
-    module.loadAndInlineStyles = function (doc, options, callback) {
-        var params = module.util.parseOptionalParameters(options, callback),
-            styles = getCssStyleElements(doc),
+    module.loadAndInlineStyles = function (doc, options) {
+        var styles = getCssStyleElements(doc),
             allErrors = [],
             alreadyLoadedCssUrls = [],
             inlineOptions;
 
-        inlineOptions = module.util.clone(params.options);
+        inlineOptions = module.util.clone(options);
         inlineOptions.baseUrl = inlineOptions.baseUrl || module.util.getDocumentBaseUrl(doc);
 
-        module.util.map(styles, function (style, finish) {
-            loadAndInlineCssForStyle(style, inlineOptions, alreadyLoadedCssUrls, function (errors) {
+        return module.util.all(styles.map(function (style) {
+            return loadAndInlineCssForStyle(style, inlineOptions, alreadyLoadedCssUrls).then(function (errors) {
                 allErrors = allErrors.concat(errors);
-
-                finish();
             });
-        }, function () {
-            params.callback(allErrors);
+        })).then(function () {
+            return allErrors;
         });
     };
 
@@ -320,7 +320,7 @@ window.rasterizeHTMLInline = (function (module) {
 
         module.loadAndInlineImages(doc, options).then(function (errors) {
             allErrors = allErrors.concat(errors);
-            module.loadAndInlineStyles(doc, options, function (errors) {
+            module.loadAndInlineStyles(doc, options).then(function (errors) {
                 allErrors = allErrors.concat(errors);
                 module.loadAndInlineCssLinks(doc, options).then(function (errors) {
                     allErrors = allErrors.concat(errors);
