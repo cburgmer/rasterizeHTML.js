@@ -318,27 +318,24 @@ window.rasterizeHTMLInline = (function (module) {
 
     /* Main */
 
-    module.inlineReferences = function (doc, options, callback) {
-        var allErrors = [];
+    module.inlineReferences = function (doc, options) {
+        var allErrors = [],
+            inlineFuncs = [
+                module.loadAndInlineImages,
+                module.loadAndInlineStyles,
+                module.loadAndInlineCssLinks];
 
-        module.loadAndInlineImages(doc, options).then(function (errors) {
-            allErrors = allErrors.concat(errors);
-            module.loadAndInlineStyles(doc, options).then(function (errors) {
-                allErrors = allErrors.concat(errors);
-                module.loadAndInlineCssLinks(doc, options).then(function (errors) {
+        if (options.inlineScripts !== false) {
+            inlineFuncs.push(module.loadAndInlineScript);
+        }
+
+        return module.util.all(inlineFuncs.map(function (func) {
+            return func(doc, options)
+                .then(function (errors) {
                     allErrors = allErrors.concat(errors);
-
-                    if (options.inlineScripts === false) {
-                        callback(allErrors);
-                    } else {
-                        module.loadAndInlineScript(doc, options).then(function (errors) {
-                            allErrors = allErrors.concat(errors);
-
-                            callback(allErrors);
-                        });
-                    }
                 });
-            });
+        })).then(function () {
+            return allErrors;
         });
     };
 
@@ -1743,7 +1740,7 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow)
         inlineOptions = rasterizeHTMLInline.util.clone(options);
         inlineOptions.inlineScripts = options.executeJs === true;
 
-        rasterizeHTMLInline.inlineReferences(doc, inlineOptions, function (allErrors) {
+        rasterizeHTMLInline.inlineReferences(doc, inlineOptions).then(function (allErrors) {
             if (options.executeJs) {
                 module.util.executeJavascript(doc, options.baseUrl, executeJsTimeout, function (doc, errors) {
                     module.util.persistInputValues(doc);

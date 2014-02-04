@@ -583,7 +583,7 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow)
         inlineOptions = rasterizeHTMLInline.util.clone(options);
         inlineOptions.inlineScripts = options.executeJs === true;
 
-        rasterizeHTMLInline.inlineReferences(doc, inlineOptions, function (allErrors) {
+        rasterizeHTMLInline.inlineReferences(doc, inlineOptions).then(function (allErrors) {
             if (options.executeJs) {
                 module.util.executeJavascript(doc, options.baseUrl, executeJsTimeout, function (doc, errors) {
                     module.util.persistInputValues(doc);

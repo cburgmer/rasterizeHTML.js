@@ -315,27 +315,24 @@ window.rasterizeHTMLInline = (function (module) {
 
     /* Main */
 
-    module.inlineReferences = function (doc, options, callback) {
-        var allErrors = [];
+    module.inlineReferences = function (doc, options) {
+        var allErrors = [],
+            inlineFuncs = [
+                module.loadAndInlineImages,
+                module.loadAndInlineStyles,
+                module.loadAndInlineCssLinks];
 
-        module.loadAndInlineImages(doc, options).then(function (errors) {
-            allErrors = allErrors.concat(errors);
-            module.loadAndInlineStyles(doc, options).then(function (errors) {
-                allErrors = allErrors.concat(errors);
-                module.loadAndInlineCssLinks(doc, options).then(function (errors) {
+        if (options.inlineScripts !== false) {
+            inlineFuncs.push(module.loadAndInlineScript);
+        }
+
+        return module.util.all(inlineFuncs.map(function (func) {
+            return func(doc, options)
+                .then(function (errors) {
                     allErrors = allErrors.concat(errors);
-
-                    if (options.inlineScripts === false) {
-                        callback(allErrors);
-                    } else {
-                        module.loadAndInlineScript(doc, options).then(function (errors) {
-                            allErrors = allErrors.concat(errors);
-
-                            callback(allErrors);
-                        });
-                    }
                 });
-            });
+        })).then(function () {
+            return allErrors;
         });
     };
 

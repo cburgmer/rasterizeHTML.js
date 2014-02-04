@@ -26,7 +26,7 @@ describe("Inline main", function () {
         loadAndInlineStyles.andReturn(withoutErrors());
         loadAndInlineScript.andReturn(withoutErrors());
 
-        rasterizeHTMLInline.inlineReferences(doc, {}, function (errors) {
+        rasterizeHTMLInline.inlineReferences(doc, {}).then(function (errors) {
             expect(errors).toEqual([]);
 
             expect(loadAndInlineImages).toHaveBeenCalledWith(doc, {});
@@ -46,7 +46,7 @@ describe("Inline main", function () {
         loadAndInlineStyles.andReturn(withoutErrors());
         loadAndInlineScript.andReturn(withoutErrors());
 
-        rasterizeHTMLInline.inlineReferences(doc, {baseUrl: "a_baseUrl", cache: 'none'}, function () {
+        rasterizeHTMLInline.inlineReferences(doc, {baseUrl: "a_baseUrl", cache: 'none'}).then(function () {
             expect(loadAndInlineImages).toHaveBeenCalledWith(doc, {baseUrl: "a_baseUrl", cache: 'none'});
             expect(loadAndInlineCssLinks).toHaveBeenCalledWith(doc, {baseUrl: "a_baseUrl", cache: 'none'});
             expect(loadAndInlineStyles).toHaveBeenCalledWith(doc, {baseUrl: "a_baseUrl", cache: 'none'});
@@ -64,7 +64,7 @@ describe("Inline main", function () {
         loadAndInlineStyles.andReturn(withoutErrors());
         loadAndInlineScript.andReturn(withoutErrors());
 
-        rasterizeHTMLInline.inlineReferences(doc, {}, function (errors) {
+        rasterizeHTMLInline.inlineReferences(doc, {}).then(function (errors) {
             expect(errors).toEqual(["the error"]);
 
             done();
@@ -79,7 +79,7 @@ describe("Inline main", function () {
         loadAndInlineCssLinks.andReturn(withErrors(["another error"]));
         loadAndInlineScript.andReturn(withErrors(["error from script"]));
 
-        rasterizeHTMLInline.inlineReferences(doc, {}, function (errors) {
+        rasterizeHTMLInline.inlineReferences(doc, {}).then(function (errors) {
             expect(errors).toEqual(["the error", "more error", "another error", "error from script"]);
 
             done();
@@ -93,7 +93,7 @@ describe("Inline main", function () {
         loadAndInlineCssLinks.andReturn(withoutErrors());
         loadAndInlineStyles.andReturn(withoutErrors());
 
-        rasterizeHTMLInline.inlineReferences(doc, {inlineScripts: false}, function () {
+        rasterizeHTMLInline.inlineReferences(doc, {inlineScripts: false}).then(function () {
             expect(loadAndInlineScript).not.toHaveBeenCalled();
 
             done();
