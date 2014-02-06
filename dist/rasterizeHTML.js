@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.7.0 - 2014-02-04
+/*! rasterizeHTML.js - v0.7.0 - 2014-02-07
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2014 Christoph Burgmer; Licensed MIT */
 window.rasterizeHTMLInline = (function (module) {
@@ -1155,7 +1155,7 @@ window.rasterizeHTMLInline = (function (module, window, ayepromise, url) {
     return module;
 }(window.rasterizeHTMLInline || {}, window, ayepromise, url));
 
-window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow) {
+window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, ayepromise, theWindow) {
     "use strict";
 
     var module = {};
@@ -1246,22 +1246,26 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow)
         };
     };
 
-    module.util.executeJavascript = function (doc, baseUrl, timeout, callback) {
+    module.util.executeJavascript = function (doc, baseUrl, timeout) {
         var iframe = createHiddenElement(theWindow.document, "iframe"),
             html = doc.documentElement.outerHTML,
             iframeErrorsMessages = [],
-            doCallback = function () {
+            defer = ayepromise.defer(),
+            doResolve = function () {
                 var doc = iframe.contentDocument;
                 theWindow.document.getElementsByTagName("body")[0].removeChild(iframe);
-                callback(doc, iframeErrorsMessages);
+                defer.resolve({
+                    document: doc,
+                    errors: iframeErrorsMessages
+                });
             };
 
         if (timeout > 0) {
             iframe.onload = function () {
-                setTimeout(doCallback, timeout);
+                setTimeout(doResolve, timeout);
             };
         } else {
-            iframe.onload = doCallback;
+            iframe.onload = doResolve;
         }
 
         iframe.contentDocument.open();
@@ -1275,6 +1279,8 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow)
 
         iframe.contentDocument.write(html);
         iframe.contentDocument.close();
+
+        return defer.promise;
     };
 
     var createHiddenSandboxedIFrame = function (doc, width, height) {
@@ -1742,10 +1748,10 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow)
 
         rasterizeHTMLInline.inlineReferences(doc, inlineOptions).then(function (allErrors) {
             if (options.executeJs) {
-                module.util.executeJavascript(doc, options.baseUrl, executeJsTimeout, function (doc, errors) {
-                    module.util.persistInputValues(doc);
+                module.util.executeJavascript(doc, options.baseUrl, executeJsTimeout).then(function (result) {
+                    module.util.persistInputValues(result.document);
 
-                    doDraw(doc, canvas, options, callback, allErrors.concat(errors));
+                    doDraw(result.document, canvas, options, callback, allErrors.concat(result.errors));
                 });
             } else {
                 doDraw(doc, canvas, options, callback, allErrors);
@@ -1810,4 +1816,4 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, theWindow)
     };
 
     return module;
-}(window.rasterizeHTMLInline, window.xmlserializer, window));
+}(window.rasterizeHTMLInline, window.xmlserializer, ayepromise, window));

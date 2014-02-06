@@ -20,8 +20,12 @@ describe("Main interface of rasterizeHTML.js", function () {
     };
 
     var withErrors = function (errors) {
+        return fulfilled(errors);
+    };
+
+    var fulfilled = function (value) {
         var defer = ayepromise.defer();
-        defer.resolve(errors);
+        defer.resolve(value);
         return defer.promise;
     };
 
@@ -100,12 +104,12 @@ describe("Main interface of rasterizeHTML.js", function () {
 
         it("should optionally execute JavaScript in the page", function (done) {
             var doc = "the document",
-                executeJavascript = spyOn(rasterizeHTML.util, "executeJavascript").andCallFake(function (doc, baseUrl, timeout, callback) {
-                    callback(doc);
-                });
+                executeJavascript = spyOn(rasterizeHTML.util, "executeJavascript").andReturn(
+                    fulfilled({document: doc, errors: []})
+                );
 
             rasterizeHTML.drawDocument(doc, {executeJs: true}, function () {
-                expect(executeJavascript).toHaveBeenCalledWith(doc, undefined, 0, jasmine.any(Function));
+                expect(executeJavascript).toHaveBeenCalledWith(doc, undefined, 0);
                 expect(rasterizeHTML.util.persistInputValues).toHaveBeenCalledWith(doc);
 
                 done();
@@ -114,9 +118,9 @@ describe("Main interface of rasterizeHTML.js", function () {
 
         it("should inline scripts when executing JavaScript", function (done) {
             var doc = "the document";
-            spyOn(rasterizeHTML.util, "executeJavascript").andCallFake(function (doc, baseUrl, timeout, callback) {
-                callback(doc);
-            });
+            spyOn(rasterizeHTML.util, "executeJavascript").andReturn(
+                fulfilled({document: doc, errors: []})
+            );
 
             rasterizeHTML.drawDocument(doc, {executeJs: true}, function () {
                 expect(inlineReferences).toHaveBeenCalledWith(doc, {executeJs : true, inlineScripts: true});
@@ -127,12 +131,13 @@ describe("Main interface of rasterizeHTML.js", function () {
 
         it("should follow optional timeout when executing JavaScript", function (done) {
             var doc = "the document",
-                executeJavascript = spyOn(rasterizeHTML.util, "executeJavascript").andCallFake(function (doc, baseUrl, timeout, callback) {
-                    callback(doc);
-                });
+                executeJavascript = spyOn(rasterizeHTML.util, "executeJavascript").andReturn(
+                    fulfilled({document: doc, errors: []})
+                );
+
 
             rasterizeHTML.drawDocument(doc, {executeJs: true, executeJsTimeout: 42}, function () {
-                expect(executeJavascript).toHaveBeenCalledWith(doc, undefined, 42, jasmine.any(Function));
+                expect(executeJavascript).toHaveBeenCalledWith(doc, undefined, 42);
 
                 done();
             });
@@ -427,9 +432,9 @@ describe("Main interface of rasterizeHTML.js", function () {
         it("should pass through a JS error", function (done) {
             var doc = "doc";
 
-            executeJavascript.andCallFake(function (doc, baseUrl, timeout, callback) {
-                callback(doc, ["the error"]);
-            });
+            executeJavascript.andReturn(
+                fulfilled({document: doc, errors: ["the error"]})
+            );
             setUpDrawDocumentImage(svgImage);
             drawImageOnCanvas.andReturn(true);
 

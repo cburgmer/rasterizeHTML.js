@@ -8,137 +8,78 @@ describe("Utilities function", function () {
             doc = window.document.implementation.createHTMLDocument("");
         });
 
-        it("should load an URL and execute the included JS", function () {
-            var the_result = null;
-
+        it("should load an URL and execute the included JS", function (done) {
             doc.documentElement.innerHTML = "<body><script>document.body.innerHTML = 'dynamic content';</script></body>";
-            rasterizeHTML.util.executeJavascript(doc, undefined, 0, function (result) {
-                the_result = result;
-            });
 
-            waitsFor(function () {
-                return the_result !== null;
-            });
+            rasterizeHTML.util.executeJavascript(doc, undefined, 0).then(function (result) {
+                expect(result.document.body.innerHTML).toEqual('dynamic content');
 
-            runs(function () {
-                expect(the_result.body.innerHTML).toEqual('dynamic content');
+                done();
             });
         });
 
-        it("should remove the iframe element when done", function () {
-            var finished = false;
-
+        it("should remove the iframe element when done", function (done) {
             doc.documentElement.innerHTML = "<body></body>";
-            rasterizeHTML.util.executeJavascript(doc, undefined, 0, function () {
-                finished = true;
-            });
 
-            waitsFor(function () {
-                return finished;
-            });
-
-            runs(function () {
+            rasterizeHTML.util.executeJavascript(doc, undefined, 0).then(function () {
                 expect($("iframe")).not.toExist();
+
+                done();
             });
         });
 
-        it("should wait a configured period of time before calling back", function () {
-            var the_result = null;
-
+        it("should wait a configured period of time before calling back", function (done) {
             doc.documentElement.innerHTML = "<body onload=\"setTimeout(function () {document.body.innerHTML = 'dynamic content';}, 1);\"></body>";
-            rasterizeHTML.util.executeJavascript(doc, undefined, 20, function (result) {
-                the_result = result;
-            });
 
-            waitsFor(function () {
-                return the_result !== null;
-            });
+            rasterizeHTML.util.executeJavascript(doc, undefined, 20).then(function (result) {
+                expect(result.document.body.innerHTML).toEqual('dynamic content');
 
-            runs(function () {
-                expect(the_result.body.innerHTML).toEqual('dynamic content');
+                done();
             });
         });
 
-        it("should be able to access CSS", function () {
-            var the_result = null;
-
+        it("should be able to access CSS", function (done) {
             doc.documentElement.innerHTML = '<head><style>div { height: 20px; }</style></head><body onload="var elem = document.getElementById(\'elem\'); document.body.innerHTML = elem.offsetHeight;"><div id="elem"></div></body>';
-            rasterizeHTML.util.executeJavascript(doc, undefined, 0, function (result) {
-                the_result = result;
-            });
 
-            waitsFor(function () {
-                return the_result !== null;
-            });
+            rasterizeHTML.util.executeJavascript(doc, undefined, 0).then(function (result) {
+                expect(result.document.body.innerHTML).toEqual('20');
 
-            runs(function () {
-                expect(the_result.body.innerHTML).toEqual('20');
+                done();
             });
         });
 
-        it("should report failing JS", function () {
-            var errors = null;
-
+        it("should report failing JS", function (done) {
             doc.documentElement.innerHTML = "<body><script>undefinedVar.t = 42</script></body>";
-            rasterizeHTML.util.executeJavascript(doc, undefined, 0, function (result, theErrors) {
-                errors = theErrors;
-            });
 
-            waitsFor(function () {
-                return errors !== null;
-            });
-
-            runs(function () {
-                expect(errors).toEqual([{
+            rasterizeHTML.util.executeJavascript(doc, undefined, 0).then(function (result) {
+                expect(result.errors).toEqual([{
                     resourceType: "scriptExecution",
                     msg: jasmine.any(String)
                 }]);
-                expect(errors[0].msg).toMatch(/ReferenceError:\s+(.+\s+)?undefinedVar/);
+                expect(result.errors[0].msg).toMatch(/ReferenceError:\s+(.+\s+)?undefinedVar/);
+
+                done();
             });
         });
 
-        it("should be able to access top 'html' tag attributes", function () {
-            var the_result = null;
-
+        it("should be able to access top 'html' tag attributes", function (done) {
             doc.documentElement.innerHTML = '<head></head><body onload="document.body.innerHTML = document.querySelectorAll(\'[myattr]\').length;"></body>';
             doc.documentElement.setAttribute('myattr', 'myvalue');
 
-            rasterizeHTML.util.executeJavascript(doc, undefined, 0, function (result) {
-                the_result = result;
-            });
+            rasterizeHTML.util.executeJavascript(doc, undefined, 0).then(function (result) {
+                expect(result.document.body.innerHTML).toEqual('1');
 
-            waitsFor(function () {
-                return the_result !== null;
-            });
-
-            runs(function () {
-                expect(the_result.body.innerHTML).toEqual('1');
+                done();
             });
         });
 
-        ifNotInPhantomJsIt("should be able to load content via AJAX from the correct url", function () {
-            var doc, result;
+        ifNotInPhantomJsIt("should be able to load content via AJAX from the correct url", function (done) {
+            rasterizeHTMLTestHelper.readHTMLDocumentFixture('ajax.html', function (doc) {
+                rasterizeHTML.util.executeJavascript(doc, jasmine.getFixtures().fixturesPath, 100).then(function (result) {
+                    expect(result.document.querySelector('div').textContent.trim()).toEqual('The content');
 
-            rasterizeHTMLTestHelper.readHTMLDocumentFixture('ajax.html', function (theDoc) {
-                doc = theDoc;
-            });
-
-            waitsFor(function () {
-                return doc !== undefined;
-            });
-
-            runs(function () {
-                rasterizeHTML.util.executeJavascript(doc, jasmine.getFixtures().fixturesPath, 100, function (theResult) {
-                    result = theResult;
+                    done();
                 });
-            });
-
-            waitsFor(function () {
-                return result !== undefined;
-            });
-
-            runs(function () {
-                expect(result.querySelector('div').textContent.trim()).toEqual('The content');
             });
         });
     });
