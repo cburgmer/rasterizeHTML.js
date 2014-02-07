@@ -20,16 +20,15 @@
         var url = "fixtures/test.html",
             cache = {};
 
-        var renderPageMultipleTimes = function (count, tick, finishCallback) {
+        var renderPageMultipleTimes = function (count, tick) {
             var canvas = document.getElementById("canvas");
             if (count === 0) {
-                finishCallback();
                 return;
             }
-            rasterizeHTML.drawURL(url, canvas, {cacheBucket: cache}, function (image, errors) {
+            return rasterizeHTML.drawURL(url, canvas, {cacheBucket: cache}).then(function (result) {
                 count -= 1;
-                tick(count, errors);
-                renderPageMultipleTimes(count, tick, finishCallback);
+                tick(count, result.errors);
+                return renderPageMultipleTimes(count, tick);
             });
         }
 
@@ -57,7 +56,7 @@
                 if (stepsLeft === 0) {
                     log("\n");
                 }
-            }, function () {
+            }).then(function () {
                 var endTime = Date.now();
 
                 log("Results:\n");

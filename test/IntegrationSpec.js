@@ -33,102 +33,68 @@ describe("Integration test", function () {
         callback = jasmine.createSpy("callback").andCallFake(function () { finished = true; });
     });
 
-    ifNotInWebkitIt("should take a document, inline all displayable content and render to the given canvas", function () {
-        var doc = null;
+    ifNotInWebkitIt("should take a document, inline all displayable content and render to the given canvas", function (done) {
+        loadDocFixture(jasmine.getFixtures().fixturesPath + "test.html", function (doc) {
+            rasterizeHTML.drawDocument(doc, canvas.get(0), {cache: 'none'}).then(function (result) {
+                expect(result.errors).toEqual([]);
+                expect(result.image).toEqualImage(referenceImg.get(0), 1);
 
-        loadDocFixture(jasmine.getFixtures().fixturesPath + "test.html", function (xmlDoc) {
-            doc = xmlDoc;
-        });
+                expect(canvas.get(0)).toEqualImage(referenceImg.get(0), 1);
+                // expect(canvas.get(0)).toImageDiffEqual(referenceImg.get(0), 10);
 
-        waitsFor(function () {
-            return doc !== null;
-        });
-
-        runs(function () {
-            rasterizeHTML.drawDocument(doc, canvas.get(0), {cache: 'none'}, callback);
-        });
-
-        waitsFor(function () {
-            return finished;
-        });
-
-        runs(function () {
-            expect(callback).toHaveBeenCalledWith(jasmine.any(Object), []);
-            expect(canvas.get(0)).toEqualImage(referenceImg.get(0), 1);
-            // expect(canvas.get(0)).toImageDiffEqual(referenceImg.get(0), 10);
+                done();
+            });
         });
     });
 
-    ifNotInWebkitIt("should take a HTML string, inline all displayable content and render to the given canvas", function () {
-        var html = null;
+    ifNotInWebkitIt("should take a HTML string, inline all displayable content and render to the given canvas", function (done) {
+        var html = readFixtures("test.html");
 
-        html = readFixtures("test.html");
+        rasterizeHTML.drawHTML(html, canvas.get(0), {baseUrl: jasmine.getFixtures().fixturesPath, cache: 'none'}).then(function (result) {
+            expect(result.errors).toEqual([]);
+            expect(result.image).toEqualImage(referenceImg.get(0), 1);
 
-        runs(function () {
-            rasterizeHTML.drawHTML(html, canvas.get(0), {baseUrl: jasmine.getFixtures().fixturesPath, cache: 'none'}, callback);
-        });
-
-        waitsFor(function () {
-            return finished;
-        });
-
-        runs(function () {
-            expect(callback).toHaveBeenCalledWith(jasmine.any(Object), []);
             expect(canvas.get(0)).toEqualImage(referenceImg.get(0), 1);
             // expect(canvas.get(0)).toImageDiffEqual(referenceImg.get(0), 70);
+
+            done();
         });
     });
 
-    ifNotInWebkitIt("should take a URL, inline all displayable content and render to the given canvas", function () {
-        runs(function () {
-            rasterizeHTML.drawURL(jasmine.getFixtures().fixturesPath + "testWithJs.html", canvas.get(0), {cache: 'none', executeJs: true}, callback);
-        });
+    ifNotInWebkitIt("should take a URL, inline all displayable content and render to the given canvas", function (done) {
+        rasterizeHTML.drawURL(jasmine.getFixtures().fixturesPath + "testWithJs.html", canvas.get(0), {cache: 'none', executeJs: true}).then(function (result) {
+            expect(result.errors).toEqual([]);
+            expect(result.image).toEqualImage(referenceImg.get(0), 1);
 
-        waitsFor(function () {
-            return finished;
-        });
-
-        runs(function () {
-            expect(callback).toHaveBeenCalledWith(jasmine.any(Object), []);
             expect(canvas.get(0)).toEqualImage(referenceImg.get(0), 1);
             // expect(canvas.get(0)).toImageDiffEqual(referenceImg.get(0), 90);
+
+            done();
         });
     });
 
-    ifNotInWebkitIt("should take a URL, inline all displayable content and return the image", function () {
-        runs(function () {
-            rasterizeHTML.drawURL(jasmine.getFixtures().fixturesPath + "testWithJs.html", {cache: 'none', width: width, height: height, executeJs: true}, callback);
-        });
+    ifNotInWebkitIt("should take a URL, inline all displayable content and return the image", function (done) {
+        rasterizeHTML.drawURL(jasmine.getFixtures().fixturesPath + "testWithJs.html", {cache: 'none', width: width, height: height, executeJs: true}).then(function (result) {
+            expect(result.errors).toEqual([]);
+            expect(result.image).toEqualImage(referenceImg.get(0), 1);
+            // expect(result.image).toImageDiffEqual(referenceImg.get(0), 90);
 
-        waitsFor(function () {
-            return finished;
-        });
-
-        runs(function () {
-            expect(callback).toHaveBeenCalledWith(jasmine.any(Object), []);
-            expect(callback.mostRecentCall.args[0]).toEqualImage(referenceImg.get(0), 1);
-            // expect(callback.mostRecentCall.args[0]).toImageDiffEqual(referenceImg.get(0), 90);
+            done();
         });
     });
 
-    ifNotInPhantomJSAndNotLocalRunnerIt("should take a URL and load non UTF-8 content", function () {
+    ifNotInPhantomJSAndNotLocalRunnerIt("should take a URL and load non UTF-8 content", function (done) {
         var inlineReferencesSpy = spyOn(rasterizeHTMLInline, 'inlineReferences');
 
-        runs(function () {
-            rasterizeHTML.drawURL(jasmine.getFixtures().fixturesPath + "nonUTF8Encoding.html", callback);
-        });
-
-        waitsFor(function () {
-            return inlineReferencesSpy.wasCalled;
-        });
-
-        runs(function () {
+        rasterizeHTML.drawURL(jasmine.getFixtures().fixturesPath + "nonUTF8Encoding.html").then(function () {
             expect(inlineReferencesSpy).toHaveBeenCalled();
 
             var doc = inlineReferencesSpy.mostRecentCall.args[0];
 
             // This fails if SpecRunner is opened locally in Firefox. Open over a local webserver helps here.
             expect(doc.body.innerHTML.trim()).toEqual('这是中文');
+
+            done();
         });
     });
 });

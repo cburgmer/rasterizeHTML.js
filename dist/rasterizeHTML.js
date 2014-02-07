@@ -1372,22 +1372,23 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, ayepromise
         }
     };
 
-    module.util.loadDocument = function (url, options, successCallback, errorCallback) {
+    module.util.loadDocument = function (url, options) {
         var ajaxRequest = new window.XMLHttpRequest(),
             // TODO remove reference to rasterizeHTMLInline.util
             joinedUrl = rasterizeHTMLInline.util.joinUrl(options.baseUrl, url),
-            augmentedUrl = getUncachableURL(joinedUrl, options.cache);
+            augmentedUrl = getUncachableURL(joinedUrl, options.cache),
+            defer = ayepromise.defer();
 
         ajaxRequest.addEventListener("load", function () {
             if (ajaxRequest.status === 200 || ajaxRequest.status === 0) {
-                successCallback(ajaxRequest.responseXML);
+                defer.resolve(ajaxRequest.responseXML);
             } else {
-                errorCallback();
+                defer.reject();
             }
         }, false);
 
         ajaxRequest.addEventListener("error", function () {
-            errorCallback();
+            defer.reject();
         }, false);
 
         try {
@@ -1395,8 +1396,10 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, ayepromise
             ajaxRequest.responseType = "document";
             ajaxRequest.send(null);
         } catch (err) {
-            errorCallback();
+            defer.reject();
         }
+
+        return defer.promise;
     };
 
     /* Rendering */
@@ -1792,15 +1795,21 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, ayepromise
             optionalArguments = Array.prototype.slice.call(arguments, 1),
             params = module.util.parseOptionalParameters(optionalArguments);
 
-        drawDocument(doc, params.canvas, params.options).then(function (result) {
-            params.callback(result.image, result.errors);
-        });
+        var promise = drawDocument(doc, params.canvas, params.options);
+
+        if (params.callback) {
+            promise.then(function (result) {
+                params.callback(result.image, result.errors);
+            });
+        }
+
+        return promise;
     };
 
     var drawHTML = function (html, canvas, options, callback) {
         var doc = module.util.parseHTML(html);
 
-        module.drawDocument(doc, canvas, options, callback);
+        return module.drawDocument(doc, canvas, options, callback);
     };
 
     /**
@@ -1812,21 +1821,30 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, ayepromise
             optionalArguments = Array.prototype.slice.call(arguments, 1),
             params = module.util.parseOptionalParameters(optionalArguments);
 
-        drawHTML(html, params.canvas, params.options, params.callback);
+        return drawHTML(html, params.canvas, params.options, params.callback);
     };
 
     var drawURL = function (url, canvas, options, callback) {
-        module.util.loadDocument(url, options, function (doc) {
-            module.drawDocument(doc, canvas, options, callback);
-        }, function () {
-            if (callback) {
-                callback(null, [{
+        var promise = module.util.loadDocument(url, options)
+            .then(function (doc) {
+                return module.drawDocument(doc, canvas, options);
+            }, function () {
+                throw {
                     resourceType: "page",
                     url: url,
                     msg: "Unable to load page " + url
-                }]);
-            }
-        });
+                };
+            });
+
+        if (callback) {
+            promise.then(function (result) {
+                    callback(result.image, result.errors);
+                }, function (e) {
+                    callback(null, [e]);
+                });
+        }
+
+        return promise;
     };
 
     /**
@@ -1838,7 +1856,7 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, ayepromise
             optionalArguments = Array.prototype.slice.call(arguments, 1),
             params = module.util.parseOptionalParameters(optionalArguments);
 
-        drawURL(url, params.canvas, params.options, params.callback);
+        return drawURL(url, params.canvas, params.options, params.callback);
     };
 
     return module;
