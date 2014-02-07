@@ -4,17 +4,6 @@ describe("Main interface of rasterizeHTML.js", function () {
         canvas, ajaxSpy, parseHTMLSpy, parseOptionalParametersSpy,
         inlineReferences, drawImageOnCanvas;
 
-    var setUpDrawDocumentImage = function (image) {
-            rasterizeHTML.drawDocumentImage.andCallFake(function (doc, canvas, options, successCallback) {
-                successCallback(image);
-            });
-        },
-        setUpDrawDocumentImageError = function () {
-            rasterizeHTML.drawDocumentImage.andCallFake(function (doc, canvas, options, successCallback, errorCallback) {
-                errorCallback();
-            });
-        };
-
     var withoutErrors = function () {
         return withErrors([]);
     };
@@ -28,6 +17,19 @@ describe("Main interface of rasterizeHTML.js", function () {
         defer.resolve(value);
         return defer.promise;
     };
+
+    var rejected = function (error) {
+        var defer = ayepromise.defer();
+        defer.reject(error);
+        return defer.promise;
+    };
+
+    var setUpDrawDocumentImage = function (image) {
+            rasterizeHTML.drawDocumentImage.andReturn(fulfilled(image));
+        },
+        setUpDrawDocumentImageError = function () {
+            rasterizeHTML.drawDocumentImage.andReturn(rejected());
+        };
 
     beforeEach(function () {
         ajaxSpy = spyOn(rasterizeHTML.util, "loadDocument");
@@ -65,7 +67,7 @@ describe("Main interface of rasterizeHTML.js", function () {
                 expect(errors).toEqual([]);
 
                 expect(inlineReferences).toHaveBeenCalledWith(doc, {inlineScripts: false});
-                expect(rasterizeHTML.drawDocumentImage).toHaveBeenCalledWith(doc, canvas, {}, jasmine.any(Function), jasmine.any(Function));
+                expect(rasterizeHTML.drawDocumentImage).toHaveBeenCalledWith(doc, canvas, {});
                 expect(drawImageOnCanvas).toHaveBeenCalledWith(svgImage, canvas);
 
                 done();
@@ -79,7 +81,7 @@ describe("Main interface of rasterizeHTML.js", function () {
                 expect(image).toEqual(svgImage);
 
                 expect(inlineReferences).toHaveBeenCalledWith(doc, {inlineScripts : false});
-                expect(rasterizeHTML.drawDocumentImage).toHaveBeenCalledWith(doc, null, {}, jasmine.any(Function), jasmine.any(Function));
+                expect(rasterizeHTML.drawDocumentImage).toHaveBeenCalledWith(doc, null, {});
                 expect(drawImageOnCanvas).not.toHaveBeenCalled();
 
                 expect(parseOptionalParametersSpy).toHaveBeenCalled();
@@ -381,6 +383,7 @@ describe("Main interface of rasterizeHTML.js", function () {
             drawImageOnCanvas.andReturn(true);
 
             rasterizeHTML.drawDocument(doc, canvas, function (image, errors) {
+                errors = rasterizeHTMLTestHelper.deleteAdditionalFieldsFromErrorsUnderPhantomJS(errors);
                 expect(drawImageOnCanvas).not.toHaveBeenCalled();
                 expect(image).toBe(null);
                 expect(errors).toEqual([{
@@ -399,6 +402,7 @@ describe("Main interface of rasterizeHTML.js", function () {
             drawImageOnCanvas.andReturn(false);
 
             rasterizeHTML.drawDocument(doc, canvas, function (image, errors) {
+                errors = rasterizeHTMLTestHelper.deleteAdditionalFieldsFromErrorsUnderPhantomJS(errors);
                 expect(image).toBe(null);
                 expect(errors).toEqual([{
                     resourceType: "document",

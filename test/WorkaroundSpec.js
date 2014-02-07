@@ -84,38 +84,35 @@ describe("working around on Firefox and Webkit to fix resources not being render
         expect($(".rasterizeHTML_js_FirefoxWorkaround").length).toEqual(1);
     });
 
-    it("should remove the workaround div once the canvas has been rendered", function () {
-        var renderFinished = false,
-            fakeImage = {},
+    it("should remove the workaround div once the canvas has been rendered", function (done) {
+        var fakeImage = {},
             canvas = document.createElement("canvas"),
             svg = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"></svg>';
 
         spyOn(window, "Image").andReturn(fakeImage);
 
-        rasterizeHTML.renderSvg(svg, canvas, function () { renderFinished = true; });
+        rasterizeHTML.renderSvg(svg, canvas).then(function () {
+            expect($(".rasterizeHTML_js_FirefoxWorkaround")).not.toExist();
+
+            done();
+        });
 
         fakeImage.onload();
-
-        expect(renderFinished).toBeTruthy();
-        expect($(".rasterizeHTML_js_FirefoxWorkaround")).not.toExist();
     });
 
-    it("should remove the workaround div before the callback has been called", function () {
-        var renderFinished = false,
-            fakeImage = {},
+    it("should remove the workaround div before the callback has been called", function (done) {
+        var fakeImage = {},
             svg = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"></svg>';
 
         spyOn(window, "Image").andReturn(fakeImage);
 
-        rasterizeHTML.renderSvg(svg, null, function () {
+        rasterizeHTML.renderSvg(svg, null).then(function () {
             expect($(".rasterizeHTML_js_FirefoxWorkaround")).not.toExist();
-            renderFinished = true;
+
+            done();
         });
 
         fakeImage.onload();
-
-        // Make sure the callback was really called
-        expect(renderFinished).toBeTruthy();
     });
 
     it("should remove the workaround div once the canvas has been rendered even if an error occurs when drawing on the canvas", function () {
@@ -130,19 +127,18 @@ describe("working around on Firefox and Webkit to fix resources not being render
         expect($(".rasterizeHTML_js_FirefoxWorkaround")).not.toExist();
     });
 
-    it("should remove the workaround div once the canvas has been rendered even if an error occurs when drawing the image", function () {
-        var renderFinished = false,
-            canvas = document.createElement("canvas"),
+    it("should remove the workaround div once the canvas has been rendered even if an error occurs when drawing the image", function (done) {
+        var canvas = document.createElement("canvas"),
             svg = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"></svg>',
             imageInstance = {};
         spyOn(window, "Image").andReturn(imageInstance);
 
-        rasterizeHTML.renderSvg(svg, canvas, function () {}, function () { renderFinished = true; });
+        rasterizeHTML.renderSvg(svg, canvas).fail(function () {
+            expect($(".rasterizeHTML_js_FirefoxWorkaround")).not.toExist();
+
+            done();
+        });
 
         imageInstance.onerror();
-
-        expect(renderFinished).toBeTruthy();
-
-        expect($(".rasterizeHTML_js_FirefoxWorkaround")).not.toExist();
     });
 });

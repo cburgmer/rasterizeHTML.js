@@ -391,111 +391,63 @@ describe("Utilities function", function () {
             doc = document.implementation.createHTMLDocument('');
         });
 
-        it("should return the content height of a document greater than the viewport height", function () {
-            var height;
-
+        it("should return the content height of a document greater than the viewport height", function (done) {
             setHtml('<div style="height: 300px;"></div>');
 
-            rasterizeHTML.util.calculateDocumentContentSize(doc, 300, 200, function (theWidth, theHeight) {
-                height = theHeight;
-            });
+            rasterizeHTML.util.calculateDocumentContentSize(doc, 300, 200).then(function (size) {
+                expect(size.height).toEqual(316);
 
-            waitsFor(function () {
-                return height !== undefined;
-            });
-
-            runs(function () {
-                expect(height).toEqual(316);
+                done();
             });
         });
 
-        it("should return the minimum height viewport", function () {
-            var height;
-
+        it("should return the minimum height viewport", function (done) {
             setHtml('<div style="height: 100px;"></div>');
 
-            rasterizeHTML.util.calculateDocumentContentSize(doc, 300, 200, function (theWidth, theHeight) {
-                height = theHeight;
-            });
+            rasterizeHTML.util.calculateDocumentContentSize(doc, 300, 200).then(function (size) {
+                expect(size.height).toEqual(200);
 
-            waitsFor(function () {
-                return height !== undefined;
-            });
-
-            runs(function () {
-                expect(height).toEqual(200);
+                done();
             });
         });
 
-        it("should return the minimum width of the viewport", function () {
-            var width;
-
+        it("should return the minimum width of the viewport", function (done) {
             setHtml('<div>The content</div>');
 
-            rasterizeHTML.util.calculateDocumentContentSize(doc, 300, 200, function (theWidth) {
-                width = theWidth;
-            });
+            rasterizeHTML.util.calculateDocumentContentSize(doc, 300, 200).then(function (size) {
+                expect(size.width).toEqual(300);
 
-            waitsFor(function () {
-                return width !== undefined;
-            });
-
-            runs(function () {
-                expect(width).toEqual(300);
+                done();
             });
         });
 
-        ifNotInPhantomJsIt("should return width greater than viewport width", function () {
-            var width;
-
+        ifNotInPhantomJsIt("should return width greater than viewport width", function (done) {
             setHtml('<div style="width: 400px; height: 10px;"></div>');
 
-            rasterizeHTML.util.calculateDocumentContentSize(doc, 300, 200, function (theWidth) {
-                width = theWidth;
-            });
+            rasterizeHTML.util.calculateDocumentContentSize(doc, 300, 200).then(function (size) {
+                expect(size.width).toEqual(408);
 
-            waitsFor(function () {
-                return width !== undefined;
-            });
-
-            runs(function () {
-                expect(width).toEqual(408);
+                done();
             });
         });
 
-        it("should remove the iframe when done calculating", function () {
-            var width;
-
+        it("should remove the iframe when done calculating", function (done) {
             setHtml('<div>The content</div>');
 
-            rasterizeHTML.util.calculateDocumentContentSize(doc, 300, 200, function (theWidth) {
-                width = theWidth;
-            });
-
-            waitsFor(function () {
-                return width !== undefined;
-            });
-
-            runs(function () {
+            rasterizeHTML.util.calculateDocumentContentSize(doc, 300, 200).then(function () {
                 expect($('iframe')).not.toExist();
+
+                done();
             });
         });
 
-        it("should not execute JavaScript", function () {
-            var height;
-
+        it("should not execute JavaScript", function (done) {
             setHtml('<div></div><script>document.querySelector("div").style.height="100";</script>');
 
-            rasterizeHTML.util.calculateDocumentContentSize(doc, 300, 10, function (theWidth, theHeight) {
-                height = theHeight;
-            });
+            rasterizeHTML.util.calculateDocumentContentSize(doc, 300, 10).then(function (size) {
+                expect(size.height).toEqual(10);
 
-            waitsFor(function () {
-                return height !== undefined;
-            });
-
-            runs(function () {
-                expect(height).toEqual(10);
+                done();
             });
         });
     });

@@ -1299,9 +1299,10 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, ayepromise
         return iframe;
     };
 
-    module.util.calculateDocumentContentSize = function (doc, viewportWidth, viewportHeight, callback) {
+    module.util.calculateDocumentContentSize = function (doc, viewportWidth, viewportHeight) {
         var html = doc.documentElement.outerHTML,
-            iframe = createHiddenSandboxedIFrame(theWindow.document, viewportWidth, viewportHeight);
+            iframe = createHiddenSandboxedIFrame(theWindow.document, viewportWidth, viewportHeight),
+            defer = ayepromise.defer();
 
         iframe.onload = function () {
             var doc = iframe.contentDocument,
@@ -1310,13 +1311,19 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, ayepromise
                 canvasHeight = Math.max(doc.documentElement.scrollHeight, doc.body.scrollHeight, doc.body.clientHeight);
 
             theWindow.document.getElementsByTagName("body")[0].removeChild(iframe);
-            callback(canvasWidth, canvasHeight);
+
+            defer.resolve({
+                width: canvasWidth,
+                height: canvasHeight
+            });
         };
 
         // srcdoc doesn't work in PhantomJS yet
         iframe.contentDocument.open();
         iframe.contentDocument.write(html);
         iframe.contentDocument.close();
+
+        return defer.promise;
     };
 
     var addHTMLTagAttributes = function (doc, html) {
@@ -1629,8 +1636,9 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, ayepromise
         );
     };
 
-    module.renderSvg = function (svg, canvas, successCallback, errorCallback) {
+    module.renderSvg = function (svg, canvas) {
         var url, image,
+            defer = ayepromise.defer(),
             resetEventHandlers = function () {
                 image.onload = null;
                 image.onerror = null;
@@ -1650,15 +1658,18 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, ayepromise
         image.onload = function() {
             resetEventHandlers();
             cleanUp();
-            successCallback(image);
+
+            defer.resolve(image);
         };
         image.onerror = function () {
             cleanUp();
 
             // Webkit calls the onerror handler if the SVG is faulty
-            errorCallback();
+            defer.reject();
         };
         image.src = url;
+
+        return defer.promise;
     };
 
     module.drawImageOnCanvas = function (image, canvas) {
@@ -1672,7 +1683,7 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, ayepromise
         return true;
     };
 
-    module.drawDocumentImage = function (doc, canvas, options, successCallback, errorCallback) {
+    module.drawDocumentImage = function (doc, canvas, options) {
         var viewportSize = getViewportSize(canvas, options);
 
         if (options.hover) {
@@ -1682,46 +1693,34 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, ayepromise
             module.util.fakeActive(doc, options.active);
         }
 
-        module.util.calculateDocumentContentSize(doc, viewportSize.width, viewportSize.height, function (width, height) {
-            var svg = module.getSvgForDocument(doc, width, height);
-
-            module.renderSvg(svg, canvas, function (image) {
-                successCallback(image);
-            }, errorCallback);
-        });
+        return module.util.calculateDocumentContentSize(doc, viewportSize.width, viewportSize.height)
+            .then(function (size) {
+                return module.getSvgForDocument(doc, size.width, size.height);
+            })
+            .then(function (svg) {
+                return module.renderSvg(svg, canvas);
+            });
     };
 
     /* "Public" API */
 
-    var doDraw = function (doc, canvas, options, callback, allErrors) {
-        var handleInternalError = function (errors) {
-                errors.push({
-                    resourceType: "document",
-                    msg: "Error rendering page"
-                });
-            };
+    var doDraw = function (doc, canvas, options) {
+        var errorMsg = "Error rendering page";
 
-        module.drawDocumentImage(doc, canvas, options, function (image) {
+        return module.drawDocumentImage(doc, canvas, options).then(function (image) {
             var successful;
 
             if (canvas) {
                 successful = module.drawImageOnCanvas(image, canvas);
 
                 if (!successful) {
-                    handleInternalError(allErrors);
-                    image = null;   // Set image to null so that Firefox behaves similar to Webkit
+                    throw errorMsg;
                 }
             }
 
-            if (callback) {
-                callback(image, allErrors);
-            }
+            return image;
         }, function () {
-            handleInternalError(allErrors);
-
-            if (callback) {
-                callback(null, allErrors);
-            }
+            throw errorMsg;
         });
     };
 
@@ -1739,24 +1738,49 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, ayepromise
         };
     };
 
-    var drawDocument = function (doc, canvas, options, callback) {
+    var drawDocument = function (doc, canvas, options) {
         var executeJsTimeout = options.executeJsTimeout || 0,
             inlineOptions;
 
         inlineOptions = rasterizeHTMLInline.util.clone(options);
         inlineOptions.inlineScripts = options.executeJs === true;
 
-        rasterizeHTMLInline.inlineReferences(doc, inlineOptions).then(function (allErrors) {
-            if (options.executeJs) {
-                module.util.executeJavascript(doc, options.baseUrl, executeJsTimeout).then(function (result) {
-                    module.util.persistInputValues(result.document);
+        return rasterizeHTMLInline.inlineReferences(doc, inlineOptions)
+            .then(function (errors) {
+                if (options.executeJs) {
+                    return module.util.executeJavascript(doc, options.baseUrl, executeJsTimeout)
+                        .then(function (result) {
+                            var document = result.document;
+                            module.util.persistInputValues(document);
 
-                    doDraw(result.document, canvas, options, callback, allErrors.concat(result.errors));
-                });
-            } else {
-                doDraw(doc, canvas, options, callback, allErrors);
-            }
-        });
+                            return {
+                                document: document,
+                                errors: errors.concat(result.errors)
+                            };
+                        });
+                } else {
+                    return {
+                        document: doc,
+                        errors: errors
+                    };
+                }
+            }).then(function (result) {
+                return doDraw(result.document, canvas, options)
+                    .then(function (image) {
+                        return {
+                            image: image,
+                            errors: result.errors
+                        };
+                    }, function (e) {
+                        return {
+                            image: null,
+                            errors: result.errors.concat([{
+                                resourceType: "document",
+                                msg: e
+                            }])
+                        };
+                    });
+            });
     };
 
     /**
@@ -1768,7 +1792,9 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, ayepromise
             optionalArguments = Array.prototype.slice.call(arguments, 1),
             params = module.util.parseOptionalParameters(optionalArguments);
 
-        drawDocument(doc, params.canvas, params.options, params.callback);
+        drawDocument(doc, params.canvas, params.options).then(function (result) {
+            params.callback(result.image, result.errors);
+        });
     };
 
     var drawHTML = function (html, canvas, options, callback) {
