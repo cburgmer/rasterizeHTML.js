@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.7.0 - 2014-02-08
+/*! rasterizeHTML.js - v0.7.0 - 2014-02-09
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2014 Christoph Burgmer; Licensed MIT */
 window.rasterizeHTMLInline = (function (module) {
@@ -394,8 +394,7 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM, ayepromise) {
                     value: rule.style.getPropertyValue('background-image'),
                     rule: rule
                 });
-            }
-            if (rule.style.getPropertyValue('background')) {
+            } else if (rule.style.getPropertyValue('background')) {
                 backgroundDeclarations.push({
                     property: 'background',
                     value: rule.style.getPropertyValue('background'),

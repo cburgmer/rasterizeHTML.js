@@ -132,6 +132,7 @@ module.exports = function (grunt) {
                         jasmine: true,
                         describe: true,
                         it: true,
+                        xit: true,
                         beforeEach: true,
                         afterEach: true,
                         waitsFor: true,

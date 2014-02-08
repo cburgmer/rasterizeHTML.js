@@ -50,8 +50,7 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM, ayepromise) {
                     value: rule.style.getPropertyValue('background-image'),
                     rule: rule
                 });
-            }
-            if (rule.style.getPropertyValue('background')) {
+            } else if (rule.style.getPropertyValue('background')) {
                 backgroundDeclarations.push({
                     property: 'background',
                     value: rule.style.getPropertyValue('background'),
