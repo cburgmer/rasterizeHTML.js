@@ -542,7 +542,11 @@ describe("Utilities function", function () {
         });
 
         it("should call error callback on fail", function (done) {
-            rasterizeHTML.util.loadDocument(jasmine.getFixtures().fixturesPath + "non_existing_url.html", {}).fail(done);
+            rasterizeHTML.util.loadDocument(jasmine.getFixtures().fixturesPath + "non_existing_url.html", {}).fail(function (e) {
+                expect(e).toEqual({message: "Unable to load page"});
+
+                done();
+            });
         });
 
         describe("options", function () {

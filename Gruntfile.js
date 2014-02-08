@@ -183,8 +183,8 @@ module.exports = function (grunt) {
 
     grunt.registerTask('default', [
         'clean:dist',
-        'jshint',
         'browserify',
+        'jshint',
         'jasmine',
         'regex-check',
         'concat',

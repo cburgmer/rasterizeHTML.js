@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.7.0 - 2014-02-07
+/*! rasterizeHTML.js - v0.7.0 - 2014-02-08
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2014 Christoph Burgmer; Licensed MIT */
 window.rasterizeHTMLInline = (function (module) {
@@ -1377,18 +1377,21 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, ayepromise
             // TODO remove reference to rasterizeHTMLInline.util
             joinedUrl = rasterizeHTMLInline.util.joinUrl(options.baseUrl, url),
             augmentedUrl = getUncachableURL(joinedUrl, options.cache),
-            defer = ayepromise.defer();
+            defer = ayepromise.defer(),
+            doReject = function () {
+                defer.reject({message: "Unable to load page"});
+            };
 
         ajaxRequest.addEventListener("load", function () {
             if (ajaxRequest.status === 200 || ajaxRequest.status === 0) {
                 defer.resolve(ajaxRequest.responseXML);
             } else {
-                defer.reject();
+                doReject();
             }
         }, false);
 
         ajaxRequest.addEventListener("error", function () {
-            defer.reject();
+            doReject();
         }, false);
 
         try {
@@ -1396,7 +1399,7 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, ayepromise
             ajaxRequest.responseType = "document";
             ajaxRequest.send(null);
         } catch (err) {
-            defer.reject();
+            doReject();
         }
 
         return defer.promise;
@@ -1708,7 +1711,7 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, ayepromise
     /* "Public" API */
 
     var doDraw = function (doc, canvas, options) {
-        var errorMsg = "Error rendering page";
+        var drawError = {message: "Error rendering page"};
 
         return module.drawDocumentImage(doc, canvas, options).then(function (image) {
             var successful;
@@ -1717,13 +1720,13 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, ayepromise
                 successful = module.drawImageOnCanvas(image, canvas);
 
                 if (!successful) {
-                    throw errorMsg;
+                    throw drawError;
                 }
             }
 
             return image;
         }, function () {
-            throw errorMsg;
+            throw drawError;
         });
     };
 
@@ -1774,14 +1777,6 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, ayepromise
                             image: image,
                             errors: result.errors
                         };
-                    }, function (e) {
-                        return {
-                            image: null,
-                            errors: result.errors.concat([{
-                                resourceType: "document",
-                                msg: e
-                            }])
-                        };
                     });
             });
     };
@@ -1797,9 +1792,15 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, ayepromise
 
         var promise = drawDocument(doc, params.canvas, params.options);
 
+        // legacy API
         if (params.callback) {
             promise.then(function (result) {
                 params.callback(result.image, result.errors);
+            }, function (e) {
+                params.callback(null, [{
+                    resourceType: "document",
+                    msg: e.message
+                }]);
             });
         }
 
@@ -1828,19 +1829,18 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, ayepromise
         var promise = module.util.loadDocument(url, options)
             .then(function (doc) {
                 return module.drawDocument(doc, canvas, options);
-            }, function () {
-                throw {
-                    resourceType: "page",
-                    url: url,
-                    msg: "Unable to load page " + url
-                };
             });
 
+        // legacy API
         if (callback) {
             promise.then(function (result) {
                     callback(result.image, result.errors);
                 }, function (e) {
-                    callback(null, [e]);
+                    callback(null, [{
+                        resourceType: "page",
+                        url: url,
+                        msg: e.message + ' ' + url
+                    }]);
                 });
         }
 
