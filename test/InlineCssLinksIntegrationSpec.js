@@ -4,7 +4,7 @@ describe("Inline CSS content (integration)", function () {
     beforeEach(function () {
         doc = document.implementation.createHTMLDocument("");
 
-        spyOn(rasterizeHTMLInline.util, "ajax").andCallFake(function (url, options, success) {
+        spyOn(rasterizeHTMLInline.util, "ajax").and.callFake(function (url, options, success) {
             var defer = ayepromise.defer(),
                 respondWith = ajaxSpyUrlMap[url];
             if (respondWith) {

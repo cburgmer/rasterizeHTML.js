@@ -21,10 +21,10 @@ describe("Inline main", function () {
     it("should inline all resources", function (done) {
         var doc = "doc";
 
-        loadAndInlineImages.andReturn(withoutErrors());
-        loadAndInlineCssLinks.andReturn(withoutErrors());
-        loadAndInlineStyles.andReturn(withoutErrors());
-        loadAndInlineScript.andReturn(withoutErrors());
+        loadAndInlineImages.and.returnValue(withoutErrors());
+        loadAndInlineCssLinks.and.returnValue(withoutErrors());
+        loadAndInlineStyles.and.returnValue(withoutErrors());
+        loadAndInlineScript.and.returnValue(withoutErrors());
 
         rasterizeHTMLInline.inlineReferences(doc, {}).then(function (errors) {
             expect(errors).toEqual([]);
@@ -41,10 +41,10 @@ describe("Inline main", function () {
     it("should pass on options", function (done) {
         var doc = "doc";
 
-        loadAndInlineImages.andReturn(withoutErrors());
-        loadAndInlineCssLinks.andReturn(withoutErrors());
-        loadAndInlineStyles.andReturn(withoutErrors());
-        loadAndInlineScript.andReturn(withoutErrors());
+        loadAndInlineImages.and.returnValue(withoutErrors());
+        loadAndInlineCssLinks.and.returnValue(withoutErrors());
+        loadAndInlineStyles.and.returnValue(withoutErrors());
+        loadAndInlineScript.and.returnValue(withoutErrors());
 
         rasterizeHTMLInline.inlineReferences(doc, {baseUrl: "a_baseUrl", cache: 'none'}).then(function () {
             expect(loadAndInlineImages).toHaveBeenCalledWith(doc, {baseUrl: "a_baseUrl", cache: 'none'});
@@ -59,10 +59,10 @@ describe("Inline main", function () {
     it("should pass through an error from inlining", function (done) {
         var doc = "doc";
 
-        loadAndInlineImages.andReturn(withErrors(["the error"]));
-        loadAndInlineCssLinks.andReturn(withoutErrors());
-        loadAndInlineStyles.andReturn(withoutErrors());
-        loadAndInlineScript.andReturn(withoutErrors());
+        loadAndInlineImages.and.returnValue(withErrors(["the error"]));
+        loadAndInlineCssLinks.and.returnValue(withoutErrors());
+        loadAndInlineStyles.and.returnValue(withoutErrors());
+        loadAndInlineScript.and.returnValue(withoutErrors());
 
         rasterizeHTMLInline.inlineReferences(doc, {}).then(function (errors) {
             expect(errors).toEqual(["the error"]);
@@ -74,10 +74,10 @@ describe("Inline main", function () {
     it("should pass through multiple errors from inlining on drawDocument", function (done) {
         var doc = "doc";
 
-        loadAndInlineImages.andReturn(withErrors(["the error"]));
-        loadAndInlineStyles.andReturn(withErrors(["more error"]));
-        loadAndInlineCssLinks.andReturn(withErrors(["another error"]));
-        loadAndInlineScript.andReturn(withErrors(["error from script"]));
+        loadAndInlineImages.and.returnValue(withErrors(["the error"]));
+        loadAndInlineStyles.and.returnValue(withErrors(["more error"]));
+        loadAndInlineCssLinks.and.returnValue(withErrors(["another error"]));
+        loadAndInlineScript.and.returnValue(withErrors(["error from script"]));
 
         rasterizeHTMLInline.inlineReferences(doc, {}).then(function (errors) {
             expect(errors).toEqual(["the error", "more error", "another error", "error from script"]);
@@ -89,9 +89,9 @@ describe("Inline main", function () {
     it("should optionally not inline scripts", function (done) {
         var doc = "doc";
 
-        loadAndInlineImages.andReturn(withoutErrors());
-        loadAndInlineCssLinks.andReturn(withoutErrors());
-        loadAndInlineStyles.andReturn(withoutErrors());
+        loadAndInlineImages.and.returnValue(withoutErrors());
+        loadAndInlineCssLinks.and.returnValue(withoutErrors());
+        loadAndInlineStyles.and.returnValue(withoutErrors());
 
         rasterizeHTMLInline.inlineReferences(doc, {inlineScripts: false}).then(function () {
             expect(loadAndInlineScript).not.toHaveBeenCalled();

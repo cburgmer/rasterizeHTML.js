@@ -2,7 +2,7 @@ describe("Inline CSS content", function () {
     var joinUrlSpy, ajaxSpy, binaryAjaxSpy, getDataURIForImageURLSpy;
 
     beforeEach(function () {
-        joinUrlSpy = spyOn(rasterizeHTMLInline.util, "joinUrl").andCallFake(function (base, url) {
+        joinUrlSpy = spyOn(rasterizeHTMLInline.util, "joinUrl").and.callFake(function (base, url) {
             return url;
         });
         ajaxSpy = spyOn(rasterizeHTMLInline.util, "ajax");
@@ -67,7 +67,7 @@ describe("Inline CSS content", function () {
         var extractCssUrlSpy;
 
         beforeEach(function () {
-            extractCssUrlSpy = spyOn(rasterizeHTMLInline.css, "extractCssUrl").andCallFake(function (cssUrl) {
+            extractCssUrlSpy = spyOn(rasterizeHTMLInline.css, "extractCssUrl").and.callFake(function (cssUrl) {
                 if (/^url/.test(cssUrl)) {
                     return cssUrl.replace(/^url\("?/, '').replace(/"?\)$/, '');
                 } else {
@@ -79,7 +79,7 @@ describe("Inline CSS content", function () {
         it("should map background paths relative to the stylesheet", function () {
             var rules = CSSOM.parse('div { background-image: url("../green.png"); }').cssRules;
 
-            joinUrlSpy.andCallFake(function (base, url) {
+            joinUrlSpy.and.callFake(function (base, url) {
                 if (url === "../green.png" && base === "below/some.css") {
                     return "green.png";
                 }
@@ -93,7 +93,7 @@ describe("Inline CSS content", function () {
         it("should map font paths relative to the stylesheet", function () {
             var rules = CSSOM.parse('@font-face { font-family: "test font"; src: url("fake.woff"); }').cssRules;
 
-            joinUrlSpy.andCallFake(function (base, url) {
+            joinUrlSpy.and.callFake(function (base, url) {
                 if (url === "fake.woff" && base === "below/some.css") {
                     return "below/fake.woff";
                 }
@@ -107,7 +107,7 @@ describe("Inline CSS content", function () {
         it("should map import paths relative to the stylesheet", function () {
             var rules = CSSOM.parse('@import url(my.css);').cssRules;
 
-            joinUrlSpy.andCallFake(function (base, url) {
+            joinUrlSpy.and.callFake(function (base, url) {
                 if (url === "my.css" && base === "below/some.css") {
                     return "below/my.css";
                 }
@@ -121,7 +121,7 @@ describe("Inline CSS content", function () {
         it("should report changes", function () {
             var rules = CSSOM.parse('@import url(my.css);').cssRules;
 
-            joinUrlSpy.andCallFake(function () {
+            joinUrlSpy.and.callFake(function () {
                 return "below/my.css";
             });
 
@@ -141,7 +141,7 @@ describe("Inline CSS content", function () {
         ifNotInPhantomJsIt("should keep all src references intact when mapping resource paths", function () {
             var rules = CSSOM.parse('@font-face { font-family: "test font"; src: local("some font"), url("fake.woff"); }').cssRules;
 
-            joinUrlSpy.andCallFake(function (base, url) {
+            joinUrlSpy.and.callFake(function (base, url) {
                 if (base === "some_url/some.css") {
                     return "some_url/" + url;
                 }
@@ -155,7 +155,7 @@ describe("Inline CSS content", function () {
         it("should keep the font-family when inlining with Webkit", function () {
             var rules = CSSOM.parse("@font-face { font-family: 'test font'; src: url(\"fake.woff\"); }").cssRules;
 
-            joinUrlSpy.andCallFake(function (base, url) {
+            joinUrlSpy.and.callFake(function (base, url) {
                 if (base === "some_url/some.css") {
                     return "some_url/" + url;
                 }
@@ -169,7 +169,7 @@ describe("Inline CSS content", function () {
         it("should keep the font-style when inlining with Webkit", function () {
             var rules = CSSOM.parse("@font-face { font-family: 'test font'; font-style: italic; src: url(\"fake.woff\"); }").cssRules;
 
-            joinUrlSpy.andCallFake(function (base, url) {
+            joinUrlSpy.and.callFake(function (base, url) {
                 if (base === "some_url/some.css") {
                     return "some_url/" + url;
                 }
@@ -183,7 +183,7 @@ describe("Inline CSS content", function () {
         it("should keep the font-weight when inlining with Webkit", function () {
             var rules = CSSOM.parse("@font-face { font-family: 'test font'; font-weight: 700; src: url(\"fake.woff\"); }").cssRules;
 
-            joinUrlSpy.andCallFake(function (base, url) {
+            joinUrlSpy.and.callFake(function (base, url) {
                 if (base === "some_url/some.css") {
                     return "some_url/" + url;
                 }
@@ -197,7 +197,7 @@ describe("Inline CSS content", function () {
         it("should keep the !important specifity override", function () {
             var rules = CSSOM.parse('div { background-image: url("../green.png") !important; }').cssRules;
 
-            joinUrlSpy.andCallFake(function () {
+            joinUrlSpy.and.callFake(function () {
                 return "green.png";
             });
 
@@ -209,7 +209,7 @@ describe("Inline CSS content", function () {
         xit("should inline both backgroundImage and background when in the same rule to catch CSSOM.js way of handling the shorthand form", function () {
             var rules = CSSOM.parse('span { background: url("../green.png"); background-image: url("../blue.png"); }').cssRules;
 
-            joinUrlSpy.andCallFake(function (base, url) {
+            joinUrlSpy.and.callFake(function (base, url) {
                 if (url === "../green.png" && base === "below/some.css") {
                     return "green.png";
                 } else if (url === "../blue.png" && base === "below/some.css") {
@@ -230,7 +230,7 @@ describe("Inline CSS content", function () {
             ajaxUrlMocks = {};
 
         var setupAjaxMock = function () {
-            ajaxSpy.andCallFake(function (url) {
+            ajaxSpy.and.callFake(function (url) {
                 var defer = ayepromise.defer();
                 if (ajaxUrlMocks[url] !== undefined) {
                     defer.resolve(ajaxUrlMocks[url]);
@@ -352,7 +352,7 @@ describe("Inline CSS content", function () {
             mockAjaxUrl('that.css', 'p { font-size: 12px; }');
 
             rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {}).then(function () {
-                expect(ajaxSpy.callCount).toEqual(1);
+                expect(ajaxSpy.calls.count()).toEqual(1);
                 expect(rules.length).toEqual(1);
 
                 done();
@@ -398,7 +398,7 @@ describe("Inline CSS content", function () {
             mockAjaxUrl("this.css", '@import url("this.css");');
 
             rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {}).then(function () {
-                expect(ajaxSpy.callCount).toEqual(1);
+                expect(ajaxSpy.calls.count()).toEqual(1);
                 expect(rules.length).toEqual(0);
 
                 done();
@@ -418,7 +418,7 @@ describe("Inline CSS content", function () {
         it("should map resource paths relative to the stylesheet", function (done) {
             var rules = CSSOM.parse('@import url("url_base/that.css");').cssRules;
 
-            joinUrlSpy.andCallFake(function (base) {
+            joinUrlSpy.and.callFake(function (base) {
                 if (base === "") {
                     return base;
                 }
@@ -429,7 +429,7 @@ describe("Inline CSS content", function () {
 
             rasterizeHTMLInline.css.loadCSSImportsForRules(rules, [], {}).then(function () {
                 expect(adjustPathsOfCssResourcesSpy).toHaveBeenCalledWith('url_base/that.css', jasmine.any(Object));
-                expect(adjustPathsOfCssResourcesSpy.mostRecentCall.args[1][0].style.getPropertyValue('background-image')).toMatch(/url\(\"?\.\.\/green\.png\"?\)/);
+                expect(adjustPathsOfCssResourcesSpy.calls.mostRecent().args[1][0].style.getPropertyValue('background-image')).toMatch(/url\(\"?\.\.\/green\.png\"?\)/);
 
                 done();
             });
@@ -459,7 +459,7 @@ describe("Inline CSS content", function () {
 
         describe("error handling", function () {
             beforeEach(function () {
-                joinUrlSpy.andCallThrough();
+                joinUrlSpy.and.callThrough();
 
                 mockAjaxUrl("existing_document.css", "");
                 mockAjaxUrl("existing_with_second_level_nonexisting.css",
@@ -543,7 +543,7 @@ describe("Inline CSS content", function () {
             urlMocks = {};
 
         var setupGetDataURIForImageURLMock = function () {
-            getDataURIForImageURLSpy.andCallFake(function (url) {
+            getDataURIForImageURLSpy.and.callFake(function (url) {
                 var defer = ayepromise.defer();
                 if (urlMocks[url] !== undefined) {
                     defer.resolve(urlMocks[url]);
@@ -561,7 +561,7 @@ describe("Inline CSS content", function () {
         };
 
         beforeEach(function () {
-            extractCssUrlSpy = spyOn(rasterizeHTMLInline.css, "extractCssUrl").andCallFake(function (cssUrl) {
+            extractCssUrlSpy = spyOn(rasterizeHTMLInline.css, "extractCssUrl").and.callFake(function (cssUrl) {
                 if (/^url/.test(cssUrl)) {
                     return cssUrl.replace(/^url\("?/, '').replace(/"?\)$/, '');
                 } else {
@@ -591,7 +591,7 @@ describe("Inline CSS content", function () {
             it("should ignore invalid values", function (done) {
                 var rules = CSSOM.parse('span { background-image: "invalid url"; }').cssRules;
 
-                extractCssUrlSpy.andCallFake(function () {
+                extractCssUrlSpy.and.callFake(function () {
                     throw new Error("Invalid url");
                 });
 
@@ -606,7 +606,7 @@ describe("Inline CSS content", function () {
             it("should ignore an invalid value together with a valid url", function (done) {
                 var rules = CSSOM.parse('span { background-image: "invalid url", url("valid/url.png"); }').cssRules;
 
-                extractCssUrlSpy.andCallFake(function (value) {
+                extractCssUrlSpy.and.callFake(function (value) {
                     if (value === 'url("valid/url.png")') {
                         return "valid/url.png";
                     } else {
@@ -634,7 +634,7 @@ describe("Inline CSS content", function () {
                 rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}).then(function (result) {
                     expect(result.hasChanges).toBe(true);
 
-                    expect(extractCssUrlSpy.mostRecentCall.args[0]).toMatch(new RegExp('url\\("?' + anImage + '"?\\)'));
+                    expect(extractCssUrlSpy.calls.mostRecent().args[0]).toMatch(new RegExp('url\\("?' + anImage + '"?\\)'));
 
                     expect(rules[0].style.getPropertyValue('background-image')).toEqual('url("' + anImagesDataUri + '")');
 
@@ -669,7 +669,7 @@ describe("Inline CSS content", function () {
                 mockGetDataURIForImageURL(aSecondImage, aSecondImagesDataUri);
 
                 rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}).then(function () {
-                    expect(extractCssUrlSpy.mostRecentCall.args[0]).toMatch(new RegExp('url\\("?' + aSecondImage + '"?\\)'));
+                    expect(extractCssUrlSpy.calls.mostRecent().args[0]).toMatch(new RegExp('url\\("?' + aSecondImage + '"?\\)'));
 
                     expect(rules[0].style.getPropertyValue('background-image')).toMatch(backgroundImageRegex);
                     match = backgroundImageRegex.exec(rules[0].style.getPropertyValue('background-image'));
@@ -697,7 +697,7 @@ describe("Inline CSS content", function () {
 
                 rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {baseUrl:  'url_base/page.html'});
 
-                expect(getDataURIForImageURLSpy.mostRecentCall.args[1].baseUrl).toEqual('url_base/page.html');
+                expect(getDataURIForImageURLSpy.calls.mostRecent().args[1].baseUrl).toEqual('url_base/page.html');
             });
 
             it("should circumvent caching if requested", function () {
@@ -769,7 +769,7 @@ describe("Inline CSS content", function () {
 
             beforeEach(function () {
                 mockGetDataURIForImageURL(aBackgroundImageThatDoesExist, '');
-                joinUrlSpy.andCallThrough();
+                joinUrlSpy.and.callThrough();
             });
 
             it("should report an error if a backgroundImage could not be loaded", function (done) {
@@ -861,7 +861,7 @@ describe("Inline CSS content", function () {
                 ajaxUrlMocks = {};
 
             var setupAjaxMock = function () {
-                binaryAjaxSpy.andCallFake(function (url) {
+                binaryAjaxSpy.and.callFake(function (url) {
                     var defer = ayepromise.defer();
                     if (ajaxUrlMocks[url] !== undefined) {
                         defer.resolve(ajaxUrlMocks[url]);
@@ -949,7 +949,7 @@ describe("Inline CSS content", function () {
                 rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}).then(function (result) {
                     expect(result.hasChanges).toBe(true);
 
-                    expect(extractCssUrlSpy.mostRecentCall.args[0]).toMatch(new RegExp('url\\("?fake.woff"?\\)'));
+                    expect(extractCssUrlSpy.calls.mostRecent().args[0]).toMatch(new RegExp('url\\("?fake.woff"?\\)'));
 
                     expectFontFaceUrlToMatch(rules[0], "data:font/woff;base64,dGhpcyBpcyBub3QgYSBmb250");
 
@@ -962,7 +962,7 @@ describe("Inline CSS content", function () {
                 mockBinaryAjaxUrl('fake.woff', '');
 
                 rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {}).then(function () {
-                    expect(extractCssUrlSpy.mostRecentCall.args[0]).toMatch(new RegExp('url\\("?fake.woff"?\\)'));
+                    expect(extractCssUrlSpy.calls.mostRecent().args[0]).toMatch(new RegExp('url\\("?fake.woff"?\\)'));
 
                     done();
                 });
@@ -1021,7 +1021,7 @@ describe("Inline CSS content", function () {
                 var rules = CSSOM.parse('@font-face { font-family: "test font"; src: url("fake.woff"); }').cssRules;
 
                 rasterizeHTMLInline.css.loadAndInlineCSSResourcesForRules(rules, {baseUrl:  'url_base/page.html'}).then(function () {
-                    expect(binaryAjaxSpy.mostRecentCall.args[1].baseUrl).toEqual('url_base/page.html');
+                    expect(binaryAjaxSpy.calls.mostRecent().args[1].baseUrl).toEqual('url_base/page.html');
 
                     done();
                 });
@@ -1054,7 +1054,7 @@ describe("Inline CSS content", function () {
             var aFontReferenceThatDoesExist = "a_font_that_does_exist.woff";
 
             beforeEach(function () {
-                binaryAjaxSpy.andCallFake(function (url) {
+                binaryAjaxSpy.and.callFake(function (url) {
                     var defer = ayepromise.defer();
                     if (url === aFontReferenceThatDoesExist) {
                         defer.resolve();
@@ -1065,7 +1065,7 @@ describe("Inline CSS content", function () {
                     }
                     return defer.promise;
                 });
-                joinUrlSpy.andCallThrough();
+                joinUrlSpy.and.callThrough();
             });
 
             it("should report an error if a font could not be loaded", function (done) {

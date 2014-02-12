@@ -10,12 +10,13 @@ module.exports = function (grunt) {
             ],
             options: {
                 specs: 'test/*Spec.js',
+                vendor: [
+                    'bower_components/js-imagediff/imagediff.js',
+                    'bower_components/jquery/jquery.js',
+                ],
                 helpers: [
                     'test/helpers.js',
                     'test/diffHelper.js',
-                    'bower_components/js-imagediff/imagediff.js',
-                    'bower_components/jquery/jquery.js',
-                    'bower_components/jasmine-jquery/lib/jasmine-jquery.js',
                     'test/gruntpath.js'
                 ]
             }

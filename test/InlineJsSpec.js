@@ -4,7 +4,7 @@ describe("JS inline", function () {
         ajaxUrlMocks = {};
 
     var setupAjaxMock = function () {
-        return spyOn(rasterizeHTMLInline.util, "ajax").andCallFake(function (url) {
+        return spyOn(rasterizeHTMLInline.util, "ajax").and.callFake(function (url) {
             var defer = ayepromise.defer();
             if (ajaxUrlMocks[url] !== undefined) {
                 defer.resolve(ajaxUrlMocks[url]);
@@ -51,7 +51,7 @@ describe("JS inline", function () {
         internalScript = window.document.createElement("script");
         internalScript.textContent = "function () {}";
 
-        joinUrlSpy.andCallFake(function (base, rel) {
+        joinUrlSpy.and.callFake(function (base, rel) {
             return base + rel;
         });
     });
@@ -70,7 +70,7 @@ describe("JS inline", function () {
         rasterizeHTMLInline.loadAndInlineScript(doc, {}).then(function () {
             expect(doc.head.getElementsByTagName("script").length).toEqual(1);
             expect(doc.head.getElementsByTagName("script")[0].textContent).toEqual("var b = 1;");
-            expect(doc.head.getElementsByTagName("script")[0].src).not.toExist();
+            expect(doc.head.getElementsByTagName("script")[0].src).toBe('');
 
             done();
         });
@@ -139,7 +139,7 @@ describe("JS inline", function () {
     });
 
     it("should respect the document's baseURI when loading linked JS", function (done) {
-        var getDocumentBaseUrlSpy = spyOn(rasterizeHTMLInline.util, 'getDocumentBaseUrl').andCallThrough();
+        var getDocumentBaseUrlSpy = spyOn(rasterizeHTMLInline.util, 'getDocumentBaseUrl').and.callThrough();
 
         doc = rasterizeHTMLTestHelper.readDocumentFixture("externalJS.html");
 
@@ -205,7 +205,7 @@ describe("JS inline", function () {
             anotherBrokenJsScript = window.document.createElement("script");
             anotherBrokenJsScript.src = "another_document_that_doesnt_exist.js";
 
-            joinUrlSpy.andCallThrough();
+            joinUrlSpy.and.callThrough();
         });
 
         it("should report an error if a script could not be loaded", function (done) {

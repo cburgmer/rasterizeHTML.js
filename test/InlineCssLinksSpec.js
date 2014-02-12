@@ -4,7 +4,7 @@ describe("Inline CSS links", function () {
         ajaxUrlMocks = {};
 
     var setupAjaxMock = function () {
-        ajaxSpy = spyOn(rasterizeHTMLInline.util, "ajax").andCallFake(function (url, options) {
+        ajaxSpy = spyOn(rasterizeHTMLInline.util, "ajax").and.callFake(function (url, options) {
             var defer = ayepromise.defer();
 
             if (ajaxUrlMocks[url + ' ' + options.baseUrl] !== undefined) {
@@ -56,7 +56,7 @@ describe("Inline CSS links", function () {
     beforeEach(function () {
         doc = document.implementation.createHTMLDocument("");
 
-        extractCssUrlSpy = spyOn(rasterizeHTMLInline.css, "extractCssUrl").andCallFake(function (cssUrl) {
+        extractCssUrlSpy = spyOn(rasterizeHTMLInline.css, "extractCssUrl").and.callFake(function (cssUrl) {
             if (/^url/.test(cssUrl)) {
                 return cssUrl.replace(/^url\("?/, '').replace(/"?\)$/, '');
             } else {
@@ -65,11 +65,11 @@ describe("Inline CSS links", function () {
         });
         joinUrlSpy = spyOn(rasterizeHTMLInline.util, "joinUrl");
         adjustPathsOfCssResourcesSpy = spyOn(rasterizeHTMLInline.css, 'adjustPathsOfCssResources');
-        loadCSSImportsForRulesSpy = spyOn(rasterizeHTMLInline.css, 'loadCSSImportsForRules').andReturn(fulfilled({
+        loadCSSImportsForRulesSpy = spyOn(rasterizeHTMLInline.css, 'loadCSSImportsForRules').and.returnValue(fulfilled({
             hasChanges: false,
             errors: []
         }));
-        loadAndInlineCSSResourcesForRulesSpy = spyOn(rasterizeHTMLInline.css, 'loadAndInlineCSSResourcesForRules').andReturn(fulfilled({
+        loadAndInlineCSSResourcesForRulesSpy = spyOn(rasterizeHTMLInline.css, 'loadAndInlineCSSResourcesForRules').and.returnValue(fulfilled({
             hasChanges: false,
             errors: []
         }));
@@ -171,7 +171,7 @@ describe("Inline CSS links", function () {
 
         rasterizeHTMLInline.loadAndInlineCssLinks(doc, {}).then(function () {
             expect(loadCSSImportsForRulesSpy).toHaveBeenCalled();
-            expect(loadCSSImportsForRulesSpy.mostRecentCall.args[0][0].cssText).toMatch(/p \{\s*font-size: 14px;\s*\}/);
+            expect(loadCSSImportsForRulesSpy.calls.mostRecent().args[0][0].cssText).toMatch(/p \{\s*font-size: 14px;\s*\}/);
 
             done();
         });
@@ -182,14 +182,14 @@ describe("Inline CSS links", function () {
 
         rasterizeHTMLInline.loadAndInlineCssLinks(doc, {}).then(function () {
             expect(loadAndInlineCSSResourcesForRulesSpy).toHaveBeenCalled();
-            expect(loadAndInlineCSSResourcesForRulesSpy.mostRecentCall.args[0][0].cssText).toMatch(/p \{\s*font-size: 14px;\s*\}/);
+            expect(loadAndInlineCSSResourcesForRulesSpy.calls.mostRecent().args[0][0].cssText).toMatch(/p \{\s*font-size: 14px;\s*\}/);
 
             done();
         });
     });
 
     it("should respect the document's baseURI when loading linked CSS", function (done) {
-        var getDocumentBaseUrlSpy = spyOn(rasterizeHTMLInline.util, 'getDocumentBaseUrl').andCallThrough();
+        var getDocumentBaseUrlSpy = spyOn(rasterizeHTMLInline.util, 'getDocumentBaseUrl').and.callThrough();
 
         doc = rasterizeHTMLTestHelper.readDocumentFixture("externalCSS.html");
 
@@ -200,9 +200,9 @@ describe("Inline CSS links", function () {
             expect(doc.getElementsByTagName("style")[0].textContent).toEqual("p { font-size: 14px; }");
             expect(doc.getElementsByTagName("link").length).toEqual(0);
 
-            expect(ajaxSpy.mostRecentCall.args[1].baseUrl).toEqual(doc.baseURI);
-            expect(loadCSSImportsForRulesSpy.mostRecentCall.args[2].baseUrl).toEqual(doc.baseURI);
-            expect(loadAndInlineCSSResourcesForRulesSpy.mostRecentCall.args[1].baseUrl).toEqual(doc.baseURI);
+            expect(ajaxSpy.calls.mostRecent().args[1].baseUrl).toEqual(doc.baseURI);
+            expect(loadCSSImportsForRulesSpy.calls.mostRecent().args[2].baseUrl).toEqual(doc.baseURI);
+            expect(loadAndInlineCSSResourcesForRulesSpy.calls.mostRecent().args[1].baseUrl).toEqual(doc.baseURI);
             expect(getDocumentBaseUrlSpy).toHaveBeenCalledWith(doc);
 
             done();
@@ -214,18 +214,18 @@ describe("Inline CSS links", function () {
 
         doc = rasterizeHTMLTestHelper.readDocumentFixtureWithoutBaseURI("externalCSS.html");
 
-        rasterizeHTMLInline.loadAndInlineCssLinks(doc, {baseUrl: jasmine.getFixtures().fixturesPath}).then(function () {
-            expect(ajaxSpy.mostRecentCall.args[1].baseUrl).toEqual(jasmine.getFixtures().fixturesPath);
+        rasterizeHTMLInline.loadAndInlineCssLinks(doc, {baseUrl: rasterizeHTMLTestHelper.fixturesPath}).then(function () {
+            expect(ajaxSpy.calls.mostRecent().args[1].baseUrl).toEqual(rasterizeHTMLTestHelper.fixturesPath);
 
-            expect(loadCSSImportsForRulesSpy.mostRecentCall.args[2].baseUrl).toEqual(jasmine.getFixtures().fixturesPath);
-            expect(loadAndInlineCSSResourcesForRulesSpy.mostRecentCall.args[1].baseUrl).toEqual(jasmine.getFixtures().fixturesPath);
+            expect(loadCSSImportsForRulesSpy.calls.mostRecent().args[2].baseUrl).toEqual(rasterizeHTMLTestHelper.fixturesPath);
+            expect(loadAndInlineCSSResourcesForRulesSpy.calls.mostRecent().args[1].baseUrl).toEqual(rasterizeHTMLTestHelper.fixturesPath);
 
             done();
         });
     });
 
     it("should favour explicit baseUrl over document.baseURI when loading linked CSS", function (done) {
-        var baseUrl = jasmine.getFixtures().fixturesPath;
+        var baseUrl = rasterizeHTMLTestHelper.fixturesPath;
 
         doc = rasterizeHTMLTestHelper.readDocumentFixture("externalCSS.html");
         expect(doc.baseURI).not.toBeNull();
@@ -234,11 +234,11 @@ describe("Inline CSS links", function () {
 
         mockAjaxUrl("some.css", "p { font-size: 14px; }");
 
-        rasterizeHTMLInline.loadAndInlineCssLinks(doc, {baseUrl: jasmine.getFixtures().fixturesPath}).then(function () {
-            expect(ajaxSpy.mostRecentCall.args[1].baseUrl).toEqual(jasmine.getFixtures().fixturesPath);
+        rasterizeHTMLInline.loadAndInlineCssLinks(doc, {baseUrl: rasterizeHTMLTestHelper.fixturesPath}).then(function () {
+            expect(ajaxSpy.calls.mostRecent().args[1].baseUrl).toEqual(rasterizeHTMLTestHelper.fixturesPath);
 
-            expect(loadCSSImportsForRulesSpy.mostRecentCall.args[2].baseUrl).toEqual(jasmine.getFixtures().fixturesPath);
-            expect(loadAndInlineCSSResourcesForRulesSpy.mostRecentCall.args[1].baseUrl).toEqual(jasmine.getFixtures().fixturesPath);
+            expect(loadCSSImportsForRulesSpy.calls.mostRecent().args[2].baseUrl).toEqual(rasterizeHTMLTestHelper.fixturesPath);
+            expect(loadAndInlineCSSResourcesForRulesSpy.calls.mostRecent().args[1].baseUrl).toEqual(rasterizeHTMLTestHelper.fixturesPath);
 
             done();
         });
@@ -274,8 +274,8 @@ describe("Inline CSS links", function () {
                 cache: 'none'
             });
 
-            expect(loadCSSImportsForRulesSpy.mostRecentCall.args[2].cache).toEqual('none');
-            expect(loadAndInlineCSSResourcesForRulesSpy.mostRecentCall.args[1].cache).toEqual('none');
+            expect(loadCSSImportsForRulesSpy.calls.mostRecent().args[2].cache).toEqual('none');
+            expect(loadAndInlineCSSResourcesForRulesSpy.calls.mostRecent().args[1].cache).toEqual('none');
 
             done();
         });
@@ -288,8 +288,8 @@ describe("Inline CSS links", function () {
         rasterizeHTMLInline.loadAndInlineCssLinks(doc, {}).then(function () {
             expect(ajaxSpy).toHaveBeenCalledWith(cssLink.attributes.href.nodeValue, {});
 
-            expect(loadCSSImportsForRulesSpy.mostRecentCall.args[2].cache).not.toBe(false);
-            expect(loadAndInlineCSSResourcesForRulesSpy.mostRecentCall.args[1].cache).not.toBe(false);
+            expect(loadCSSImportsForRulesSpy.calls.mostRecent().args[2].cache).not.toBe(false);
+            expect(loadAndInlineCSSResourcesForRulesSpy.calls.mostRecent().args[1].cache).not.toBe(false);
 
             done();
         });
@@ -305,9 +305,9 @@ describe("Inline CSS links", function () {
         rasterizeHTMLInline.loadAndInlineCssLinks(doc, {cacheBucket: cacheBucket}).then(function () {
             expect(ajaxSpy).toHaveBeenCalled();
 
-            ajaxSpy.reset();
-            loadCSSImportsForRulesSpy.reset();
-            loadAndInlineCSSResourcesForRulesSpy.reset();
+            ajaxSpy.calls.reset();
+            loadCSSImportsForRulesSpy.calls.reset();
+            loadAndInlineCSSResourcesForRulesSpy.calls.reset();
 
             // second call
             doc = document.implementation.createHTMLDocument("");
@@ -328,16 +328,16 @@ describe("Inline CSS links", function () {
     it("should cache inlined content for different pages if baseUrl is the same", function (done) {
         var cacheBucket = {};
 
-        joinUrlSpy.andCallThrough();
+        joinUrlSpy.and.callThrough();
 
         // first call
         doc = rasterizeHTMLTestHelper.readDocumentFixture("empty1.html");
         doc.getElementsByTagName("head")[0].appendChild(aCssLink());
 
         rasterizeHTMLInline.loadAndInlineCssLinks(doc, {cacheBucket: cacheBucket}).then(function () {
-            ajaxSpy.reset();
-            loadCSSImportsForRulesSpy.reset();
-            loadAndInlineCSSResourcesForRulesSpy.reset();
+            ajaxSpy.calls.reset();
+            loadCSSImportsForRulesSpy.calls.reset();
+            loadAndInlineCSSResourcesForRulesSpy.calls.reset();
 
             // second call
             doc = rasterizeHTMLTestHelper.readDocumentFixture("empty2.html"); // use a document with different url, but same baseUrl
@@ -365,7 +365,7 @@ describe("Inline CSS links", function () {
         rasterizeHTMLInline.loadAndInlineCssLinks(doc, {cacheBucket: cacheBucket, cache: 'none'}).then(function () {
             expect(ajaxSpy).toHaveBeenCalled();
 
-            ajaxSpy.reset();
+            ajaxSpy.calls.reset();
 
             // second call
             doc = document.implementation.createHTMLDocument("");
@@ -393,7 +393,7 @@ describe("Inline CSS links", function () {
             anotherBrokenCssLink.rel = "stylesheet";
             anotherBrokenCssLink.type = "text/css";
 
-            joinUrlSpy.andCallThrough();
+            joinUrlSpy.and.callThrough();
         });
 
         it("should report an error if a stylesheet could not be loaded", function (done) {
@@ -440,11 +440,11 @@ describe("Inline CSS links", function () {
         it("should report errors from inlining resources", function (done) {
             doc.head.appendChild(aCssLink());
 
-            loadCSSImportsForRulesSpy.andReturn(fulfilled({
+            loadCSSImportsForRulesSpy.and.returnValue(fulfilled({
                 hasChanges: false,
                 errors: ["import inline error"]
             }));
-            loadAndInlineCSSResourcesForRulesSpy.andReturn(fulfilled({
+            loadAndInlineCSSResourcesForRulesSpy.and.returnValue(fulfilled({
                 hasChanges: false,
                 errors: ["resource inline error"]
             }));
@@ -469,7 +469,7 @@ describe("Inline CSS links", function () {
         it("should cache errors alongside if a cache bucket is given", function (done) {
             var cacheBucket = {};
 
-            loadCSSImportsForRulesSpy.andReturn(fulfilled({
+            loadCSSImportsForRulesSpy.and.returnValue(fulfilled({
                 hasChanges: false,
                 errors: ["import inline error"]
             }));

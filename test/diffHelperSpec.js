@@ -44,11 +44,11 @@ describe("diffHelper", function () {
 
     describe("toEqualImage matcher", function () {
         beforeEach(function () {
-            this.addMatchers(diffHelper.matcher);
+            jasmine.addMatchers(diffHelper.matcher);
         });
 
         it("should delegate to imageEqual", function () {
-            var toEqualImageSpy = spyOn(diffHelper, 'imageEquals').andReturn(true);
+            var toEqualImageSpy = spyOn(diffHelper, 'imageEquals').and.returnValue(true);
 
             // when
             expect('a').toEqualImage('b', 42);

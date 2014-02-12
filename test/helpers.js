@@ -23,35 +23,22 @@ var isWebkit = navigator.userAgent.indexOf("WebKit") >= 0,
         }
     };
 
-var oldIt = it;
-
-window.it = function asyncTestWrapper(testName, test) {
-    var newTest = test,
-        hasDoneHandler = test.length === 1;
-
-    if (hasDoneHandler) {
-        newTest = function () {
-            var done = false,
-                doneHandler = function () {
-                    done = true;
-                };
-
-            test(doneHandler);
-
-            waitsFor(function () {
-                return done;
-            });
-        };
-    }
-
-    oldIt(testName, newTest);
-};
-
 var rasterizeHTMLTestHelper = (function () {
     var module = {};
 
+    module.fixturesPath = 'fixtures/';
+
+    module.readHTMLFixture = function (url, callback) {
+        var fixtureUrl = module.fixturesPath + url,
+            xhr = new window.XMLHttpRequest();
+
+        xhr.open('GET', fixtureUrl, false);
+        xhr.send(null);
+        return xhr.response;
+    };
+
     module.readHTMLDocumentFixture = function (url, callback) {
-        var fixtureUrl = jasmine.getFixtures().fixturesPath + url,
+        var fixtureUrl = module.fixturesPath + url,
             xhr = new window.XMLHttpRequest();
 
         xhr.addEventListener("load", function () {
@@ -67,7 +54,7 @@ var rasterizeHTMLTestHelper = (function () {
 
     module.readDocumentFixture = function (url) {
         var doc,
-            fixtureUrl = jasmine.getFixtures().fixturesPath + url;
+            fixtureUrl = module.fixturesPath + url;
 
         $.ajax({
             dataType: 'xml',
@@ -84,7 +71,7 @@ var rasterizeHTMLTestHelper = (function () {
     };
 
     module.readDocumentFixtureWithoutBaseURI = function (url) {
-        var html = readFixtures(url),
+        var html = module.readHTMLFixture(url),
             doc = document.implementation.createHTMLDocument("");
 
         doc.documentElement.innerHTML = html;

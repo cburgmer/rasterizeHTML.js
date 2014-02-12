@@ -22,7 +22,7 @@ describe("Utilities function", function () {
             doc.documentElement.innerHTML = "<body></body>";
 
             rasterizeHTML.util.executeJavascript(doc, undefined, 0).then(function () {
-                expect($("iframe")).not.toExist();
+                expect($("iframe").length).toEqual(0);
 
                 done();
             });
@@ -75,7 +75,7 @@ describe("Utilities function", function () {
 
         ifNotInPhantomJsIt("should be able to load content via AJAX from the correct url", function (done) {
             rasterizeHTMLTestHelper.readHTMLDocumentFixture('ajax.html', function (doc) {
-                rasterizeHTML.util.executeJavascript(doc, jasmine.getFixtures().fixturesPath, 100).then(function (result) {
+                rasterizeHTML.util.executeJavascript(doc, rasterizeHTMLTestHelper.fixturesPath, 100).then(function (result) {
                     expect(result.document.querySelector('div').textContent.trim()).toEqual('The content');
 
                     done();
@@ -435,7 +435,7 @@ describe("Utilities function", function () {
             setHtml('<div>The content</div>');
 
             rasterizeHTML.util.calculateDocumentContentSize(doc, 300, 200).then(function () {
-                expect($('iframe')).not.toExist();
+                expect($('iframe').length).toEqual(0);
 
                 done();
             });
@@ -534,7 +534,7 @@ describe("Utilities function", function () {
 
     describe("loadDocument", function () {
         it("should load document from a URL", function (done) {
-            rasterizeHTML.util.loadDocument(jasmine.getFixtures().fixturesPath + "test.html", {}).then(function (doc) {
+            rasterizeHTML.util.loadDocument(rasterizeHTMLTestHelper.fixturesPath + "test.html", {}).then(function (doc) {
                 expect(doc.querySelector('title').textContent).toEqual("Test page with full resource includes");
 
                 done();
@@ -542,7 +542,7 @@ describe("Utilities function", function () {
         });
 
         it("should call error callback on fail", function (done) {
-            rasterizeHTML.util.loadDocument(jasmine.getFixtures().fixturesPath + "non_existing_url.html", {}).fail(function (e) {
+            rasterizeHTML.util.loadDocument(rasterizeHTMLTestHelper.fixturesPath + "non_existing_url.html", {}).fail(function (e) {
                 expect(e).toEqual({message: "Unable to load page"});
 
                 done();
@@ -554,9 +554,9 @@ describe("Utilities function", function () {
 
             beforeEach(function () {
                 ajaxRequest = jasmine.createSpyObj("ajaxRequest", ["open", "addEventListener", "overrideMimeType", "send"]);
-                spyOn(window, "XMLHttpRequest").andReturn(ajaxRequest);
+                spyOn(window, "XMLHttpRequest").and.returnValue(ajaxRequest);
 
-                spyOn(rasterizeHTMLInline.util, "joinUrl").andCallFake(function (baseUrl, url) {
+                spyOn(rasterizeHTMLInline.util, "joinUrl").and.callFake(function (baseUrl, url) {
                     return baseUrl ? baseUrl + url : url;
                 });
             });
@@ -565,14 +565,14 @@ describe("Utilities function", function () {
                 rasterizeHTML.util.loadDocument("non_existing_url.html", {cache: 'none'});
 
                 expect(ajaxRequest.open).toHaveBeenCalledWith('GET', jasmine.any(String), true);
-                expect(ajaxRequest.open.mostRecentCall.args[1]).toMatch(/^non_existing_url.html\?_=[0123456789]+$/);
+                expect(ajaxRequest.open.calls.mostRecent().args[1]).toMatch(/^non_existing_url.html\?_=[0123456789]+$/);
             });
 
             it("should attach an unique parameter to the given URL to circumvent caching if requested (legacy: 'false')", function () {
                 rasterizeHTML.util.loadDocument("non_existing_url.html", {cache: false});
 
                 expect(ajaxRequest.open).toHaveBeenCalledWith('GET', jasmine.any(String), true);
-                expect(ajaxRequest.open.mostRecentCall.args[1]).toMatch(/^non_existing_url.html\?_=[0123456789]+$/);
+                expect(ajaxRequest.open.calls.mostRecent().args[1]).toMatch(/^non_existing_url.html\?_=[0123456789]+$/);
             });
 
             it("should not attach an unique parameter to the given URL by default", function () {
@@ -582,36 +582,36 @@ describe("Utilities function", function () {
             });
 
             it("should allow caching for repeated calls if requested", function () {
-                var dateNowSpy = spyOn(window.Date, 'now').andReturn(42);
+                var dateNowSpy = spyOn(window.Date, 'now').and.returnValue(42);
 
                 rasterizeHTML.util.loadDocument("non_existing_url.html", {cache: 'none'});
 
-                expect(ajaxRequest.open.mostRecentCall.args[1]).toEqual('non_existing_url.html?_=42');
+                expect(ajaxRequest.open.calls.mostRecent().args[1]).toEqual('non_existing_url.html?_=42');
 
-                ajaxRequest.open.reset();
-                dateNowSpy.andReturn(43);
+                ajaxRequest.open.calls.reset();
+                dateNowSpy.and.returnValue(43);
                 rasterizeHTML.util.loadDocument("non_existing_url.html", {cache: 'repeated'});
-                expect(ajaxRequest.open.mostRecentCall.args[1]).toEqual('non_existing_url.html?_=42');
+                expect(ajaxRequest.open.calls.mostRecent().args[1]).toEqual('non_existing_url.html?_=42');
 
-                expect(dateNowSpy.callCount).toEqual(1);
+                expect(dateNowSpy.calls.count()).toEqual(1);
             });
 
             it("should not cache repeated calls by default", function () {
-                var dateNowSpy = spyOn(window.Date, 'now').andReturn(42);
+                var dateNowSpy = spyOn(window.Date, 'now').and.returnValue(42);
                 rasterizeHTML.util.loadDocument("non_existing_url.html", {cache: 'none'});
 
-                expect(ajaxRequest.open.mostRecentCall.args[1]).toEqual('non_existing_url.html?_=42');
+                expect(ajaxRequest.open.calls.mostRecent().args[1]).toEqual('non_existing_url.html?_=42');
 
-                ajaxRequest.open.reset();
-                dateNowSpy.andReturn(43);
+                ajaxRequest.open.calls.reset();
+                dateNowSpy.and.returnValue(43);
                 rasterizeHTML.util.loadDocument("non_existing_url.html", {cache: 'none'});
-                expect(ajaxRequest.open.mostRecentCall.args[1]).toEqual('non_existing_url.html?_=43');
+                expect(ajaxRequest.open.calls.mostRecent().args[1]).toEqual('non_existing_url.html?_=43');
             });
 
             it("should load URLs relative to baseUrl", function () {
                 rasterizeHTML.util.loadDocument("relative/url.html", {baseUrl: "http://example.com/"});
 
-                expect(ajaxRequest.open.mostRecentCall.args[1]).toEqual('http://example.com/relative/url.html');
+                expect(ajaxRequest.open.calls.mostRecent().args[1]).toEqual('http://example.com/relative/url.html');
 
                 expect(rasterizeHTMLInline.util.joinUrl).toHaveBeenCalledWith("http://example.com/", "relative/url.html");
             });

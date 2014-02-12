@@ -4,11 +4,11 @@
     <title>Jasmine Spec Runner</title>
     <meta charset="utf-8"/>
 
-    <link rel="stylesheet" type="text/css" href="../bower_components/jasmine/lib/jasmine-core/jasmine.css">
-    <script type="text/javascript" src="../bower_components/jasmine/lib/jasmine-core/jasmine.js"></script>
-    <script type="text/javascript" src="../bower_components/jasmine/lib/jasmine-core/jasmine-html.js"></script>
+    <link rel="stylesheet" type="text/css" href="../node_modules/jasmine-core/lib//jasmine-core/jasmine.css">
+    <script type="text/javascript" src="../node_modules/jasmine-core/lib/jasmine-core/jasmine.js"></script>
+    <script type="text/javascript" src="../node_modules/jasmine-core/lib/jasmine-core/jasmine-html.js"></script>
+    <script type="text/javascript" src="../node_modules/jasmine-core/lib/jasmine-core/boot.js"></script>
     <script type="text/javascript" src="../bower_components/jquery/jquery.js"></script>
-    <script type="text/javascript" src="../bower_components/jasmine-jquery/lib/jasmine-jquery.js"></script>
     <script type="text/javascript" src="../bower_components/js-imagediff/imagediff.js"></script>
 
     <!-- include source files here... -->
@@ -40,37 +40,6 @@
     <script type="text/javascript" src="WorkaroundSpec.js"></script>
     <!-- test specs -->
     <script type="text/javascript" src="diffHelperSpec.js"></script>
-
-    <script type="text/javascript">
-        (function() {
-            var jasmineEnv = jasmine.getEnv();
-            jasmineEnv.updateInterval = 1000;
-
-            var htmlReporter = new jasmine.HtmlReporter();
-
-            jasmineEnv.addReporter(htmlReporter);
-
-            jasmineEnv.specFilter = function(spec) {
-                return htmlReporter.specFilter(spec);
-            };
-
-            jasmine.getFixtures().fixturesPath = 'fixtures/';
-
-            var currentWindowOnload = window.onload;
-
-            window.onload = function() {
-                if (currentWindowOnload) {
-                    currentWindowOnload();
-                }
-                execJasmine();
-            };
-
-            function execJasmine() {
-                jasmineEnv.execute();
-            }
-
-        })();
-    </script>
 
 </head>
 

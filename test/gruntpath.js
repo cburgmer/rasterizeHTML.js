@@ -1,1 +1,1 @@
-jasmine.getFixtures().fixturesPath = 'test/fixtures/';
+rasterizeHTMLTestHelper.fixturesPath = 'test/fixtures/';

@@ -22,19 +22,18 @@ describe("Integration test", function () {
     };
 
     beforeEach(function () {
-        this.addMatchers(imagediff.jasmine);
-        this.addMatchers(diffHelper.matcher);
+        jasmine.addMatchers(diffHelper.matcher);
 
         canvas = $('<canvas width="' + width + '" height="' + height + '"></canvas>'); // Firefox adds a space between the divs and needs the canvas to fit horizontally for all content to be rendered
 
-        referenceImg = $('<img src="'+ jasmine.getFixtures().fixturesPath + '/testResult.png" alt="test image"/>');
+        referenceImg = $('<img src="'+ rasterizeHTMLTestHelper.fixturesPath + '/testResult.png" alt="test image"/>');
 
         finished = false;
-        callback = jasmine.createSpy("callback").andCallFake(function () { finished = true; });
+        callback = jasmine.createSpy("callback").and.callFake(function () { finished = true; });
     });
 
     ifNotInWebkitIt("should take a document, inline all displayable content and render to the given canvas", function (done) {
-        loadDocFixture(jasmine.getFixtures().fixturesPath + "test.html", function (doc) {
+        loadDocFixture(rasterizeHTMLTestHelper.fixturesPath + "test.html", function (doc) {
             rasterizeHTML.drawDocument(doc, canvas.get(0), {cache: 'none'}).then(function (result) {
                 expect(result.errors).toEqual([]);
                 expect(result.image).toEqualImage(referenceImg.get(0), 1);
@@ -48,9 +47,9 @@ describe("Integration test", function () {
     });
 
     ifNotInWebkitIt("should take a HTML string, inline all displayable content and render to the given canvas", function (done) {
-        var html = readFixtures("test.html");
+        var html = rasterizeHTMLTestHelper.readHTMLFixture("test.html");
 
-        rasterizeHTML.drawHTML(html, canvas.get(0), {baseUrl: jasmine.getFixtures().fixturesPath, cache: 'none'}).then(function (result) {
+        rasterizeHTML.drawHTML(html, canvas.get(0), {baseUrl: rasterizeHTMLTestHelper.fixturesPath, cache: 'none'}).then(function (result) {
             expect(result.errors).toEqual([]);
             expect(result.image).toEqualImage(referenceImg.get(0), 1);
 
@@ -62,7 +61,7 @@ describe("Integration test", function () {
     });
 
     ifNotInWebkitIt("should take a URL, inline all displayable content and render to the given canvas", function (done) {
-        rasterizeHTML.drawURL(jasmine.getFixtures().fixturesPath + "testWithJs.html", canvas.get(0), {cache: 'none', executeJs: true}).then(function (result) {
+        rasterizeHTML.drawURL(rasterizeHTMLTestHelper.fixturesPath + "testWithJs.html", canvas.get(0), {cache: 'none', executeJs: true}).then(function (result) {
             expect(result.errors).toEqual([]);
             expect(result.image).toEqualImage(referenceImg.get(0), 1);
 
@@ -74,7 +73,7 @@ describe("Integration test", function () {
     });
 
     ifNotInWebkitIt("should take a URL, inline all displayable content and return the image", function (done) {
-        rasterizeHTML.drawURL(jasmine.getFixtures().fixturesPath + "testWithJs.html", {cache: 'none', width: width, height: height, executeJs: true}).then(function (result) {
+        rasterizeHTML.drawURL(rasterizeHTMLTestHelper.fixturesPath + "testWithJs.html", {cache: 'none', width: width, height: height, executeJs: true}).then(function (result) {
             expect(result.errors).toEqual([]);
             expect(result.image).toEqualImage(referenceImg.get(0), 1);
             // expect(result.image).toImageDiffEqual(referenceImg.get(0), 90);
@@ -86,10 +85,10 @@ describe("Integration test", function () {
     ifNotInPhantomJSAndNotLocalRunnerIt("should take a URL and load non UTF-8 content", function (done) {
         var inlineReferencesSpy = spyOn(rasterizeHTMLInline, 'inlineReferences');
 
-        rasterizeHTML.drawURL(jasmine.getFixtures().fixturesPath + "nonUTF8Encoding.html").then(function () {
+        rasterizeHTML.drawURL(rasterizeHTMLTestHelper.fixturesPath + "nonUTF8Encoding.html").then(function () {
             expect(inlineReferencesSpy).toHaveBeenCalled();
 
-            var doc = inlineReferencesSpy.mostRecentCall.args[0];
+            var doc = inlineReferencesSpy.calls.mostRecent().args[0];
 
             // This fails if SpecRunner is opened locally in Firefox. Open over a local webserver helps here.
             expect(doc.body.innerHTML.trim()).toEqual('这是中文');

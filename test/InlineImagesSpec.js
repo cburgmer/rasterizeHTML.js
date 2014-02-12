@@ -7,7 +7,7 @@ describe("Image and image input inline", function () {
         urlMocks = {};
 
     var setupGetDataURIForImageURLMock = function () {
-        return spyOn(rasterizeHTMLInline.util, "getDataURIForImageURL").andCallFake(function (url) {
+        return spyOn(rasterizeHTMLInline.util, "getDataURIForImageURL").and.callFake(function (url) {
             var defer = ayepromise.defer();
             if (urlMocks[url] !== undefined) {
                 defer.resolve(urlMocks[url]);
@@ -94,13 +94,13 @@ describe("Image and image input inline", function () {
     });
 
     it("should respect the document's baseURI when loading the image", function () {
-        var getDocumentBaseUrlSpy = spyOn(rasterizeHTMLInline.util, 'getDocumentBaseUrl').andCallThrough();
+        var getDocumentBaseUrlSpy = spyOn(rasterizeHTMLInline.util, 'getDocumentBaseUrl').and.callThrough();
 
         doc = rasterizeHTMLTestHelper.readDocumentFixture("image.html");
 
         rasterizeHTMLInline.loadAndInlineImages(doc, {});
 
-        expect(getDataURIForImageURLSpy.mostRecentCall.args[1].baseUrl).toEqual(doc.baseURI);
+        expect(getDataURIForImageURLSpy.calls.mostRecent().args[1].baseUrl).toEqual(doc.baseURI);
         expect(getDocumentBaseUrlSpy).toHaveBeenCalledWith(doc);
     });
 
@@ -109,7 +109,7 @@ describe("Image and image input inline", function () {
 
         rasterizeHTMLInline.loadAndInlineImages(doc, {baseUrl: "aBaseUrl"});
 
-        expect(getDataURIForImageURLSpy.mostRecentCall.args[1].baseUrl).toEqual("aBaseUrl");
+        expect(getDataURIForImageURLSpy.calls.mostRecent().args[1].baseUrl).toEqual("aBaseUrl");
     });
 
     it("should favour explicit baseUrl over document.baseURI when loading the image", function () {
@@ -122,7 +122,7 @@ describe("Image and image input inline", function () {
 
         rasterizeHTMLInline.loadAndInlineImages(doc, {baseUrl: baseUrl});
 
-        expect(getDataURIForImageURLSpy.mostRecentCall.args[1].baseUrl).toEqual(baseUrl);
+        expect(getDataURIForImageURLSpy.calls.mostRecent().args[1].baseUrl).toEqual(baseUrl);
     });
 
     it("should circumvent caching if requested", function () {
@@ -145,7 +145,7 @@ describe("Image and image input inline", function () {
         var imageThatDoesExist = "image_that_does_exist.png";
 
         beforeEach(function () {
-            joinUrlSpy.andCallThrough();
+            joinUrlSpy.and.callThrough();
 
             mockGetDataURIForImageURL(imageThatDoesExist, "theDataUri");
         });

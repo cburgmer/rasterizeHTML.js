@@ -10,15 +10,15 @@ describe("Import styles", function () {
     beforeEach(function () {
         doc = document.implementation.createHTMLDocument("");
 
-        loadCSSImportsForRulesSpy = spyOn(rasterizeHTMLInline.css, 'loadCSSImportsForRules').andReturn(fulfilled({
+        loadCSSImportsForRulesSpy = spyOn(rasterizeHTMLInline.css, 'loadCSSImportsForRules').and.returnValue(fulfilled({
             hasChanges: false,
             errors: []
         }));
-        loadAndInlineCSSResourcesForRulesSpy = spyOn(rasterizeHTMLInline.css, 'loadAndInlineCSSResourcesForRules').andReturn(fulfilled({
+        loadAndInlineCSSResourcesForRulesSpy = spyOn(rasterizeHTMLInline.css, 'loadAndInlineCSSResourcesForRules').and.returnValue(fulfilled({
             hasChanges: false,
             errors: []
         }));
-        spyOn(rasterizeHTMLInline.util, 'clone').andCallFake(function (object) {
+        spyOn(rasterizeHTMLInline.util, 'clone').and.callFake(function (object) {
             return object;
         });
     });
@@ -34,14 +34,14 @@ describe("Import styles", function () {
     it("should not touch unrelated CSS", function (done) {
         rasterizeHTMLTestHelper.addStyleToDocument(doc, "span { padding-left: 0; }");
 
-        loadCSSImportsForRulesSpy.andCallFake(function(rules) {
+        loadCSSImportsForRulesSpy.and.callFake(function(rules) {
             rules[0] = "fake rule";
             return fulfilled({
                 hasChanges: false,
                 errors: []
             });
         });
-        loadAndInlineCSSResourcesForRulesSpy.andCallFake(function(rules) {
+        loadAndInlineCSSResourcesForRulesSpy.and.callFake(function(rules) {
             rules[0] = "something else";
             return fulfilled({
                 hasChanges: false,
@@ -61,7 +61,7 @@ describe("Import styles", function () {
 
         rasterizeHTMLInline.loadAndInlineStyles(doc, {}).then(function () {
             expect(loadCSSImportsForRulesSpy).toHaveBeenCalled();
-            expect(loadCSSImportsForRulesSpy.mostRecentCall.args[0][0].cssText).toMatch(/@import url\("?that.css"?\)\s*;/);
+            expect(loadCSSImportsForRulesSpy.calls.mostRecent().args[0][0].cssText).toMatch(/@import url\("?that.css"?\)\s*;/);
 
             done();
         });
@@ -72,7 +72,7 @@ describe("Import styles", function () {
 
         rasterizeHTMLInline.loadAndInlineStyles(doc, {}).then(function () {
             expect(loadAndInlineCSSResourcesForRulesSpy).toHaveBeenCalled();
-            expect(loadAndInlineCSSResourcesForRulesSpy.mostRecentCall.args[0][0].cssText).toMatch(/span \{\s*background-image: url\("?anImage.png"?\)\s*;\s*\}/);
+            expect(loadAndInlineCSSResourcesForRulesSpy.calls.mostRecent().args[0][0].cssText).toMatch(/span \{\s*background-image: url\("?anImage.png"?\)\s*;\s*\}/);
 
             done();
         });
@@ -108,7 +108,7 @@ describe("Import styles", function () {
     });
 
     it("should respect the document's baseURI", function (done) {
-        var getDocumentBaseUrlSpy = spyOn(rasterizeHTMLInline.util, 'getDocumentBaseUrl').andCallThrough();
+        var getDocumentBaseUrlSpy = spyOn(rasterizeHTMLInline.util, 'getDocumentBaseUrl').and.callThrough();
         doc = rasterizeHTMLTestHelper.readDocumentFixture("importCss.html");
 
         rasterizeHTMLInline.loadAndInlineStyles(doc, {}).then(function () {
@@ -142,9 +142,9 @@ describe("Import styles", function () {
 
         rasterizeHTMLInline.loadAndInlineStyles(doc, {cache: 'none'}).then(function () {
             expect(loadCSSImportsForRulesSpy).toHaveBeenCalled();
-            expect(loadCSSImportsForRulesSpy.mostRecentCall.args[2].cache).toEqual('none');
+            expect(loadCSSImportsForRulesSpy.calls.mostRecent().args[2].cache).toEqual('none');
             expect(loadAndInlineCSSResourcesForRulesSpy).toHaveBeenCalled();
-            expect(loadAndInlineCSSResourcesForRulesSpy.mostRecentCall.args[1].cache).toEqual('none');
+            expect(loadAndInlineCSSResourcesForRulesSpy.calls.mostRecent().args[1].cache).toEqual('none');
 
             done();
         });
@@ -155,9 +155,9 @@ describe("Import styles", function () {
 
         rasterizeHTMLInline.loadAndInlineStyles(doc, {}).then(function () {
             expect(loadCSSImportsForRulesSpy).toHaveBeenCalled();
-            expect(loadCSSImportsForRulesSpy.mostRecentCall.args[2]).toBeTruthy();
+            expect(loadCSSImportsForRulesSpy.calls.mostRecent().args[2]).toBeTruthy();
             expect(loadAndInlineCSSResourcesForRulesSpy).toHaveBeenCalled();
-            expect(loadAndInlineCSSResourcesForRulesSpy.mostRecentCall.args[1].cache).not.toBe(false);
+            expect(loadAndInlineCSSResourcesForRulesSpy.calls.mostRecent().args[1].cache).not.toBe(false);
 
             done();
         });
@@ -166,7 +166,7 @@ describe("Import styles", function () {
     it("should cache inlined content if a cache bucket is given", function (done) {
         var cacheBucket = {};
 
-        loadAndInlineCSSResourcesForRulesSpy.andReturn(fulfilled({
+        loadAndInlineCSSResourcesForRulesSpy.and.returnValue(fulfilled({
             hasChanges: true,
             errors: []
         }));
@@ -178,8 +178,8 @@ describe("Import styles", function () {
         rasterizeHTMLInline.loadAndInlineStyles(doc, {cacheBucket: cacheBucket}).then(function () {
             expect(loadCSSImportsForRulesSpy).toHaveBeenCalled();
 
-            loadCSSImportsForRulesSpy.reset();
-            loadAndInlineCSSResourcesForRulesSpy.reset();
+            loadCSSImportsForRulesSpy.calls.reset();
+            loadAndInlineCSSResourcesForRulesSpy.calls.reset();
 
             // second call
             doc = document.implementation.createHTMLDocument("");
@@ -199,7 +199,7 @@ describe("Import styles", function () {
     it("should not use cache inlined content if the documents' URLs don't match", function (done) {
         var cacheBucket = {};
 
-        loadAndInlineCSSResourcesForRulesSpy.andReturn(fulfilled({
+        loadAndInlineCSSResourcesForRulesSpy.and.returnValue(fulfilled({
             hasChanges: true,
             errors: []
         }));
@@ -211,8 +211,8 @@ describe("Import styles", function () {
         rasterizeHTMLInline.loadAndInlineStyles(doc, {cacheBucket: cacheBucket}).then(function () {
             expect(loadCSSImportsForRulesSpy).toHaveBeenCalled();
 
-            loadCSSImportsForRulesSpy.reset();
-            loadAndInlineCSSResourcesForRulesSpy.reset();
+            loadCSSImportsForRulesSpy.calls.reset();
+            loadAndInlineCSSResourcesForRulesSpy.calls.reset();
 
             // second call
             doc = rasterizeHTMLTestHelper.readDocumentFixture("image.html"); // use a document with different baseUrl
@@ -237,7 +237,7 @@ describe("Import styles", function () {
         rasterizeHTMLInline.loadAndInlineStyles(doc, {cacheBucket: cacheBucket, cache: 'none'}).then(function () {
             expect(loadCSSImportsForRulesSpy).toHaveBeenCalled();
 
-            loadCSSImportsForRulesSpy.reset();
+            loadCSSImportsForRulesSpy.calls.reset();
 
             // second call
             doc = document.implementation.createHTMLDocument("");
@@ -254,11 +254,11 @@ describe("Import styles", function () {
     describe("error handling", function () {
 
         it("should report errors", function (done) {
-            loadCSSImportsForRulesSpy.andReturn(fulfilled({
+            loadCSSImportsForRulesSpy.and.returnValue(fulfilled({
                 hasChanges: false,
                 errors: ['import error']
             }));
-            loadAndInlineCSSResourcesForRulesSpy.andReturn(fulfilled({
+            loadAndInlineCSSResourcesForRulesSpy.and.returnValue(fulfilled({
                 hasChanges: false,
                 errors: ['resource error']
             }));
@@ -274,7 +274,7 @@ describe("Import styles", function () {
         it("should cache errors alongside if a cache bucket is given", function (done) {
             var cacheBucket = {};
 
-            loadCSSImportsForRulesSpy.andReturn(fulfilled({
+            loadCSSImportsForRulesSpy.and.returnValue(fulfilled({
                 hasChanges: false,
                 errors: ['import error']
             }));

@@ -30,12 +30,12 @@ describe("working around on Firefox and Webkit to fix resources not being render
             svg = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"></svg>';
 
         // Stop method of finishing and removing div
-        spyOn(window, "Image").andReturn({});
+        spyOn(window, "Image").and.returnValue({});
 
         rasterizeHTML.renderSvg(svg, canvas);
 
-        expect($(".rasterizeHTML_js_FirefoxWorkaround")).toExist();
-        expect($(".rasterizeHTML_js_FirefoxWorkaround svg")).toExist();
+        expect($(".rasterizeHTML_js_FirefoxWorkaround").length).toEqual(1);
+        expect($(".rasterizeHTML_js_FirefoxWorkaround svg").length).toEqual(1);
         expect($(".rasterizeHTML_js_FirefoxWorkaround").css("visibility")).toEqual("hidden");
         expect($(".rasterizeHTML_js_FirefoxWorkaround").css("position")).toEqual("absolute");
         expect($(".rasterizeHTML_js_FirefoxWorkaround").css("top")).toEqual("-10000px");
@@ -49,11 +49,11 @@ describe("working around on Firefox and Webkit to fix resources not being render
             svg = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"></svg>';
 
         // Stop method of finishing and removing div
-        spyOn(window, "Image").andReturn({});
+        spyOn(window, "Image").and.returnValue({});
 
         rasterizeHTML.renderSvg(svg, canvas);
 
-        expect($(".rasterizeHTML_js_FirefoxWorkaround")).not.toExist();
+        expect($(".rasterizeHTML_js_FirefoxWorkaround").length).toEqual(0);
     });
 
     it("should add the workaround for each canvas", function () {
@@ -63,7 +63,7 @@ describe("working around on Firefox and Webkit to fix resources not being render
             svg2 = '<svg xmlns="http://www.w3.org/2000/svg" width="102" height="102"></svg>';
 
         // Stop method of finishing and removing div
-        spyOn(window, "Image").andReturn({});
+        spyOn(window, "Image").and.returnValue({});
 
         rasterizeHTML.renderSvg(svg1, canvas1);
         rasterizeHTML.renderSvg(svg2, canvas2);
@@ -76,7 +76,7 @@ describe("working around on Firefox and Webkit to fix resources not being render
             svg = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"></svg>';
 
         // Stop method of finishing and removing div
-        spyOn(window, "Image").andReturn({});
+        spyOn(window, "Image").and.returnValue({});
 
         rasterizeHTML.renderSvg(svg, canvas);
         rasterizeHTML.renderSvg(svg, canvas);
@@ -89,10 +89,10 @@ describe("working around on Firefox and Webkit to fix resources not being render
             canvas = document.createElement("canvas"),
             svg = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"></svg>';
 
-        spyOn(window, "Image").andReturn(fakeImage);
+        spyOn(window, "Image").and.returnValue(fakeImage);
 
         rasterizeHTML.renderSvg(svg, canvas).then(function () {
-            expect($(".rasterizeHTML_js_FirefoxWorkaround")).not.toExist();
+            expect($(".rasterizeHTML_js_FirefoxWorkaround").length).toEqual(0);
 
             done();
         });
@@ -104,10 +104,10 @@ describe("working around on Firefox and Webkit to fix resources not being render
         var fakeImage = {},
             svg = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"></svg>';
 
-        spyOn(window, "Image").andReturn(fakeImage);
+        spyOn(window, "Image").and.returnValue(fakeImage);
 
         rasterizeHTML.renderSvg(svg, null).then(function () {
-            expect($(".rasterizeHTML_js_FirefoxWorkaround")).not.toExist();
+            expect($(".rasterizeHTML_js_FirefoxWorkaround").length).toEqual(0);
 
             done();
         });
@@ -119,22 +119,22 @@ describe("working around on Firefox and Webkit to fix resources not being render
         var canvas = jasmine.createSpyObj("canvas", ["getContext"]),
             context = jasmine.createSpyObj("context", ["drawImage"]);
 
-        canvas.getContext.andReturn(context);
-        context.drawImage.andThrow("exception");
+        canvas.getContext.and.returnValue(context);
+        context.drawImage.and.throwError("exception");
 
         rasterizeHTML.drawImageOnCanvas("svg", canvas);
 
-        expect($(".rasterizeHTML_js_FirefoxWorkaround")).not.toExist();
+        expect($(".rasterizeHTML_js_FirefoxWorkaround").length).toEqual(0);
     });
 
     it("should remove the workaround div once the canvas has been rendered even if an error occurs when drawing the image", function (done) {
         var canvas = document.createElement("canvas"),
             svg = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"></svg>',
             imageInstance = {};
-        spyOn(window, "Image").andReturn(imageInstance);
+        spyOn(window, "Image").and.returnValue(imageInstance);
 
         rasterizeHTML.renderSvg(svg, canvas).fail(function () {
-            expect($(".rasterizeHTML_js_FirefoxWorkaround")).not.toExist();
+            expect($(".rasterizeHTML_js_FirefoxWorkaround").length).toEqual(0);
 
             done();
         });

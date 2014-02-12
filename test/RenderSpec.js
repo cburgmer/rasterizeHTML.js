@@ -113,11 +113,11 @@ describe("The rendering process", function () {
 
     describe("on SVG rendering", function () {
         beforeEach(function () {
-            this.addMatchers(imagediff.jasmine);
+            jasmine.addMatchers(diffHelper.matcher);
         });
 
         ifNotInWebkitIt("should render the SVG", function (done) {
-            var referenceImg = $('<img src="' + jasmine.getFixtures().fixturesPath + 'rednblue.png" alt="test image"/>'),
+            var referenceImg = $('<img src="' + rasterizeHTMLTestHelper.fixturesPath + 'rednblue.png" alt="test image"/>'),
                 twoColorSvg = (
                     '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">' +
                         '<foreignObject width="100%" height="100%">' +
@@ -147,7 +147,7 @@ describe("The rendering process", function () {
         });
 
         ifNotInWebkitIt("should render an SVG with inline image", function (done) {
-            var referenceImg = $('<img src="' + jasmine.getFixtures().fixturesPath + 'rednblue.png" alt="test image"/>'),
+            var referenceImg = $('<img src="' + rasterizeHTMLTestHelper.fixturesPath + 'rednblue.png" alt="test image"/>'),
                 twoColorSvg = (
                     '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">' +
                         '<foreignObject width="100%" height="100%">' +
@@ -179,7 +179,7 @@ describe("The rendering process", function () {
             var imageSpy = {};
 
             // We need to mock, as only Chrome & Safari seem to throw errors on a faulty SVG
-            spyOn(window, "Image").andReturn(imageSpy);
+            spyOn(window, "Image").and.returnValue(imageSpy);
 
             rasterizeHTML.renderSvg("svg", null).fail(done);
 
@@ -217,7 +217,7 @@ describe("The rendering process", function () {
         beforeEach(function () {
             spyOn(rasterizeHTML.util, 'fakeHover');
             spyOn(rasterizeHTML.util, 'fakeActive');
-            spyOn(rasterizeHTML.util, 'calculateDocumentContentSize').andReturn(fulfilled({width: 47, height: 11}));
+            spyOn(rasterizeHTML.util, 'calculateDocumentContentSize').and.returnValue(fulfilled({width: 47, height: 11}));
             spyOn(rasterizeHTML, 'getSvgForDocument');
             spyOn(rasterizeHTML, 'renderSvg');
 
@@ -230,8 +230,8 @@ describe("The rendering process", function () {
             var svg = "the svg",
                 image = "the image";
 
-            rasterizeHTML.getSvgForDocument.andReturn(svg);
-            rasterizeHTML.renderSvg.andReturn(fulfilled(image));
+            rasterizeHTML.getSvgForDocument.and.returnValue(svg);
+            rasterizeHTML.renderSvg.and.returnValue(fulfilled(image));
 
             rasterizeHTML.drawDocumentImage(doc, canvas, {}).then(function (theImage) {
                 expect(theImage).toBe(image);
@@ -245,7 +245,7 @@ describe("The rendering process", function () {
         });
 
         it("should report an error when constructing the SVG image", function (done) {
-            rasterizeHTML.renderSvg.andReturn(rejected());
+            rasterizeHTML.renderSvg.and.returnValue(rejected());
 
             rasterizeHTML.drawDocumentImage(doc, canvas, {}).fail(done);
         });
@@ -299,7 +299,7 @@ describe("The rendering process", function () {
                 canvas = jasmine.createSpyObj("canvas", ["getContext"]),
                 context = jasmine.createSpyObj("context", ["drawImage"]);
 
-            canvas.getContext.andCallFake(function (howManyD) {
+            canvas.getContext.and.callFake(function (howManyD) {
                 if (howManyD === "2d") {
                     return context;
                 }
@@ -316,8 +316,8 @@ describe("The rendering process", function () {
                 canvas = jasmine.createSpyObj("canvas", ["getContext"]),
                 context = jasmine.createSpyObj("context", ["drawImage"]);
 
-            canvas.getContext.andReturn(context);
-            context.drawImage.andThrow("error");
+            canvas.getContext.and.returnValue(context);
+            context.drawImage.and.throwError("error");
 
             var result = rasterizeHTML.drawImageOnCanvas(image, canvas, function () {}, function () {});
 

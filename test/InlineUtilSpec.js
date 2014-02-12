@@ -29,7 +29,7 @@ describe("Inline utilities function", function () {
         };
 
         it("should return a document's base url", function () {
-            var fixturePath = jasmine.getFixtures().fixturesPath + "image.html",
+            var fixturePath = rasterizeHTMLTestHelper.fixturesPath + "image.html",
                 doc = rasterizeHTMLTestHelper.readDocumentFixture("image.html"),
                 url, nonQueryPart;
 
@@ -201,7 +201,7 @@ describe("Inline utilities function", function () {
 
     describe("ajax", function () {
         it("should load content from a URL", function (done) {
-            rasterizeHTMLInline.util.ajax(jasmine.getFixtures().fixturesPath + "some.css", {})
+            rasterizeHTMLInline.util.ajax(rasterizeHTMLTestHelper.fixturesPath + "some.css", {})
                 .then(function (loadedContent) {
                     expect(loadedContent).toEqual("p { font-size: 14px; }");
 
@@ -231,9 +231,9 @@ describe("Inline utilities function", function () {
 
             beforeEach(function () {
                 ajaxRequest = jasmine.createSpyObj("ajaxRequest", ["open", "addEventListener", "overrideMimeType", "send"]);
-                spyOn(window, "XMLHttpRequest").andReturn(ajaxRequest);
+                spyOn(window, "XMLHttpRequest").and.returnValue(ajaxRequest);
 
-                spyOn(rasterizeHTMLInline.util, "joinUrl").andCallFake(function (baseUrl, url) {
+                spyOn(rasterizeHTMLInline.util, "joinUrl").and.callFake(function (baseUrl, url) {
                     return baseUrl ? baseUrl + url : url;
                 });
             });
@@ -242,14 +242,14 @@ describe("Inline utilities function", function () {
                 rasterizeHTMLInline.util.ajax("non_existing_url.html", {cache: 'none'});
 
                 expect(ajaxRequest.open).toHaveBeenCalledWith('GET', jasmine.any(String), true);
-                expect(ajaxRequest.open.mostRecentCall.args[1]).toMatch(/^non_existing_url.html\?_=[0123456789]+$/);
+                expect(ajaxRequest.open.calls.mostRecent().args[1]).toMatch(/^non_existing_url.html\?_=[0123456789]+$/);
             });
 
             it("should attach an unique parameter to the given URL to circumvent caching if requested (legacy: 'false')", function () {
                 rasterizeHTMLInline.util.ajax("non_existing_url.html", {cache: false});
 
                 expect(ajaxRequest.open).toHaveBeenCalledWith('GET', jasmine.any(String), true);
-                expect(ajaxRequest.open.mostRecentCall.args[1]).toMatch(/^non_existing_url.html\?_=[0123456789]+$/);
+                expect(ajaxRequest.open.calls.mostRecent().args[1]).toMatch(/^non_existing_url.html\?_=[0123456789]+$/);
             });
 
             it("should not attach an unique parameter to the given URL by default", function () {
@@ -259,28 +259,28 @@ describe("Inline utilities function", function () {
             });
 
             it("should allow caching for repeated calls if requested", function () {
-                var dateNowSpy = spyOn(window.Date, 'now').andReturn(42);
+                var dateNowSpy = spyOn(window.Date, 'now').and.returnValue(42);
 
                 rasterizeHTMLInline.util.ajax("non_existing_url.html", {cache: 'none'});
 
-                expect(ajaxRequest.open.mostRecentCall.args[1]).toEqual('non_existing_url.html?_=42');
+                expect(ajaxRequest.open.calls.mostRecent().args[1]).toEqual('non_existing_url.html?_=42');
 
-                dateNowSpy.andReturn(43);
+                dateNowSpy.and.returnValue(43);
                 rasterizeHTMLInline.util.ajax("non_existing_url.html", {cache: 'repeated'});
-                expect(ajaxRequest.open.mostRecentCall.args[1]).toEqual('non_existing_url.html?_=42');
+                expect(ajaxRequest.open.calls.mostRecent().args[1]).toEqual('non_existing_url.html?_=42');
 
-                expect(dateNowSpy.callCount).toEqual(1);
+                expect(dateNowSpy.calls.count()).toEqual(1);
             });
 
             it("should not cache repeated calls by default", function () {
-                var dateNowSpy = spyOn(window.Date, 'now').andReturn(42);
+                var dateNowSpy = spyOn(window.Date, 'now').and.returnValue(42);
                 rasterizeHTMLInline.util.ajax("non_existing_url.html", {cache: 'none'});
 
-                expect(ajaxRequest.open.mostRecentCall.args[1]).toEqual('non_existing_url.html?_=42');
+                expect(ajaxRequest.open.calls.mostRecent().args[1]).toEqual('non_existing_url.html?_=42');
 
-                dateNowSpy.andReturn(43);
+                dateNowSpy.and.returnValue(43);
                 rasterizeHTMLInline.util.ajax("non_existing_url.html", {cache: 'none'});
-                expect(ajaxRequest.open.mostRecentCall.args[1]).toEqual('non_existing_url.html?_=43');
+                expect(ajaxRequest.open.calls.mostRecent().args[1]).toEqual('non_existing_url.html?_=43');
             });
 
             it("should force mime type if requested", function () {
@@ -292,7 +292,7 @@ describe("Inline utilities function", function () {
             it("should load URLs relative to baseUrl", function () {
                 rasterizeHTMLInline.util.ajax("relative/url.png", {baseUrl: "http://example.com/"});
 
-                expect(ajaxRequest.open.mostRecentCall.args[1]).toEqual('http://example.com/relative/url.png');
+                expect(ajaxRequest.open.calls.mostRecent().args[1]).toEqual('http://example.com/relative/url.png');
 
                 expect(rasterizeHTMLInline.util.joinUrl).toHaveBeenCalledWith("http://example.com/", "relative/url.png");
             });
@@ -301,7 +301,7 @@ describe("Inline utilities function", function () {
                 var url = 'non_existing_url.html',
                     baseUrl = 'http://example.com/';
 
-                ajaxRequest.open.andThrow(new Error('a'));
+                ajaxRequest.open.and.throwError(new Error('a'));
                 rasterizeHTMLInline.util.ajax(url, {baseUrl: baseUrl})
                     .fail(function (e) {
                         expect(rasterizeHTMLInline.util.joinUrl).toHaveBeenCalledWith(baseUrl, url);
@@ -318,7 +318,7 @@ describe("Inline utilities function", function () {
 
     describe("binaryAjax", function () {
         var mockAjaxWith = function (promise) {
-            return spyOn(rasterizeHTMLInline.util, "ajax").andReturn(promise);
+            return spyOn(rasterizeHTMLInline.util, "ajax").and.returnValue(promise);
         };
         var rejectedPromise = function (e) {
             var defer = ayepromise.defer();
@@ -332,13 +332,13 @@ describe("Inline utilities function", function () {
         };
 
         beforeEach(function () {
-            spyOn(rasterizeHTMLInline.util, "joinUrl").andCallFake(function (baseUrl, url) {
+            spyOn(rasterizeHTMLInline.util, "joinUrl").and.callFake(function (baseUrl, url) {
                 return url;
             });
         });
 
         it("should load binary data", function (done) {
-            rasterizeHTMLInline.util.binaryAjax(jasmine.getFixtures().fixturesPath + "green.png", {})
+            rasterizeHTMLInline.util.binaryAjax(rasterizeHTMLTestHelper.fixturesPath + "green.png", {})
                 .then(function (loadedContent) {
                     expect(btoa(loadedContent)).toEqual("iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAABFElEQVR4nO3OMQ0AAAjAMPybhnsKxrHUQGc2r+iBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YGQHgjpgZAeCOmBkB4I6YHAAV821mT1w27RAAAAAElFTkSuQmCC");
 
@@ -389,7 +389,7 @@ describe("Inline utilities function", function () {
         var binaryAjaxSpy;
 
         var mockBinaryAjax = function (targetUrl, content) {
-            binaryAjaxSpy.andCallFake(function (url) {
+            binaryAjaxSpy.and.callFake(function (url) {
                 var defer = ayepromise.defer();
                 if (url === targetUrl) {
                     defer.resolve(content);
@@ -441,7 +441,7 @@ describe("Inline utilities function", function () {
         });
 
         it("should return an error if the image could not be located due to a REST error", function (done) {
-            binaryAjaxSpy.andCallFake(function () {
+            binaryAjaxSpy.and.callFake(function () {
                 var defer = ayepromise.defer();
                 defer.reject();
                 return defer.promise;
@@ -454,7 +454,7 @@ describe("Inline utilities function", function () {
         it("should hand through the error object", function (done) {
             var e = new Error('not good');
 
-            binaryAjaxSpy.andCallFake(function () {
+            binaryAjaxSpy.and.callFake(function () {
                 var defer = ayepromise.defer();
                 defer.reject(e);
                 return defer.promise;
@@ -484,7 +484,7 @@ describe("Inline utilities function", function () {
             memo = {};
 
             aResult = "the function result";
-            func = jasmine.createSpy('func').andCallFake(function () {
+            func = jasmine.createSpy('func').and.callFake(function () {
                 return aResult;
             });
             hasher = function (x) { return x; };
@@ -503,7 +503,7 @@ describe("Inline utilities function", function () {
             var memoized = rasterizeHTMLInline.util.memoize(func, hasher, memo);
 
             memoized('a parameter', 1, 'and a 3rd parameter');
-            func.reset();
+            func.calls.reset();
             memoized('a parameter', 1, 'and a 3rd parameter');
 
             expect(func).not.toHaveBeenCalled();
@@ -528,7 +528,7 @@ describe("Inline utilities function", function () {
             var memoized = rasterizeHTMLInline.util.memoize(func, hasher, memo);
 
             memoized('a parameter', 1, 'and a 3rd parameter');
-            func.reset();
+            func.calls.reset();
             memoized('another parameter', 1, 2);
 
             expect(func).toHaveBeenCalledWith('another parameter', 1, 2);
@@ -536,7 +536,7 @@ describe("Inline utilities function", function () {
 
         it("should memoize different functions independently", function () {
             var yetAnotherResult = 'yet another result',
-                func2 = jasmine.createSpy('func2').andCallFake(function () {
+                func2 = jasmine.createSpy('func2').and.callFake(function () {
                     return yetAnotherResult;
                 }),
                 memoized = rasterizeHTMLInline.util.memoize(func, hasher, memo),
@@ -554,7 +554,7 @@ describe("Inline utilities function", function () {
                 memoized2 = rasterizeHTMLInline.util.memoize(func, hasher, memo);
 
             memoized1('a parameter', 1, 'and a 3rd parameter');
-            func.reset();
+            func.calls.reset();
             memoized2('a parameter', 1, 'and a 3rd parameter');
 
             expect(func).not.toHaveBeenCalled();
@@ -565,7 +565,7 @@ describe("Inline utilities function", function () {
                 memoized2 = rasterizeHTMLInline.util.memoize(func, hasher, {});
 
             memoized1('a parameter', 1, 'and a 3rd parameter');
-            func.reset();
+            func.calls.reset();
             memoized2('a parameter', 1, 'and a 3rd parameter');
 
             expect(func).toHaveBeenCalledWith('a parameter', 1, 'and a 3rd parameter');
@@ -576,7 +576,7 @@ describe("Inline utilities function", function () {
                 memoized = rasterizeHTMLInline.util.memoize(func, hasher, memo);
 
             memoized({a: 1}, 1, 2);
-            func.reset();
+            func.calls.reset();
             memoized({b: 2}, 1, 2);
             expect(func).toHaveBeenCalled();
         });
@@ -586,7 +586,7 @@ describe("Inline utilities function", function () {
                 memoized = rasterizeHTMLInline.util.memoize(func, hasher, memo);
 
             memoized({a: 1}, 1, 2);
-            func.reset();
+            func.calls.reset();
             memoized({b: 2}, 1, 2);
             expect(func).not.toHaveBeenCalled();
         });
