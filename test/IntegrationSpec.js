@@ -3,6 +3,12 @@ describe("Integration test", function () {
         width = 204,
         height = 100;
 
+    var fulfilled = function (value) {
+        var defer = ayepromise.defer();
+        defer.resolve(value);
+        return defer.promise;
+    };
+
     var loadDocFixture = function (url, callback) {
         var request = new window.XMLHttpRequest(),
             doc;
@@ -83,7 +89,7 @@ describe("Integration test", function () {
     });
 
     ifNotInPhantomJSAndNotLocalRunnerIt("should take a URL and load non UTF-8 content", function (done) {
-        var inlineReferencesSpy = spyOn(rasterizeHTMLInline, 'inlineReferences');
+        var inlineReferencesSpy = spyOn(rasterizeHTMLInline, 'inlineReferences').and.returnValue(fulfilled());
 
         rasterizeHTML.drawURL(rasterizeHTMLTestHelper.fixturesPath + "nonUTF8Encoding.html").then(function () {
             expect(inlineReferencesSpy).toHaveBeenCalled();
