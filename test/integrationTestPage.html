@@ -2,39 +2,14 @@
 <html>
 <head>
     <title>Smoke test</title>
-    <script type="text/javascript" src="../dist/rasterizeHTML.allinone.js"></script>
+    <script src="../dist/rasterizeHTML.allinone.js"></script>
+    <script src="phantomjs-polyfill.js"></script>
     <style>
         * {
             margin: 0;
             padding: 0;
         }
     </style>
-    <script>
-    /* Add missing support for .bind() to PhantomJS */
-    if (!Function.prototype.bind) {
-      Function.prototype.bind = function (oThis) {
-        if (typeof this !== "function") {
-          // closest thing possible to the ECMAScript 5 internal IsCallable function
-          throw new TypeError("Function.prototype.bind - what is trying to be bound is not callable");
-        }
-
-        var aArgs = Array.prototype.slice.call(arguments, 1),
-            fToBind = this,
-            fNOP = function () {},
-            fBound = function () {
-              return fToBind.apply(this instanceof fNOP && oThis
-                                     ? this
-                                     : oThis,
-                                   aArgs.concat(Array.prototype.slice.call(arguments)));
-            };
-
-        fNOP.prototype = this.prototype;
-        fBound.prototype = new fNOP();
-
-        return fBound;
-      };
-    }
-    </script>
 </head>
 <body>
     <canvas id="canvas" width="204" height="100"></canvas>
