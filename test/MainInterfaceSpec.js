@@ -27,8 +27,8 @@ describe("Main interface of rasterizeHTML.js", function () {
     var setUpDrawDocumentImage = function (image) {
             rasterizeHTML.drawDocumentImage.and.returnValue(fulfilled(image));
         },
-        setUpDrawDocumentImageError = function () {
-            rasterizeHTML.drawDocumentImage.and.returnValue(rejected());
+        setUpDrawDocumentImageError = function (e) {
+            rasterizeHTML.drawDocumentImage.and.returnValue(rejected(e));
         };
 
     beforeEach(function () {
@@ -52,7 +52,7 @@ describe("Main interface of rasterizeHTML.js", function () {
             callback = jasmine.createSpy("drawCallback");
 
             inlineReferences = spyOn(rasterizeHTMLInline, "inlineReferences").and.returnValue(withoutErrors());
-            drawImageOnCanvas = spyOn(rasterizeHTML, "drawImageOnCanvas").and.returnValue(true);
+            drawImageOnCanvas = spyOn(rasterizeHTML, "drawImageOnCanvas");
 
             spyOn(rasterizeHTML.util, 'persistInputValues');
 
@@ -315,7 +315,7 @@ describe("Main interface of rasterizeHTML.js", function () {
         beforeEach(function () {
             callback = jasmine.createSpy("drawCallback");
 
-            drawImageOnCanvas = spyOn(rasterizeHTML, "drawImageOnCanvas").and.returnValue(true);
+            drawImageOnCanvas = spyOn(rasterizeHTML, "drawImageOnCanvas");
             spyOn(rasterizeHTML.util, 'persistInputValues');
         });
 
@@ -384,7 +384,6 @@ describe("Main interface of rasterizeHTML.js", function () {
                 fulfilled({document: doc, errors: ["the error"]})
             );
             setUpDrawDocumentImage(svgImage);
-            drawImageOnCanvas.and.returnValue(true);
 
             rasterizeHTML.drawDocument(doc, canvas, {executeJs: true}).then(function (result) {
                 expect(result.image).toBe(svgImage);
@@ -438,16 +437,13 @@ describe("Main interface of rasterizeHTML.js", function () {
         });
 
         it("should fail the returned promise on error from inlining when rendering the SVG on drawDocument", function (done) {
-            var doc = "doc";
+            var doc = "doc",
+                error = new Error();
 
-            setUpDrawDocumentImageError();
-            drawImageOnCanvas.and.returnValue(true);
+            setUpDrawDocumentImageError(error);
 
             rasterizeHTML.drawDocument(doc, canvas).fail(function (e) {
-                var error = rasterizeHTMLTestHelper.deleteAdditionalFieldsFromErrorsUnderPhantomJS([e])[0];
-                expect(error).toEqual({
-                    message: "Error rendering page"
-                });
+                expect(e).toBe(error);
 
                 expect(drawImageOnCanvas).not.toHaveBeenCalled();
 
@@ -459,7 +455,6 @@ describe("Main interface of rasterizeHTML.js", function () {
             var doc = "doc";
 
             setUpDrawDocumentImageError();
-            drawImageOnCanvas.and.returnValue(true);
 
             rasterizeHTML.drawDocument(doc, canvas, function (image, errors) {
                 errors = rasterizeHTMLTestHelper.deleteAdditionalFieldsFromErrorsUnderPhantomJS(errors);
@@ -475,16 +470,14 @@ describe("Main interface of rasterizeHTML.js", function () {
         });
 
         it("should fail the returned promise on error from inlining when drawing the image on the canvas on drawDocument", function (done) {
-            var doc = "doc";
+            var doc = "doc",
+                error = new Error("theError");
 
             setUpDrawDocumentImage(svgImage);
-            drawImageOnCanvas.and.returnValue(false);
+            drawImageOnCanvas.and.throwError(error);
 
             rasterizeHTML.drawDocument(doc, canvas).fail(function (e) {
-                var error = rasterizeHTMLTestHelper.deleteAdditionalFieldsFromErrorsUnderPhantomJS([e])[0];
-                expect(error).toEqual({
-                    message: "Error rendering page"
-                });
+                expect(e).toBe(error);
 
                 expect(drawImageOnCanvas).toHaveBeenCalled();
 
@@ -496,7 +489,7 @@ describe("Main interface of rasterizeHTML.js", function () {
             var doc = "doc";
 
             setUpDrawDocumentImage(svgImage);
-            drawImageOnCanvas.and.returnValue(false);
+            drawImageOnCanvas.and.throwError({});
 
             rasterizeHTML.drawDocument(doc, canvas, function (image, errors) {
                 errors = rasterizeHTMLTestHelper.deleteAdditionalFieldsFromErrorsUnderPhantomJS(errors);

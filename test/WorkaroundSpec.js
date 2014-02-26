@@ -122,7 +122,9 @@ describe("working around on Firefox and Webkit to fix resources not being render
         canvas.getContext.and.returnValue(context);
         context.drawImage.and.throwError("exception");
 
-        rasterizeHTML.drawImageOnCanvas("svg", canvas);
+        try {
+            rasterizeHTML.drawImageOnCanvas("svg", canvas);
+        } catch(e) {}
 
         expect($(".rasterizeHTML_js_FirefoxWorkaround").length).toEqual(0);
     });

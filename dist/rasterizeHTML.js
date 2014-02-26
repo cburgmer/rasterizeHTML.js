@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.8.0 - 2014-02-17
+/*! rasterizeHTML.js - v0.8.0 - 2014-02-27
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2014 Christoph Burgmer; Licensed MIT */
 window.rasterizeHTMLInline = (function (module) {
@@ -1358,6 +1358,31 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, ayepromise
         return doc;
     };
 
+    var isParseError = function (parsedDocument) {
+        // http://stackoverflow.com/questions/11563554/how-do-i-detect-xml-parsing-errors-when-using-javascripts-domparser-in-a-cross
+        var p = new DOMParser(),
+            errorneousParse = p.parseFromString('<', 'text/xml'),
+            parsererrorNS = errorneousParse.getElementsByTagName("parsererror")[0].namespaceURI;
+
+        if (parsererrorNS === 'http://www.w3.org/1999/xhtml') {
+            // In PhantomJS the parseerror element doesn't seem to have a special namespace, so we are just guessing here :(
+            return parsedDocument.getElementsByTagName("parsererror").length > 0;
+        }
+
+        return parsedDocument.getElementsByTagNameNS(parsererrorNS, 'parsererror').length > 0;
+    };
+
+    module.util.validateXHTML = function (xhtml) {
+        var p = new DOMParser(),
+            result = p.parseFromString(xhtml, "application/xml");
+
+        if (isParseError(result)) {
+            throw {
+                message: "Invalid source"
+            };
+        }
+    };
+
     var lastCacheDate = null;
 
     var getUncachableURL = function (url, cache) {
@@ -1407,7 +1432,7 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, ayepromise
     /* Rendering */
 
     var supportsBlobBuilding = function () {
-        // Newer Safari (under PhantomJS) seems to support blob building, but loading an image with the blob fails
+        // Newer WebKit (under PhantomJS) seems to support blob building, but loading an image with the blob fails
         if (theWindow.navigator.userAgent.indexOf("WebKit") >= 0 && theWindow.navigator.userAgent.indexOf("Chrome") < 0) {
             return false;
         }
@@ -1632,6 +1657,8 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, ayepromise
         workAroundWebkitBugIgnoringTheFirstRuleInCSS(doc);
         xhtml = xmlserializer.serializeToString(doc);
 
+        module.util.validateXHTML(xhtml);
+
         return (
             '<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height + '">' +
                 '<foreignObject width="100%" height="100%">' +
@@ -1639,6 +1666,10 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, ayepromise
                 '</foreignObject>' +
             '</svg>'
         );
+    };
+
+    var generalDrawError = function () {
+        return {message: "Error rendering page"};
     };
 
     module.renderSvg = function (svg, canvas) {
@@ -1670,7 +1701,7 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, ayepromise
             cleanUp();
 
             // Webkit calls the onerror handler if the SVG is faulty
-            defer.reject();
+            defer.reject(generalDrawError());
         };
         image.src = url;
 
@@ -1682,10 +1713,8 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, ayepromise
             canvas.getContext("2d").drawImage(image, 0, 0);
         } catch (e) {
             // Firefox throws a 'NS_ERROR_NOT_AVAILABLE' if the SVG is faulty
-            return false;
+            throw generalDrawError();
         }
-
-        return true;
     };
 
     module.drawDocumentImage = function (doc, canvas, options) {
@@ -1710,22 +1739,12 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, ayepromise
     /* "Public" API */
 
     var doDraw = function (doc, canvas, options) {
-        var drawError = {message: "Error rendering page"};
-
         return module.drawDocumentImage(doc, canvas, options).then(function (image) {
-            var successful;
-
             if (canvas) {
-                successful = module.drawImageOnCanvas(image, canvas);
-
-                if (!successful) {
-                    throw drawError;
-                }
+                module.drawImageOnCanvas(image, canvas);
             }
 
             return image;
-        }, function () {
-            throw drawError;
         });
     };
 
@@ -1795,10 +1814,10 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, ayepromise
         if (params.callback) {
             promise.then(function (result) {
                 params.callback(result.image, result.errors);
-            }, function (e) {
+            }, function () {
                 params.callback(null, [{
                     resourceType: "document",
-                    msg: e.message
+                    msg: "Error rendering page"
                 }]);
             });
         }

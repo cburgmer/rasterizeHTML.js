@@ -87,19 +87,21 @@ var rasterizeHTMLTestHelper = (function () {
         doc.getElementsByTagName('head')[0].appendChild(styleNode);
     };
 
-    module.deleteAdditionalFieldsFromErrorsUnderPhantomJS = function (errors) {
-        return errors.map(function (error) {
-            var newErrorObject = {},
-                additionalKeys = ['sourceId', 'sourceURL', 'stack', 'stackArray', 'line'];
+    module.deleteAdditionalFieldsFromErrorUnderPhantomJS = function (error) {
+        var newErrorObject = {},
+            additionalKeys = ['sourceId', 'sourceURL', 'stack', 'stackArray', 'line'];
 
-            Object.keys(error).forEach(function (key) {
-                if (additionalKeys.indexOf(key) === -1) {
-                    newErrorObject[key] = error[key];
-                }
-            });
-            return newErrorObject;
+        Object.keys(error).forEach(function (key) {
+            if (additionalKeys.indexOf(key) === -1) {
+                newErrorObject[key] = error[key];
+            }
         });
+        return newErrorObject;
     };
+
+    module.deleteAdditionalFieldsFromErrorsUnderPhantomJS = function (errors) {
+        return errors.map(module.deleteAdditionalFieldsFromErrorUnderPhantomJS);
+    }
 
     return module;
 }());

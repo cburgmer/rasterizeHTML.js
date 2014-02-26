@@ -69,6 +69,16 @@ describe("The rendering process", function () {
             ));
         });
 
+        it("should raise an error on invalid source", function () {
+            var doc = document.implementation.createHTMLDocument("");
+            doc.body.innerHTML = "content";
+
+            var error = new Error();
+            spyOn(rasterizeHTML.util, 'validateXHTML').and.throwError(error);
+
+            expect(function () { rasterizeHTML.getSvgForDocument(doc, 123, 987); }).toThrow(error);
+        });
+
         describe("workAroundWebkitBugIgnoringTheFirstRuleInCSS", function () {
             var originalUserAgent, myUserAgent;
 
@@ -294,7 +304,7 @@ describe("The rendering process", function () {
     });
 
     describe("on drawing the image on the canvas", function () {
-        it("should render the image and return true", function () {
+        it("should render the image", function () {
             var image = "the_image",
                 canvas = jasmine.createSpyObj("canvas", ["getContext"]),
                 context = jasmine.createSpyObj("context", ["drawImage"]);
@@ -305,23 +315,27 @@ describe("The rendering process", function () {
                 }
             });
 
-            var result = rasterizeHTML.drawImageOnCanvas(image, canvas, function () {});
+            rasterizeHTML.drawImageOnCanvas(image, canvas);
 
-            expect(result).toBeTruthy();
             expect(context.drawImage).toHaveBeenCalledWith(image, 0, 0);
         });
 
-        it("should handle an error and return false", function () {
+        it("should handle an error", function () {
             var image = "the_image",
                 canvas = jasmine.createSpyObj("canvas", ["getContext"]),
-                context = jasmine.createSpyObj("context", ["drawImage"]);
+                context = jasmine.createSpyObj("context", ["drawImage"]),
+                error;
 
             canvas.getContext.and.returnValue(context);
             context.drawImage.and.throwError("error");
 
-            var result = rasterizeHTML.drawImageOnCanvas(image, canvas, function () {}, function () {});
+            try {
+                rasterizeHTML.drawImageOnCanvas(image, canvas);
+            } catch (e) {
+                error = rasterizeHTMLTestHelper.deleteAdditionalFieldsFromErrorUnderPhantomJS(e);
+            }
 
-            expect(result).toBeFalsy();
+            expect(error).toEqual({message: "Error rendering page"});
         });
     });
 });

@@ -122,6 +122,24 @@ describe("Utilities function", function () {
         });
     });
 
+    describe("validateXHTML", function () {
+        it("should throw an exception if the document is invalid", function () {
+            var error;
+            try {
+                rasterizeHTML.util.validateXHTML("<invalid document");
+            } catch (e) {
+                error = e;
+            }
+
+            error = rasterizeHTMLTestHelper.deleteAdditionalFieldsFromErrorUnderPhantomJS(error);
+            expect(error).toEqual({message: "Invalid source"});
+        });
+
+        it("should pass on a valid document", function () {
+            rasterizeHTML.util.validateXHTML("<b></b>");
+        });
+    });
+
     describe("persistInputValues", function () {
         var doc,
             setHtml = function (html) {

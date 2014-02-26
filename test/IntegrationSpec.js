@@ -102,4 +102,13 @@ describe("Integration test", function () {
             done();
         });
     });
+
+    ifNotInWebkitIt("should report a source error on invalid input", function (done) {
+        // rasterizeHTML.drawURL(rasterizeHTMLTestHelper.fixturesPath + "invalidInput.html", {cache: 'none'}).then(null, function (error) {
+        rasterizeHTML.drawHTML("<weird:element>", {cache: 'none'}).then(null, function (error) {
+            expect(error.message).toEqual("Invalid source");
+
+            done();
+        });
+    });
 });
