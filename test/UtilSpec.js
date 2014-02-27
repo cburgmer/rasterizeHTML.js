@@ -135,6 +135,18 @@ describe("Utilities function", function () {
             expect(error).toEqual({message: "Invalid source"});
         });
 
+        ifNotInPhantomJsIt("should throw an exception if the document is invalid because of a missing namespace", function () {
+            var error;
+            try {
+                rasterizeHTML.util.validateXHTML("<html><weird:element></html>");
+            } catch (e) {
+                error = e;
+            }
+
+            error = rasterizeHTMLTestHelper.deleteAdditionalFieldsFromErrorUnderPhantomJS(error);
+            expect(error).toEqual({message: "Invalid source"});
+        });
+
         it("should pass on a valid document", function () {
             rasterizeHTML.util.validateXHTML("<b></b>");
         });
@@ -559,9 +571,17 @@ describe("Utilities function", function () {
             });
         });
 
-        it("should call error callback on fail", function (done) {
+        it("should error on failing URL", function (done) {
             rasterizeHTML.util.loadDocument(rasterizeHTMLTestHelper.fixturesPath + "non_existing_url.html", {}).fail(function (e) {
                 expect(e).toEqual({message: "Unable to load page"});
+
+                done();
+            });
+        });
+
+        ifNotInWebkitIt("should error on failing parse", function (done) {
+            rasterizeHTML.util.loadDocument(rasterizeHTMLTestHelper.fixturesPath + "invalidInput.html", {}).fail(function (e) {
+                expect(e).toEqual({message: "Invalid source"});
 
                 done();
             });

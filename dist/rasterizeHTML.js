@@ -1372,15 +1372,19 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, ayepromise
         return parsedDocument.getElementsByTagNameNS(parsererrorNS, 'parsererror').length > 0;
     };
 
-    module.util.validateXHTML = function (xhtml) {
-        var p = new DOMParser(),
-            result = p.parseFromString(xhtml, "application/xml");
-
-        if (isParseError(result)) {
+    var failOnParseError = function (doc) {
+        if (isParseError(doc)) {
             throw {
                 message: "Invalid source"
             };
         }
+    };
+
+    module.util.validateXHTML = function (xhtml) {
+        var p = new DOMParser(),
+            doc = p.parseFromString(xhtml, "application/xml");
+
+        failOnParseError(doc);
     };
 
     var lastCacheDate = null;
@@ -1396,7 +1400,7 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, ayepromise
         }
     };
 
-    module.util.loadDocument = function (url, options) {
+    var doDocumentLoad = function (url, options) {
         var ajaxRequest = new window.XMLHttpRequest(),
             // TODO remove reference to rasterizeHTMLInline.util
             joinedUrl = rasterizeHTMLInline.util.joinUrl(options.baseUrl, url),
@@ -1427,6 +1431,15 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, ayepromise
         }
 
         return defer.promise;
+    };
+
+    module.util.loadDocument = function (url, options) {
+        return doDocumentLoad(url, options)
+            .then(function (doc) {
+                failOnParseError(doc);
+
+                return doc;
+            });
     };
 
     /* Rendering */
