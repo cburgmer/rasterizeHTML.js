@@ -1,9 +1,9 @@
-window.rasterizeHTMLInline = (function (module, window, ayepromise, url) {
+var inlineUtil = (function (window, ayepromise, url) {
     "use strict";
 
-    module.util = {};
+    var module = {};
 
-    module.util.getDocumentBaseUrl = function (doc) {
+    module.getDocumentBaseUrl = function (doc) {
         if (doc.baseURI !== 'about:blank') {
             return doc.baseURI;
         }
@@ -11,7 +11,7 @@ window.rasterizeHTMLInline = (function (module, window, ayepromise, url) {
         return null;
     };
 
-    module.util.clone = function (object) {
+    module.clone = function (object) {
         var theClone = {},
             i;
         for (i in object) {
@@ -22,19 +22,19 @@ window.rasterizeHTMLInline = (function (module, window, ayepromise, url) {
         return theClone;
     };
 
-    module.util.cloneArray = function (nodeList) {
+    module.cloneArray = function (nodeList) {
         return Array.prototype.slice.apply(nodeList, [0]);
     };
 
-    module.util.joinUrl = function (baseUrl, relUrl) {
+    module.joinUrl = function (baseUrl, relUrl) {
         return url.resolve(baseUrl, relUrl);
     };
 
-    module.util.isDataUri = function (url) {
+    module.isDataUri = function (url) {
         return (/^data:/).test(url);
     };
 
-    module.util.all = function (promises) {
+    module.all = function (promises) {
         var defer = ayepromise.defer(),
             pendingPromiseCount = promises.length,
             resolvedValues = [];
@@ -59,10 +59,10 @@ window.rasterizeHTMLInline = (function (module, window, ayepromise, url) {
         return defer.promise;
     };
 
-    module.util.collectAndReportErrors = function (promises) {
+    module.collectAndReportErrors = function (promises) {
         var errors = [];
 
-        return module.util.all(promises.map(function (promise) {
+        return module.all(promises.map(function (promise) {
             return promise.fail(function (e) {
                 errors.push(e);
             });
@@ -84,10 +84,10 @@ window.rasterizeHTMLInline = (function (module, window, ayepromise, url) {
         }
     };
 
-    module.util.ajax = function (url, options) {
+    module.ajax = function (url, options) {
         var ajaxRequest = new window.XMLHttpRequest(),
             defer = ayepromise.defer(),
-            joinedUrl = module.util.joinUrl(options.baseUrl, url),
+            joinedUrl = module.joinUrl(options.baseUrl, url),
             augmentedUrl;
 
         var doReject = function () {
@@ -120,12 +120,12 @@ window.rasterizeHTMLInline = (function (module, window, ayepromise, url) {
         return defer.promise;
     };
 
-    module.util.binaryAjax = function (url, options) {
-        var ajaxOptions = module.util.clone(options);
+    module.binaryAjax = function (url, options) {
+        var ajaxOptions = module.clone(options);
 
         ajaxOptions.mimeType = 'text/plain; charset=x-user-defined';
 
-        return module.util.ajax(url, ajaxOptions)
+        return module.ajax(url, ajaxOptions)
             .then(function (content) {
                 var binaryContent = "";
 
@@ -148,8 +148,8 @@ window.rasterizeHTMLInline = (function (module, window, ayepromise, url) {
         return 'image/png';
     };
 
-    module.util.getDataURIForImageURL = function (url, options) {
-        return module.util.binaryAjax(url, options)
+    module.getDataURIForImageURL = function (url, options) {
+        return module.binaryAjax(url, options)
             .then(function (content) {
                 var base64Content = btoa(content),
                     mimeType = detectMimeType(content);
@@ -168,7 +168,7 @@ window.rasterizeHTMLInline = (function (module, window, ayepromise, url) {
         return uniqueIdList.indexOf(element);
     };
 
-    module.util.memoize = function (func, hasher, memo) {
+    module.memoize = function (func, hasher, memo) {
         if (typeof memo !== "object") {
             throw new Error("cacheBucket is not an object");
         }
@@ -194,4 +194,4 @@ window.rasterizeHTMLInline = (function (module, window, ayepromise, url) {
     };
 
     return module;
-}(window.rasterizeHTMLInline || {}, window, ayepromise, url));
+}(window, ayepromise, url));

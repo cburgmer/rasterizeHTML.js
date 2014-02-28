@@ -594,7 +594,7 @@ describe("Utilities function", function () {
                 ajaxRequest = jasmine.createSpyObj("ajaxRequest", ["open", "addEventListener", "overrideMimeType", "send"]);
                 spyOn(window, "XMLHttpRequest").and.returnValue(ajaxRequest);
 
-                spyOn(rasterizeHTMLInline.util, "joinUrl").and.callFake(function (baseUrl, url) {
+                spyOn(inlineUtil, "joinUrl").and.callFake(function (baseUrl, url) {
                     return baseUrl ? baseUrl + url : url;
                 });
             });
@@ -651,7 +651,7 @@ describe("Utilities function", function () {
 
                 expect(ajaxRequest.open.calls.mostRecent().args[1]).toEqual('http://example.com/relative/url.html');
 
-                expect(rasterizeHTMLInline.util.joinUrl).toHaveBeenCalledWith("http://example.com/", "relative/url.html");
+                expect(inlineUtil.joinUrl).toHaveBeenCalledWith("http://example.com/", "relative/url.html");
             });
         });
     });

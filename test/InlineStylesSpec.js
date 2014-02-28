@@ -10,21 +10,21 @@ describe("Import styles", function () {
     beforeEach(function () {
         doc = document.implementation.createHTMLDocument("");
 
-        loadCSSImportsForRulesSpy = spyOn(rasterizeHTMLInline.css, 'loadCSSImportsForRules').and.returnValue(fulfilled({
+        loadCSSImportsForRulesSpy = spyOn(inlineCss, 'loadCSSImportsForRules').and.returnValue(fulfilled({
             hasChanges: false,
             errors: []
         }));
-        loadAndInlineCSSResourcesForRulesSpy = spyOn(rasterizeHTMLInline.css, 'loadAndInlineCSSResourcesForRules').and.returnValue(fulfilled({
+        loadAndInlineCSSResourcesForRulesSpy = spyOn(inlineCss, 'loadAndInlineCSSResourcesForRules').and.returnValue(fulfilled({
             hasChanges: false,
             errors: []
         }));
-        spyOn(rasterizeHTMLInline.util, 'clone').and.callFake(function (object) {
+        spyOn(inlineUtil, 'clone').and.callFake(function (object) {
             return object;
         });
     });
 
     it("should do nothing if no CSS is found", function (done) {
-        rasterizeHTMLInline.loadAndInlineStyles(doc, {}).then(function () {
+        inline.loadAndInlineStyles(doc, {}).then(function () {
             expect(loadCSSImportsForRulesSpy).not.toHaveBeenCalled();
 
             done();
@@ -49,7 +49,7 @@ describe("Import styles", function () {
             });
         });
 
-        rasterizeHTMLInline.loadAndInlineStyles(doc, {}).then(function () {
+        inline.loadAndInlineStyles(doc, {}).then(function () {
             expect(doc.head.getElementsByTagName("style")[0].textContent).toEqual("span { padding-left: 0; }");
 
             done();
@@ -59,7 +59,7 @@ describe("Import styles", function () {
     it("should replace an import with the content of the given URL", function (done) {
         rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import url("that.css");');
 
-        rasterizeHTMLInline.loadAndInlineStyles(doc, {}).then(function () {
+        inline.loadAndInlineStyles(doc, {}).then(function () {
             expect(loadCSSImportsForRulesSpy).toHaveBeenCalled();
             expect(loadCSSImportsForRulesSpy.calls.mostRecent().args[0][0].cssText).toMatch(/@import url\("?that.css"?\)\s*;/);
 
@@ -70,7 +70,7 @@ describe("Import styles", function () {
     it("should inline css resources", function (done) {
         rasterizeHTMLTestHelper.addStyleToDocument(doc, 'span { background-image: url("anImage.png"); }');
 
-        rasterizeHTMLInline.loadAndInlineStyles(doc, {}).then(function () {
+        inline.loadAndInlineStyles(doc, {}).then(function () {
             expect(loadAndInlineCSSResourcesForRulesSpy).toHaveBeenCalled();
             expect(loadAndInlineCSSResourcesForRulesSpy.calls.mostRecent().args[0][0].cssText).toMatch(/span \{\s*background-image: url\("?anImage.png"?\)\s*;\s*\}/);
 
@@ -84,7 +84,7 @@ describe("Import styles", function () {
         styleNode.appendChild(doc.createTextNode('@import url("imported.css");'));
         doc.head.appendChild(styleNode);
 
-        rasterizeHTMLInline.loadAndInlineStyles(doc, {}).then(function () {
+        inline.loadAndInlineStyles(doc, {}).then(function () {
             expect(loadCSSImportsForRulesSpy).toHaveBeenCalled();
             expect(loadAndInlineCSSResourcesForRulesSpy).toHaveBeenCalled();
 
@@ -99,7 +99,7 @@ describe("Import styles", function () {
         styleNode.appendChild(doc.createTextNode('@import url("imported.css");'));
         doc.head.appendChild(styleNode);
 
-        rasterizeHTMLInline.loadAndInlineStyles(doc, {}).then(function () {
+        inline.loadAndInlineStyles(doc, {}).then(function () {
             expect(loadCSSImportsForRulesSpy).not.toHaveBeenCalled();
             expect(loadAndInlineCSSResourcesForRulesSpy).not.toHaveBeenCalled();
 
@@ -108,10 +108,10 @@ describe("Import styles", function () {
     });
 
     it("should respect the document's baseURI", function (done) {
-        var getDocumentBaseUrlSpy = spyOn(rasterizeHTMLInline.util, 'getDocumentBaseUrl').and.callThrough();
+        var getDocumentBaseUrlSpy = spyOn(inlineUtil, 'getDocumentBaseUrl').and.callThrough();
         doc = rasterizeHTMLTestHelper.readDocumentFixture("importCss.html");
 
-        rasterizeHTMLInline.loadAndInlineStyles(doc, {}).then(function () {
+        inline.loadAndInlineStyles(doc, {}).then(function () {
             expect(loadCSSImportsForRulesSpy).toHaveBeenCalledWith(jasmine.any(Object), [], {baseUrl: doc.baseURI});
             expect(loadAndInlineCSSResourcesForRulesSpy).toHaveBeenCalledWith(jasmine.any(Object), {baseUrl: doc.baseURI});
             expect(getDocumentBaseUrlSpy).toHaveBeenCalledWith(doc);
@@ -129,7 +129,7 @@ describe("Import styles", function () {
         expect(doc.baseURI).not.toEqual("about:blank");
         expect(doc.baseURI).not.toEqual(baseUrl);
 
-        rasterizeHTMLInline.loadAndInlineStyles(doc, {baseUrl: baseUrl}).then(function () {
+        inline.loadAndInlineStyles(doc, {baseUrl: baseUrl}).then(function () {
             expect(loadCSSImportsForRulesSpy).toHaveBeenCalledWith(jasmine.any(Object), [], {baseUrl: baseUrl});
             expect(loadAndInlineCSSResourcesForRulesSpy).toHaveBeenCalledWith(jasmine.any(Object), {baseUrl: baseUrl});
 
@@ -140,7 +140,7 @@ describe("Import styles", function () {
     it("should circumvent caching if requested", function (done) {
         rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import url("that.css");');
 
-        rasterizeHTMLInline.loadAndInlineStyles(doc, {cache: 'none'}).then(function () {
+        inline.loadAndInlineStyles(doc, {cache: 'none'}).then(function () {
             expect(loadCSSImportsForRulesSpy).toHaveBeenCalled();
             expect(loadCSSImportsForRulesSpy.calls.mostRecent().args[2].cache).toEqual('none');
             expect(loadAndInlineCSSResourcesForRulesSpy).toHaveBeenCalled();
@@ -153,7 +153,7 @@ describe("Import styles", function () {
     it("should not circumvent caching by default", function (done) {
         rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import url("that.css");');
 
-        rasterizeHTMLInline.loadAndInlineStyles(doc, {}).then(function () {
+        inline.loadAndInlineStyles(doc, {}).then(function () {
             expect(loadCSSImportsForRulesSpy).toHaveBeenCalled();
             expect(loadCSSImportsForRulesSpy.calls.mostRecent().args[2]).toBeTruthy();
             expect(loadAndInlineCSSResourcesForRulesSpy).toHaveBeenCalled();
@@ -175,7 +175,7 @@ describe("Import styles", function () {
         doc = document.implementation.createHTMLDocument("");
         rasterizeHTMLTestHelper.addStyleToDocument(doc, 'background-image { url(anImage.png); }');
 
-        rasterizeHTMLInline.loadAndInlineStyles(doc, {cacheBucket: cacheBucket}).then(function () {
+        inline.loadAndInlineStyles(doc, {cacheBucket: cacheBucket}).then(function () {
             expect(loadCSSImportsForRulesSpy).toHaveBeenCalled();
 
             loadCSSImportsForRulesSpy.calls.reset();
@@ -185,7 +185,7 @@ describe("Import styles", function () {
             doc = document.implementation.createHTMLDocument("");
             rasterizeHTMLTestHelper.addStyleToDocument(doc, 'background-image { url(anImage.png); }');
 
-            rasterizeHTMLInline.loadAndInlineStyles(doc, {cacheBucket: cacheBucket}).then(function () {
+            inline.loadAndInlineStyles(doc, {cacheBucket: cacheBucket}).then(function () {
                 expect(loadCSSImportsForRulesSpy).not.toHaveBeenCalled();
                 expect(loadAndInlineCSSResourcesForRulesSpy).not.toHaveBeenCalled();
 
@@ -208,7 +208,7 @@ describe("Import styles", function () {
         doc = document.implementation.createHTMLDocument("");
         rasterizeHTMLTestHelper.addStyleToDocument(doc, 'background-image { url(anImage.png); }');
 
-        rasterizeHTMLInline.loadAndInlineStyles(doc, {cacheBucket: cacheBucket}).then(function () {
+        inline.loadAndInlineStyles(doc, {cacheBucket: cacheBucket}).then(function () {
             expect(loadCSSImportsForRulesSpy).toHaveBeenCalled();
 
             loadCSSImportsForRulesSpy.calls.reset();
@@ -218,7 +218,7 @@ describe("Import styles", function () {
             doc = rasterizeHTMLTestHelper.readDocumentFixture("image.html"); // use a document with different baseUrl
             rasterizeHTMLTestHelper.addStyleToDocument(doc, 'background-image { url(anImage.png); }');
 
-            rasterizeHTMLInline.loadAndInlineStyles(doc, {cacheBucket: cacheBucket}).then(function () {
+            inline.loadAndInlineStyles(doc, {cacheBucket: cacheBucket}).then(function () {
                 expect(loadCSSImportsForRulesSpy).toHaveBeenCalled();
                 expect(loadAndInlineCSSResourcesForRulesSpy).toHaveBeenCalled();
 
@@ -234,7 +234,7 @@ describe("Import styles", function () {
         doc = document.implementation.createHTMLDocument("");
         rasterizeHTMLTestHelper.addStyleToDocument(doc, 'background-image { url(anImage.png); }');
 
-        rasterizeHTMLInline.loadAndInlineStyles(doc, {cacheBucket: cacheBucket, cache: 'none'}).then(function () {
+        inline.loadAndInlineStyles(doc, {cacheBucket: cacheBucket, cache: 'none'}).then(function () {
             expect(loadCSSImportsForRulesSpy).toHaveBeenCalled();
 
             loadCSSImportsForRulesSpy.calls.reset();
@@ -243,7 +243,7 @@ describe("Import styles", function () {
             doc = document.implementation.createHTMLDocument("");
             rasterizeHTMLTestHelper.addStyleToDocument(doc, 'background-image { url(anImage.png); }');
 
-            rasterizeHTMLInline.loadAndInlineStyles(doc, {cacheBucket: cacheBucket, cache: 'none'}).then(function () {
+            inline.loadAndInlineStyles(doc, {cacheBucket: cacheBucket, cache: 'none'}).then(function () {
                 expect(loadCSSImportsForRulesSpy).toHaveBeenCalled();
 
                 done();
@@ -264,7 +264,7 @@ describe("Import styles", function () {
             }));
             rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import url("that.css");');
 
-            rasterizeHTMLInline.loadAndInlineStyles(doc, {}).then(function (errors) {
+            inline.loadAndInlineStyles(doc, {}).then(function (errors) {
                 expect(errors).toEqual(['import error', 'resource error']);
 
                 done();
@@ -283,13 +283,13 @@ describe("Import styles", function () {
             doc = document.implementation.createHTMLDocument("");
             rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import url("that.css");');
 
-            rasterizeHTMLInline.loadAndInlineStyles(doc, {cacheBucket: cacheBucket}).then(function () {
+            inline.loadAndInlineStyles(doc, {cacheBucket: cacheBucket}).then(function () {
 
                 // second call
                 doc = document.implementation.createHTMLDocument("");
                 rasterizeHTMLTestHelper.addStyleToDocument(doc, '@import url("that.css");');
 
-                rasterizeHTMLInline.loadAndInlineStyles(doc, {cacheBucket: cacheBucket}).then(function (errors) {
+                inline.loadAndInlineStyles(doc, {cacheBucket: cacheBucket}).then(function (errors) {
                     expect(errors).toEqual(["import error"]);
 
                     done();

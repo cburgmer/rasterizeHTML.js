@@ -2,7 +2,14 @@
 <html>
 <head>
     <title>Helper page for bundlePage.js</title>
-    <script type="text/javascript" src="../dist/rasterizeHTML.allinone.js"></script>
+    <script type="text/javascript" src="../build/dependencies/cssom.js"></script> <!-- Only needed for Chrome -->
+    <script type="text/javascript" src="../build/dependencies/xmlserializer.js"></script>
+    <script type="text/javascript" src="../build/dependencies/url.js"></script>
+    <script type="text/javascript" src="../node_modules/ayepromise/ayepromise.js"></script>
+    <script type="text/javascript" src="../src/inlineUtil.js"></script>
+    <script type="text/javascript" src="../src/inlineCss.js"></script>
+    <script type="text/javascript" src="../src/inline.js"></script>
+    <script type="text/javascript" src="../src/rasterizeHTML.js"></script>
     <script>
         var sendMessage = function (cmd, content) {
             console.log(JSON.stringify({
@@ -12,7 +19,7 @@
         };
         window.bundlePage = function (url) {
             rasterizeHTML.util.loadDocument(url, {}).then(function (doc) {
-                rasterizeHTMLInline.inlineReferences(doc, {}).then(function (errors) {
+                inline.inlineReferences(doc, {}).then(function (errors) {
                     var xhtml;
 
                     errors.forEach(function (error) {

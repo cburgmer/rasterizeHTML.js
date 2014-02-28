@@ -1,4 +1,4 @@
-window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, ayepromise, theWindow) {
+window.rasterizeHTML = (function (inline, inlineUtil, xmlserializer, ayepromise, theWindow) {
     "use strict";
 
     var module = {};
@@ -79,8 +79,8 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, ayepromise
                 var args = Array.prototype.slice.call(arguments),
                     method = args.shift(),
                     url = args.shift(),
-                    // TODO remove reference to rasterizeHTMLInline.util
-                    joinedUrl = rasterizeHTMLInline.util.joinUrl(baseUrl, url);
+                    // TODO remove reference to inlineUtil
+                    joinedUrl = inlineUtil.joinUrl(baseUrl, url);
 
                 return open.apply(this, [method, joinedUrl].concat(args));
             };
@@ -246,8 +246,8 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, ayepromise
 
     var doDocumentLoad = function (url, options) {
         var ajaxRequest = new window.XMLHttpRequest(),
-            // TODO remove reference to rasterizeHTMLInline.util
-            joinedUrl = rasterizeHTMLInline.util.joinUrl(options.baseUrl, url),
+            // TODO remove reference to inlineUtil
+            joinedUrl = inlineUtil.joinUrl(options.baseUrl, url),
             augmentedUrl = getUncachableURL(joinedUrl, options.cache),
             defer = ayepromise.defer(),
             doReject = function () {
@@ -623,10 +623,10 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, ayepromise
         var executeJsTimeout = options.executeJsTimeout || 0,
             inlineOptions;
 
-        inlineOptions = rasterizeHTMLInline.util.clone(options);
+        inlineOptions = inlineUtil.clone(options);
         inlineOptions.inlineScripts = options.executeJs === true;
 
-        return rasterizeHTMLInline.inlineReferences(doc, inlineOptions)
+        return inline.inlineReferences(doc, inlineOptions)
             .then(function (errors) {
                 if (options.executeJs) {
                     return module.util.executeJavascript(doc, options.baseUrl, executeJsTimeout)
@@ -735,4 +735,4 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, ayepromise
     };
 
     return module;
-}(window.rasterizeHTMLInline, xmlserializer, ayepromise, window));
+}(inline, inlineUtil, xmlserializer, ayepromise, window));

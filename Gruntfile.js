@@ -4,9 +4,12 @@ module.exports = function (grunt) {
         pkg: grunt.file.readJSON('package.json'),
         jasmine: {
             src: [
-                'build/*.js',
+                'build/dependencies/*.js',
                 'node_modules/ayepromise/ayepromise.js',
-                'src/*.js'
+                'src/inlineUtil.js',
+                'src/inlineCss.js',
+                'src/inline.js',
+                'src/rasterizeHTML.js'
             ],
             options: {
                 specs: 'test/*Spec.js',
@@ -24,40 +27,54 @@ module.exports = function (grunt) {
         browserify: {
             cssom: {
                 src: 'node_modules/cssom/lib/index.js',
-                dest: 'build/cssom.js',
+                dest: 'build/dependencies/cssom.js',
                 options: {
                     'standalone': 'cssom'
                 }
             },
             xmlserializer: {
                 src: 'node_modules/xmlserializer/lib/serializer.js',
-                dest: 'build/xmlserializer.js',
+                dest: 'build/dependencies/xmlserializer.js',
                 options: {
                     'standalone': 'xmlserializer'
                 }
             },
             url: {
                 src: 'node_modules/url/url.js',
-                dest: 'build/url.js',
+                dest: 'build/dependencies/url.js',
                 options: {
                     'standalone': 'url'
                 }
             }
         },
         clean: {
-            dist: ['build/*.js'],
+            dist: ['build/*.js', 'build/dependencies/'],
             all: ['build']
         },
+        umd: {
+            all: {
+                src: 'build/rasterizeHTML.concat.js',
+                dest: 'build/rasterizeHTML.umd.js',
+                objectToExport: 'rasterizeHTML',
+                deps: {
+                    'default': ['url', 'xmlserializer', 'cssom', 'ayepromise']
+                }
+            }
+        },
         concat: {
-            options: {
-                banner:'/*! <%= pkg.title || pkg.name %> - v<%= pkg.version %> - ' +
-                    '<%= grunt.template.today("yyyy-mm-dd") %>\n' +
-                    '* <%= pkg.homepage %>\n' +
-                    '* Copyright (c) <%= grunt.template.today("yyyy") %> <%= pkg.author.name %>;' +
-                    ' Licensed <%= pkg.license %> */\n'
+            one: {
+                src: ['src/inlineUtil.js', 'src/inlineCss.js', 'src/inline.js', 'src/rasterizeHTML.js'],
+                dest: 'build/rasterizeHTML.concat.js'
             },
             dist: {
-                src: ['src/*.js'],
+                options: {
+                    banner:'/*! <%= pkg.title || pkg.name %> - v<%= pkg.version %> - ' +
+                        '<%= grunt.template.today("yyyy-mm-dd") %>\n' +
+                        '* <%= pkg.homepage %>\n' +
+                        '* Copyright (c) <%= grunt.template.today("yyyy") %> <%= pkg.author.name %>;' +
+                        ' Licensed <%= pkg.license %> */\n'
+                },
+                src: ['build/rasterizeHTML.umd.js'],
                 dest: 'dist/<%= pkg.title %>'
             }
         },
@@ -83,13 +100,13 @@ module.exports = function (grunt) {
                         ' Licensed <%= pkg.license %> */\n' +
                         '/* Integrated dependencies:\n' +
                         ' * url (MIT License),\n' +
-                        ' * CSSOM (MIT License),\n' +
+                        ' * CSSOM.js (MIT License),\n' +
                         ' * ayepromise (BSD License & WTFPL),\n' +
                         ' * xmlserializer (MIT License) */\n'
                 },
                 files: {
                     'dist/rasterizeHTML.allinone.js': [
-                        'build/*.js',
+                        'build/dependencies/*.js',
                         'node_modules/ayepromise/ayepromise.js',
                         'dist/rasterizeHTML.js'
                     ]
@@ -117,11 +134,15 @@ module.exports = function (grunt) {
                 trailing: true,
                 browser: true,
                 globals: {
+                    inlineUtil: true,
+                    inlineCss: true,
+                    inline: true,
                     cssom: true,
                     url: true,
                     xmlserializer: true,
                     ayepromise: true
-                }
+                },
+                exported: ['inline', 'inlineCss', 'inlineUtil']
             },
             uses_defaults: [
                 'src/*.js',
@@ -146,6 +167,9 @@ module.exports = function (grunt) {
                         ifNotInWebkitIt: true,
                         ifNotInPhantomJsIt: true,
                         ifNotInPhantomJSAndNotLocalRunnerIt: true,
+                        inlineUtil: true,
+                        inlineCss: true,
+                        inline: true,
                         cssom: true,
                         url: true,
                         ayepromise: true,
@@ -183,6 +207,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-contrib-clean');
     grunt.loadNpmTasks('grunt-browserify');
+    grunt.loadNpmTasks('grunt-umd');
 
     grunt.registerTask('default', [
         'clean:dist',
@@ -190,7 +215,9 @@ module.exports = function (grunt) {
         'jshint',
         'jasmine',
         'regex-check',
-        'concat',
+        'concat:one',
+        'umd',
+        'concat:dist',
         'uglify'
     ]);
 

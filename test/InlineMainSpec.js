@@ -12,10 +12,10 @@ describe("Inline main", function () {
     };
 
     beforeEach(function () {
-        loadAndInlineImages = spyOn(rasterizeHTMLInline, "loadAndInlineImages");
-        loadAndInlineCssLinks = spyOn(rasterizeHTMLInline, "loadAndInlineCssLinks");
-        loadAndInlineStyles = spyOn(rasterizeHTMLInline, "loadAndInlineStyles");
-        loadAndInlineScript = spyOn(rasterizeHTMLInline, "loadAndInlineScript");
+        loadAndInlineImages = spyOn(inline, "loadAndInlineImages");
+        loadAndInlineCssLinks = spyOn(inline, "loadAndInlineCssLinks");
+        loadAndInlineStyles = spyOn(inline, "loadAndInlineStyles");
+        loadAndInlineScript = spyOn(inline, "loadAndInlineScript");
     });
 
     it("should inline all resources", function (done) {
@@ -26,7 +26,7 @@ describe("Inline main", function () {
         loadAndInlineStyles.and.returnValue(withoutErrors());
         loadAndInlineScript.and.returnValue(withoutErrors());
 
-        rasterizeHTMLInline.inlineReferences(doc, {}).then(function (errors) {
+        inline.inlineReferences(doc, {}).then(function (errors) {
             expect(errors).toEqual([]);
 
             expect(loadAndInlineImages).toHaveBeenCalledWith(doc, {});
@@ -46,7 +46,7 @@ describe("Inline main", function () {
         loadAndInlineStyles.and.returnValue(withoutErrors());
         loadAndInlineScript.and.returnValue(withoutErrors());
 
-        rasterizeHTMLInline.inlineReferences(doc, {baseUrl: "a_baseUrl", cache: 'none'}).then(function () {
+        inline.inlineReferences(doc, {baseUrl: "a_baseUrl", cache: 'none'}).then(function () {
             expect(loadAndInlineImages).toHaveBeenCalledWith(doc, {baseUrl: "a_baseUrl", cache: 'none'});
             expect(loadAndInlineCssLinks).toHaveBeenCalledWith(doc, {baseUrl: "a_baseUrl", cache: 'none'});
             expect(loadAndInlineStyles).toHaveBeenCalledWith(doc, {baseUrl: "a_baseUrl", cache: 'none'});
@@ -64,7 +64,7 @@ describe("Inline main", function () {
         loadAndInlineStyles.and.returnValue(withoutErrors());
         loadAndInlineScript.and.returnValue(withoutErrors());
 
-        rasterizeHTMLInline.inlineReferences(doc, {}).then(function (errors) {
+        inline.inlineReferences(doc, {}).then(function (errors) {
             expect(errors).toEqual(["the error"]);
 
             done();
@@ -79,7 +79,7 @@ describe("Inline main", function () {
         loadAndInlineCssLinks.and.returnValue(withErrors(["another error"]));
         loadAndInlineScript.and.returnValue(withErrors(["error from script"]));
 
-        rasterizeHTMLInline.inlineReferences(doc, {}).then(function (errors) {
+        inline.inlineReferences(doc, {}).then(function (errors) {
             expect(errors).toEqual(["the error", "more error", "another error", "error from script"]);
 
             done();
@@ -93,7 +93,7 @@ describe("Inline main", function () {
         loadAndInlineCssLinks.and.returnValue(withoutErrors());
         loadAndInlineStyles.and.returnValue(withoutErrors());
 
-        rasterizeHTMLInline.inlineReferences(doc, {inlineScripts: false}).then(function () {
+        inline.inlineReferences(doc, {inlineScripts: false}).then(function () {
             expect(loadAndInlineScript).not.toHaveBeenCalled();
 
             done();

@@ -51,7 +51,7 @@ describe("Main interface of rasterizeHTML.js", function () {
         beforeEach(function () {
             callback = jasmine.createSpy("drawCallback");
 
-            inlineReferences = spyOn(rasterizeHTMLInline, "inlineReferences").and.returnValue(withoutErrors());
+            inlineReferences = spyOn(inline, "inlineReferences").and.returnValue(withoutErrors());
             drawImageOnCanvas = spyOn(rasterizeHTML, "drawImageOnCanvas");
 
             spyOn(rasterizeHTML.util, 'persistInputValues');
@@ -321,7 +321,7 @@ describe("Main interface of rasterizeHTML.js", function () {
 
         it("should pass through errors", function (done) {
             setUpDrawDocumentImage(svgImage);
-            spyOn(rasterizeHTMLInline, "inlineReferences").and.returnValue(withErrors(["the error"]));
+            spyOn(inline, "inlineReferences").and.returnValue(withErrors(["the error"]));
 
             ajaxSpy.and.returnValue(fulfilled('html'));
 
@@ -337,7 +337,7 @@ describe("Main interface of rasterizeHTML.js", function () {
 
             setUpDrawDocumentImage(svgImage);
 
-            inlineReferences = spyOn(rasterizeHTMLInline, "inlineReferences").and.returnValue(withErrors(["the error"]));
+            inlineReferences = spyOn(inline, "inlineReferences").and.returnValue(withErrors(["the error"]));
 
             rasterizeHTML.drawDocument(doc, canvas, function (image, errors) {
                 expect(image).toEqual(svgImage);
@@ -379,7 +379,7 @@ describe("Main interface of rasterizeHTML.js", function () {
         it("should pass through a JS error", function (done) {
             var doc = "doc";
 
-            spyOn(rasterizeHTMLInline, "inlineReferences").and.returnValue(withoutErrors());
+            spyOn(inline, "inlineReferences").and.returnValue(withoutErrors());
             spyOn(rasterizeHTML.util, "executeJavascript").and.returnValue(
                 fulfilled({document: doc, errors: ["the error"]})
             );
@@ -428,7 +428,7 @@ describe("Main interface of rasterizeHTML.js", function () {
         beforeEach(function () {
             callback = jasmine.createSpy("drawCallback");
 
-            inlineReferences = spyOn(rasterizeHTMLInline, "inlineReferences").and.returnValue(withoutErrors());
+            inlineReferences = spyOn(inline, "inlineReferences").and.returnValue(withoutErrors());
 
             drawImageOnCanvas = spyOn(rasterizeHTML, "drawImageOnCanvas");
 

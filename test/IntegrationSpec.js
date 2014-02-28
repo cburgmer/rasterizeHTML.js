@@ -89,7 +89,7 @@ describe("Integration test", function () {
     });
 
     ifNotInPhantomJSAndNotLocalRunnerIt("should take a URL and load non UTF-8 content", function (done) {
-        var inlineReferencesSpy = spyOn(rasterizeHTMLInline, 'inlineReferences').and.returnValue(fulfilled());
+        var inlineReferencesSpy = spyOn(inline, 'inlineReferences').and.returnValue(fulfilled());
 
         rasterizeHTML.drawURL(rasterizeHTMLTestHelper.fixturesPath + "nonUTF8Encoding.html").then(function () {
             expect(inlineReferencesSpy).toHaveBeenCalled();

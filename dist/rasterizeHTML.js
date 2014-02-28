@@ -1,351 +1,220 @@
 /*! rasterizeHTML.js - v0.8.0 - 2014-02-28
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2014 Christoph Burgmer; Licensed MIT */
-window.rasterizeHTMLInline = (function (module) {
+(function(root, factory) {
+    if(typeof exports === 'object') {
+        module.exports = factory(require('url'), require('xmlserializer'), require('cssom'), require('ayepromise'));
+    }
+    else if(typeof define === 'function' && define.amd) {
+        define(['url', 'xmlserializer', 'cssom', 'ayepromise'], factory);
+    }
+    else {
+        root['rasterizeHTML'] = factory(root.url, root.xmlserializer, root.cssom, root.ayepromise);
+    }
+}(this, function(url, xmlserializer, cssom, ayepromise) {
+
+var inlineUtil = (function (window, ayepromise, url) {
     "use strict";
 
-    var getUrlBasePath = function (url) {
-        return module.util.joinUrl(url, '.');
+    var module = {};
+
+    module.getDocumentBaseUrl = function (doc) {
+        if (doc.baseURI !== 'about:blank') {
+            return doc.baseURI;
+        }
+
+        return null;
     };
 
-    var parameterHashFunction = function (params) {
-        // HACK JSON.stringify is poor man's hashing;
-        // same objects might not receive same result as key order is not guaranteed
-        var a = params.map(function (param, idx) {
-            // Only include options relevant for method
-            if (idx === (params.length - 1)) {
-                param = {
-                    // Two different HTML pages on the same path level have the same base path, but a different URL
-                    baseUrl: getUrlBasePath(param.baseUrl)
-                };
+    module.clone = function (object) {
+        var theClone = {},
+            i;
+        for (i in object) {
+            if (object.hasOwnProperty(i)) {
+               theClone[i] = object[i];
             }
-            return JSON.stringify(param);
-        });
-        return a;
-    };
-
-    var memoizeFunctionOnCaching = function (func, options) {
-        if ((options.cache !== false && options.cache !== 'none') && options.cacheBucket) {
-            return module.util.memoize(func, parameterHashFunction, options.cacheBucket);
-        } else {
-            return func;
         }
+        return theClone;
     };
 
-    /* Img Inlining */
+    module.cloneArray = function (nodeList) {
+        return Array.prototype.slice.apply(nodeList, [0]);
+    };
 
-    var encodeImageAsDataURI = function (image, options) {
-        var url = image.attributes.src ? image.attributes.src.nodeValue : null,
-            documentBase = module.util.getDocumentBaseUrl(image.ownerDocument),
-            ajaxOptions = module.util.clone(options);
+    module.joinUrl = function (baseUrl, relUrl) {
+        return url.resolve(baseUrl, relUrl);
+    };
 
-        if (!ajaxOptions.baseUrl && documentBase) {
-            ajaxOptions.baseUrl = documentBase;
+    module.isDataUri = function (url) {
+        return (/^data:/).test(url);
+    };
+
+    module.all = function (promises) {
+        var defer = ayepromise.defer(),
+            pendingPromiseCount = promises.length,
+            resolvedValues = [];
+
+        if (promises.length === 0) {
+            defer.resolve([]);
+            return defer.promise;
         }
 
-        return module.util.getDataURIForImageURL(url, ajaxOptions)
-            .then(function (dataURI) {
-                return dataURI;
-            }, function (e) {
-                throw {
-                    resourceType: "image",
-                    url: e.url,
-                    msg: "Unable to load image " + e.url
-                };
-            });
-    };
+        promises.forEach(function (promise, idx) {
+            promise.then(function (value) {
+                pendingPromiseCount -= 1;
+                resolvedValues[idx] = value;
 
-    var filterExternalImages = function (images) {
-        return images.filter(function (image) {
-            var url = image.attributes.src ? image.attributes.src.nodeValue : null;
-
-            return url !== null && !module.util.isDataUri(url);
-        });
-    };
-
-    var filterInputsForImageType = function (inputs) {
-        return Array.prototype.filter.call(inputs, function (input) {
-            return input.type === "image";
-        });
-    };
-
-    var toArray = function (arrayLike) {
-        return Array.prototype.slice.call(arrayLike);
-    };
-
-    module.loadAndInlineImages = function (doc, options) {
-        var images = toArray(doc.getElementsByTagName("img")),
-            imageInputs = filterInputsForImageType(doc.getElementsByTagName("input")),
-            externalImages = filterExternalImages(images.concat(imageInputs));
-
-        return module.util.collectAndReportErrors(externalImages.map(function (image) {
-            return encodeImageAsDataURI(image, options).then(function (dataURI) {
-                image.attributes.src.nodeValue = dataURI;
-            });
-        }));
-    };
-
-    /* Style inlining */
-
-    var requestExternalsForStylesheet = function (styleContent, alreadyLoadedCssUrls, options) {
-        var cssRules = module.css.rulesForCssText(styleContent);
-
-        return module.css.loadCSSImportsForRules(cssRules, alreadyLoadedCssUrls, options).then(function (cssImportResult) {
-            return module.css.loadAndInlineCSSResourcesForRules(cssRules, options).then(function (cssResourcesResult) {
-                var errors = cssImportResult.errors.concat(cssResourcesResult.errors),
-                    hasChanges = cssImportResult.hasChanges || cssResourcesResult.hasChanges;
-
-                if (hasChanges) {
-                    styleContent = module.css.cssRulesToText(cssRules);
+                if (pendingPromiseCount === 0) {
+                    defer.resolve(resolvedValues);
                 }
-
-                return {
-                    hasChanges: hasChanges,
-                    content: styleContent,
-                    errors: errors
-                };
-            });
-        });
-    };
-
-    var loadAndInlineCssForStyle = function (style, options, alreadyLoadedCssUrls) {
-        var styleContent = style.textContent,
-            processExternals = memoizeFunctionOnCaching(requestExternalsForStylesheet, options);
-
-        return processExternals(styleContent, alreadyLoadedCssUrls, options).then(function (result) {
-            if (result.hasChanges) {
-                style.childNodes[0].nodeValue = result.content;
-            }
-
-            return module.util.cloneArray(result.errors);
-        });
-    };
-
-    var getCssStyleElements = function (doc) {
-        var styles = doc.getElementsByTagName("style");
-
-        return Array.prototype.filter.call(styles, function (style) {
-            return !style.attributes.type || style.attributes.type.nodeValue === "text/css";
-        });
-    };
-
-    module.loadAndInlineStyles = function (doc, options) {
-        var styles = getCssStyleElements(doc),
-            allErrors = [],
-            alreadyLoadedCssUrls = [],
-            inlineOptions;
-
-        inlineOptions = module.util.clone(options);
-        inlineOptions.baseUrl = inlineOptions.baseUrl || module.util.getDocumentBaseUrl(doc);
-
-        return module.util.all(styles.map(function (style) {
-            return loadAndInlineCssForStyle(style, inlineOptions, alreadyLoadedCssUrls).then(function (errors) {
-                allErrors = allErrors.concat(errors);
-            });
-        })).then(function () {
-            return allErrors;
-        });
-    };
-
-    /* CSS link inlining */
-
-    var substituteLinkWithInlineStyle = function (oldLinkNode, styleContent) {
-        var parent = oldLinkNode.parentNode,
-            styleNode;
-
-        styleContent = styleContent.trim();
-        if (styleContent) {
-            styleNode = oldLinkNode.ownerDocument.createElement("style");
-            styleNode.type = "text/css";
-            styleNode.appendChild(oldLinkNode.ownerDocument.createTextNode(styleContent));
-
-            parent.insertBefore(styleNode, oldLinkNode);
-        }
-
-        parent.removeChild(oldLinkNode);
-    };
-
-    var requestStylesheetAndInlineResources = function (url, options) {
-        return module.util.ajax(url, options)
-            .then(function (content) {
-                var cssRules = module.css.rulesForCssText(content);
-
-                return {
-                    content: content,
-                    cssRules: cssRules
-                };
-            })
-            .then(function (result) {
-                var hasChangesFromPathAdjustment = module.css.adjustPathsOfCssResources(url, result.cssRules);
-
-                return {
-                    content: result.content,
-                    cssRules: result.cssRules,
-                    hasChanges: hasChangesFromPathAdjustment
-                };
-            })
-            .then(function (result) {
-                return module.css.loadCSSImportsForRules(result.cssRules, [], options)
-                    .then(function (cssImportResult) {
-                        return {
-                            content: result.content,
-                            cssRules: result.cssRules,
-                            hasChanges: result.hasChanges || cssImportResult.hasChanges,
-                            errors: cssImportResult.errors
-                        };
-                    });
-            })
-            .then(function (result) {
-                return module.css.loadAndInlineCSSResourcesForRules(result.cssRules, options)
-                    .then(function (cssResourcesResult) {
-                        return {
-                            content: result.content,
-                            cssRules: result.cssRules,
-                            hasChanges: result.hasChanges || cssResourcesResult.hasChanges,
-                            errors: result.errors.concat(cssResourcesResult.errors)
-                        };
-                    });
-            })
-            .then(function (result) {
-                var content = result.content;
-                if (result.hasChanges) {
-                    content = module.css.cssRulesToText(result.cssRules);
-                }
-                return {
-                    content: content,
-                    errors: result.errors
-                };
-            });
-    };
-
-    var loadLinkedCSS = function (link, options) {
-        var cssHref = link.attributes.href.nodeValue,
-            documentBaseUrl = module.util.getDocumentBaseUrl(link.ownerDocument),
-            ajaxOptions = module.util.clone(options);
-
-        if (!ajaxOptions.baseUrl && documentBaseUrl) {
-            ajaxOptions.baseUrl = documentBaseUrl;
-        }
-
-        var processStylesheet = memoizeFunctionOnCaching(requestStylesheetAndInlineResources, options);
-
-        return processStylesheet(cssHref, ajaxOptions).then(function (result) {
-            return {
-                content: result.content,
-                errors: module.util.cloneArray(result.errors)
-            };
-        });
-    };
-
-    var getCssStylesheetLinks = function (doc) {
-        var links = doc.getElementsByTagName("link");
-
-        return Array.prototype.filter.call(links, function (link) {
-            return link.attributes.rel && link.attributes.rel.nodeValue === "stylesheet" &&
-                (!link.attributes.type || link.attributes.type.nodeValue === "text/css");
-        });
-    };
-
-    module.loadAndInlineCssLinks = function (doc, options) {
-        var links = getCssStylesheetLinks(doc),
-            errors = [];
-
-        return module.util.all(links.map(function (link) {
-            return loadLinkedCSS(link, options).then(function(result) {
-                substituteLinkWithInlineStyle(link, result.content + "\n");
-
-                errors = errors.concat(result.errors);
             }, function (e) {
-                errors.push({
-                    resourceType: "stylesheet",
-                    url: e.url,
-                    msg: "Unable to load stylesheet " + e.url
-                });
+                defer.reject(e);
+            });
+        });
+        return defer.promise;
+    };
+
+    module.collectAndReportErrors = function (promises) {
+        var errors = [];
+
+        return module.all(promises.map(function (promise) {
+            return promise.fail(function (e) {
+                errors.push(e);
             });
         })).then(function () {
             return errors;
         });
     };
 
-    /* Script inlining */
+    var lastCacheDate = null;
 
-    var loadLinkedScript = function (script, options) {
-        var src = script.attributes.src.nodeValue,
-            documentBase = module.util.getDocumentBaseUrl(script.ownerDocument),
-            ajaxOptions = module.util.clone(options);
+    var getUncachableURL = function (url, cache) {
+        if (cache === false || cache === 'none' || cache === 'repeated') {
+            if (lastCacheDate === null || cache !== 'repeated') {
+                lastCacheDate = Date.now();
+            }
+            return url + "?_=" + lastCacheDate;
+        } else {
+            return url;
+        }
+    };
 
-        if (!ajaxOptions.baseUrl && documentBase) {
-            ajaxOptions.baseUrl = documentBase;
+    module.ajax = function (url, options) {
+        var ajaxRequest = new window.XMLHttpRequest(),
+            defer = ayepromise.defer(),
+            joinedUrl = module.joinUrl(options.baseUrl, url),
+            augmentedUrl;
+
+        var doReject = function () {
+            defer.reject({
+                msg: 'Unable to load url',
+                url: joinedUrl
+            });
+        };
+
+        augmentedUrl = getUncachableURL(joinedUrl, options.cache);
+
+        ajaxRequest.addEventListener("load", function () {
+            if (ajaxRequest.status === 200 || ajaxRequest.status === 0) {
+                defer.resolve(ajaxRequest.response);
+            } else {
+                doReject();
+            }
+        }, false);
+
+        ajaxRequest.addEventListener("error", doReject, false);
+
+        try {
+            ajaxRequest.open('GET', augmentedUrl, true);
+            ajaxRequest.overrideMimeType(options.mimeType);
+            ajaxRequest.send(null);
+        } catch (e) {
+            doReject();
         }
 
-        return module.util.ajax(src, ajaxOptions)
-            .fail(function (e) {
-                throw {
-                    resourceType: "script",
-                    url: e.url,
-                    msg: "Unable to load script " + e.url
-                };
+        return defer.promise;
+    };
+
+    module.binaryAjax = function (url, options) {
+        var ajaxOptions = module.clone(options);
+
+        ajaxOptions.mimeType = 'text/plain; charset=x-user-defined';
+
+        return module.ajax(url, ajaxOptions)
+            .then(function (content) {
+                var binaryContent = "";
+
+                for (var i = 0; i < content.length; i++) {
+                    binaryContent += String.fromCharCode(content.charCodeAt(i) & 0xFF);
+                }
+
+                return binaryContent;
             });
     };
 
-    var escapeClosingTags = function (text) {
-        // http://stackoverflow.com/questions/9246382/escaping-script-tag-inside-javascript
-        return text.replace(/<\//g, '<\\/');
+    var detectMimeType = function (content) {
+        var startsWith = function (string, substring) {
+            return string.substring(0, substring.length) === substring;
+        };
+
+        if (startsWith(content, '<?xml') || startsWith(content, '<svg')) {
+            return 'image/svg+xml';
+        }
+        return 'image/png';
     };
 
-    var substituteExternalScriptWithInline = function (scriptNode, jsCode) {
-        scriptNode.attributes.removeNamedItem('src');
-        scriptNode.textContent = escapeClosingTags(jsCode);
-    };
+    module.getDataURIForImageURL = function (url, options) {
+        return module.binaryAjax(url, options)
+            .then(function (content) {
+                var base64Content = btoa(content),
+                    mimeType = detectMimeType(content);
 
-    var getScripts = function (doc) {
-        var scripts = doc.getElementsByTagName("script");
-
-        return Array.prototype.filter.call(scripts, function (script) {
-            return !!script.attributes.src;
-        });
-    };
-
-    module.loadAndInlineScript = function (doc, options) {
-        var scripts = getScripts(doc);
-
-        return module.util.collectAndReportErrors(scripts.map(function (script) {
-            return loadLinkedScript(script, options).then(function (jsCode) {
-                substituteExternalScriptWithInline(script, jsCode);
+                return 'data:' + mimeType + ';base64,' + base64Content;
             });
-        }));
     };
 
-    /* Main */
+    var uniqueIdList = [];
 
-    module.inlineReferences = function (doc, options) {
-        var allErrors = [],
-            inlineFuncs = [
-                module.loadAndInlineImages,
-                module.loadAndInlineStyles,
-                module.loadAndInlineCssLinks];
+    var constantUniqueIdFor = function (element) {
+        // HACK, using a list results in O(n), but how do we hash a function?
+        if (uniqueIdList.indexOf(element) < 0) {
+            uniqueIdList.push(element);
+        }
+        return uniqueIdList.indexOf(element);
+    };
 
-        if (options.inlineScripts !== false) {
-            inlineFuncs.push(module.loadAndInlineScript);
+    module.memoize = function (func, hasher, memo) {
+        if (typeof memo !== "object") {
+            throw new Error("cacheBucket is not an object");
         }
 
-        return module.util.all(inlineFuncs.map(function (func) {
-            return func(doc, options)
-                .then(function (errors) {
-                    allErrors = allErrors.concat(errors);
-                });
-        })).then(function () {
-            return allErrors;
-        });
+        return function () {
+            var args = Array.prototype.slice.call(arguments);
+
+            var argumentHash = hasher(args),
+                funcHash = constantUniqueIdFor(func),
+                retValue;
+
+            if (memo[funcHash] && memo[funcHash][argumentHash]) {
+                return memo[funcHash][argumentHash];
+            } else {
+                retValue = func.apply(null, args);
+
+                memo[funcHash] = memo[funcHash] || {};
+                memo[funcHash][argumentHash] = retValue;
+
+                return retValue;
+            }
+        };
     };
 
     return module;
-}(window.rasterizeHTMLInline || {}));
+}(window, ayepromise, url));
 
-window.rasterizeHTMLInline = (function (module, window, cssom, ayepromise) {
+var inlineCss = (function (inlineUtil, window, cssom, ayepromise) {
     "use strict";
 
-    module.css = {};
+    var module = {};
 
     var updateCssPropertyValue = function (rule, property, value) {
         rule.style.setProperty(property, value, rule.style.getPropertyPriority(property));
@@ -370,7 +239,7 @@ window.rasterizeHTMLInline = (function (module, window, cssom, ayepromise) {
         return !rules.length || rules[0].cssText.indexOf('url()') >= 0;
     }());
 
-    module.css.rulesForCssText = function (styleContent) {
+    module.rulesForCssText = function (styleContent) {
         if (browserHasBackgroundImageUrlIssue && cssom.parse) {
             return cssom.parse(styleContent).cssRules;
         } else {
@@ -412,7 +281,7 @@ window.rasterizeHTMLInline = (function (module, window, cssom, ayepromise) {
         });
     };
 
-    module.css.cssRulesToText = function (cssRules) {
+    module.cssRulesToText = function (cssRules) {
         return cssRules.reduce(function (cssText, rule) {
             return cssText + rule.cssText;
         }, '');
@@ -439,7 +308,7 @@ window.rasterizeHTMLInline = (function (module, window, cssom, ayepromise) {
         return url.replace(whitespaceRegex, "$1");
     };
 
-    module.css.extractCssUrl = function (cssUrl) {
+    module.extractCssUrl = function (cssUrl) {
         var urlRegex = /^url\(([^\)]+)\)/,
             quotedUrl;
 
@@ -467,7 +336,7 @@ window.rasterizeHTMLInline = (function (module, window, cssom, ayepromise) {
         var url, format = null;
 
         try {
-            url = module.css.extractCssUrl(reference[0]);
+            url = module.extractCssUrl(reference[0]);
             if (reference[1]) {
                 format = findFontFaceFormat(reference[1]);
             }
@@ -505,7 +374,7 @@ window.rasterizeHTMLInline = (function (module, window, cssom, ayepromise) {
         cssRules[ruleIdx] = styleSheet.cssRules[ruleIdx];
     };
 
-    module.css.adjustPathsOfCssResources = function (baseUrl, cssRules) {
+    module.adjustPathsOfCssResources = function (baseUrl, cssRules) {
         var backgroundRules = findBackgroundImageRules(cssRules),
             backgroundDeclarations = findBackgroundDeclarations(backgroundRules),
             change = false;
@@ -518,7 +387,7 @@ window.rasterizeHTMLInline = (function (module, window, cssom, ayepromise) {
             if (externalBackgroundIndices.length > 0) {
                 externalBackgroundIndices.forEach(function (backgroundLayerIndex) {
                     var relativeUrl = parsedBackground[backgroundLayerIndex].url,
-                        url = module.util.joinUrl(baseUrl, relativeUrl);
+                        url = inlineUtil.joinUrl(baseUrl, relativeUrl);
                     parsedBackground[backgroundLayerIndex].url = url;
                 });
 
@@ -537,7 +406,7 @@ window.rasterizeHTMLInline = (function (module, window, cssom, ayepromise) {
             if (externalFontFaceUrlIndices.length > 0) {
                 externalFontFaceUrlIndices.forEach(function (fontFaceUrlIndex) {
                     var relativeUrl = parsedFontFaceSources[fontFaceUrlIndex].url,
-                        url = module.util.joinUrl(baseUrl, relativeUrl);
+                        url = inlineUtil.joinUrl(baseUrl, relativeUrl);
 
                     parsedFontFaceSources[fontFaceUrlIndex].url = url;
                 });
@@ -549,7 +418,7 @@ window.rasterizeHTMLInline = (function (module, window, cssom, ayepromise) {
         });
         findCSSImportRules(cssRules).forEach(function (rule) {
             var cssUrl = rule.href,
-                url = module.util.joinUrl(baseUrl, cssUrl);
+                url = inlineUtil.joinUrl(baseUrl, cssUrl);
 
             exchangeRule(cssRules, rule, "@import url(" + url + ");");
 
@@ -598,7 +467,7 @@ window.rasterizeHTMLInline = (function (module, window, cssom, ayepromise) {
             url = unquoteString(url);
         }
 
-        cssHrefRelativeToDoc = module.util.joinUrl(options.baseUrl, url);
+        cssHrefRelativeToDoc = inlineUtil.joinUrl(options.baseUrl, url);
 
         if (alreadyLoadedCssUrls.indexOf(cssHrefRelativeToDoc) >= 0) {
             // Remove URL by adding empty string
@@ -608,14 +477,14 @@ window.rasterizeHTMLInline = (function (module, window, cssom, ayepromise) {
             alreadyLoadedCssUrls.push(cssHrefRelativeToDoc);
         }
 
-        return module.util.ajax(url, options)
+        return inlineUtil.ajax(url, options)
             .then(function (cssText) {
-                var externalCssRules = module.css.rulesForCssText(cssText);
+                var externalCssRules = module.rulesForCssText(cssText);
 
                 // Recursively follow @import statements
-                return module.css.loadCSSImportsForRules(externalCssRules, alreadyLoadedCssUrls, options)
+                return module.loadCSSImportsForRules(externalCssRules, alreadyLoadedCssUrls, options)
                     .then(function (result) {
-                        module.css.adjustPathsOfCssResources(url, externalCssRules);
+                        module.adjustPathsOfCssResources(url, externalCssRules);
 
                         substituteRule(cssRules, rule, externalCssRules);
 
@@ -630,12 +499,12 @@ window.rasterizeHTMLInline = (function (module, window, cssom, ayepromise) {
             });
     };
 
-    module.css.loadCSSImportsForRules = function (cssRules, alreadyLoadedCssUrls, options) {
+    module.loadCSSImportsForRules = function (cssRules, alreadyLoadedCssUrls, options) {
         var rulesToInline = findCSSImportRules(cssRules),
             errors = [],
             hasChanges = false;
 
-        return module.util.all(rulesToInline.map(function (rule) {
+        return inlineUtil.all(rulesToInline.map(function (rule) {
             return loadAndInlineCSSImport(cssRules, rule, alreadyLoadedCssUrls, options).then(function (moreErrors) {
                 errors = errors.concat(moreErrors);
 
@@ -693,7 +562,7 @@ window.rasterizeHTMLInline = (function (module, window, cssom, ayepromise) {
 
         for(i = 0; i < values.length; i++) {
             try {
-                url = module.css.extractCssUrl(values[i]);
+                url = module.extractCssUrl(values[i]);
                 return {
                     url: url,
                     idx: i
@@ -726,7 +595,7 @@ window.rasterizeHTMLInline = (function (module, window, cssom, ayepromise) {
         var matchIndices = [];
 
         parsedBackground.forEach(function (backgroundLayer, i) {
-            if (backgroundLayer.url && !module.util.isDataUri(backgroundLayer.url)) {
+            if (backgroundLayer.url && !inlineUtil.isDataUri(backgroundLayer.url)) {
                 matchIndices.push(i);
             }
         });
@@ -756,10 +625,10 @@ window.rasterizeHTMLInline = (function (module, window, cssom, ayepromise) {
             externalBackgroundLayerIndices = findExternalBackgroundUrls(parsedBackground),
             hasChanges = false;
 
-        return module.util.collectAndReportErrors(externalBackgroundLayerIndices.map(function (backgroundLayerIndex) {
+        return inlineUtil.collectAndReportErrors(externalBackgroundLayerIndices.map(function (backgroundLayerIndex) {
             var url = parsedBackground[backgroundLayerIndex].url;
 
-            return module.util.getDataURIForImageURL(url, options)
+            return inlineUtil.getDataURIForImageURL(url, options)
                 .then(function (dataURI) {
                     parsedBackground[backgroundLayerIndex].url = dataURI;
 
@@ -786,7 +655,7 @@ window.rasterizeHTMLInline = (function (module, window, cssom, ayepromise) {
             errors = [],
             cssHasChanges = false;
 
-        return module.util.all(backgroundDeclarations.map(function (declaration) {
+        return inlineUtil.all(backgroundDeclarations.map(function (declaration) {
             return loadAndInlineBackgroundImages(declaration.value, options)
                 .then(function (result) {
                     if (result.hasChanges) {
@@ -856,7 +725,7 @@ window.rasterizeHTMLInline = (function (module, window, cssom, ayepromise) {
     var findExternalFontFaceUrls = function (parsedFontFaceSources) {
         var sourceIndices = [];
         parsedFontFaceSources.forEach(function (sourceItem, i) {
-            if (sourceItem.url && !module.util.isDataUri(sourceItem.url)) {
+            if (sourceItem.url && !inlineUtil.isDataUri(sourceItem.url)) {
                 sourceIndices.push(i);
             }
         });
@@ -884,11 +753,11 @@ window.rasterizeHTMLInline = (function (module, window, cssom, ayepromise) {
             externalFontFaceUrlIndices = findExternalFontFaceUrls(parsedFontFaceSources),
             hasChanges = false;
 
-        return module.util.collectAndReportErrors(externalFontFaceUrlIndices.map(function (urlIndex) {
+        return inlineUtil.collectAndReportErrors(externalFontFaceUrlIndices.map(function (urlIndex) {
             var fontSrc = parsedFontFaceSources[urlIndex],
                 format = fontSrc.format || "woff";
 
-            return module.util.binaryAjax(fontSrc.url, options)
+            return inlineUtil.binaryAjax(fontSrc.url, options)
                 .then(function (content) {
                     var base64Content = btoa(content);
                     fontSrc.url = 'data:font/' + format + ';base64,' + base64Content;
@@ -915,7 +784,7 @@ window.rasterizeHTMLInline = (function (module, window, cssom, ayepromise) {
             errors = [],
             hasChanges = false;
 
-        return module.util.all(rulesToInline.map(function (rule) {
+        return inlineUtil.all(rulesToInline.map(function (rule) {
             var srcDeclarationValue = rule.style.getPropertyValue("src");
 
             return loadAndInlineFontFace(srcDeclarationValue, options).then(function (result) {
@@ -935,11 +804,11 @@ window.rasterizeHTMLInline = (function (module, window, cssom, ayepromise) {
         });
     };
 
-    module.css.loadAndInlineCSSResourcesForRules = function (cssRules, options) {
+    module.loadAndInlineCSSResourcesForRules = function (cssRules, options) {
         var hasChanges = false,
             errors = [];
 
-        return module.util.all([iterateOverRulesAndInlineBackgroundImages, iterateOverRulesAndInlineFontFace].map(function (func) {
+        return inlineUtil.all([iterateOverRulesAndInlineBackgroundImages, iterateOverRulesAndInlineFontFace].map(function (func) {
             return func(cssRules, options)
                 .then(function (result) {
                     hasChanges = hasChanges || result.hasChanges;
@@ -954,207 +823,352 @@ window.rasterizeHTMLInline = (function (module, window, cssom, ayepromise) {
     };
 
     return module;
-}(window.rasterizeHTMLInline || {}, window, window.cssom || {}, ayepromise));
+}(inlineUtil, window, cssom || {}, ayepromise));
 
-window.rasterizeHTMLInline = (function (module, window, ayepromise, url) {
+var inline = (function (inlineCss, inlineUtil) {
     "use strict";
 
-    module.util = {};
+    var module = {};
 
-    module.util.getDocumentBaseUrl = function (doc) {
-        if (doc.baseURI !== 'about:blank') {
-            return doc.baseURI;
-        }
-
-        return null;
+    var getUrlBasePath = function (url) {
+        return inlineUtil.joinUrl(url, '.');
     };
 
-    module.util.clone = function (object) {
-        var theClone = {},
-            i;
-        for (i in object) {
-            if (object.hasOwnProperty(i)) {
-               theClone[i] = object[i];
+    var parameterHashFunction = function (params) {
+        // HACK JSON.stringify is poor man's hashing;
+        // same objects might not receive same result as key order is not guaranteed
+        var a = params.map(function (param, idx) {
+            // Only include options relevant for method
+            if (idx === (params.length - 1)) {
+                param = {
+                    // Two different HTML pages on the same path level have the same base path, but a different URL
+                    baseUrl: getUrlBasePath(param.baseUrl)
+                };
             }
+            return JSON.stringify(param);
+        });
+        return a;
+    };
+
+    var memoizeFunctionOnCaching = function (func, options) {
+        if ((options.cache !== false && options.cache !== 'none') && options.cacheBucket) {
+            return inlineUtil.memoize(func, parameterHashFunction, options.cacheBucket);
+        } else {
+            return func;
         }
-        return theClone;
     };
 
-    module.util.cloneArray = function (nodeList) {
-        return Array.prototype.slice.apply(nodeList, [0]);
-    };
+    /* Img Inlining */
 
-    module.util.joinUrl = function (baseUrl, relUrl) {
-        return url.resolve(baseUrl, relUrl);
-    };
+    var encodeImageAsDataURI = function (image, options) {
+        var url = image.attributes.src ? image.attributes.src.nodeValue : null,
+            documentBase = inlineUtil.getDocumentBaseUrl(image.ownerDocument),
+            ajaxOptions = inlineUtil.clone(options);
 
-    module.util.isDataUri = function (url) {
-        return (/^data:/).test(url);
-    };
-
-    module.util.all = function (promises) {
-        var defer = ayepromise.defer(),
-            pendingPromiseCount = promises.length,
-            resolvedValues = [];
-
-        if (promises.length === 0) {
-            defer.resolve([]);
-            return defer.promise;
+        if (!ajaxOptions.baseUrl && documentBase) {
+            ajaxOptions.baseUrl = documentBase;
         }
 
-        promises.forEach(function (promise, idx) {
-            promise.then(function (value) {
-                pendingPromiseCount -= 1;
-                resolvedValues[idx] = value;
-
-                if (pendingPromiseCount === 0) {
-                    defer.resolve(resolvedValues);
-                }
+        return inlineUtil.getDataURIForImageURL(url, ajaxOptions)
+            .then(function (dataURI) {
+                return dataURI;
             }, function (e) {
-                defer.reject(e);
+                throw {
+                    resourceType: "image",
+                    url: e.url,
+                    msg: "Unable to load image " + e.url
+                };
+            });
+    };
+
+    var filterExternalImages = function (images) {
+        return images.filter(function (image) {
+            var url = image.attributes.src ? image.attributes.src.nodeValue : null;
+
+            return url !== null && !inlineUtil.isDataUri(url);
+        });
+    };
+
+    var filterInputsForImageType = function (inputs) {
+        return Array.prototype.filter.call(inputs, function (input) {
+            return input.type === "image";
+        });
+    };
+
+    var toArray = function (arrayLike) {
+        return Array.prototype.slice.call(arrayLike);
+    };
+
+    module.loadAndInlineImages = function (doc, options) {
+        var images = toArray(doc.getElementsByTagName("img")),
+            imageInputs = filterInputsForImageType(doc.getElementsByTagName("input")),
+            externalImages = filterExternalImages(images.concat(imageInputs));
+
+        return inlineUtil.collectAndReportErrors(externalImages.map(function (image) {
+            return encodeImageAsDataURI(image, options).then(function (dataURI) {
+                image.attributes.src.nodeValue = dataURI;
+            });
+        }));
+    };
+
+    /* Style inlining */
+
+    var requestExternalsForStylesheet = function (styleContent, alreadyLoadedCssUrls, options) {
+        var cssRules = inlineCss.rulesForCssText(styleContent);
+
+        return inlineCss.loadCSSImportsForRules(cssRules, alreadyLoadedCssUrls, options).then(function (cssImportResult) {
+            return inlineCss.loadAndInlineCSSResourcesForRules(cssRules, options).then(function (cssResourcesResult) {
+                var errors = cssImportResult.errors.concat(cssResourcesResult.errors),
+                    hasChanges = cssImportResult.hasChanges || cssResourcesResult.hasChanges;
+
+                if (hasChanges) {
+                    styleContent = inlineCss.cssRulesToText(cssRules);
+                }
+
+                return {
+                    hasChanges: hasChanges,
+                    content: styleContent,
+                    errors: errors
+                };
             });
         });
-        return defer.promise;
     };
 
-    module.util.collectAndReportErrors = function (promises) {
-        var errors = [];
+    var loadAndInlineCssForStyle = function (style, options, alreadyLoadedCssUrls) {
+        var styleContent = style.textContent,
+            processExternals = memoizeFunctionOnCaching(requestExternalsForStylesheet, options);
 
-        return module.util.all(promises.map(function (promise) {
-            return promise.fail(function (e) {
-                errors.push(e);
+        return processExternals(styleContent, alreadyLoadedCssUrls, options).then(function (result) {
+            if (result.hasChanges) {
+                style.childNodes[0].nodeValue = result.content;
+            }
+
+            return inlineUtil.cloneArray(result.errors);
+        });
+    };
+
+    var getCssStyleElements = function (doc) {
+        var styles = doc.getElementsByTagName("style");
+
+        return Array.prototype.filter.call(styles, function (style) {
+            return !style.attributes.type || style.attributes.type.nodeValue === "text/css";
+        });
+    };
+
+    module.loadAndInlineStyles = function (doc, options) {
+        var styles = getCssStyleElements(doc),
+            allErrors = [],
+            alreadyLoadedCssUrls = [],
+            inlineOptions;
+
+        inlineOptions = inlineUtil.clone(options);
+        inlineOptions.baseUrl = inlineOptions.baseUrl || inlineUtil.getDocumentBaseUrl(doc);
+
+        return inlineUtil.all(styles.map(function (style) {
+            return loadAndInlineCssForStyle(style, inlineOptions, alreadyLoadedCssUrls).then(function (errors) {
+                allErrors = allErrors.concat(errors);
+            });
+        })).then(function () {
+            return allErrors;
+        });
+    };
+
+    /* CSS link inlining */
+
+    var substituteLinkWithInlineStyle = function (oldLinkNode, styleContent) {
+        var parent = oldLinkNode.parentNode,
+            styleNode;
+
+        styleContent = styleContent.trim();
+        if (styleContent) {
+            styleNode = oldLinkNode.ownerDocument.createElement("style");
+            styleNode.type = "text/css";
+            styleNode.appendChild(oldLinkNode.ownerDocument.createTextNode(styleContent));
+
+            parent.insertBefore(styleNode, oldLinkNode);
+        }
+
+        parent.removeChild(oldLinkNode);
+    };
+
+    var requestStylesheetAndInlineResources = function (url, options) {
+        return inlineUtil.ajax(url, options)
+            .then(function (content) {
+                var cssRules = inlineCss.rulesForCssText(content);
+
+                return {
+                    content: content,
+                    cssRules: cssRules
+                };
+            })
+            .then(function (result) {
+                var hasChangesFromPathAdjustment = inlineCss.adjustPathsOfCssResources(url, result.cssRules);
+
+                return {
+                    content: result.content,
+                    cssRules: result.cssRules,
+                    hasChanges: hasChangesFromPathAdjustment
+                };
+            })
+            .then(function (result) {
+                return inlineCss.loadCSSImportsForRules(result.cssRules, [], options)
+                    .then(function (cssImportResult) {
+                        return {
+                            content: result.content,
+                            cssRules: result.cssRules,
+                            hasChanges: result.hasChanges || cssImportResult.hasChanges,
+                            errors: cssImportResult.errors
+                        };
+                    });
+            })
+            .then(function (result) {
+                return inlineCss.loadAndInlineCSSResourcesForRules(result.cssRules, options)
+                    .then(function (cssResourcesResult) {
+                        return {
+                            content: result.content,
+                            cssRules: result.cssRules,
+                            hasChanges: result.hasChanges || cssResourcesResult.hasChanges,
+                            errors: result.errors.concat(cssResourcesResult.errors)
+                        };
+                    });
+            })
+            .then(function (result) {
+                var content = result.content;
+                if (result.hasChanges) {
+                    content = inlineCss.cssRulesToText(result.cssRules);
+                }
+                return {
+                    content: content,
+                    errors: result.errors
+                };
+            });
+    };
+
+    var loadLinkedCSS = function (link, options) {
+        var cssHref = link.attributes.href.nodeValue,
+            documentBaseUrl = inlineUtil.getDocumentBaseUrl(link.ownerDocument),
+            ajaxOptions = inlineUtil.clone(options);
+
+        if (!ajaxOptions.baseUrl && documentBaseUrl) {
+            ajaxOptions.baseUrl = documentBaseUrl;
+        }
+
+        var processStylesheet = memoizeFunctionOnCaching(requestStylesheetAndInlineResources, options);
+
+        return processStylesheet(cssHref, ajaxOptions).then(function (result) {
+            return {
+                content: result.content,
+                errors: inlineUtil.cloneArray(result.errors)
+            };
+        });
+    };
+
+    var getCssStylesheetLinks = function (doc) {
+        var links = doc.getElementsByTagName("link");
+
+        return Array.prototype.filter.call(links, function (link) {
+            return link.attributes.rel && link.attributes.rel.nodeValue === "stylesheet" &&
+                (!link.attributes.type || link.attributes.type.nodeValue === "text/css");
+        });
+    };
+
+    module.loadAndInlineCssLinks = function (doc, options) {
+        var links = getCssStylesheetLinks(doc),
+            errors = [];
+
+        return inlineUtil.all(links.map(function (link) {
+            return loadLinkedCSS(link, options).then(function(result) {
+                substituteLinkWithInlineStyle(link, result.content + "\n");
+
+                errors = errors.concat(result.errors);
+            }, function (e) {
+                errors.push({
+                    resourceType: "stylesheet",
+                    url: e.url,
+                    msg: "Unable to load stylesheet " + e.url
+                });
             });
         })).then(function () {
             return errors;
         });
     };
 
-    var lastCacheDate = null;
+    /* Script inlining */
 
-    var getUncachableURL = function (url, cache) {
-        if (cache === false || cache === 'none' || cache === 'repeated') {
-            if (lastCacheDate === null || cache !== 'repeated') {
-                lastCacheDate = Date.now();
-            }
-            return url + "?_=" + lastCacheDate;
-        } else {
-            return url;
-        }
-    };
+    var loadLinkedScript = function (script, options) {
+        var src = script.attributes.src.nodeValue,
+            documentBase = inlineUtil.getDocumentBaseUrl(script.ownerDocument),
+            ajaxOptions = inlineUtil.clone(options);
 
-    module.util.ajax = function (url, options) {
-        var ajaxRequest = new window.XMLHttpRequest(),
-            defer = ayepromise.defer(),
-            joinedUrl = module.util.joinUrl(options.baseUrl, url),
-            augmentedUrl;
-
-        var doReject = function () {
-            defer.reject({
-                msg: 'Unable to load url',
-                url: joinedUrl
-            });
-        };
-
-        augmentedUrl = getUncachableURL(joinedUrl, options.cache);
-
-        ajaxRequest.addEventListener("load", function () {
-            if (ajaxRequest.status === 200 || ajaxRequest.status === 0) {
-                defer.resolve(ajaxRequest.response);
-            } else {
-                doReject();
-            }
-        }, false);
-
-        ajaxRequest.addEventListener("error", doReject, false);
-
-        try {
-            ajaxRequest.open('GET', augmentedUrl, true);
-            ajaxRequest.overrideMimeType(options.mimeType);
-            ajaxRequest.send(null);
-        } catch (e) {
-            doReject();
+        if (!ajaxOptions.baseUrl && documentBase) {
+            ajaxOptions.baseUrl = documentBase;
         }
 
-        return defer.promise;
-    };
-
-    module.util.binaryAjax = function (url, options) {
-        var ajaxOptions = module.util.clone(options);
-
-        ajaxOptions.mimeType = 'text/plain; charset=x-user-defined';
-
-        return module.util.ajax(url, ajaxOptions)
-            .then(function (content) {
-                var binaryContent = "";
-
-                for (var i = 0; i < content.length; i++) {
-                    binaryContent += String.fromCharCode(content.charCodeAt(i) & 0xFF);
-                }
-
-                return binaryContent;
+        return inlineUtil.ajax(src, ajaxOptions)
+            .fail(function (e) {
+                throw {
+                    resourceType: "script",
+                    url: e.url,
+                    msg: "Unable to load script " + e.url
+                };
             });
     };
 
-    var detectMimeType = function (content) {
-        var startsWith = function (string, substring) {
-            return string.substring(0, substring.length) === substring;
-        };
-
-        if (startsWith(content, '<?xml') || startsWith(content, '<svg')) {
-            return 'image/svg+xml';
-        }
-        return 'image/png';
+    var escapeClosingTags = function (text) {
+        // http://stackoverflow.com/questions/9246382/escaping-script-tag-inside-javascript
+        return text.replace(/<\//g, '<\\/');
     };
 
-    module.util.getDataURIForImageURL = function (url, options) {
-        return module.util.binaryAjax(url, options)
-            .then(function (content) {
-                var base64Content = btoa(content),
-                    mimeType = detectMimeType(content);
+    var substituteExternalScriptWithInline = function (scriptNode, jsCode) {
+        scriptNode.attributes.removeNamedItem('src');
+        scriptNode.textContent = escapeClosingTags(jsCode);
+    };
 
-                return 'data:' + mimeType + ';base64,' + base64Content;
+    var getScripts = function (doc) {
+        var scripts = doc.getElementsByTagName("script");
+
+        return Array.prototype.filter.call(scripts, function (script) {
+            return !!script.attributes.src;
+        });
+    };
+
+    module.loadAndInlineScript = function (doc, options) {
+        var scripts = getScripts(doc);
+
+        return inlineUtil.collectAndReportErrors(scripts.map(function (script) {
+            return loadLinkedScript(script, options).then(function (jsCode) {
+                substituteExternalScriptWithInline(script, jsCode);
             });
+        }));
     };
 
-    var uniqueIdList = [];
+    /* Main */
 
-    var constantUniqueIdFor = function (element) {
-        // HACK, using a list results in O(n), but how do we hash a function?
-        if (uniqueIdList.indexOf(element) < 0) {
-            uniqueIdList.push(element);
-        }
-        return uniqueIdList.indexOf(element);
-    };
+    module.inlineReferences = function (doc, options) {
+        var allErrors = [],
+            inlineFuncs = [
+                module.loadAndInlineImages,
+                module.loadAndInlineStyles,
+                module.loadAndInlineCssLinks];
 
-    module.util.memoize = function (func, hasher, memo) {
-        if (typeof memo !== "object") {
-            throw new Error("cacheBucket is not an object");
+        if (options.inlineScripts !== false) {
+            inlineFuncs.push(module.loadAndInlineScript);
         }
 
-        return function () {
-            var args = Array.prototype.slice.call(arguments);
-
-            var argumentHash = hasher(args),
-                funcHash = constantUniqueIdFor(func),
-                retValue;
-
-            if (memo[funcHash] && memo[funcHash][argumentHash]) {
-                return memo[funcHash][argumentHash];
-            } else {
-                retValue = func.apply(null, args);
-
-                memo[funcHash] = memo[funcHash] || {};
-                memo[funcHash][argumentHash] = retValue;
-
-                return retValue;
-            }
-        };
+        return inlineUtil.all(inlineFuncs.map(function (func) {
+            return func(doc, options)
+                .then(function (errors) {
+                    allErrors = allErrors.concat(errors);
+                });
+        })).then(function () {
+            return allErrors;
+        });
     };
 
     return module;
-}(window.rasterizeHTMLInline || {}, window, ayepromise, url));
+}(inlineCss, inlineUtil));
 
-window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, ayepromise, theWindow) {
+window.rasterizeHTML = (function (inline, inlineUtil, xmlserializer, ayepromise, theWindow) {
     "use strict";
 
     var module = {};
@@ -1235,8 +1249,8 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, ayepromise
                 var args = Array.prototype.slice.call(arguments),
                     method = args.shift(),
                     url = args.shift(),
-                    // TODO remove reference to rasterizeHTMLInline.util
-                    joinedUrl = rasterizeHTMLInline.util.joinUrl(baseUrl, url);
+                    // TODO remove reference to inlineUtil
+                    joinedUrl = inlineUtil.joinUrl(baseUrl, url);
 
                 return open.apply(this, [method, joinedUrl].concat(args));
             };
@@ -1402,8 +1416,8 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, ayepromise
 
     var doDocumentLoad = function (url, options) {
         var ajaxRequest = new window.XMLHttpRequest(),
-            // TODO remove reference to rasterizeHTMLInline.util
-            joinedUrl = rasterizeHTMLInline.util.joinUrl(options.baseUrl, url),
+            // TODO remove reference to inlineUtil
+            joinedUrl = inlineUtil.joinUrl(options.baseUrl, url),
             augmentedUrl = getUncachableURL(joinedUrl, options.cache),
             defer = ayepromise.defer(),
             doReject = function () {
@@ -1779,10 +1793,10 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, ayepromise
         var executeJsTimeout = options.executeJsTimeout || 0,
             inlineOptions;
 
-        inlineOptions = rasterizeHTMLInline.util.clone(options);
+        inlineOptions = inlineUtil.clone(options);
         inlineOptions.inlineScripts = options.executeJs === true;
 
-        return rasterizeHTMLInline.inlineReferences(doc, inlineOptions)
+        return inline.inlineReferences(doc, inlineOptions)
             .then(function (errors) {
                 if (options.executeJs) {
                     return module.util.executeJavascript(doc, options.baseUrl, executeJsTimeout)
@@ -1891,4 +1905,9 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, ayepromise
     };
 
     return module;
-}(window.rasterizeHTMLInline, xmlserializer, ayepromise, window));
+}(inline, inlineUtil, xmlserializer, ayepromise, window));
+
+
+return rasterizeHTML;
+
+}));

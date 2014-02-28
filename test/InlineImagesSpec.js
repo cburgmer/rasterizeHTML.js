@@ -7,7 +7,7 @@ describe("Image and image input inline", function () {
         urlMocks = {};
 
     var setupGetDataURIForImageURLMock = function () {
-        return spyOn(rasterizeHTMLInline.util, "getDataURIForImageURL").and.callFake(function (url) {
+        return spyOn(inlineUtil, "getDataURIForImageURL").and.callFake(function (url) {
             var defer = ayepromise.defer();
             if (urlMocks[url] !== undefined) {
                 defer.resolve(urlMocks[url]);
@@ -25,7 +25,7 @@ describe("Image and image input inline", function () {
     };
 
     beforeEach(function () {
-        joinUrlSpy = spyOn(rasterizeHTMLInline.util, "joinUrl");
+        joinUrlSpy = spyOn(inlineUtil, "joinUrl");
         getDataURIForImageURLSpy = setupGetDataURIForImageURLMock();
 
         doc = document.implementation.createHTMLDocument("");
@@ -35,7 +35,7 @@ describe("Image and image input inline", function () {
         mockGetDataURIForImageURL(firstImage, firstImageDataURI);
         doc.body.innerHTML = '<img id="image" src="' + firstImage + '" alt="test image"/>';
 
-        rasterizeHTMLInline.loadAndInlineImages(doc, {}).then(function () {
+        inline.loadAndInlineImages(doc, {}).then(function () {
             expect(doc.getElementById("image").attributes.src.nodeValue).toEqual(firstImageDataURI);
 
             done();
@@ -46,7 +46,7 @@ describe("Image and image input inline", function () {
         mockGetDataURIForImageURL(firstImage, firstImageDataURI);
         doc.body.innerHTML = '<input type="image" id="input" src="' + firstImage + '" alt="test image"/>';
 
-        rasterizeHTMLInline.loadAndInlineImages(doc, {}).then(function () {
+        inline.loadAndInlineImages(doc, {}).then(function () {
             expect(doc.getElementById("input").attributes.src.nodeValue).toEqual(firstImageDataURI);
 
             done();
@@ -61,7 +61,7 @@ describe("Image and image input inline", function () {
             '<img id="image2" src="' + secondImage +'" alt="test image"/>'
         );
 
-        rasterizeHTMLInline.loadAndInlineImages(doc, {}).then(function () {
+        inline.loadAndInlineImages(doc, {}).then(function () {
             expect(doc.getElementById("image1").attributes.src.nodeValue).toEqual(firstImageDataURI);
             expect(doc.getElementById("image2").attributes.src.nodeValue).toEqual(secondImageDataURI);
 
@@ -70,13 +70,13 @@ describe("Image and image input inline", function () {
     });
 
     it("should finish if no images found", function (done) {
-        rasterizeHTMLInline.loadAndInlineImages(doc, {}).then(done);
+        inline.loadAndInlineImages(doc, {}).then(done);
     });
 
     it("should not touch an already inlined image", function (done) {
         doc.body.innerHTML = '<img id="image" src="data:image/png;base64,soMEfAkebASE64=" alt="test image"/>';
 
-        rasterizeHTMLInline.loadAndInlineImages(doc, {}).then(function () {
+        inline.loadAndInlineImages(doc, {}).then(function () {
             expect(doc.getElementById("image").src).toEqual('data:image/png;base64,soMEfAkebASE64=');
 
             done();
@@ -86,7 +86,7 @@ describe("Image and image input inline", function () {
     it("should not touch an image without a src", function (done) {
         doc.body.innerHTML = '<img id="image">';
 
-        rasterizeHTMLInline.loadAndInlineImages(doc, {}).then(function () {
+        inline.loadAndInlineImages(doc, {}).then(function () {
             expect(doc.getElementById("image").parentNode.innerHTML).toEqual('<img id="image">');
 
             done();
@@ -94,11 +94,11 @@ describe("Image and image input inline", function () {
     });
 
     it("should respect the document's baseURI when loading the image", function () {
-        var getDocumentBaseUrlSpy = spyOn(rasterizeHTMLInline.util, 'getDocumentBaseUrl').and.callThrough();
+        var getDocumentBaseUrlSpy = spyOn(inlineUtil, 'getDocumentBaseUrl').and.callThrough();
 
         doc = rasterizeHTMLTestHelper.readDocumentFixture("image.html");
 
-        rasterizeHTMLInline.loadAndInlineImages(doc, {});
+        inline.loadAndInlineImages(doc, {});
 
         expect(getDataURIForImageURLSpy.calls.mostRecent().args[1].baseUrl).toEqual(doc.baseURI);
         expect(getDocumentBaseUrlSpy).toHaveBeenCalledWith(doc);
@@ -107,7 +107,7 @@ describe("Image and image input inline", function () {
     it("should respect optional baseUrl when loading the image", function () {
         doc = rasterizeHTMLTestHelper.readDocumentFixtureWithoutBaseURI("image.html");
 
-        rasterizeHTMLInline.loadAndInlineImages(doc, {baseUrl: "aBaseUrl"});
+        inline.loadAndInlineImages(doc, {baseUrl: "aBaseUrl"});
 
         expect(getDataURIForImageURLSpy.calls.mostRecent().args[1].baseUrl).toEqual("aBaseUrl");
     });
@@ -120,7 +120,7 @@ describe("Image and image input inline", function () {
         expect(doc.baseURI).not.toEqual("about:blank");
         expect(doc.baseURI).not.toEqual(baseUrl);
 
-        rasterizeHTMLInline.loadAndInlineImages(doc, {baseUrl: baseUrl});
+        inline.loadAndInlineImages(doc, {baseUrl: baseUrl});
 
         expect(getDataURIForImageURLSpy.calls.mostRecent().args[1].baseUrl).toEqual(baseUrl);
     });
@@ -128,7 +128,7 @@ describe("Image and image input inline", function () {
     it("should circumvent caching if requested", function () {
         doc.body.innerHTML = '<img id="image" src="' + firstImage + '" alt="test image"/>';
 
-        rasterizeHTMLInline.loadAndInlineImages(doc, {cache: 'none'});
+        inline.loadAndInlineImages(doc, {cache: 'none'});
 
         expect(getDataURIForImageURLSpy).toHaveBeenCalledWith(jasmine.any(String), {cache: 'none'});
     });
@@ -136,7 +136,7 @@ describe("Image and image input inline", function () {
     it("should not circumvent caching by default", function () {
         doc.body.innerHTML = '<img id="image" src="' + firstImage + '" alt="test image"/>';
 
-        rasterizeHTMLInline.loadAndInlineImages(doc, {});
+        inline.loadAndInlineImages(doc, {});
 
         expect(getDataURIForImageURLSpy).toHaveBeenCalledWith(jasmine.any(String), {});
     });
@@ -153,7 +153,7 @@ describe("Image and image input inline", function () {
         it("should report an error if an image could not be loaded", function (done) {
             doc.body.innerHTML = '<img src="image_that_doesnt_exist.png" alt="test image"/>';
 
-            rasterizeHTMLInline.loadAndInlineImages(doc, {}).then(function (errors) {
+            inline.loadAndInlineImages(doc, {}).then(function (errors) {
                 errors = rasterizeHTMLTestHelper.deleteAdditionalFieldsFromErrorsUnderPhantomJS(errors);
 
                 expect(errors).toEqual([{
@@ -172,7 +172,7 @@ describe("Image and image input inline", function () {
                 '<img src="' + imageThatDoesExist + '" alt="test image"/>'
             );
 
-            rasterizeHTMLInline.loadAndInlineImages(doc, {}).then(function (errors) {
+            inline.loadAndInlineImages(doc, {}).then(function (errors) {
                 errors = rasterizeHTMLTestHelper.deleteAdditionalFieldsFromErrorsUnderPhantomJS(errors);
 
                 expect(errors).toEqual([{
@@ -191,7 +191,7 @@ describe("Image and image input inline", function () {
                 '<img src="another_image_that_doesnt_exist.png" alt="test image"/>'
             );
 
-            rasterizeHTMLInline.loadAndInlineImages(doc, {}).then(function (errors) {
+            inline.loadAndInlineImages(doc, {}).then(function (errors) {
                 expect(errors).toEqual([jasmine.any(Object), jasmine.any(Object)]);
                 expect(errors[0]).not.toEqual(errors[1]);
 
@@ -202,7 +202,7 @@ describe("Image and image input inline", function () {
         it("should report an empty list for a successful image", function (done) {
             doc.body.innerHTML = ('<img src="' + imageThatDoesExist + '" alt="test image"/>');
 
-            rasterizeHTMLInline.loadAndInlineImages(doc, {}).then(function (errors) {
+            inline.loadAndInlineImages(doc, {}).then(function (errors) {
                 expect(errors).toEqual([]);
 
                 done();

@@ -1,8 +1,10 @@
-window.rasterizeHTMLInline = (function (module) {
+var inline = (function (inlineCss, inlineUtil) {
     "use strict";
 
+    var module = {};
+
     var getUrlBasePath = function (url) {
-        return module.util.joinUrl(url, '.');
+        return inlineUtil.joinUrl(url, '.');
     };
 
     var parameterHashFunction = function (params) {
@@ -23,7 +25,7 @@ window.rasterizeHTMLInline = (function (module) {
 
     var memoizeFunctionOnCaching = function (func, options) {
         if ((options.cache !== false && options.cache !== 'none') && options.cacheBucket) {
-            return module.util.memoize(func, parameterHashFunction, options.cacheBucket);
+            return inlineUtil.memoize(func, parameterHashFunction, options.cacheBucket);
         } else {
             return func;
         }
@@ -33,14 +35,14 @@ window.rasterizeHTMLInline = (function (module) {
 
     var encodeImageAsDataURI = function (image, options) {
         var url = image.attributes.src ? image.attributes.src.nodeValue : null,
-            documentBase = module.util.getDocumentBaseUrl(image.ownerDocument),
-            ajaxOptions = module.util.clone(options);
+            documentBase = inlineUtil.getDocumentBaseUrl(image.ownerDocument),
+            ajaxOptions = inlineUtil.clone(options);
 
         if (!ajaxOptions.baseUrl && documentBase) {
             ajaxOptions.baseUrl = documentBase;
         }
 
-        return module.util.getDataURIForImageURL(url, ajaxOptions)
+        return inlineUtil.getDataURIForImageURL(url, ajaxOptions)
             .then(function (dataURI) {
                 return dataURI;
             }, function (e) {
@@ -56,7 +58,7 @@ window.rasterizeHTMLInline = (function (module) {
         return images.filter(function (image) {
             var url = image.attributes.src ? image.attributes.src.nodeValue : null;
 
-            return url !== null && !module.util.isDataUri(url);
+            return url !== null && !inlineUtil.isDataUri(url);
         });
     };
 
@@ -75,7 +77,7 @@ window.rasterizeHTMLInline = (function (module) {
             imageInputs = filterInputsForImageType(doc.getElementsByTagName("input")),
             externalImages = filterExternalImages(images.concat(imageInputs));
 
-        return module.util.collectAndReportErrors(externalImages.map(function (image) {
+        return inlineUtil.collectAndReportErrors(externalImages.map(function (image) {
             return encodeImageAsDataURI(image, options).then(function (dataURI) {
                 image.attributes.src.nodeValue = dataURI;
             });
@@ -85,15 +87,15 @@ window.rasterizeHTMLInline = (function (module) {
     /* Style inlining */
 
     var requestExternalsForStylesheet = function (styleContent, alreadyLoadedCssUrls, options) {
-        var cssRules = module.css.rulesForCssText(styleContent);
+        var cssRules = inlineCss.rulesForCssText(styleContent);
 
-        return module.css.loadCSSImportsForRules(cssRules, alreadyLoadedCssUrls, options).then(function (cssImportResult) {
-            return module.css.loadAndInlineCSSResourcesForRules(cssRules, options).then(function (cssResourcesResult) {
+        return inlineCss.loadCSSImportsForRules(cssRules, alreadyLoadedCssUrls, options).then(function (cssImportResult) {
+            return inlineCss.loadAndInlineCSSResourcesForRules(cssRules, options).then(function (cssResourcesResult) {
                 var errors = cssImportResult.errors.concat(cssResourcesResult.errors),
                     hasChanges = cssImportResult.hasChanges || cssResourcesResult.hasChanges;
 
                 if (hasChanges) {
-                    styleContent = module.css.cssRulesToText(cssRules);
+                    styleContent = inlineCss.cssRulesToText(cssRules);
                 }
 
                 return {
@@ -114,7 +116,7 @@ window.rasterizeHTMLInline = (function (module) {
                 style.childNodes[0].nodeValue = result.content;
             }
 
-            return module.util.cloneArray(result.errors);
+            return inlineUtil.cloneArray(result.errors);
         });
     };
 
@@ -132,10 +134,10 @@ window.rasterizeHTMLInline = (function (module) {
             alreadyLoadedCssUrls = [],
             inlineOptions;
 
-        inlineOptions = module.util.clone(options);
-        inlineOptions.baseUrl = inlineOptions.baseUrl || module.util.getDocumentBaseUrl(doc);
+        inlineOptions = inlineUtil.clone(options);
+        inlineOptions.baseUrl = inlineOptions.baseUrl || inlineUtil.getDocumentBaseUrl(doc);
 
-        return module.util.all(styles.map(function (style) {
+        return inlineUtil.all(styles.map(function (style) {
             return loadAndInlineCssForStyle(style, inlineOptions, alreadyLoadedCssUrls).then(function (errors) {
                 allErrors = allErrors.concat(errors);
             });
@@ -163,9 +165,9 @@ window.rasterizeHTMLInline = (function (module) {
     };
 
     var requestStylesheetAndInlineResources = function (url, options) {
-        return module.util.ajax(url, options)
+        return inlineUtil.ajax(url, options)
             .then(function (content) {
-                var cssRules = module.css.rulesForCssText(content);
+                var cssRules = inlineCss.rulesForCssText(content);
 
                 return {
                     content: content,
@@ -173,7 +175,7 @@ window.rasterizeHTMLInline = (function (module) {
                 };
             })
             .then(function (result) {
-                var hasChangesFromPathAdjustment = module.css.adjustPathsOfCssResources(url, result.cssRules);
+                var hasChangesFromPathAdjustment = inlineCss.adjustPathsOfCssResources(url, result.cssRules);
 
                 return {
                     content: result.content,
@@ -182,7 +184,7 @@ window.rasterizeHTMLInline = (function (module) {
                 };
             })
             .then(function (result) {
-                return module.css.loadCSSImportsForRules(result.cssRules, [], options)
+                return inlineCss.loadCSSImportsForRules(result.cssRules, [], options)
                     .then(function (cssImportResult) {
                         return {
                             content: result.content,
@@ -193,7 +195,7 @@ window.rasterizeHTMLInline = (function (module) {
                     });
             })
             .then(function (result) {
-                return module.css.loadAndInlineCSSResourcesForRules(result.cssRules, options)
+                return inlineCss.loadAndInlineCSSResourcesForRules(result.cssRules, options)
                     .then(function (cssResourcesResult) {
                         return {
                             content: result.content,
@@ -206,7 +208,7 @@ window.rasterizeHTMLInline = (function (module) {
             .then(function (result) {
                 var content = result.content;
                 if (result.hasChanges) {
-                    content = module.css.cssRulesToText(result.cssRules);
+                    content = inlineCss.cssRulesToText(result.cssRules);
                 }
                 return {
                     content: content,
@@ -217,8 +219,8 @@ window.rasterizeHTMLInline = (function (module) {
 
     var loadLinkedCSS = function (link, options) {
         var cssHref = link.attributes.href.nodeValue,
-            documentBaseUrl = module.util.getDocumentBaseUrl(link.ownerDocument),
-            ajaxOptions = module.util.clone(options);
+            documentBaseUrl = inlineUtil.getDocumentBaseUrl(link.ownerDocument),
+            ajaxOptions = inlineUtil.clone(options);
 
         if (!ajaxOptions.baseUrl && documentBaseUrl) {
             ajaxOptions.baseUrl = documentBaseUrl;
@@ -229,7 +231,7 @@ window.rasterizeHTMLInline = (function (module) {
         return processStylesheet(cssHref, ajaxOptions).then(function (result) {
             return {
                 content: result.content,
-                errors: module.util.cloneArray(result.errors)
+                errors: inlineUtil.cloneArray(result.errors)
             };
         });
     };
@@ -247,7 +249,7 @@ window.rasterizeHTMLInline = (function (module) {
         var links = getCssStylesheetLinks(doc),
             errors = [];
 
-        return module.util.all(links.map(function (link) {
+        return inlineUtil.all(links.map(function (link) {
             return loadLinkedCSS(link, options).then(function(result) {
                 substituteLinkWithInlineStyle(link, result.content + "\n");
 
@@ -268,14 +270,14 @@ window.rasterizeHTMLInline = (function (module) {
 
     var loadLinkedScript = function (script, options) {
         var src = script.attributes.src.nodeValue,
-            documentBase = module.util.getDocumentBaseUrl(script.ownerDocument),
-            ajaxOptions = module.util.clone(options);
+            documentBase = inlineUtil.getDocumentBaseUrl(script.ownerDocument),
+            ajaxOptions = inlineUtil.clone(options);
 
         if (!ajaxOptions.baseUrl && documentBase) {
             ajaxOptions.baseUrl = documentBase;
         }
 
-        return module.util.ajax(src, ajaxOptions)
+        return inlineUtil.ajax(src, ajaxOptions)
             .fail(function (e) {
                 throw {
                     resourceType: "script",
@@ -306,7 +308,7 @@ window.rasterizeHTMLInline = (function (module) {
     module.loadAndInlineScript = function (doc, options) {
         var scripts = getScripts(doc);
 
-        return module.util.collectAndReportErrors(scripts.map(function (script) {
+        return inlineUtil.collectAndReportErrors(scripts.map(function (script) {
             return loadLinkedScript(script, options).then(function (jsCode) {
                 substituteExternalScriptWithInline(script, jsCode);
             });
@@ -326,7 +328,7 @@ window.rasterizeHTMLInline = (function (module) {
             inlineFuncs.push(module.loadAndInlineScript);
         }
 
-        return module.util.all(inlineFuncs.map(function (func) {
+        return inlineUtil.all(inlineFuncs.map(function (func) {
             return func(doc, options)
                 .then(function (errors) {
                     allErrors = allErrors.concat(errors);
@@ -337,4 +339,4 @@ window.rasterizeHTMLInline = (function (module) {
     };
 
     return module;
-}(window.rasterizeHTMLInline || {}));
+}(inlineCss, inlineUtil));

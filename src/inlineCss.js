@@ -1,7 +1,7 @@
-window.rasterizeHTMLInline = (function (module, window, cssom, ayepromise) {
+var inlineCss = (function (inlineUtil, window, cssom, ayepromise) {
     "use strict";
 
-    module.css = {};
+    var module = {};
 
     var updateCssPropertyValue = function (rule, property, value) {
         rule.style.setProperty(property, value, rule.style.getPropertyPriority(property));
@@ -26,7 +26,7 @@ window.rasterizeHTMLInline = (function (module, window, cssom, ayepromise) {
         return !rules.length || rules[0].cssText.indexOf('url()') >= 0;
     }());
 
-    module.css.rulesForCssText = function (styleContent) {
+    module.rulesForCssText = function (styleContent) {
         if (browserHasBackgroundImageUrlIssue && cssom.parse) {
             return cssom.parse(styleContent).cssRules;
         } else {
@@ -68,7 +68,7 @@ window.rasterizeHTMLInline = (function (module, window, cssom, ayepromise) {
         });
     };
 
-    module.css.cssRulesToText = function (cssRules) {
+    module.cssRulesToText = function (cssRules) {
         return cssRules.reduce(function (cssText, rule) {
             return cssText + rule.cssText;
         }, '');
@@ -95,7 +95,7 @@ window.rasterizeHTMLInline = (function (module, window, cssom, ayepromise) {
         return url.replace(whitespaceRegex, "$1");
     };
 
-    module.css.extractCssUrl = function (cssUrl) {
+    module.extractCssUrl = function (cssUrl) {
         var urlRegex = /^url\(([^\)]+)\)/,
             quotedUrl;
 
@@ -123,7 +123,7 @@ window.rasterizeHTMLInline = (function (module, window, cssom, ayepromise) {
         var url, format = null;
 
         try {
-            url = module.css.extractCssUrl(reference[0]);
+            url = module.extractCssUrl(reference[0]);
             if (reference[1]) {
                 format = findFontFaceFormat(reference[1]);
             }
@@ -161,7 +161,7 @@ window.rasterizeHTMLInline = (function (module, window, cssom, ayepromise) {
         cssRules[ruleIdx] = styleSheet.cssRules[ruleIdx];
     };
 
-    module.css.adjustPathsOfCssResources = function (baseUrl, cssRules) {
+    module.adjustPathsOfCssResources = function (baseUrl, cssRules) {
         var backgroundRules = findBackgroundImageRules(cssRules),
             backgroundDeclarations = findBackgroundDeclarations(backgroundRules),
             change = false;
@@ -174,7 +174,7 @@ window.rasterizeHTMLInline = (function (module, window, cssom, ayepromise) {
             if (externalBackgroundIndices.length > 0) {
                 externalBackgroundIndices.forEach(function (backgroundLayerIndex) {
                     var relativeUrl = parsedBackground[backgroundLayerIndex].url,
-                        url = module.util.joinUrl(baseUrl, relativeUrl);
+                        url = inlineUtil.joinUrl(baseUrl, relativeUrl);
                     parsedBackground[backgroundLayerIndex].url = url;
                 });
 
@@ -193,7 +193,7 @@ window.rasterizeHTMLInline = (function (module, window, cssom, ayepromise) {
             if (externalFontFaceUrlIndices.length > 0) {
                 externalFontFaceUrlIndices.forEach(function (fontFaceUrlIndex) {
                     var relativeUrl = parsedFontFaceSources[fontFaceUrlIndex].url,
-                        url = module.util.joinUrl(baseUrl, relativeUrl);
+                        url = inlineUtil.joinUrl(baseUrl, relativeUrl);
 
                     parsedFontFaceSources[fontFaceUrlIndex].url = url;
                 });
@@ -205,7 +205,7 @@ window.rasterizeHTMLInline = (function (module, window, cssom, ayepromise) {
         });
         findCSSImportRules(cssRules).forEach(function (rule) {
             var cssUrl = rule.href,
-                url = module.util.joinUrl(baseUrl, cssUrl);
+                url = inlineUtil.joinUrl(baseUrl, cssUrl);
 
             exchangeRule(cssRules, rule, "@import url(" + url + ");");
 
@@ -254,7 +254,7 @@ window.rasterizeHTMLInline = (function (module, window, cssom, ayepromise) {
             url = unquoteString(url);
         }
 
-        cssHrefRelativeToDoc = module.util.joinUrl(options.baseUrl, url);
+        cssHrefRelativeToDoc = inlineUtil.joinUrl(options.baseUrl, url);
 
         if (alreadyLoadedCssUrls.indexOf(cssHrefRelativeToDoc) >= 0) {
             // Remove URL by adding empty string
@@ -264,14 +264,14 @@ window.rasterizeHTMLInline = (function (module, window, cssom, ayepromise) {
             alreadyLoadedCssUrls.push(cssHrefRelativeToDoc);
         }
 
-        return module.util.ajax(url, options)
+        return inlineUtil.ajax(url, options)
             .then(function (cssText) {
-                var externalCssRules = module.css.rulesForCssText(cssText);
+                var externalCssRules = module.rulesForCssText(cssText);
 
                 // Recursively follow @import statements
-                return module.css.loadCSSImportsForRules(externalCssRules, alreadyLoadedCssUrls, options)
+                return module.loadCSSImportsForRules(externalCssRules, alreadyLoadedCssUrls, options)
                     .then(function (result) {
-                        module.css.adjustPathsOfCssResources(url, externalCssRules);
+                        module.adjustPathsOfCssResources(url, externalCssRules);
 
                         substituteRule(cssRules, rule, externalCssRules);
 
@@ -286,12 +286,12 @@ window.rasterizeHTMLInline = (function (module, window, cssom, ayepromise) {
             });
     };
 
-    module.css.loadCSSImportsForRules = function (cssRules, alreadyLoadedCssUrls, options) {
+    module.loadCSSImportsForRules = function (cssRules, alreadyLoadedCssUrls, options) {
         var rulesToInline = findCSSImportRules(cssRules),
             errors = [],
             hasChanges = false;
 
-        return module.util.all(rulesToInline.map(function (rule) {
+        return inlineUtil.all(rulesToInline.map(function (rule) {
             return loadAndInlineCSSImport(cssRules, rule, alreadyLoadedCssUrls, options).then(function (moreErrors) {
                 errors = errors.concat(moreErrors);
 
@@ -349,7 +349,7 @@ window.rasterizeHTMLInline = (function (module, window, cssom, ayepromise) {
 
         for(i = 0; i < values.length; i++) {
             try {
-                url = module.css.extractCssUrl(values[i]);
+                url = module.extractCssUrl(values[i]);
                 return {
                     url: url,
                     idx: i
@@ -382,7 +382,7 @@ window.rasterizeHTMLInline = (function (module, window, cssom, ayepromise) {
         var matchIndices = [];
 
         parsedBackground.forEach(function (backgroundLayer, i) {
-            if (backgroundLayer.url && !module.util.isDataUri(backgroundLayer.url)) {
+            if (backgroundLayer.url && !inlineUtil.isDataUri(backgroundLayer.url)) {
                 matchIndices.push(i);
             }
         });
@@ -412,10 +412,10 @@ window.rasterizeHTMLInline = (function (module, window, cssom, ayepromise) {
             externalBackgroundLayerIndices = findExternalBackgroundUrls(parsedBackground),
             hasChanges = false;
 
-        return module.util.collectAndReportErrors(externalBackgroundLayerIndices.map(function (backgroundLayerIndex) {
+        return inlineUtil.collectAndReportErrors(externalBackgroundLayerIndices.map(function (backgroundLayerIndex) {
             var url = parsedBackground[backgroundLayerIndex].url;
 
-            return module.util.getDataURIForImageURL(url, options)
+            return inlineUtil.getDataURIForImageURL(url, options)
                 .then(function (dataURI) {
                     parsedBackground[backgroundLayerIndex].url = dataURI;
 
@@ -442,7 +442,7 @@ window.rasterizeHTMLInline = (function (module, window, cssom, ayepromise) {
             errors = [],
             cssHasChanges = false;
 
-        return module.util.all(backgroundDeclarations.map(function (declaration) {
+        return inlineUtil.all(backgroundDeclarations.map(function (declaration) {
             return loadAndInlineBackgroundImages(declaration.value, options)
                 .then(function (result) {
                     if (result.hasChanges) {
@@ -512,7 +512,7 @@ window.rasterizeHTMLInline = (function (module, window, cssom, ayepromise) {
     var findExternalFontFaceUrls = function (parsedFontFaceSources) {
         var sourceIndices = [];
         parsedFontFaceSources.forEach(function (sourceItem, i) {
-            if (sourceItem.url && !module.util.isDataUri(sourceItem.url)) {
+            if (sourceItem.url && !inlineUtil.isDataUri(sourceItem.url)) {
                 sourceIndices.push(i);
             }
         });
@@ -540,11 +540,11 @@ window.rasterizeHTMLInline = (function (module, window, cssom, ayepromise) {
             externalFontFaceUrlIndices = findExternalFontFaceUrls(parsedFontFaceSources),
             hasChanges = false;
 
-        return module.util.collectAndReportErrors(externalFontFaceUrlIndices.map(function (urlIndex) {
+        return inlineUtil.collectAndReportErrors(externalFontFaceUrlIndices.map(function (urlIndex) {
             var fontSrc = parsedFontFaceSources[urlIndex],
                 format = fontSrc.format || "woff";
 
-            return module.util.binaryAjax(fontSrc.url, options)
+            return inlineUtil.binaryAjax(fontSrc.url, options)
                 .then(function (content) {
                     var base64Content = btoa(content);
                     fontSrc.url = 'data:font/' + format + ';base64,' + base64Content;
@@ -571,7 +571,7 @@ window.rasterizeHTMLInline = (function (module, window, cssom, ayepromise) {
             errors = [],
             hasChanges = false;
 
-        return module.util.all(rulesToInline.map(function (rule) {
+        return inlineUtil.all(rulesToInline.map(function (rule) {
             var srcDeclarationValue = rule.style.getPropertyValue("src");
 
             return loadAndInlineFontFace(srcDeclarationValue, options).then(function (result) {
@@ -591,11 +591,11 @@ window.rasterizeHTMLInline = (function (module, window, cssom, ayepromise) {
         });
     };
 
-    module.css.loadAndInlineCSSResourcesForRules = function (cssRules, options) {
+    module.loadAndInlineCSSResourcesForRules = function (cssRules, options) {
         var hasChanges = false,
             errors = [];
 
-        return module.util.all([iterateOverRulesAndInlineBackgroundImages, iterateOverRulesAndInlineFontFace].map(function (func) {
+        return inlineUtil.all([iterateOverRulesAndInlineBackgroundImages, iterateOverRulesAndInlineFontFace].map(function (func) {
             return func(cssRules, options)
                 .then(function (result) {
                     hasChanges = hasChanges || result.hasChanges;
@@ -610,4 +610,4 @@ window.rasterizeHTMLInline = (function (module, window, cssom, ayepromise) {
     };
 
     return module;
-}(window.rasterizeHTMLInline || {}, window, window.cssom || {}, ayepromise));
+}(inlineUtil, window, cssom || {}, ayepromise));

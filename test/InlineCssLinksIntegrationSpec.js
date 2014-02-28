@@ -4,7 +4,7 @@ describe("Inline CSS content (integration)", function () {
     beforeEach(function () {
         doc = document.implementation.createHTMLDocument("");
 
-        spyOn(rasterizeHTMLInline.util, "ajax").and.callFake(function (url, options, success) {
+        spyOn(inlineUtil, "ajax").and.callFake(function (url, options, success) {
             var defer = ayepromise.defer(),
                 respondWith = ajaxSpyUrlMap[url];
             if (respondWith) {
@@ -42,7 +42,7 @@ describe("Inline CSS content (integration)", function () {
 
         appendStylesheetLink(doc, "some.html");
 
-        rasterizeHTMLInline.loadAndInlineCssLinks(doc, {}).then(function () {
+        inline.loadAndInlineCssLinks(doc, {}).then(function () {
             expect(doc.head.getElementsByTagName("style")[0].textContent).toMatch(
                 /p\s*\{\s*font-size:\s*14px;\s*\}\s*@font-face\s*\{\s*font-family:\s*["']test font["'];\s*src:\s*url\("?data:font\/woff;base64,dGhpcyBpcyBub3QgYSBmb250"?\);\s*\}/
             );
