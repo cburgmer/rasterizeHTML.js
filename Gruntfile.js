@@ -45,6 +45,14 @@ module.exports = function (grunt) {
                 options: {
                     'standalone': 'url'
                 }
+            },
+            allinone: {
+                src: 'dist/rasterizeHTML.js',
+                dest: 'build/rasterizeHTML.allinone.js',
+                options: {
+                    'standalone': 'rasterizeHTML',
+                    'alias': ['node_modules/url/url.js:url']
+                }
             }
         },
         clean: {
@@ -105,11 +113,7 @@ module.exports = function (grunt) {
                         ' * xmlserializer (MIT License) */\n'
                 },
                 files: {
-                    'dist/rasterizeHTML.allinone.js': [
-                        'build/dependencies/*.js',
-                        'node_modules/ayepromise/ayepromise.js',
-                        'dist/rasterizeHTML.js'
-                    ]
+                    'dist/rasterizeHTML.allinone.js': ['build/rasterizeHTML.allinone.js']
                 }
             }
         },
@@ -211,13 +215,16 @@ module.exports = function (grunt) {
 
     grunt.registerTask('default', [
         'clean:dist',
-        'browserify',
+        'browserify:cssom',
+        'browserify:url',
+        'browserify:xmlserializer',
         'jshint',
         'jasmine',
         'regex-check',
         'concat:one',
         'umd',
         'concat:dist',
+        'browserify:allinone',
         'uglify'
     ]);
 
