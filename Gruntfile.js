@@ -9,6 +9,7 @@ module.exports = function (grunt) {
                 'src/inlineUtil.js',
                 'src/inlineCss.js',
                 'src/inline.js',
+                'src/util.js',
                 'src/rasterizeHTML.js'
             ],
             options: {
@@ -64,6 +65,7 @@ module.exports = function (grunt) {
                 src: 'build/rasterizeHTML.concat.js',
                 dest: 'build/rasterizeHTML.umd.js',
                 objectToExport: 'rasterizeHTML',
+                indent: '    ',
                 deps: {
                     'default': ['url', 'xmlserializer', 'cssom', 'ayepromise']
                 }
@@ -71,7 +73,13 @@ module.exports = function (grunt) {
         },
         concat: {
             one: {
-                src: ['src/inlineUtil.js', 'src/inlineCss.js', 'src/inline.js', 'src/rasterizeHTML.js'],
+                src: [
+                    'src/inlineUtil.js',
+                    'src/inlineCss.js',
+                    'src/inline.js',
+                    'src/util.js',
+                    'src/rasterizeHTML.js'
+                ],
                 dest: 'build/rasterizeHTML.concat.js'
             },
             dist: {
@@ -141,12 +149,13 @@ module.exports = function (grunt) {
                     inlineUtil: true,
                     inlineCss: true,
                     inline: true,
+                    util: true,
                     cssom: true,
                     url: true,
                     xmlserializer: true,
                     ayepromise: true
                 },
-                exported: ['inline', 'inlineCss', 'inlineUtil']
+                exported: ['util', 'inline', 'inlineCss', 'inlineUtil']
             },
             uses_defaults: [
                 'src/*.js',
@@ -174,6 +183,7 @@ module.exports = function (grunt) {
                         inlineUtil: true,
                         inlineCss: true,
                         inline: true,
+                        util: true,
                         cssom: true,
                         url: true,
                         ayepromise: true,

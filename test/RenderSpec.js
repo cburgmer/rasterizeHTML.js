@@ -74,7 +74,7 @@ describe("The rendering process", function () {
             doc.body.innerHTML = "content";
 
             var error = new Error();
-            spyOn(rasterizeHTML.util, 'validateXHTML').and.throwError(error);
+            spyOn(util, 'validateXHTML').and.throwError(error);
 
             expect(function () { rasterizeHTML.getSvgForDocument(doc, 123, 987); }).toThrow(error);
         });
@@ -225,9 +225,9 @@ describe("The rendering process", function () {
         };
 
         beforeEach(function () {
-            spyOn(rasterizeHTML.util, 'fakeHover');
-            spyOn(rasterizeHTML.util, 'fakeActive');
-            spyOn(rasterizeHTML.util, 'calculateDocumentContentSize').and.returnValue(fulfilled({width: 47, height: 11}));
+            spyOn(util, 'fakeHover');
+            spyOn(util, 'fakeActive');
+            spyOn(util, 'calculateDocumentContentSize').and.returnValue(fulfilled({width: 47, height: 11}));
             spyOn(rasterizeHTML, 'getSvgForDocument');
             spyOn(rasterizeHTML, 'renderSvg');
 
@@ -246,7 +246,7 @@ describe("The rendering process", function () {
             rasterizeHTML.drawDocumentImage(doc, canvas, {}).then(function (theImage) {
                 expect(theImage).toBe(image);
 
-                expect(rasterizeHTML.util.calculateDocumentContentSize).toHaveBeenCalledWith(doc, jasmine.any(Number), jasmine.any(Number));
+                expect(util.calculateDocumentContentSize).toHaveBeenCalledWith(doc, jasmine.any(Number), jasmine.any(Number));
                 expect(rasterizeHTML.getSvgForDocument).toHaveBeenCalledWith(doc, 47, 11);
                 expect(rasterizeHTML.renderSvg).toHaveBeenCalledWith(svg, canvas);
 
@@ -263,43 +263,43 @@ describe("The rendering process", function () {
         it("should use the canvas width and height as viewport size", function () {
             rasterizeHTML.drawDocumentImage(doc, canvas, {});
 
-            expect(rasterizeHTML.util.calculateDocumentContentSize).toHaveBeenCalledWith(doc, 123, 456);
+            expect(util.calculateDocumentContentSize).toHaveBeenCalledWith(doc, 123, 456);
         });
 
         it("should make the canvas optional and apply default viewport width and height", function () {
             rasterizeHTML.drawDocumentImage(doc, null, {});
 
-            expect(rasterizeHTML.util.calculateDocumentContentSize).toHaveBeenCalledWith(doc, 300, 200);
+            expect(util.calculateDocumentContentSize).toHaveBeenCalledWith(doc, 300, 200);
         });
 
         it("should take an optional width and height", function () {
             rasterizeHTML.drawDocumentImage(doc, canvas, {width: 42, height: 4711});
 
-            expect(rasterizeHTML.util.calculateDocumentContentSize).toHaveBeenCalledWith(doc, 42, 4711);
+            expect(util.calculateDocumentContentSize).toHaveBeenCalledWith(doc, 42, 4711);
         });
 
         it("should trigger hover effect", function () {
             rasterizeHTML.drawDocumentImage(doc, canvas, {hover: '.mySpan'});
 
-            expect(rasterizeHTML.util.fakeHover).toHaveBeenCalledWith(doc, '.mySpan');
+            expect(util.fakeHover).toHaveBeenCalledWith(doc, '.mySpan');
         });
 
         it("should not trigger hover effect by default", function () {
             rasterizeHTML.drawDocumentImage(doc, canvas, {});
 
-            expect(rasterizeHTML.util.fakeHover).not.toHaveBeenCalled();
+            expect(util.fakeHover).not.toHaveBeenCalled();
         });
 
         it("should trigger active effect", function () {
             rasterizeHTML.drawDocumentImage(doc, canvas, {active: '.mySpan'});
 
-            expect(rasterizeHTML.util.fakeActive).toHaveBeenCalledWith(doc, '.mySpan');
+            expect(util.fakeActive).toHaveBeenCalledWith(doc, '.mySpan');
         });
 
         it("should not trigger active effect by default", function () {
             rasterizeHTML.drawDocumentImage(doc, canvas, {});
 
-            expect(rasterizeHTML.util.fakeActive).not.toHaveBeenCalled();
+            expect(util.fakeActive).not.toHaveBeenCalled();
         });
     });
 

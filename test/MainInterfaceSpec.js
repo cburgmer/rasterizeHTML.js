@@ -32,15 +32,15 @@ describe("Main interface of rasterizeHTML.js", function () {
         };
 
     beforeEach(function () {
-        ajaxSpy = spyOn(rasterizeHTML.util, "loadDocument");
-        parseHTMLSpy = spyOn(rasterizeHTML.util, 'parseHTML').and.returnValue(doc);
+        ajaxSpy = spyOn(util, "loadDocument");
+        parseHTMLSpy = spyOn(util, 'parseHTML').and.returnValue(doc);
 
 
         canvas = document.createElement("canvas");
         canvas.width = 123;
         canvas.height = 456;
 
-        parseOptionalParametersSpy = spyOn(rasterizeHTML.util, "parseOptionalParameters").and.callThrough();
+        parseOptionalParametersSpy = spyOn(util, "parseOptionalParameters").and.callThrough();
 
         spyOn(rasterizeHTML, 'drawDocumentImage');
     });
@@ -54,7 +54,7 @@ describe("Main interface of rasterizeHTML.js", function () {
             inlineReferences = spyOn(inline, "inlineReferences").and.returnValue(withoutErrors());
             drawImageOnCanvas = spyOn(rasterizeHTML, "drawImageOnCanvas");
 
-            spyOn(rasterizeHTML.util, 'persistInputValues');
+            spyOn(util, 'persistInputValues');
 
             setUpDrawDocumentImage(svgImage);
         });
@@ -111,13 +111,13 @@ describe("Main interface of rasterizeHTML.js", function () {
 
         it("should optionally execute JavaScript in the page", function (done) {
             var doc = "the document",
-                executeJavascript = spyOn(rasterizeHTML.util, "executeJavascript").and.returnValue(
+                executeJavascript = spyOn(util, "executeJavascript").and.returnValue(
                     fulfilled({document: doc, errors: []})
                 );
 
             rasterizeHTML.drawDocument(doc, {executeJs: true}).then(function () {
                 expect(executeJavascript).toHaveBeenCalledWith(doc, undefined, 0);
-                expect(rasterizeHTML.util.persistInputValues).toHaveBeenCalledWith(doc);
+                expect(util.persistInputValues).toHaveBeenCalledWith(doc);
 
                 done();
             });
@@ -125,7 +125,7 @@ describe("Main interface of rasterizeHTML.js", function () {
 
         it("should inline scripts when executing JavaScript", function (done) {
             var doc = "the document";
-            spyOn(rasterizeHTML.util, "executeJavascript").and.returnValue(
+            spyOn(util, "executeJavascript").and.returnValue(
                 fulfilled({document: doc, errors: []})
             );
 
@@ -138,7 +138,7 @@ describe("Main interface of rasterizeHTML.js", function () {
 
         it("should follow optional timeout when executing JavaScript", function (done) {
             var doc = "the document",
-                executeJavascript = spyOn(rasterizeHTML.util, "executeJavascript").and.returnValue(
+                executeJavascript = spyOn(util, "executeJavascript").and.returnValue(
                     fulfilled({document: doc, errors: []})
                 );
 
@@ -316,7 +316,7 @@ describe("Main interface of rasterizeHTML.js", function () {
             callback = jasmine.createSpy("drawCallback");
 
             drawImageOnCanvas = spyOn(rasterizeHTML, "drawImageOnCanvas");
-            spyOn(rasterizeHTML.util, 'persistInputValues');
+            spyOn(util, 'persistInputValues');
         });
 
         it("should pass through errors", function (done) {
@@ -380,7 +380,7 @@ describe("Main interface of rasterizeHTML.js", function () {
             var doc = "doc";
 
             spyOn(inline, "inlineReferences").and.returnValue(withoutErrors());
-            spyOn(rasterizeHTML.util, "executeJavascript").and.returnValue(
+            spyOn(util, "executeJavascript").and.returnValue(
                 fulfilled({document: doc, errors: ["the error"]})
             );
             setUpDrawDocumentImage(svgImage);
@@ -432,8 +432,8 @@ describe("Main interface of rasterizeHTML.js", function () {
 
             drawImageOnCanvas = spyOn(rasterizeHTML, "drawImageOnCanvas");
 
-            executeJavascript = spyOn(rasterizeHTML.util, "executeJavascript");
-            spyOn(rasterizeHTML.util, 'persistInputValues');
+            executeJavascript = spyOn(util, "executeJavascript");
+            spyOn(util, 'persistInputValues');
         });
 
         it("should fail the returned promise on error from inlining when rendering the SVG on drawDocument", function (done) {
