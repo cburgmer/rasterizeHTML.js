@@ -735,4 +735,4 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, ayepromise
     };
 
     return module;
-}(window.rasterizeHTMLInline, window.xmlserializer, ayepromise, window));
+}(window.rasterizeHTMLInline, xmlserializer, ayepromise, window));

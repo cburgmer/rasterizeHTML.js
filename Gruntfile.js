@@ -24,9 +24,9 @@ module.exports = function (grunt) {
         browserify: {
             cssom: {
                 src: 'node_modules/cssom/lib/index.js',
-                dest: 'build/CSSOM.js',
+                dest: 'build/cssom.js',
                 options: {
-                    'standalone': 'CSSOM'
+                    'standalone': 'cssom'
                 }
             },
             xmlserializer: {
@@ -117,8 +117,9 @@ module.exports = function (grunt) {
                 trailing: true,
                 browser: true,
                 globals: {
-                    CSSOM: true,
+                    cssom: true,
                     url: true,
+                    xmlserializer: true,
                     ayepromise: true
                 }
             },
@@ -145,7 +146,7 @@ module.exports = function (grunt) {
                         ifNotInWebkitIt: true,
                         ifNotInPhantomJsIt: true,
                         ifNotInPhantomJSAndNotLocalRunnerIt: true,
-                        CSSOM: true,
+                        cssom: true,
                         url: true,
                         ayepromise: true,
                         imagediff: true,

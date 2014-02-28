@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.8.0 - 2014-02-27
+/*! rasterizeHTML.js - v0.8.0 - 2014-02-28
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2014 Christoph Burgmer; Licensed MIT */
 window.rasterizeHTMLInline = (function (module) {
@@ -342,7 +342,7 @@ window.rasterizeHTMLInline = (function (module) {
     return module;
 }(window.rasterizeHTMLInline || {}));
 
-window.rasterizeHTMLInline = (function (module, window, CSSOM, ayepromise) {
+window.rasterizeHTMLInline = (function (module, window, cssom, ayepromise) {
     "use strict";
 
     module.css = {};
@@ -371,8 +371,8 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM, ayepromise) {
     }());
 
     module.css.rulesForCssText = function (styleContent) {
-        if (browserHasBackgroundImageUrlIssue && CSSOM.parse) {
-            return CSSOM.parse(styleContent).cssRules;
+        if (browserHasBackgroundImageUrlIssue && cssom.parse) {
+            return cssom.parse(styleContent).cssRules;
         } else {
             return rulesForCssTextFromBrowser(styleContent);
         }
@@ -954,7 +954,7 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM, ayepromise) {
     };
 
     return module;
-}(window.rasterizeHTMLInline || {}, window, window.CSSOM || {}, ayepromise));
+}(window.rasterizeHTMLInline || {}, window, window.cssom || {}, ayepromise));
 
 window.rasterizeHTMLInline = (function (module, window, ayepromise, url) {
     "use strict";
@@ -1891,4 +1891,4 @@ window.rasterizeHTML = (function (rasterizeHTMLInline, xmlserializer, ayepromise
     };
 
     return module;
-}(window.rasterizeHTMLInline, window.xmlserializer, ayepromise, window));
+}(window.rasterizeHTMLInline, xmlserializer, ayepromise, window));

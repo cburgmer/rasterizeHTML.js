@@ -1,4 +1,4 @@
-window.rasterizeHTMLInline = (function (module, window, CSSOM, ayepromise) {
+window.rasterizeHTMLInline = (function (module, window, cssom, ayepromise) {
     "use strict";
 
     module.css = {};
@@ -27,8 +27,8 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM, ayepromise) {
     }());
 
     module.css.rulesForCssText = function (styleContent) {
-        if (browserHasBackgroundImageUrlIssue && CSSOM.parse) {
-            return CSSOM.parse(styleContent).cssRules;
+        if (browserHasBackgroundImageUrlIssue && cssom.parse) {
+            return cssom.parse(styleContent).cssRules;
         } else {
             return rulesForCssTextFromBrowser(styleContent);
         }
@@ -610,4 +610,4 @@ window.rasterizeHTMLInline = (function (module, window, CSSOM, ayepromise) {
     };
 
     return module;
-}(window.rasterizeHTMLInline || {}, window, window.CSSOM || {}, ayepromise));
+}(window.rasterizeHTMLInline || {}, window, window.cssom || {}, ayepromise));
