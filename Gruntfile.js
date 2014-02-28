@@ -155,7 +155,7 @@ module.exports = function (grunt) {
                     xmlserializer: true,
                     ayepromise: true
                 },
-                exported: ['util', 'inline', 'inlineCss', 'inlineUtil']
+                exported: ['rasterizeHTML', 'util', 'inline', 'inlineCss', 'inlineUtil']
             },
             uses_defaults: [
                 'src/*.js',
@@ -175,23 +175,23 @@ module.exports = function (grunt) {
                         runs: true,
                         expect: true,
                         spyOn: true,
-                        readFixtures: true,
-                        setFixtures: true,
+
                         ifNotInWebkitIt: true,
                         ifNotInPhantomJsIt: true,
                         ifNotInPhantomJSAndNotLocalRunnerIt: true,
+                        rasterizeHTMLTestHelper: true,
+                        diffHelper: true,
+
                         inlineUtil: true,
                         inlineCss: true,
                         inline: true,
                         util: true,
+                        rasterizeHTML: true,
+
                         cssom: true,
                         url: true,
                         ayepromise: true,
-                        imagediff: true,
-                        rasterizeHTML: true,
-                        rasterizeHTMLInline: true,
-                        rasterizeHTMLTestHelper: true,
-                        diffHelper: true
+                        imagediff: true
                     }
                 },
                 files: {

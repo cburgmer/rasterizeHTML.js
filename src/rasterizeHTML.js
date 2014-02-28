@@ -1,4 +1,4 @@
-window.rasterizeHTML = (function (util, inline, inlineUtil, xmlserializer, ayepromise, theWindow) {
+var rasterizeHTML = (function (util, inline, inlineUtil, xmlserializer, ayepromise, window) {
     "use strict";
 
     var module = {};
@@ -7,17 +7,17 @@ window.rasterizeHTML = (function (util, inline, inlineUtil, xmlserializer, ayepr
 
     var supportsBlobBuilding = function () {
         // Newer WebKit (under PhantomJS) seems to support blob building, but loading an image with the blob fails
-        if (theWindow.navigator.userAgent.indexOf("WebKit") >= 0 && theWindow.navigator.userAgent.indexOf("Chrome") < 0) {
+        if (window.navigator.userAgent.indexOf("WebKit") >= 0 && window.navigator.userAgent.indexOf("Chrome") < 0) {
             return false;
         }
-        if (theWindow.BlobBuilder || theWindow.MozBlobBuilder || theWindow.WebKitBlobBuilder) {
+        if (window.BlobBuilder || window.MozBlobBuilder || window.WebKitBlobBuilder) {
             // Deprecated interface
             return true;
         } else {
-            if (theWindow.Blob) {
+            if (window.Blob) {
                 // Available as constructor only in newer builds for all Browsers
                 try {
-                    new theWindow.Blob(['<b></b>'], { "type" : "text\/xml" });
+                    new window.Blob(['<b></b>'], { "type" : "text\/xml" });
                     return true;
                 } catch (err) {
                     return false;
@@ -29,19 +29,19 @@ window.rasterizeHTML = (function (util, inline, inlineUtil, xmlserializer, ayepr
 
     var getBlob = function (data) {
        var imageType = "image/svg+xml;charset=utf-8",
-           BLOBBUILDER = theWindow.BlobBuilder || theWindow.MozBlobBuilder || theWindow.WebKitBlobBuilder,
+           BLOBBUILDER = window.BlobBuilder || window.MozBlobBuilder || window.WebKitBlobBuilder,
            svg;
        if (BLOBBUILDER) {
            svg = new BLOBBUILDER();
            svg.append(data);
            return svg.getBlob(imageType);
        } else {
-           return new theWindow.Blob([data], {"type": imageType});
+           return new window.Blob([data], {"type": imageType});
        }
     };
 
     var buildImageUrl = function (svg) {
-        var DOMURL = theWindow.URL || theWindow.webkitURL || window;
+        var DOMURL = window.URL || window.webkitURL || window;
         if (supportsBlobBuilding()) {
             return DOMURL.createObjectURL(getBlob(svg));
         } else {
@@ -50,7 +50,7 @@ window.rasterizeHTML = (function (util, inline, inlineUtil, xmlserializer, ayepr
     };
 
     var cleanUpUrl = function (url) {
-        var DOMURL = theWindow.URL || theWindow.webkitURL || window;
+        var DOMURL = window.URL || window.webkitURL || window;
         if (supportsBlobBuilding()) {
             DOMURL.revokeObjectURL(url);
         }
@@ -83,7 +83,7 @@ window.rasterizeHTML = (function (util, inline, inlineUtil, xmlserializer, ayepr
     var WORKAROUND_ID = "rasterizeHTML_js_FirefoxWorkaround";
 
     var needsBackgroundImageWorkaround = function () {
-        var firefoxMatch = theWindow.navigator.userAgent.match(/Firefox\/(\d+).0/);
+        var firefoxMatch = window.navigator.userAgent.match(/Firefox\/(\d+).0/);
         return !firefoxMatch || !firefoxMatch[1] || parseInt(firefoxMatch[1], 10) < 17;
     };
 
@@ -91,7 +91,7 @@ window.rasterizeHTML = (function (util, inline, inlineUtil, xmlserializer, ayepr
         // Firefox < 17, Chrome & Safari will (sometimes) not show an inlined background-image until the svg is
         // connected to the DOM it seems.
         var uniqueId = util.getConstantUniqueIdFor(svg),
-            doc = canvas ? canvas.ownerDocument : theWindow.document,
+            doc = canvas ? canvas.ownerDocument : window.document,
             workaroundDiv;
 
         if (needsBackgroundImageWorkaround()) {
@@ -114,7 +114,7 @@ window.rasterizeHTML = (function (util, inline, inlineUtil, xmlserializer, ayepr
 
     var cleanUpAfterWorkAroundForBackgroundImages = function (svg, canvas) {
         var uniqueId = util.getConstantUniqueIdFor(svg),
-            doc = canvas ? canvas.ownerDocument : theWindow.document,
+            doc = canvas ? canvas.ownerDocument : window.document,
             div = doc.getElementById(WORKAROUND_ID + uniqueId);
         if (div) {
             div.parentNode.removeChild(div);
@@ -160,7 +160,7 @@ window.rasterizeHTML = (function (util, inline, inlineUtil, xmlserializer, ayepr
 
         url = buildImageUrl(svg);
 
-        image = new theWindow.Image();
+        image = new window.Image();
         image.onload = function() {
             resetEventHandlers();
             cleanUp();
