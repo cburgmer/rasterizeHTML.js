@@ -32,7 +32,7 @@ describe("working around on Firefox and Webkit to fix resources not being render
         // Stop method of finishing and removing div
         spyOn(window, "Image").and.returnValue({});
 
-        rasterizeHTML.renderSvg(svg, canvas);
+        render.renderSvg(svg, canvas);
 
         expect($(".rasterizeHTML_js_FirefoxWorkaround").length).toEqual(1);
         expect($(".rasterizeHTML_js_FirefoxWorkaround svg").length).toEqual(1);
@@ -51,7 +51,7 @@ describe("working around on Firefox and Webkit to fix resources not being render
         // Stop method of finishing and removing div
         spyOn(window, "Image").and.returnValue({});
 
-        rasterizeHTML.renderSvg(svg, canvas);
+        render.renderSvg(svg, canvas);
 
         expect($(".rasterizeHTML_js_FirefoxWorkaround").length).toEqual(0);
     });
@@ -65,8 +65,8 @@ describe("working around on Firefox and Webkit to fix resources not being render
         // Stop method of finishing and removing div
         spyOn(window, "Image").and.returnValue({});
 
-        rasterizeHTML.renderSvg(svg1, canvas1);
-        rasterizeHTML.renderSvg(svg2, canvas2);
+        render.renderSvg(svg1, canvas1);
+        render.renderSvg(svg2, canvas2);
 
         expect($(".rasterizeHTML_js_FirefoxWorkaround").length).toEqual(2);
     });
@@ -78,8 +78,8 @@ describe("working around on Firefox and Webkit to fix resources not being render
         // Stop method of finishing and removing div
         spyOn(window, "Image").and.returnValue({});
 
-        rasterizeHTML.renderSvg(svg, canvas);
-        rasterizeHTML.renderSvg(svg, canvas);
+        render.renderSvg(svg, canvas);
+        render.renderSvg(svg, canvas);
 
         expect($(".rasterizeHTML_js_FirefoxWorkaround").length).toEqual(1);
     });
@@ -91,7 +91,7 @@ describe("working around on Firefox and Webkit to fix resources not being render
 
         spyOn(window, "Image").and.returnValue(fakeImage);
 
-        rasterizeHTML.renderSvg(svg, canvas).then(function () {
+        render.renderSvg(svg, canvas).then(function () {
             expect($(".rasterizeHTML_js_FirefoxWorkaround").length).toEqual(0);
 
             done();
@@ -106,7 +106,7 @@ describe("working around on Firefox and Webkit to fix resources not being render
 
         spyOn(window, "Image").and.returnValue(fakeImage);
 
-        rasterizeHTML.renderSvg(svg, null).then(function () {
+        render.renderSvg(svg, null).then(function () {
             expect($(".rasterizeHTML_js_FirefoxWorkaround").length).toEqual(0);
 
             done();
@@ -135,7 +135,7 @@ describe("working around on Firefox and Webkit to fix resources not being render
             imageInstance = {};
         spyOn(window, "Image").and.returnValue(imageInstance);
 
-        rasterizeHTML.renderSvg(svg, canvas).fail(function () {
+        render.renderSvg(svg, canvas).fail(function () {
             expect($(".rasterizeHTML_js_FirefoxWorkaround").length).toEqual(0);
 
             done();

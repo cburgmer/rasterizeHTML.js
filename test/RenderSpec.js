@@ -4,7 +4,7 @@ describe("The rendering process", function () {
             var doc = document.implementation.createHTMLDocument("");
             doc.body.innerHTML = "Test content";
 
-            var svgCode = rasterizeHTML.getSvgForDocument(doc, 123, 456);
+            var svgCode = render.getSvgForDocument(doc, 123, 456);
 
             expect(svgCode).toMatch(new RegExp(
                 '<svg xmlns="http://www.w3.org/2000/svg" width="123" height="456">' +
@@ -27,7 +27,7 @@ describe("The rendering process", function () {
                 canonicalXML;
             doc.body.innerHTML = '<img src="data:image/png;base64,sOmeFAKeBasE64="/>';
 
-            var svgCode = rasterizeHTML.getSvgForDocument(doc, 123, 456);
+            var svgCode = render.getSvgForDocument(doc, 123, 456);
 
             expect(svgCode).not.toBeNull();
             canonicalXML = svgCode.replace(/ +\/>/, '/>');
@@ -51,7 +51,7 @@ describe("The rendering process", function () {
             var doc = document.implementation.createHTMLDocument("");
             doc.body.innerHTML = "content";
 
-            var svgCode = rasterizeHTML.getSvgForDocument(doc, 123, 987);
+            var svgCode = render.getSvgForDocument(doc, 123, 987);
 
             expect(svgCode).toMatch(new RegExp(
                 '<svg xmlns="http://www.w3.org/2000/svg" width="123" height="987">' +
@@ -76,7 +76,7 @@ describe("The rendering process", function () {
             var error = new Error();
             spyOn(util, 'validateXHTML').and.throwError(error);
 
-            expect(function () { rasterizeHTML.getSvgForDocument(doc, 123, 987); }).toThrow(error);
+            expect(function () { render.getSvgForDocument(doc, 123, 987); }).toThrow(error);
         });
 
         describe("workAroundWebkitBugIgnoringTheFirstRuleInCSS", function () {
@@ -101,7 +101,7 @@ describe("The rendering process", function () {
                 myUserAgent = "WebKit";
                 rasterizeHTMLTestHelper.addStyleToDocument(doc, 'span { background-image: url("data:image/png;base64,soMEfAkebASE64="); }');
 
-                svgCode = rasterizeHTML.getSvgForDocument(doc, 123, 987);
+                svgCode = render.getSvgForDocument(doc, 123, 987);
 
                 expect(svgCode).toMatch(/<style type="text\/css">\s*span \{\}/);
             });
@@ -113,7 +113,7 @@ describe("The rendering process", function () {
                 myUserAgent = "Something else";
                 rasterizeHTMLTestHelper.addStyleToDocument(doc, 'span { background-image: url("data:image/png;base64,soMEfAkebASE64="); }');
 
-                svgCode = rasterizeHTML.getSvgForDocument(doc, 123, 987);
+                svgCode = render.getSvgForDocument(doc, 123, 987);
 
                 expect(svgCode).not.toMatch(/span \{\}/);
             });
@@ -144,7 +144,7 @@ describe("The rendering process", function () {
                     '</svg>'
                 );
 
-            rasterizeHTML.renderSvg(twoColorSvg, null).then(function (image) {
+            render.renderSvg(twoColorSvg, null).then(function (image) {
                 // This fails in Chrome & Safari, possibly due to a bug with same origin policy stuff
                 try {
                     expect(image).toImageDiffEqual(referenceImg.get(0));
@@ -173,7 +173,7 @@ describe("The rendering process", function () {
                     '</svg>'
                 );
 
-            rasterizeHTML.renderSvg(twoColorSvg, null).then(function (image) {
+            render.renderSvg(twoColorSvg, null).then(function (image) {
                 // This fails in Chrome & Safari, possibly due to a bug with same origin policy stuff
                 try {
                     expect(image).toImageDiffEqual(referenceImg.get(0));
@@ -191,7 +191,7 @@ describe("The rendering process", function () {
             // We need to mock, as only Chrome & Safari seem to throw errors on a faulty SVG
             spyOn(window, "Image").and.returnValue(imageSpy);
 
-            rasterizeHTML.renderSvg("svg", null).fail(done);
+            render.renderSvg("svg", null).fail(done);
 
             imageSpy.onerror();
         });
@@ -199,7 +199,7 @@ describe("The rendering process", function () {
         it("should return an image without event listeners attached", function (done) {
             var anSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"></svg>';
 
-            rasterizeHTML.renderSvg(anSvg, null).then(function (image) {
+            render.renderSvg(anSvg, null).then(function (image) {
                 expect(image.onerror).toBeNull();
                 expect(image.onload).toBeNull();
 
@@ -228,8 +228,8 @@ describe("The rendering process", function () {
             spyOn(util, 'fakeHover');
             spyOn(util, 'fakeActive');
             spyOn(util, 'calculateDocumentContentSize').and.returnValue(fulfilled({width: 47, height: 11}));
-            spyOn(rasterizeHTML, 'getSvgForDocument');
-            spyOn(rasterizeHTML, 'renderSvg');
+            spyOn(render, 'getSvgForDocument');
+            spyOn(render, 'renderSvg');
 
             canvas = document.createElement("canvas");
             canvas.width = 123;
@@ -240,64 +240,64 @@ describe("The rendering process", function () {
             var svg = "the svg",
                 image = "the image";
 
-            rasterizeHTML.getSvgForDocument.and.returnValue(svg);
-            rasterizeHTML.renderSvg.and.returnValue(fulfilled(image));
+            render.getSvgForDocument.and.returnValue(svg);
+            render.renderSvg.and.returnValue(fulfilled(image));
 
-            rasterizeHTML.drawDocumentImage(doc, canvas, {}).then(function (theImage) {
+            render.drawDocumentImage(doc, canvas, {}).then(function (theImage) {
                 expect(theImage).toBe(image);
 
                 expect(util.calculateDocumentContentSize).toHaveBeenCalledWith(doc, jasmine.any(Number), jasmine.any(Number));
-                expect(rasterizeHTML.getSvgForDocument).toHaveBeenCalledWith(doc, 47, 11);
-                expect(rasterizeHTML.renderSvg).toHaveBeenCalledWith(svg, canvas);
+                expect(render.getSvgForDocument).toHaveBeenCalledWith(doc, 47, 11);
+                expect(render.renderSvg).toHaveBeenCalledWith(svg, canvas);
 
                 done();
             });
         });
 
         it("should report an error when constructing the SVG image", function (done) {
-            rasterizeHTML.renderSvg.and.returnValue(rejected());
+            render.renderSvg.and.returnValue(rejected());
 
-            rasterizeHTML.drawDocumentImage(doc, canvas, {}).fail(done);
+            render.drawDocumentImage(doc, canvas, {}).fail(done);
         });
 
         it("should use the canvas width and height as viewport size", function () {
-            rasterizeHTML.drawDocumentImage(doc, canvas, {});
+            render.drawDocumentImage(doc, canvas, {});
 
             expect(util.calculateDocumentContentSize).toHaveBeenCalledWith(doc, 123, 456);
         });
 
         it("should make the canvas optional and apply default viewport width and height", function () {
-            rasterizeHTML.drawDocumentImage(doc, null, {});
+            render.drawDocumentImage(doc, null, {});
 
             expect(util.calculateDocumentContentSize).toHaveBeenCalledWith(doc, 300, 200);
         });
 
         it("should take an optional width and height", function () {
-            rasterizeHTML.drawDocumentImage(doc, canvas, {width: 42, height: 4711});
+            render.drawDocumentImage(doc, canvas, {width: 42, height: 4711});
 
             expect(util.calculateDocumentContentSize).toHaveBeenCalledWith(doc, 42, 4711);
         });
 
         it("should trigger hover effect", function () {
-            rasterizeHTML.drawDocumentImage(doc, canvas, {hover: '.mySpan'});
+            render.drawDocumentImage(doc, canvas, {hover: '.mySpan'});
 
             expect(util.fakeHover).toHaveBeenCalledWith(doc, '.mySpan');
         });
 
         it("should not trigger hover effect by default", function () {
-            rasterizeHTML.drawDocumentImage(doc, canvas, {});
+            render.drawDocumentImage(doc, canvas, {});
 
             expect(util.fakeHover).not.toHaveBeenCalled();
         });
 
         it("should trigger active effect", function () {
-            rasterizeHTML.drawDocumentImage(doc, canvas, {active: '.mySpan'});
+            render.drawDocumentImage(doc, canvas, {active: '.mySpan'});
 
             expect(util.fakeActive).toHaveBeenCalledWith(doc, '.mySpan');
         });
 
         it("should not trigger active effect by default", function () {
-            rasterizeHTML.drawDocumentImage(doc, canvas, {});
+            render.drawDocumentImage(doc, canvas, {});
 
             expect(util.fakeActive).not.toHaveBeenCalled();
         });
@@ -315,7 +315,7 @@ describe("The rendering process", function () {
                 }
             });
 
-            rasterizeHTML.drawImageOnCanvas(image, canvas);
+            render.drawImageOnCanvas(image, canvas);
 
             expect(context.drawImage).toHaveBeenCalledWith(image, 0, 0);
         });
@@ -330,7 +330,7 @@ describe("The rendering process", function () {
             context.drawImage.and.throwError("error");
 
             try {
-                rasterizeHTML.drawImageOnCanvas(image, canvas);
+                render.drawImageOnCanvas(image, canvas);
             } catch (e) {
                 error = rasterizeHTMLTestHelper.deleteAdditionalFieldsFromErrorUnderPhantomJS(e);
             }

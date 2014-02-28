@@ -1575,12 +1575,10 @@
         return module;
     }(inlineUtil, ayepromise, window));
     
-    var rasterizeHTML = (function (util, inline, inlineUtil, xmlserializer, ayepromise, window) {
+    var render = (function (util, xmlserializer, ayepromise, window) {
         "use strict";
     
         var module = {};
-    
-        /* Rendering */
     
         var supportsBlobBuilding = function () {
             // Newer WebKit (under PhantomJS) seems to support blob building, but loading an image with the blob fails
@@ -1764,6 +1762,20 @@
             }
         };
     
+        var getViewportSize = function (canvas, options) {
+            var defaultWidth = 300,
+                defaultHeight = 200,
+                fallbackWidth = canvas ? canvas.width : defaultWidth,
+                fallbackHeight = canvas ? canvas.height : defaultHeight,
+                width = options.width !== undefined ? options.width : fallbackWidth,
+                height = options.height !== undefined ? options.height : fallbackHeight;
+    
+            return {
+                width: width,
+                height: height
+            };
+        };
+    
         module.drawDocumentImage = function (doc, canvas, options) {
             var viewportSize = getViewportSize(canvas, options);
     
@@ -1783,30 +1795,22 @@
                 });
         };
     
-        /* "Public" API */
+        return module;
+    }(util, xmlserializer, ayepromise, window));
+    
+    var rasterizeHTML = (function (util, render, inline, inlineUtil) {
+        "use strict";
+    
+        var module = {};
     
         var doDraw = function (doc, canvas, options) {
-            return module.drawDocumentImage(doc, canvas, options).then(function (image) {
+            return render.drawDocumentImage(doc, canvas, options).then(function (image) {
                 if (canvas) {
-                    module.drawImageOnCanvas(image, canvas);
+                    render.drawImageOnCanvas(image, canvas);
                 }
     
                 return image;
             });
-        };
-    
-        var getViewportSize = function (canvas, options) {
-            var defaultWidth = 300,
-                defaultHeight = 200,
-                fallbackWidth = canvas ? canvas.width : defaultWidth,
-                fallbackHeight = canvas ? canvas.height : defaultHeight,
-                width = options.width !== undefined ? options.width : fallbackWidth,
-                height = options.height !== undefined ? options.height : fallbackHeight;
-    
-            return {
-                width: width,
-                height: height
-            };
         };
     
         var drawDocument = function (doc, canvas, options) {
@@ -1925,7 +1929,7 @@
         };
     
         return module;
-    }(util, inline, inlineUtil, xmlserializer, ayepromise, window));
+    }(util, render, inline, inlineUtil));
     
 
     return rasterizeHTML;

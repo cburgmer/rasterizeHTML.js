@@ -10,6 +10,7 @@ module.exports = function (grunt) {
                 'src/inlineCss.js',
                 'src/inline.js',
                 'src/util.js',
+                'src/render.js',
                 'src/rasterizeHTML.js'
             ],
             options: {
@@ -78,6 +79,7 @@ module.exports = function (grunt) {
                     'src/inlineCss.js',
                     'src/inline.js',
                     'src/util.js',
+                    'src/render.js',
                     'src/rasterizeHTML.js'
                 ],
                 dest: 'build/rasterizeHTML.concat.js'
@@ -150,12 +152,14 @@ module.exports = function (grunt) {
                     inlineCss: true,
                     inline: true,
                     util: true,
+                    render: true,
+
                     cssom: true,
                     url: true,
                     xmlserializer: true,
                     ayepromise: true
                 },
-                exported: ['rasterizeHTML', 'util', 'inline', 'inlineCss', 'inlineUtil']
+                exported: ['rasterizeHTML', 'render', 'util', 'inline', 'inlineCss', 'inlineUtil']
             },
             uses_defaults: [
                 'src/*.js',
@@ -186,6 +190,7 @@ module.exports = function (grunt) {
                         inlineCss: true,
                         inline: true,
                         util: true,
+                        render: true,
                         rasterizeHTML: true,
 
                         cssom: true,

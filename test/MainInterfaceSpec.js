@@ -25,10 +25,10 @@ describe("Main interface of rasterizeHTML.js", function () {
     };
 
     var setUpDrawDocumentImage = function (image) {
-            rasterizeHTML.drawDocumentImage.and.returnValue(fulfilled(image));
+            render.drawDocumentImage.and.returnValue(fulfilled(image));
         },
         setUpDrawDocumentImageError = function (e) {
-            rasterizeHTML.drawDocumentImage.and.returnValue(rejected(e));
+            render.drawDocumentImage.and.returnValue(rejected(e));
         };
 
     beforeEach(function () {
@@ -42,7 +42,7 @@ describe("Main interface of rasterizeHTML.js", function () {
 
         parseOptionalParametersSpy = spyOn(util, "parseOptionalParameters").and.callThrough();
 
-        spyOn(rasterizeHTML, 'drawDocumentImage');
+        spyOn(render, 'drawDocumentImage');
     });
 
     describe("Rendering", function () {
@@ -52,7 +52,7 @@ describe("Main interface of rasterizeHTML.js", function () {
             callback = jasmine.createSpy("drawCallback");
 
             inlineReferences = spyOn(inline, "inlineReferences").and.returnValue(withoutErrors());
-            drawImageOnCanvas = spyOn(rasterizeHTML, "drawImageOnCanvas");
+            drawImageOnCanvas = spyOn(render, "drawImageOnCanvas");
 
             spyOn(util, 'persistInputValues');
 
@@ -67,7 +67,7 @@ describe("Main interface of rasterizeHTML.js", function () {
                 expect(result.errors).toEqual([]);
 
                 expect(inlineReferences).toHaveBeenCalledWith(doc, {inlineScripts: false});
-                expect(rasterizeHTML.drawDocumentImage).toHaveBeenCalledWith(doc, canvas, {});
+                expect(render.drawDocumentImage).toHaveBeenCalledWith(doc, canvas, {});
                 expect(drawImageOnCanvas).toHaveBeenCalledWith(svgImage, canvas);
 
                 done();
@@ -81,7 +81,7 @@ describe("Main interface of rasterizeHTML.js", function () {
                 expect(result.image).toEqual(svgImage);
 
                 expect(inlineReferences).toHaveBeenCalledWith(doc, {inlineScripts : false});
-                expect(rasterizeHTML.drawDocumentImage).toHaveBeenCalledWith(doc, null, {});
+                expect(render.drawDocumentImage).toHaveBeenCalledWith(doc, null, {});
                 expect(drawImageOnCanvas).not.toHaveBeenCalled();
 
                 expect(parseOptionalParametersSpy).toHaveBeenCalled();
@@ -315,7 +315,7 @@ describe("Main interface of rasterizeHTML.js", function () {
         beforeEach(function () {
             callback = jasmine.createSpy("drawCallback");
 
-            drawImageOnCanvas = spyOn(rasterizeHTML, "drawImageOnCanvas");
+            drawImageOnCanvas = spyOn(render, "drawImageOnCanvas");
             spyOn(util, 'persistInputValues');
         });
 
@@ -430,7 +430,7 @@ describe("Main interface of rasterizeHTML.js", function () {
 
             inlineReferences = spyOn(inline, "inlineReferences").and.returnValue(withoutErrors());
 
-            drawImageOnCanvas = spyOn(rasterizeHTML, "drawImageOnCanvas");
+            drawImageOnCanvas = spyOn(render, "drawImageOnCanvas");
 
             executeJavascript = spyOn(util, "executeJavascript");
             spyOn(util, 'persistInputValues');
