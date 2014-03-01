@@ -52,8 +52,7 @@ module.exports = function (grunt) {
                 src: 'dist/rasterizeHTML.js',
                 dest: 'build/rasterizeHTML.allinone.js',
                 options: {
-                    'standalone': 'rasterizeHTML',
-                    'alias': ['node_modules/url/url.js:url']
+                    'standalone': 'rasterizeHTML'
                 }
             }
         },
