@@ -227,19 +227,31 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-browserify');
     grunt.loadNpmTasks('grunt-umd');
 
-    grunt.registerTask('default', [
-        'clean:dist',
+    grunt.registerTask('deps', [
         'browserify:cssom',
         'browserify:url',
         'browserify:xmlserializer',
+    ]);
+
+    grunt.registerTask('test', [
         'jshint',
         'jasmine',
         'regex-check',
+    ]);
+
+    grunt.registerTask('build', [
         'concat:one',
         'umd',
         'concat:dist',
         'browserify:allinone',
         'uglify'
+    ]);
+
+    grunt.registerTask('default', [
+        'clean:dist',
+        'deps',
+        'test',
+        'build'
     ]);
 
 };
