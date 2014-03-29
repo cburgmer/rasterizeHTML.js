@@ -23,7 +23,7 @@
     <textarea id="input"></textarea>
 
     <script type="text/template" id="template">
-        You can type HTML into this <span style='color: green'>canvas</span>.
+        This rendering should look much sharper on retina displays than <span style='color: green'>the original example</span>.<br>
         In <span style="font-style: italic">Chrome</span> make sure to open the file through a webserver to load the embedded images.
         <div class="tigerbg">
             A div with background-image
@@ -39,16 +39,6 @@
                 height: 50px;
             }
         </style>
-    </script>
-    <script type="text/template" id="retinaCSS">
-        html {
-            -webkit-transform: scale($scaleFactor, $scaleFactor);
-            -webkit-transform-origin: top left;
-            transform: scale($scaleFactor, $scaleFactor);
-            transform-origin: top left;
-            max-width: $scaleDownPercentage%;
-            max-height: $scaleDownPercentage%;
-        }
     </script>
 
     <script type="text/javascript">
@@ -73,15 +63,13 @@
             canvas.width = parsePixelValue(canvasStyle.width) * scaleFactor;
             canvas.height = parsePixelValue(canvasStyle.height) * scaleFactor;
         };
-        var injectRetinaCSS = function (html) {
-            var scaleFactor = backingScale(),
-                cssTemplate = document.getElementById('retinaCSS').innerHTML;
-                css = '<style type="text/css">\n' +
-                    cssTemplate
-                        .replace(/\$scaleFactor/g, scaleFactor)
-                        .replace(/\$scaleDownPercentage/g, (100 / scaleFactor)) + '\n' +
-                    '</style>';
-            return css + html;
+
+        var drawHTML = function () {
+            var scaleFactor = backingScale();
+
+            rasterizeHTML.drawHTML(input.value, canvas, {
+                zoom: scaleFactor
+            });
         };
 
         scaleCanvasForRetina(canvas);
@@ -90,14 +78,14 @@
                 oldText = input.value;
                 canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 
-                rasterizeHTML.drawHTML(injectRetinaCSS(input.value), canvas);
+                drawHTML();
             }
         };
 
         if (!input.value) {
             input.value = template.innerHTML.replace(/^ {8}/gm, "").replace(/^\n/g, "").replace(/\n +$/g, "\n");
         }
-        rasterizeHTML.drawHTML(injectRetinaCSS(input.value), canvas);
+        drawHTML();
     </script>
 </body>
 </html>
