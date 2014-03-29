@@ -36,7 +36,7 @@ At the time of writing it seems that the individual browsers still have some iss
 Development
 -----------
 
-For linting, tests and minification install Node.js, SlimerJS, Firefox and run
+For linting, tests and minification install Node.js and Firefox and run
 
     $ ./go
 
