@@ -119,9 +119,9 @@ var render = (function (util, xmlserializer, ayepromise, window) {
         }
     };
 
-    module.getSvgForDocument = function (doc, width, height, zoomFactor) {
+    var zoomedElementSizingAttributes = function (width, height, zoomFactor) {
         var zoomHtmlInject = '',
-            xhtml, closestScaledWith, closestScaledHeight;
+            closestScaledWith, closestScaledHeight;
 
         zoomFactor = zoomFactor || 1;
         closestScaledWith = Math.round(width / zoomFactor);
@@ -135,6 +135,13 @@ var render = (function (util, xmlserializer, ayepromise, window) {
                 'transform-origin: top left;"';
         }
 
+        return ' width="' + closestScaledWith + '" height="' + closestScaledHeight + '"' +
+                zoomHtmlInject;
+    };
+
+    module.getSvgForDocument = function (doc, width, height, zoomFactor) {
+        var xhtml;
+
         workAroundWebkitBugIgnoringTheFirstRuleInCSS(doc);
         xhtml = xmlserializer.serializeToString(doc);
 
@@ -142,9 +149,7 @@ var render = (function (util, xmlserializer, ayepromise, window) {
 
         return (
             '<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height + '">' +
-                '<foreignObject width="' + closestScaledWith + '" height="' + closestScaledHeight + '"' +
-                zoomHtmlInject +
-                '>' +
+                '<foreignObject' + zoomedElementSizingAttributes(width, height, zoomFactor) + '>' +
                 xhtml +
                 '</foreignObject>' +
             '</svg>'
