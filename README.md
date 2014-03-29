@@ -10,7 +10,7 @@ Example
 
 ```js
 var canvas = document.getElementById("canvas");
-rasterizeHTML.drawHTML('Some <span style="color: green">HTML</span> with an image <img src="someimg.png" />', canvas);
+rasterizeHTML.drawHTML('Some <span style="color: green; font-size: 20px;">HTML</span> with an image <img src="someimg.png" />', canvas);
 ```
 
 See [the examples page](https://github.com/cburgmer/rasterizeHTML.js/wiki/Examples) and [the examples shipped with the code](https://github.com/cburgmer/rasterizeHTML.js/tree/master/examples).
@@ -22,14 +22,14 @@ For security reasons rendering HTML into a canvas is severly limited. Firefox of
 
 As described in http://robert.ocallahan.org/2011/11/drawing-dom-content-to-canvas.html and https://developer.mozilla.org/en/HTML/Canvas/Drawing_DOM_objects_into_a_canvas however it is possible by embedding the HTML into an SVG image as a `<foreignObject>` and then drawing the resulting image via `ctx.drawImage()`.
 
-To cope with the existing limitations, rasterizeHTML.js will load external images, fonts and stylesheets and store them inline via data: URIs or inline style elements respectively.
+In addition SVG is not allowed to link to external resources and so rasterizeHTML.js will load external images, fonts and stylesheets and store them inline via data: URIs (or inline style elements respectively).
 
 Limitations
 -----------
 
-SVG is not allowed to link to external resources, as such all resources need to be embedded using data: URIs. While the solution to that is loading and inlining external resources those can only be loaded if from the same origin (unless CORS is used).
+All resources (HTML page, CSS, images and JS) that are needed for drawing the page can only be loaded if from the [same origin](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Same_origin_policy_for_JavaScript), unless techniques like [CORS](http://enable-cors.org) are used. I.E. `drawURL()` can only load pages from the same domain as the current page and all draw methods can equally only embed styling and images from that domain.
 
-The code is tested under Firefox, Chrome & Safari. However IE is not supported so far.
+The code is tested under Firefox, Chrome & Safari. However IE up to version 11 does not honour `<foreignObject>` and is unsupported.
 
 At the time of writing it seems that the individual browsers still have some issues with rendering SVGs with embedded HTML to the canvas. See the [wiki for a list of known issues](https://github.com/cburgmer/rasterizeHTML.js/wiki/Browser-issues) and do add your findings there.
 
