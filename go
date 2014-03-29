@@ -28,7 +28,11 @@ runCharacterisationTest() {
     # Work around https://github.com/laurentj/slimerjs/issues/172
     FIREFOX_PATH=$SLIMERJSLAUNCHER
     if [ -z $FIREFOX_PATH ]; then
-        FIREFOX_PATH="/Applications/Firefox.app/Contents/MacOS/firefox"
+        if which firefox; then
+            FIREFOX_PATH=$(which firefox)
+        else
+            FIREFOX_PATH="/Applications/Firefox.app/Contents/MacOS/firefox"
+        fi
     fi
     PATH=`pwd`/slimerjs/:$PATH SLIMERJSLAUNCHER=$FIREFOX_PATH ./test/inlineIntegration/runInlineTests.sh
 }
