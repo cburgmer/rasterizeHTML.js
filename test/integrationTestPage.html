@@ -3,7 +3,6 @@
 <head>
     <title>Smoke test</title>
     <script src="../dist/rasterizeHTML.allinone.js"></script>
-    <script src="phantomjs-polyfill.js"></script>
     <style>
         * {
             margin: 0;
@@ -16,36 +15,17 @@
     <script type="text/javascript">
         var canvas = document.getElementById("canvas");
 
-        var ajax = function (url, callback) {
-            var ajaxRequest = new window.XMLHttpRequest();
-
-            ajaxRequest.addEventListener("load", function () {
-                if (ajaxRequest.status === 200 || ajaxRequest.status === 0) {
-                    callback(ajaxRequest.response);
+        rasterizeHTML.drawURL("fixtures/testScaled50PercentWithJs.html", canvas, {
+            cache: false,
+            executeJs: true,
+            zoom: 2
+        }).then(function (result) {
+                if (result.errors.length > 0) {
+                    console.log("Could not load the following resources: ", errors.map(function (e) {
+                        return e.msg;
+                    }).join(', '));
                 }
-            }, false);
-
-            ajaxRequest.open('GET', url, true);
-            ajaxRequest.send(null);
-        };
-
-        // Work around PhantomJS not using up-to-date Webkit, and with that not supporting responseType document from XHR2.
-        // See https://github.com/cburgmer/rasterizeHTML.js/issues/45
-        ajax("fixtures/testScaled50PercentWithJs.html", function (html) {
-            rasterizeHTML.drawHTML(html, canvas, {
-                cache: false,
-                executeJs: true,
-                baseUrl: "fixtures/",
-                zoom: 2
-            }).then(function (result) {
-                    if (result.errors.length > 0) {
-                        console.log("Could not load the following resources: ", errors.map(function (e) {
-                            return e.msg;
-                        }).join(', '));
-                    }
-                });
-        });
-        // rasterizeHTML.drawURL("fixtures/testWithJs.html", canvas, {cache: false, executeJs: true, zoom: 2});
+            });
     </script>
 </body>
 </html>
