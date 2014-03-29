@@ -7,12 +7,12 @@ var getDataUriForBase64PNG = function (pngBase64) {
 var renderPage = function (url, successCallback) {
     var page = require("webpage").create();
 
-    page.viewportSize = { width: 204, height: 100 };
+    page.viewportSize = { width: 200, height: 100 };
     page.open(url, function () {
         setTimeout(function () {
             var base64PNG, imgURI;
 
-            page.clipRect = {top: 0, left: 0, width: 204, height: 100};
+            page.clipRect = {top: 0, left: 0, width: 200, height: 100};
             base64PNG = page.renderBase64("PNG");
             imgURI = getDataUriForBase64PNG(base64PNG);
 

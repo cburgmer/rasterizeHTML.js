@@ -20,8 +20,10 @@
 </head>
 <body>
     <p>Possibly due to a bug with the same origin policy under Webkit certain automatic tests that need to read the canvas will fail and are disabled. Use these manual tests here instead.</p>
+    <p>All canvases below should show the following image:<br><img src="fixtures/testResult.png" alt="reference image"></p>
+    <h3>Test cases</h3>
     <div>
-        <canvas id="documentCanvas" width="400" height="200"></canvas>
+        <canvas id="documentCanvas" width="200" height="100"></canvas>
         <script type="text/javascript">
             var documentCanvas = document.getElementById("documentCanvas"),
                 documentRequest = new window.XMLHttpRequest();
@@ -40,7 +42,7 @@
     </div>
 
     <div>
-        <canvas id="htmlCanvas" width="400" height="200"></canvas>
+        <canvas id="htmlCanvas" width="200" height="100"></canvas>
         <script type="text/javascript">
             var htmlCanvas = document.getElementById("htmlCanvas"),
                 htmlRequest = new window.XMLHttpRequest();
@@ -62,7 +64,7 @@
     </div>
 
     <div>
-        <canvas id="urlCanvas" width="400" height="200"></canvas>
+        <canvas id="urlCanvas" width="200" height="100"></canvas>
         <script type="text/javascript">
             var urlCanvas = document.getElementById("urlCanvas");
 

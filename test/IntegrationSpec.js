@@ -1,6 +1,6 @@
 describe("Integration test", function () {
     var canvas, finished, callback, referenceImg,
-        width = 204,
+        width = 200,
         height = 100;
 
     var fulfilled = function (value) {
