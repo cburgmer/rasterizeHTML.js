@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.8.0 - 2014-03-01
+/*! rasterizeHTML.js - v0.8.0 - 2014-03-29
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2014 Christoph Burgmer; Licensed MIT */
 (function(root, factory) {
@@ -1696,8 +1696,21 @@
             }
         };
     
-        module.getSvgForDocument = function (doc, width, height) {
-            var xhtml;
+        module.getSvgForDocument = function (doc, width, height, zoomFactor) {
+            var zoomHtmlInject = '',
+                xhtml, closestScaledWith, closestScaledHeight;
+    
+            zoomFactor = zoomFactor || 1;
+            closestScaledWith = Math.round(width / zoomFactor);
+            closestScaledHeight = Math.round(height / zoomFactor);
+    
+            if (zoomFactor !== 1) {
+                zoomHtmlInject = ' style="' +
+                    '-webkit-transform: scale(' + zoomFactor + '); ' +
+                    '-webkit-transform-origin: top left; ' +
+                    'transform: scale(' + zoomFactor + '); ' +
+                    'transform-origin: top left;"';
+            }
     
             workAroundWebkitBugIgnoringTheFirstRuleInCSS(doc);
             xhtml = xmlserializer.serializeToString(doc);
@@ -1706,8 +1719,10 @@
     
             return (
                 '<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height + '">' +
-                    '<foreignObject width="100%" height="100%">' +
-                        xhtml +
+                    '<foreignObject width="' + closestScaledWith + '" height="' + closestScaledHeight + '"' +
+                    zoomHtmlInject +
+                    '>' +
+                    xhtml +
                     '</foreignObject>' +
                 '</svg>'
             );
@@ -1788,7 +1803,7 @@
     
             return util.calculateDocumentContentSize(doc, viewportSize.width, viewportSize.height)
                 .then(function (size) {
-                    return module.getSvgForDocument(doc, size.width, size.height);
+                    return module.getSvgForDocument(doc, size.width, size.height, options.zoom);
                 })
                 .then(function (svg) {
                     return module.renderSvg(svg, canvas);

@@ -7,11 +7,12 @@ var getDataUriForBase64PNG = function (pngBase64) {
 var renderPage = function (url, successCallback) {
     var page = require("webpage").create();
 
-    page.viewportSize = { width: 210, height: 110 };
+    page.viewportSize = { width: 204, height: 100 };
     page.open(url, function () {
         setTimeout(function () {
             var base64PNG, imgURI;
 
+            page.clipRect = {top: 0, left: 0, width: 204, height: 100};
             base64PNG = page.renderBase64("PNG");
             imgURI = getDataUriForBase64PNG(base64PNG);
 
@@ -34,7 +35,7 @@ renderPage(fs.absolute('test/integrationTestPage.html'), function (imageUrl) {
             }
         };
 
-        imageDiffPage.open("test/diffHelperPage.html", function () {
+        imageDiffPage.open(fs.absolute('test/diffHelperPage.html'), function () {
             imageDiffPage.evaluate(function (url1, url2) {
                 isEqual(url1, url2, 5);
             }, imageUrl, targetImageUrl);

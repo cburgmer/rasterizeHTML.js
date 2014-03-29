@@ -67,7 +67,11 @@ describe("Integration test", function () {
     });
 
     ifNotInWebkitIt("should take a URL, inline all displayable content and render to the given canvas", function (done) {
-        rasterizeHTML.drawURL(rasterizeHTMLTestHelper.fixturesPath + "testWithJs.html", canvas.get(0), {cache: 'none', executeJs: true}).then(function (result) {
+        rasterizeHTML.drawURL(rasterizeHTMLTestHelper.fixturesPath + "testScaled50PercentWithJs.html", canvas.get(0), {
+            cache: 'none',
+            executeJs: true,
+            zoom: 2
+        }).then(function (result) {
             expect(result.errors).toEqual([]);
             expect(result.image).toEqualImage(referenceImg.get(0), 1);
 
@@ -79,7 +83,13 @@ describe("Integration test", function () {
     });
 
     ifNotInWebkitIt("should take a URL, inline all displayable content and return the image", function (done) {
-        rasterizeHTML.drawURL(rasterizeHTMLTestHelper.fixturesPath + "testWithJs.html", {cache: 'none', width: width, height: height, executeJs: true}).then(function (result) {
+        rasterizeHTML.drawURL(rasterizeHTMLTestHelper.fixturesPath + "testScaled50PercentWithJs.html", {
+            cache: 'none',
+            width: width,
+            height: height,
+            executeJs: true,
+            zoom: 2
+        }).then(function (result) {
             expect(result.errors).toEqual([]);
             expect(result.image).toEqualImage(referenceImg.get(0), 1);
             // expect(result.image).toImageDiffEqual(referenceImg.get(0), 90);

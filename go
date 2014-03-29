@@ -1,6 +1,16 @@
 #!/bin/bash
 set -e
 
+# Work around https://github.com/laurentj/slimerjs/issues/172
+FIREFOX_PATH=$SLIMERJSLAUNCHER
+if [ -z $FIREFOX_PATH ]; then
+    if which firefox; then
+        FIREFOX_PATH=$(which firefox)
+    else
+        FIREFOX_PATH="/Applications/Firefox.app/Contents/MacOS/firefox"
+    fi
+fi
+
 installDependencies() {
     npm install
 }
@@ -21,19 +31,10 @@ build() {
 }
 
 runIntegrationTest() {
-    phantomjs test/phantomIntegrationTest.js
+    PATH=`pwd`/slimerjs/:$PATH SLIMERJSLAUNCHER=$FIREFOX_PATH slimerjs test/phantomIntegrationTest.js
 }
 
 runCharacterisationTest() {
-    # Work around https://github.com/laurentj/slimerjs/issues/172
-    FIREFOX_PATH=$SLIMERJSLAUNCHER
-    if [ -z $FIREFOX_PATH ]; then
-        if which firefox; then
-            FIREFOX_PATH=$(which firefox)
-        else
-            FIREFOX_PATH="/Applications/Firefox.app/Contents/MacOS/firefox"
-        fi
-    fi
     PATH=`pwd`/slimerjs/:$PATH SLIMERJSLAUNCHER=$FIREFOX_PATH ./test/inlineIntegration/runInlineTests.sh
 }
 

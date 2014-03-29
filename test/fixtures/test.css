@@ -5,6 +5,7 @@
 
 .bgimage {
     background-image: url("rednblue.png");
+    background-size: 100%;
 }
 .webfont {
     font-family: 'RaphaelIcons';

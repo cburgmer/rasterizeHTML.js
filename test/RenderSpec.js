@@ -280,11 +280,11 @@ describe("The rendering process", function () {
             render.getSvgForDocument.and.returnValue(svg);
             render.renderSvg.and.returnValue(fulfilled(image));
 
-            render.drawDocumentImage(doc, canvas, {}).then(function (theImage) {
+            render.drawDocumentImage(doc, canvas, {zoom: 42}).then(function (theImage) {
                 expect(theImage).toBe(image);
 
                 expect(util.calculateDocumentContentSize).toHaveBeenCalledWith(doc, jasmine.any(Number), jasmine.any(Number));
-                expect(render.getSvgForDocument).toHaveBeenCalledWith(doc, 47, 11);
+                expect(render.getSvgForDocument).toHaveBeenCalledWith(doc, 47, 11, 42);
                 expect(render.renderSvg).toHaveBeenCalledWith(svg, canvas);
 
                 done();

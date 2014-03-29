@@ -100,6 +100,16 @@ describe("Main interface of rasterizeHTML.js", function () {
             });
         });
 
+        it("should pass on render options", function (done) {
+            var doc = "doc";
+
+            rasterizeHTML.drawDocument(doc, canvas, {width: 123, height: 234, hover: '.aSelector', active: '#anotherSelector', zoom: 42}).then(function () {
+                expect(render.drawDocumentImage).toHaveBeenCalledWith(doc, canvas, {width: 123, height: 234, hover: '.aSelector', active: '#anotherSelector', zoom: 42});
+
+                done();
+            });
+        });
+
         it("should provide a callback for legacy reasons for drawDocument", function (done) {
             rasterizeHTML.drawDocument("doc", canvas, function (image, errors) {
                 expect(image).toEqual(svgImage);

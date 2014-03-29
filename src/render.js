@@ -226,7 +226,7 @@ var render = (function (util, xmlserializer, ayepromise, window) {
 
         return util.calculateDocumentContentSize(doc, viewportSize.width, viewportSize.height)
             .then(function (size) {
-                return module.getSvgForDocument(doc, size.width, size.height);
+                return module.getSvgForDocument(doc, size.width, size.height, options.zoom);
             })
             .then(function (svg) {
                 return module.renderSvg(svg, canvas);
