@@ -113,7 +113,7 @@ describe("Integration test", function () {
         });
     });
 
-    ifNotInWebkitIt("should report a source error on invalid input from HTML", function (done) {
+    ifNotInPhantomJsIt("should report a source error on invalid input from HTML", function (done) {
         rasterizeHTML.drawHTML("<html><weird:element></html>", {cache: 'none'}).then(null, function (error) {
             expect(error.message).toEqual("Invalid source");
 
@@ -121,7 +121,7 @@ describe("Integration test", function () {
         });
     });
 
-    ifNotInWebkitIt("should report a source error on invalid input from URL", function (done) {
+    ifNotInPhantomJsIt("should report a source error on invalid input from URL", function (done) {
         rasterizeHTML.drawURL(rasterizeHTMLTestHelper.fixturesPath + "invalidInput.html", {cache: 'none'}).then(null, function (error) {
             expect(error.message).toEqual("Invalid source");
 
