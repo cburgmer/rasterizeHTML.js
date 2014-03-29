@@ -65,9 +65,9 @@ rasterizeHTML.drawDocument( document [, canvas] [, options] [, callback] )</pre>
 
 <p>As described in <a href="http://robert.ocallahan.org/2011/11/drawing-dom-content-to-canvas.html">http://robert.ocallahan.org/2011/11/drawing-dom-content-to-canvas.html</a> and <a href="https://developer.mozilla.org/en/HTML/Canvas/Drawing_DOM_objects_into_a_canvas">https://developer.mozilla.org/en/HTML/Canvas/Drawing_DOM_objects_into_a_canvas</a> however it is possible by embedding the HTML into an SVG image as a &lt;foreignObject&gt; and then drawing the resulting image via ctx.drawImage().</p>
 
-<p>To cope with the existing limitations, rasterizeHTML.js will load external images, fonts and stylesheets and store them inline via <a href="http://en.wikipedia.org/wiki/Data_URI_scheme">data: URIs</a> or inline style elements respectively.</p>
+<p>In addition SVG is not allowed to link to external resources and so rasterizeHTML.js will load external images, fonts and stylesheets and store them inline via <a href="http://en.wikipedia.org/wiki/Data_URI_scheme">data: URIs</a> (or inline style elements respectively).</p>
 
-<p>You can <a href="http://2013.jsconf.eu/speakers/christoph-burgmer-a-panoramic-tour-through-html5-rendering-itself.html">hear me talk</a> on some of the details of the implementation.</p>
+<p>You can <a href="http://2013.jsconf.eu/speakers/christoph-burgmer-a-panoramic-tour-through-html5-rendering-itself.html">hear cburgmer talk</a> on some of the details of the implementation.</p>
 
 <h2>Demo I</h2>
 
@@ -139,9 +139,9 @@ rasterizeHTML.drawDocument( document [, canvas] [, options] [, callback] )</pre>
 
 <h2>Limitations</h2>
 
-<p>SVG is not allowed to link to external resources, as such all used resources need to be embedded using data: URIs. However resources can only be loaded if from the same origin, unless <a href="http://en.wikipedia.org/wiki/Cross-origin_resource_sharing">CORS</a> is used.</p>
+<p>All resources (HTML page, CSS, images and JS) that are needed for drawing the page can only be loaded if from the <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Same_origin_policy_for_JavaScript">same origin</a>, unless techniques like <a href="http://enable-cors.org">CORS</a> are used. I.E. <code>drawURL()</code> can only load pages from the same domain as the current page and all draw methods can equally only embed styling and images from that domain.</p>
 
-<p>The code is tested under Firefox, Chrome &amp; Safari. However IE is not supported so far (IE10 doesn't load HTML inside an SVG).</p>
+<p>The code is tested under Firefox, Chrome &amp; Safari. However IE up to version 11 does not honour <code>&lt;foreignObject&gt;</code> and is unsupported.</p>
 
 <p>At the time of writing it seems that the individual browsers still have some issues with rendering SVGs with embedded HTML to the canvas. See the <a href="https://github.com/cburgmer/rasterizeHTML.js/wiki/Browser-issues">wiki for a list of known issues</a> and do add your findings there.</p>
 
