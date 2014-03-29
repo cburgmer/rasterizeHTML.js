@@ -6,8 +6,5 @@
     "./dist/rasterizeHTML.allinone.js"
   ],
   "dependencies": {},
-  "devDependencies": {
-    "jquery": "~1.7.0",
-    "js-imagediff": "~1.0.4"
-  }
+  "devDependencies": {}
 }

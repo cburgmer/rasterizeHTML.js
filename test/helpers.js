@@ -53,21 +53,13 @@ var rasterizeHTMLTestHelper = (function () {
     };
 
     module.readDocumentFixture = function (url) {
-        var doc,
-            fixtureUrl = module.fixturesPath + url;
+        var fixtureUrl = module.fixturesPath + url,
+            xhr = new window.XMLHttpRequest();
 
-        $.ajax({
-            dataType: 'xml',
-            mimeType: 'text/xml',
-            url: fixtureUrl,
-            async: false,
-            cache: false,
-            success: function (content) {
-                doc = content;
-            }
-        });
-
-        return doc;
+        xhr.open('GET', fixtureUrl, false);
+        xhr.overrideMimeType = 'text/xml';
+        xhr.send(null);
+        return xhr.responseXML;
     };
 
     module.readDocumentFixtureWithoutBaseURI = function (url) {

@@ -15,10 +15,6 @@ installDependencies() {
     npm install
 }
 
-installDependenciesNotYetOnNPM() {
-    ./node_modules/.bin/bower install
-}
-
 installSlimerJS() {
     # Work around https://github.com/laurentj/slimerjs/issues/64
     wget "http://download.slimerjs.org/v0.9/0.9.1/slimerjs-0.9.1.zip"
@@ -41,10 +37,6 @@ runCharacterisationTest() {
 main() {
     if [ ! -d node_modules ]; then
         installDependencies
-    fi
-
-    if [ ! -d bower_components ]; then
-        installDependenciesNotYetOnNPM
     fi
 
     if [ ! -d slimerjs ]; then

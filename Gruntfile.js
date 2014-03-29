@@ -16,8 +16,8 @@ module.exports = function (grunt) {
             options: {
                 specs: 'test/*Spec.js',
                 vendor: [
-                    'bower_components/js-imagediff/imagediff.js',
-                    'bower_components/jquery/jquery.js',
+                    'node_modules/imagediff/imagediff.js',
+                    'node_modules/jquery/dist/jquery.js',
                 ],
                 helpers: [
                     'test/helpers.js',
