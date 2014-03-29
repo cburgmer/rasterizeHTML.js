@@ -81,7 +81,8 @@ runTest() {
 
 main() {
     runTest "github" "github.com/index.html"
-    runTest "twitter" "twitter.com/index.html"
+    # Flaky, doesn't always terminate
+    #runTest "twitter" "twitter.com/index.html"
 
     if [[ "$failedTests" -eq 0 ]]; then
         echo "DONE"
