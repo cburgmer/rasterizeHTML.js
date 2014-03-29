@@ -57,7 +57,7 @@ var rasterizeHTMLTestHelper = (function () {
             xhr = new window.XMLHttpRequest();
 
         xhr.open('GET', fixtureUrl, false);
-        xhr.overrideMimeType = 'text/xml';
+        xhr.overrideMimeType('text/xml');
         xhr.send(null);
         return xhr.responseXML;
     };
