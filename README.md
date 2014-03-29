@@ -1,3 +1,8 @@
+<a href="https://www.npmjs.org/package/rasterizehtml">
+    <img src="https://badge.fury.io/js/rasterizehtml.png"
+         align="right" alt="NPM version" />
+</a>
+
 rasterizeHTML.js
 ================
 
