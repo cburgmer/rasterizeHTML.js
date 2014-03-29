@@ -1,14 +1,16 @@
 describe("The rendering process", function () {
     describe("on document to SVG conversion", function () {
+        var defaultZoomLevel = 1;
+
         it("should return a SVG with embeded HTML", function () {
             var doc = document.implementation.createHTMLDocument("");
             doc.body.innerHTML = "Test content";
 
-            var svgCode = render.getSvgForDocument(doc, 123, 456);
+            var svgCode = render.getSvgForDocument(doc, 123, 456, defaultZoomLevel);
 
             expect(svgCode).toMatch(new RegExp(
                 '<svg xmlns="http://www.w3.org/2000/svg" width="123" height="456">' +
-                    '<foreignObject width="100%" height="100%">' +
+                    '<foreignObject width="123" height="456">' +
                         '<html xmlns="http://www.w3.org/1999/xhtml">' +
                             '<head>' +
                                 '<title(/>|></title>)' +
@@ -27,13 +29,13 @@ describe("The rendering process", function () {
                 canonicalXML;
             doc.body.innerHTML = '<img src="data:image/png;base64,sOmeFAKeBasE64="/>';
 
-            var svgCode = render.getSvgForDocument(doc, 123, 456);
+            var svgCode = render.getSvgForDocument(doc, 123, 456, defaultZoomLevel);
 
             expect(svgCode).not.toBeNull();
             canonicalXML = svgCode.replace(/ +\/>/, '/>');
             expect(canonicalXML).toMatch(new RegExp(
                 '<svg xmlns="http://www.w3.org/2000/svg" width="123" height="456">' +
-                    '<foreignObject width="100%" height="100%">' +
+                    '<foreignObject width="123" height="456">' +
                         '<html xmlns="http://www.w3.org/1999/xhtml">' +
                             '<head>' +
                                 '<title(/>|></title>)' +
@@ -51,11 +53,11 @@ describe("The rendering process", function () {
             var doc = document.implementation.createHTMLDocument("");
             doc.body.innerHTML = "content";
 
-            var svgCode = render.getSvgForDocument(doc, 123, 987);
+            var svgCode = render.getSvgForDocument(doc, 123, 987, defaultZoomLevel);
 
             expect(svgCode).toMatch(new RegExp(
                 '<svg xmlns="http://www.w3.org/2000/svg" width="123" height="987">' +
-                    '<foreignObject width="100%" height="100%">' +
+                    '<foreignObject width="123" height="987">' +
                         '<html xmlns="http://www.w3.org/1999/xhtml">' +
                             '<head>' +
                                 '<title(/>|></title>)' +
@@ -66,6 +68,41 @@ describe("The rendering process", function () {
                         '</html>' +
                     '</foreignObject>' +
                 '</svg>'
+            ));
+        });
+
+        it("should zoom by the given factor", function () {
+            var doc = document.implementation.createHTMLDocument("");
+            doc.body.innerHTML = "content";
+
+            var zoomFactor = 10;
+            var svgCode = render.getSvgForDocument(doc, 123, 987, zoomFactor);
+
+            expect(svgCode).toMatch(new RegExp(
+                '<svg xmlns="http://www.w3.org/2000/svg" width="123" height="987">' +
+                    '<foreignObject width="12" height="99" style="-webkit-transform: scale\\(10\\); -webkit-transform-origin: top left; transform: scale\\(10\\); transform-origin: top left;">' +
+                        '<html xmlns="http://www.w3.org/1999/xhtml">' +
+                            '<head>' +
+                                '<title(/>|></title>)' +
+                            '</head>' +
+                            '<body>' +
+                                "content" +
+                            '</body>' +
+                        '</html>' +
+                    '</foreignObject>' +
+                '</svg>'
+            ));
+        });
+
+        it("should ignore zoom factor 0", function () {
+            var doc = document.implementation.createHTMLDocument("");
+            doc.body.innerHTML = "content";
+
+            var zoomLevel = 0;
+            var svgCode = render.getSvgForDocument(doc, 123, 987, zoomLevel);
+
+            expect(svgCode).toMatch(new RegExp(
+                '<foreignObject width="123" height="987">'
             ));
         });
 
