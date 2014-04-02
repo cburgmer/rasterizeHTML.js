@@ -13,7 +13,7 @@
     }
 }(this, function(url, xmlserializer, ayepromise, inlineresources) {
 
-    var util = (function (ayepromise, theWindow) {
+    var util = (function (ayepromise, url, theWindow) {
         "use strict";
     
         var module = {};
@@ -420,7 +420,7 @@
         };
     
         return module;
-    }(ayepromise, window));
+    }(ayepromise, url, window));
     
     var render = (function (util, xmlserializer, ayepromise, window) {
         "use strict";

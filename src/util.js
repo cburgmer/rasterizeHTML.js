@@ -1,4 +1,4 @@
-var util = (function (ayepromise, theWindow) {
+var util = (function (ayepromise, url, theWindow) {
     "use strict";
 
     var module = {};
@@ -405,4 +405,4 @@ var util = (function (ayepromise, theWindow) {
     };
 
     return module;
-}(ayepromise, window));
+}(ayepromise, url, window));
