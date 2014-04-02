@@ -7,8 +7,6 @@ module.exports = function (grunt) {
                 'build/dependencies/*.js',
                 'node_modules/ayepromise/ayepromise.js',
                 'src/inlineUtil.js',
-                'src/inlineCss.js',
-                'src/inline.js',
                 'src/util.js',
                 'src/render.js',
                 'src/rasterizeHTML.js'
@@ -48,6 +46,13 @@ module.exports = function (grunt) {
                     'standalone': 'url'
                 }
             },
+            inlineresources: {
+                src: 'node_modules/inlineresources/src/inline.js',
+                dest: 'build/dependencies/inlineresources.js',
+                options: {
+                    'standalone': 'inlineresources'
+                }
+            },
             allinone: {
                 src: 'dist/rasterizeHTML.js',
                 dest: 'build/rasterizeHTML.allinone.js',
@@ -67,7 +72,7 @@ module.exports = function (grunt) {
                 objectToExport: 'rasterizeHTML',
                 indent: '    ',
                 deps: {
-                    'default': ['url', 'xmlserializer', 'cssom', 'ayepromise']
+                    'default': ['url', 'xmlserializer', 'cssom', 'ayepromise', 'inlineresources']
                 }
             }
         },
@@ -75,8 +80,6 @@ module.exports = function (grunt) {
             one: {
                 src: [
                     'src/inlineUtil.js',
-                    'src/inlineCss.js',
-                    'src/inline.js',
                     'src/util.js',
                     'src/render.js',
                     'src/rasterizeHTML.js'
@@ -119,7 +122,8 @@ module.exports = function (grunt) {
                         ' * url (MIT License),\n' +
                         ' * CSSOM.js (MIT License),\n' +
                         ' * ayepromise (BSD License & WTFPL),\n' +
-                        ' * xmlserializer (MIT License) */\n'
+                        ' * xmlserializer (MIT License),\n' +
+                        ' * inlineresources (MIT License) */\n'
                 },
                 files: {
                     'dist/rasterizeHTML.allinone.js': ['build/rasterizeHTML.allinone.js']
@@ -148,17 +152,16 @@ module.exports = function (grunt) {
                 browser: true,
                 globals: {
                     inlineUtil: true,
-                    inlineCss: true,
-                    inline: true,
                     util: true,
                     render: true,
 
                     cssom: true,
                     url: true,
                     xmlserializer: true,
-                    ayepromise: true
+                    ayepromise: true,
+                    inlineresources: true
                 },
-                exported: ['rasterizeHTML', 'render', 'util', 'inline', 'inlineCss', 'inlineUtil']
+                exported: ['rasterizeHTML', 'render', 'util', 'inlineUtil']
             },
             uses_defaults: [
                 'src/*.js',
@@ -186,8 +189,6 @@ module.exports = function (grunt) {
                         diffHelper: true,
 
                         inlineUtil: true,
-                        inlineCss: true,
-                        inline: true,
                         util: true,
                         render: true,
                         rasterizeHTML: true,
@@ -195,6 +196,8 @@ module.exports = function (grunt) {
                         cssom: true,
                         url: true,
                         ayepromise: true,
+                        inlineresources: true,
+
                         imagediff: true
                     }
                 },
@@ -231,6 +234,7 @@ module.exports = function (grunt) {
         'browserify:cssom',
         'browserify:url',
         'browserify:xmlserializer',
+        'browserify:inlineresources'
     ]);
 
     grunt.registerTask('test', [

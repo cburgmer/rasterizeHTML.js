@@ -30,10 +30,6 @@ runIntegrationTest() {
     PATH=`pwd`/slimerjs/:$PATH SLIMERJSLAUNCHER=$FIREFOX_PATH slimerjs test/phantomIntegrationTest.js
 }
 
-runCharacterisationTest() {
-    PATH=`pwd`/slimerjs/:$PATH SLIMERJSLAUNCHER=$FIREFOX_PATH ./test/inlineIntegration/runInlineTests.sh
-}
-
 main() {
     if [ ! -d node_modules ]; then
         installDependencies
@@ -45,7 +41,6 @@ main() {
 
     build
     runIntegrationTest
-    runCharacterisationTest
 }
 
 main
