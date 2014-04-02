@@ -3,15 +3,15 @@
 * Copyright (c) 2014 Christoph Burgmer; Licensed MIT */
 (function(root, factory) {
     if(typeof exports === 'object') {
-        module.exports = factory(require('url'), require('xmlserializer'), require('cssom'), require('ayepromise'), require('inlineresources'));
+        module.exports = factory(require('url'), require('xmlserializer'), require('ayepromise'), require('inlineresources'));
     }
     else if(typeof define === 'function' && define.amd) {
-        define(['url', 'xmlserializer', 'cssom', 'ayepromise', 'inlineresources'], factory);
+        define(['url', 'xmlserializer', 'ayepromise', 'inlineresources'], factory);
     }
     else {
-        root['rasterizeHTML'] = factory(root.url, root.xmlserializer, root.cssom, root.ayepromise, root.inlineresources);
+        root['rasterizeHTML'] = factory(root.url, root.xmlserializer, root.ayepromise, root.inlineresources);
     }
-}(this, function(url, xmlserializer, cssom, ayepromise, inlineresources) {
+}(this, function(url, xmlserializer, ayepromise, inlineresources) {
 
     var inlineUtil = (function (window, ayepromise, url) {
         "use strict";
