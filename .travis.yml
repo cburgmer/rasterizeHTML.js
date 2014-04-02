@@ -4,14 +4,14 @@ node_js:
 env:
   - DISPLAY=:99.0
 addons:
-  firefox: "28.0"
+  firefox: '28.0'
 before_script:
   - "sh -e /etc/init.d/xvfb start"
 deploy:
   provider: npm
   email: christoph.burgmer@gmail.com
   api_key:
-    secure: EsvyCKvVOxMZDU5yvIGiwpqWTGlHUWZtcFLTaXqdJB4PseJQpDoWohFL+aH/N3cc5DgxwtCTRunwQ1jesGsQb++AWMZ5TeWuYDQXvvU6vs5oGY7wChqb70Ksjbcyp4MIzyUEotfwt+PGlDKPEOb/S3wnBBRjF9m5fWfnS4RjVZQ=
+    secure: FNqFg3zOU5Qd0MsGDUMHITm8Zc6GeS4+Y5JwWc+rPUKoXQPNYGBELuCOAngTa9OpKHpur8GCvdZ85IIx7XT6gbvSSrfQeuof1apVvv7ekU+wQljtSV0NoY8S4EdhNr4vysuI/lEE9/EhY0QmBnQk02EmFOLq7WuAzXQL9iDsCbw=
   on:
     tags: true
     repo: cburgmer/rasterizeHTML.js
