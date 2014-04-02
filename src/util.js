@@ -1,4 +1,4 @@
-var util = (function (inlineUtil, ayepromise, theWindow) {
+var util = (function (ayepromise, theWindow) {
     "use strict";
 
     var module = {};
@@ -6,6 +6,10 @@ var util = (function (inlineUtil, ayepromise, theWindow) {
     var uniqueIdList = [];
 
     module = {};
+
+    module.joinUrl = function (baseUrl, relUrl) {
+        return url.resolve(baseUrl, relUrl);
+    };
 
     module.getConstantUniqueIdFor = function (element) {
         // HACK, using a list results in O(n), but how do we hash e.g. a DOM node?
@@ -15,15 +19,15 @@ var util = (function (inlineUtil, ayepromise, theWindow) {
         return uniqueIdList.indexOf(element);
     };
 
-    var cloneObject = function(object) {
-        var newObject = {},
+    module.clone = function (object) {
+        var theClone = {},
             i;
         for (i in object) {
             if (object.hasOwnProperty(i)) {
-                newObject[i] = object[i];
+                theClone[i] = object[i];
             }
         }
-        return newObject;
+        return theClone;
     };
 
     var isObject = function (obj) {
@@ -55,12 +59,12 @@ var util = (function (inlineUtil, ayepromise, theWindow) {
                 if (isFunction(args[1])) {
                     parameters.callback = args[1];
                 } else {
-                    parameters.options = cloneObject(args[1]);
+                    parameters.options = module.clone(args[1]);
                     parameters.callback = args[2] || null;
                 }
 
             } else {
-                parameters.options = cloneObject(args[0]);
+                parameters.options = module.clone(args[0]);
                 parameters.callback = args[1] || null;
             }
         }
@@ -77,8 +81,7 @@ var util = (function (inlineUtil, ayepromise, theWindow) {
                 var args = Array.prototype.slice.call(arguments),
                     method = args.shift(),
                     url = args.shift(),
-                    // TODO remove reference to inlineUtil
-                    joinedUrl = inlineUtil.joinUrl(baseUrl, url);
+                    joinedUrl = util.joinUrl(baseUrl, url);
 
                 return open.apply(this, [method, joinedUrl].concat(args));
             };
@@ -258,8 +261,7 @@ var util = (function (inlineUtil, ayepromise, theWindow) {
 
     var doDocumentLoad = function (url, options) {
         var ajaxRequest = new window.XMLHttpRequest(),
-            // TODO remove reference to inlineUtil
-            joinedUrl = inlineUtil.joinUrl(options.baseUrl, url),
+            joinedUrl = util.joinUrl(options.baseUrl, url),
             augmentedUrl = getUncachableURL(joinedUrl, options.cache),
             defer = ayepromise.defer(),
             doReject = function () {
@@ -403,4 +405,4 @@ var util = (function (inlineUtil, ayepromise, theWindow) {
     };
 
     return module;
-}(inlineUtil, ayepromise, window));
+}(ayepromise, window));

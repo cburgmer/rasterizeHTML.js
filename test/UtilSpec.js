@@ -1,6 +1,65 @@
 describe("Utilities function", function () {
     // TODO tests for log and getConstantUniqueIdFor
 
+    describe("joinUrl", function () {
+        it("should append the url to a directory-only base", function () {
+            var url = util.joinUrl("rel/path/", "the_relative_url");
+            expect(url).toEqual("rel/path/the_relative_url");
+        });
+
+        it("should append the url to a file base", function () {
+            var url = util.joinUrl("rel/path/something", "the_relative_url");
+            expect(url).toEqual("rel/path/the_relative_url");
+        });
+
+        it("should merge ../ with a directory-only base", function () {
+            var url = util.joinUrl("rel/path/", "../the_relative_url");
+            expect(url).toEqual("rel/the_relative_url");
+        });
+
+        it("should just return the url if absolute", function () {
+            var url = util.joinUrl("rel/path/", "/the_relative_url");
+            expect(url).toEqual("/the_relative_url");
+        });
+
+        it("should combine a url starting with '/' with the host of the base", function () {
+            var url = util.joinUrl("http://example.com/rel/path/", "/the_relative_url");
+            expect(url).toEqual("http://example.com/the_relative_url");
+        });
+
+        it("should ignore base with an absolute url", function () {
+            var url = util.joinUrl("http://example.com/rel/path/", "http://github.com//the_relative_url");
+            expect(url).toEqual("http://github.com//the_relative_url");
+        });
+
+        it("should ignore base without directories", function () {
+            var url = util.joinUrl("aFile", "anotherFile");
+            expect(url).toEqual("anotherFile");
+        });
+
+        it("should ignore an undefined base", function () {
+            var url = util.joinUrl(undefined, "aFile");
+            expect(url).toEqual("aFile");
+        });
+
+        it("should keep a relative base URL", function () {
+            var url = util.joinUrl("../rel/path/", "the_relative_url");
+            expect(url).toEqual("../rel/path/the_relative_url");
+        });
+    });
+
+    describe("clone", function () {
+        it("should create a copy of the given object", function () {
+            var input = {anOption: '1', yetAnotherOption: '21'},
+                output;
+
+            output = util.clone(input);
+
+            expect(input).toEqual(output);
+            expect(input).not.toBe(output);
+        });
+    });
+
     describe("executeJavascript", function () {
         var doc;
 
@@ -595,7 +654,7 @@ describe("Utilities function", function () {
                 ajaxRequest = jasmine.createSpyObj("ajaxRequest", ["open", "addEventListener", "overrideMimeType", "send"]);
                 spyOn(window, "XMLHttpRequest").and.returnValue(ajaxRequest);
 
-                spyOn(inlineUtil, "joinUrl").and.callFake(function (baseUrl, url) {
+                spyOn(util, "joinUrl").and.callFake(function (baseUrl, url) {
                     return baseUrl ? baseUrl + url : url;
                 });
             });
@@ -652,7 +711,7 @@ describe("Utilities function", function () {
 
                 expect(ajaxRequest.open.calls.mostRecent().args[1]).toEqual('http://example.com/relative/url.html');
 
-                expect(inlineUtil.joinUrl).toHaveBeenCalledWith("http://example.com/", "relative/url.html");
+                expect(util.joinUrl).toHaveBeenCalledWith("http://example.com/", "relative/url.html");
             });
         });
     });

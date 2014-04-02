@@ -6,7 +6,6 @@ module.exports = function (grunt) {
             src: [
                 'build/dependencies/*.js',
                 'node_modules/ayepromise/ayepromise.js',
-                'src/inlineUtil.js',
                 'src/util.js',
                 'src/render.js',
                 'src/rasterizeHTML.js'
@@ -72,7 +71,6 @@ module.exports = function (grunt) {
         concat: {
             one: {
                 src: [
-                    'src/inlineUtil.js',
                     'src/util.js',
                     'src/render.js',
                     'src/rasterizeHTML.js'
@@ -144,7 +142,6 @@ module.exports = function (grunt) {
                 trailing: true,
                 browser: true,
                 globals: {
-                    inlineUtil: true,
                     util: true,
                     render: true,
 
@@ -153,7 +150,7 @@ module.exports = function (grunt) {
                     ayepromise: true,
                     inlineresources: true
                 },
-                exported: ['rasterizeHTML', 'render', 'util', 'inlineUtil']
+                exported: ['rasterizeHTML', 'render', 'util']
             },
             uses_defaults: [
                 'src/*.js',
@@ -180,7 +177,6 @@ module.exports = function (grunt) {
                         rasterizeHTMLTestHelper: true,
                         diffHelper: true,
 
-                        inlineUtil: true,
                         util: true,
                         render: true,
                         rasterizeHTML: true,

@@ -13,30 +13,7 @@
     }
 }(this, function(url, xmlserializer, ayepromise, inlineresources) {
 
-    var inlineUtil = (function (window, ayepromise, url) {
-        "use strict";
-    
-        var module = {};
-    
-        module.clone = function (object) {
-            var theClone = {},
-                i;
-            for (i in object) {
-                if (object.hasOwnProperty(i)) {
-                   theClone[i] = object[i];
-                }
-            }
-            return theClone;
-        };
-    
-        module.joinUrl = function (baseUrl, relUrl) {
-            return url.resolve(baseUrl, relUrl);
-        };
-    
-        return module;
-    }(window, ayepromise, url));
-    
-    var util = (function (inlineUtil, ayepromise, theWindow) {
+    var util = (function (ayepromise, theWindow) {
         "use strict";
     
         var module = {};
@@ -44,6 +21,10 @@
         var uniqueIdList = [];
     
         module = {};
+    
+        module.joinUrl = function (baseUrl, relUrl) {
+            return url.resolve(baseUrl, relUrl);
+        };
     
         module.getConstantUniqueIdFor = function (element) {
             // HACK, using a list results in O(n), but how do we hash e.g. a DOM node?
@@ -53,15 +34,15 @@
             return uniqueIdList.indexOf(element);
         };
     
-        var cloneObject = function(object) {
-            var newObject = {},
+        module.clone = function (object) {
+            var theClone = {},
                 i;
             for (i in object) {
                 if (object.hasOwnProperty(i)) {
-                    newObject[i] = object[i];
+                    theClone[i] = object[i];
                 }
             }
-            return newObject;
+            return theClone;
         };
     
         var isObject = function (obj) {
@@ -93,12 +74,12 @@
                     if (isFunction(args[1])) {
                         parameters.callback = args[1];
                     } else {
-                        parameters.options = cloneObject(args[1]);
+                        parameters.options = module.clone(args[1]);
                         parameters.callback = args[2] || null;
                     }
     
                 } else {
-                    parameters.options = cloneObject(args[0]);
+                    parameters.options = module.clone(args[0]);
                     parameters.callback = args[1] || null;
                 }
             }
@@ -115,8 +96,7 @@
                     var args = Array.prototype.slice.call(arguments),
                         method = args.shift(),
                         url = args.shift(),
-                        // TODO remove reference to inlineUtil
-                        joinedUrl = inlineUtil.joinUrl(baseUrl, url);
+                        joinedUrl = util.joinUrl(baseUrl, url);
     
                     return open.apply(this, [method, joinedUrl].concat(args));
                 };
@@ -296,8 +276,7 @@
     
         var doDocumentLoad = function (url, options) {
             var ajaxRequest = new window.XMLHttpRequest(),
-                // TODO remove reference to inlineUtil
-                joinedUrl = inlineUtil.joinUrl(options.baseUrl, url),
+                joinedUrl = util.joinUrl(options.baseUrl, url),
                 augmentedUrl = getUncachableURL(joinedUrl, options.cache),
                 defer = ayepromise.defer(),
                 doReject = function () {
@@ -441,7 +420,7 @@
         };
     
         return module;
-    }(inlineUtil, ayepromise, window));
+    }(ayepromise, window));
     
     var render = (function (util, xmlserializer, ayepromise, window) {
         "use strict";
@@ -686,7 +665,7 @@
         return module;
     }(util, xmlserializer, ayepromise, window));
     
-    var rasterizeHTML = (function (util, render, inlineresources, inlineUtil) {
+    var rasterizeHTML = (function (util, render, inlineresources) {
         "use strict";
     
         var module = {};
@@ -705,7 +684,7 @@
             var executeJsTimeout = options.executeJsTimeout || 0,
                 inlineOptions;
     
-            inlineOptions = inlineUtil.clone(options);
+            inlineOptions = util.clone(options);
             inlineOptions.inlineScripts = options.executeJs === true;
     
             return inlineresources.inlineReferences(doc, inlineOptions)
@@ -817,7 +796,7 @@
         };
     
         return module;
-    }(util, render, inlineresources, inlineUtil));
+    }(util, render, inlineresources));
     
 
     return rasterizeHTML;

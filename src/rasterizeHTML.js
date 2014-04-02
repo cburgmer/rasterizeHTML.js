@@ -1,4 +1,4 @@
-var rasterizeHTML = (function (util, render, inlineresources, inlineUtil) {
+var rasterizeHTML = (function (util, render, inlineresources) {
     "use strict";
 
     var module = {};
@@ -17,7 +17,7 @@ var rasterizeHTML = (function (util, render, inlineresources, inlineUtil) {
         var executeJsTimeout = options.executeJsTimeout || 0,
             inlineOptions;
 
-        inlineOptions = inlineUtil.clone(options);
+        inlineOptions = util.clone(options);
         inlineOptions.inlineScripts = options.executeJs === true;
 
         return inlineresources.inlineReferences(doc, inlineOptions)
@@ -129,4 +129,4 @@ var rasterizeHTML = (function (util, render, inlineresources, inlineUtil) {
     };
 
     return module;
-}(util, render, inlineresources, inlineUtil));
+}(util, render, inlineresources));
