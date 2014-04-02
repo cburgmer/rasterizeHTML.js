@@ -20,6 +20,7 @@ installSlimerJS() {
     wget "http://download.slimerjs.org/v0.9/0.9.1/slimerjs-0.9.1.zip"
     unzip "slimerjs-0.9.1.zip"
     mv "slimerjs-0.9.1" slimerjs
+    rm "slimerjs-0.9.1.zip"
 }
 
 build() {
