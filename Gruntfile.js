@@ -11,7 +11,7 @@ module.exports = function (grunt) {
                 'src/rasterizeHTML.js'
             ],
             options: {
-                specs: 'test/*Spec.js',
+                specs: 'test/specs/*.js',
                 vendor: [
                     'node_modules/imagediff/imagediff.js',
                     'node_modules/jquery/dist/jquery.js',
@@ -124,7 +124,7 @@ module.exports = function (grunt) {
         watch: {
             files: [
                 'src/*.js',
-                'test/*Spec.js'
+                'test/specs/*.js'
             ],
             tasks: ['jshint', 'jasmine']
         },
@@ -189,7 +189,7 @@ module.exports = function (grunt) {
                     }
                 },
                 files: {
-                    src: ['test/*Spec.js']
+                    src: ['test/specs/*.js']
                 }
             }
         },
@@ -199,6 +199,7 @@ module.exports = function (grunt) {
                 // 'test/{,*/}*'
                 'test/*.html',
                 'test/*.js',
+                'test/specs/*.js',
                 'test/*/*.html',
             ],
             options: {
