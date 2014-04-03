@@ -2,8 +2,8 @@ rasterizeHTML.js
 ================
 
 <a href="https://www.npmjs.org/package/rasterizehtml">
-    <img src="https://badge.fury.io/js/rasterizehtml.png"
-         align="right" alt="NPM version" />
+    <img src="https://badge.fury.io/js/rasterizehtml.svg"
+        align="right" alt="NPM version" height="18">
 </a>
 
 Renders HTML into the browser's canvas.
