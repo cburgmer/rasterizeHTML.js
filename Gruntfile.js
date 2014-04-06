@@ -166,8 +166,6 @@ module.exports = function (grunt) {
                         xit: true,
                         beforeEach: true,
                         afterEach: true,
-                        waitsFor: true,
-                        runs: true,
                         expect: true,
                         spyOn: true,
 

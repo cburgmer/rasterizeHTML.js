@@ -510,7 +510,7 @@ describe("Utilities function", function () {
             });
         });
 
-        ifNotInPhantomJsIt("should return width greater than viewport width", function (done) {
+        it("should return width greater than viewport width", function (done) {
             setHtml('<div style="width: 400px; height: 10px;"></div>');
 
             util.calculateDocumentContentSize(doc, 300, 200).then(function (size) {
