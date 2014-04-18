@@ -20,6 +20,7 @@ module.exports = function (grunt) {
                 helpers: [
                     'test/helpers.js',
                     'test/diffHelper.js',
+                    'test/testHelper.js',
                     'test/gruntpath.js'
                 ]
             }
@@ -175,7 +176,7 @@ module.exports = function (grunt) {
                         ifNotInWebkitIt: true,
                         ifNotInPhantomJsIt: true,
                         ifNotInPhantomJSAndNotLocalRunnerIt: true,
-                        rasterizeHTMLTestHelper: true,
+                        testHelper: true,
                         diffHelper: true,
 
                         xhrproxies: true,

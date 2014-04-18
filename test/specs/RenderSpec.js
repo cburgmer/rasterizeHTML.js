@@ -136,7 +136,7 @@ describe("The rendering process", function () {
                     svgCode;
 
                 myUserAgent = "WebKit";
-                rasterizeHTMLTestHelper.addStyleToDocument(doc, 'span { background-image: url("data:image/png;base64,soMEfAkebASE64="); }');
+                testHelper.addStyleToDocument(doc, 'span { background-image: url("data:image/png;base64,soMEfAkebASE64="); }');
 
                 svgCode = render.getSvgForDocument(doc, 123, 987);
 
@@ -148,7 +148,7 @@ describe("The rendering process", function () {
                     svgCode;
 
                 myUserAgent = "Something else";
-                rasterizeHTMLTestHelper.addStyleToDocument(doc, 'span { background-image: url("data:image/png;base64,soMEfAkebASE64="); }');
+                testHelper.addStyleToDocument(doc, 'span { background-image: url("data:image/png;base64,soMEfAkebASE64="); }');
 
                 svgCode = render.getSvgForDocument(doc, 123, 987);
 
@@ -164,7 +164,7 @@ describe("The rendering process", function () {
         });
 
         ifNotInWebkitIt("should render the SVG", function (done) {
-            var referenceImg = $('<img src="' + rasterizeHTMLTestHelper.fixturesPath + 'rednblue.png" alt="test image"/>'),
+            var referenceImg = $('<img src="' + testHelper.fixturesPath + 'rednblue.png" alt="test image"/>'),
                 twoColorSvg = (
                     '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">' +
                         '<foreignObject width="100%" height="100%">' +
@@ -194,7 +194,7 @@ describe("The rendering process", function () {
         });
 
         ifNotInWebkitIt("should render an SVG with inline image", function (done) {
-            var referenceImg = $('<img src="' + rasterizeHTMLTestHelper.fixturesPath + 'rednblue.png" alt="test image"/>'),
+            var referenceImg = $('<img src="' + testHelper.fixturesPath + 'rednblue.png" alt="test image"/>'),
                 twoColorSvg = (
                     '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">' +
                         '<foreignObject width="100%" height="100%">' +
@@ -369,7 +369,7 @@ describe("The rendering process", function () {
             try {
                 render.drawImageOnCanvas(image, canvas);
             } catch (e) {
-                error = rasterizeHTMLTestHelper.deleteAdditionalFieldsFromErrorUnderPhantomJS(e);
+                error = testHelper.deleteAdditionalFieldsFromErrorUnderPhantomJS(e);
             }
 
             expect(error).toEqual({message: "Error rendering page"});

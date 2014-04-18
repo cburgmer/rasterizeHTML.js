@@ -127,7 +127,7 @@ describe("XHR Proxies", function () {
                 var finishNotifyingProxy = xhrproxies.finishNotifying(window.XMLHttpRequest);
                 window.XMLHttpRequest = finishNotifyingProxy;
 
-                var loadPromise = rasterizeHTMLTestHelper.readHTMLDocumentFixture('test.html');
+                var loadPromise = testHelper.readHTMLDocumentFixture('test.html');
 
                 finishNotifyingProxy.waitForRequestsToFinish().then(callback);
 

@@ -133,8 +133,8 @@ describe("Utilities function", function () {
         });
 
         ifNotInPhantomJsIt("should be able to load content via AJAX from the correct url", function (done) {
-            rasterizeHTMLTestHelper.readHTMLDocumentFixture('ajax.html', function (doc) {
-                util.executeJavascript(doc, rasterizeHTMLTestHelper.fixturesPath, 100).then(function (result) {
+            testHelper.readHTMLDocumentFixture('ajax.html').then(function (doc) {
+                util.executeJavascript(doc, testHelper.fixturesPath, 100).then(function (result) {
                     expect(result.document.querySelector('div').textContent.trim()).toEqual('The content');
 
                     done();
@@ -190,7 +190,7 @@ describe("Utilities function", function () {
                 error = e;
             }
 
-            error = rasterizeHTMLTestHelper.deleteAdditionalFieldsFromErrorUnderPhantomJS(error);
+            error = testHelper.deleteAdditionalFieldsFromErrorUnderPhantomJS(error);
             expect(error).toEqual({message: "Invalid source"});
         });
 
@@ -202,7 +202,7 @@ describe("Utilities function", function () {
                 error = e;
             }
 
-            error = rasterizeHTMLTestHelper.deleteAdditionalFieldsFromErrorUnderPhantomJS(error);
+            error = testHelper.deleteAdditionalFieldsFromErrorUnderPhantomJS(error);
             expect(error).toEqual({message: "Invalid source"});
         });
 
@@ -623,7 +623,7 @@ describe("Utilities function", function () {
 
     describe("loadDocument", function () {
         it("should load document from a URL", function (done) {
-            util.loadDocument(rasterizeHTMLTestHelper.fixturesPath + "test.html", {}).then(function (doc) {
+            util.loadDocument(testHelper.fixturesPath + "test.html", {}).then(function (doc) {
                 expect(doc.querySelector('title').textContent).toEqual("Test page with full resource includes");
 
                 done();
@@ -631,7 +631,7 @@ describe("Utilities function", function () {
         });
 
         it("should error on failing URL", function (done) {
-            util.loadDocument(rasterizeHTMLTestHelper.fixturesPath + "non_existing_url.html", {}).fail(function (e) {
+            util.loadDocument(testHelper.fixturesPath + "non_existing_url.html", {}).fail(function (e) {
                 expect(e).toEqual({message: "Unable to load page"});
 
                 done();
@@ -640,7 +640,7 @@ describe("Utilities function", function () {
 
         // Seems to be generally broken, see https://github.com/cburgmer/rasterizeHTML.js/issues/51
         ifNotInWebkitIt("should error on failing parse", function (done) {
-            util.loadDocument(rasterizeHTMLTestHelper.fixturesPath + "invalidInput.html", {}).fail(function (e) {
+            util.loadDocument(testHelper.fixturesPath + "invalidInput.html", {}).fail(function (e) {
                 expect(e).toEqual({message: "Invalid source"});
 
                 done();

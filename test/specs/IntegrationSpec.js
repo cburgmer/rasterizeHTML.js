@@ -32,14 +32,14 @@ describe("Integration test", function () {
 
         canvas = $('<canvas width="' + width + '" height="' + height + '"></canvas>'); // Firefox adds a space between the divs and needs the canvas to fit horizontally for all content to be rendered
 
-        referenceImg = $('<img src="'+ rasterizeHTMLTestHelper.fixturesPath + '/testResult.png" alt="test image"/>');
+        referenceImg = $('<img src="'+ testHelper.fixturesPath + '/testResult.png" alt="test image"/>');
 
         finished = false;
         callback = jasmine.createSpy("callback").and.callFake(function () { finished = true; });
     });
 
     ifNotInWebkitIt("should take a document, inline all displayable content and render to the given canvas", function (done) {
-        loadDocFixture(rasterizeHTMLTestHelper.fixturesPath + "test.html", function (doc) {
+        loadDocFixture(testHelper.fixturesPath + "test.html", function (doc) {
             rasterizeHTML.drawDocument(doc, canvas.get(0), {cache: 'none'}).then(function (result) {
                 expect(result.errors).toEqual([]);
                 expect(result.image).toEqualImage(referenceImg.get(0), 1);
@@ -53,9 +53,9 @@ describe("Integration test", function () {
     });
 
     ifNotInWebkitIt("should take a HTML string, inline all displayable content and render to the given canvas", function (done) {
-        var html = rasterizeHTMLTestHelper.readHTMLFixture("test.html");
+        var html = testHelper.readHTMLFixture("test.html");
 
-        rasterizeHTML.drawHTML(html, canvas.get(0), {baseUrl: rasterizeHTMLTestHelper.fixturesPath, cache: 'none'}).then(function (result) {
+        rasterizeHTML.drawHTML(html, canvas.get(0), {baseUrl: testHelper.fixturesPath, cache: 'none'}).then(function (result) {
             expect(result.errors).toEqual([]);
             expect(result.image).toEqualImage(referenceImg.get(0), 1);
 
@@ -67,7 +67,7 @@ describe("Integration test", function () {
     });
 
     ifNotInWebkitIt("should take a URL, inline all displayable content and render to the given canvas", function (done) {
-        rasterizeHTML.drawURL(rasterizeHTMLTestHelper.fixturesPath + "testScaled50PercentWithJs.html", canvas.get(0), {
+        rasterizeHTML.drawURL(testHelper.fixturesPath + "testScaled50PercentWithJs.html", canvas.get(0), {
             cache: 'none',
             executeJs: true,
             zoom: 2
@@ -83,7 +83,7 @@ describe("Integration test", function () {
     });
 
     ifNotInWebkitIt("should take a URL, inline all displayable content and return the image", function (done) {
-        rasterizeHTML.drawURL(rasterizeHTMLTestHelper.fixturesPath + "testScaled50PercentWithJs.html", {
+        rasterizeHTML.drawURL(testHelper.fixturesPath + "testScaled50PercentWithJs.html", {
             cache: 'none',
             width: width,
             height: height,
@@ -101,7 +101,7 @@ describe("Integration test", function () {
     ifNotInPhantomJSAndNotLocalRunnerIt("should take a URL and load non UTF-8 content", function (done) {
         var inlineReferencesSpy = spyOn(inlineresources, 'inlineReferences').and.returnValue(fulfilled());
 
-        rasterizeHTML.drawURL(rasterizeHTMLTestHelper.fixturesPath + "nonUTF8Encoding.html").then(function () {
+        rasterizeHTML.drawURL(testHelper.fixturesPath + "nonUTF8Encoding.html").then(function () {
             expect(inlineReferencesSpy).toHaveBeenCalled();
 
             var doc = inlineReferencesSpy.calls.mostRecent().args[0];
@@ -122,7 +122,7 @@ describe("Integration test", function () {
     });
 
     ifNotInPhantomJsIt("should report a source error on invalid input from URL", function (done) {
-        rasterizeHTML.drawURL(rasterizeHTMLTestHelper.fixturesPath + "invalidInput.html", {cache: 'none'}).then(null, function (error) {
+        rasterizeHTML.drawURL(testHelper.fixturesPath + "invalidInput.html", {cache: 'none'}).then(null, function (error) {
             expect(error.message).toEqual("Invalid source");
 
             done();

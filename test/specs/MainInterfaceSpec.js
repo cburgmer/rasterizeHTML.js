@@ -407,7 +407,7 @@ describe("Main interface of rasterizeHTML.js", function () {
             ajaxSpy.and.returnValue(rejected({message: "the message"}));
 
             rasterizeHTML.drawURL("non_existing.html", canvas, function (image, errors) {
-                errors = rasterizeHTMLTestHelper.deleteAdditionalFieldsFromErrorsUnderPhantomJS(errors);
+                errors = testHelper.deleteAdditionalFieldsFromErrorsUnderPhantomJS(errors);
                 expect(image).toBe(null);
                 expect(errors).toEqual([{
                     resourceType: "page",
@@ -467,7 +467,7 @@ describe("Main interface of rasterizeHTML.js", function () {
             setUpDrawDocumentImageError();
 
             rasterizeHTML.drawDocument(doc, canvas, function (image, errors) {
-                errors = rasterizeHTMLTestHelper.deleteAdditionalFieldsFromErrorsUnderPhantomJS(errors);
+                errors = testHelper.deleteAdditionalFieldsFromErrorsUnderPhantomJS(errors);
                 expect(drawImageOnCanvas).not.toHaveBeenCalled();
                 expect(image).toBe(null);
                 expect(errors).toEqual([{
@@ -502,7 +502,7 @@ describe("Main interface of rasterizeHTML.js", function () {
             drawImageOnCanvas.and.throwError({});
 
             rasterizeHTML.drawDocument(doc, canvas, function (image, errors) {
-                errors = rasterizeHTMLTestHelper.deleteAdditionalFieldsFromErrorsUnderPhantomJS(errors);
+                errors = testHelper.deleteAdditionalFieldsFromErrorsUnderPhantomJS(errors);
                 expect(image).toBe(null);
                 expect(errors).toEqual([{
                     resourceType: "document",
