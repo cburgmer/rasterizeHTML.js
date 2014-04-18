@@ -3,6 +3,10 @@ var render = (function (util, browser, documentHelper, xmlserializer, ayepromise
 
     var module = {};
 
+    var asArray = function (arrayLike) {
+        return Array.prototype.slice.call(arrayLike);
+    };
+
     var supportsBlobBuilding = function () {
         // Newer WebKit (under PhantomJS) seems to support blob building, but loading an image with the blob fails
         if (window.navigator.userAgent.indexOf("WebKit") >= 0 && window.navigator.userAgent.indexOf("Chrome") < 0) {
@@ -104,7 +108,7 @@ var render = (function (util, browser, documentHelper, xmlserializer, ayepromise
         // DOM. While this does not directly affect the process when rastering to canvas, this is needed for the
         // workaround found in workAroundBrowserBugForBackgroundImages();
         if (window.navigator.userAgent.indexOf("WebKit") >= 0) {
-            Array.prototype.forEach.call(doc.getElementsByTagName("style"), function (style) {
+            asArray(doc.getElementsByTagName("style")).forEach(function (style) {
                 style.textContent = "span {}\n" + style.textContent;
             });
         }

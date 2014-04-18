@@ -3,6 +3,10 @@ var documentHelper = (function (documentUtil) {
 
     var module = {};
 
+    var asArray = function (arrayLike) {
+        return Array.prototype.slice.call(arrayLike);
+    };
+
     module.fakeHover = function (doc, hoverSelector) {
         var elem = doc.querySelector(hoverSelector),
             fakeHoverClass = 'rasterizehtmlhover';
@@ -26,13 +30,13 @@ var documentHelper = (function (documentUtil) {
     };
 
     module.persistInputValues = function (doc) {
-        var inputs = Array.prototype.slice.call(doc.querySelectorAll('input')),
-            textareas = Array.prototype.slice.call(doc.querySelectorAll('textarea')),
+        var inputs = doc.querySelectorAll('input'),
+            textareas = doc.querySelectorAll('textarea'),
             isCheckable = function (input) {
                 return input.type === 'checkbox' || input.type === 'radio';
             };
 
-        inputs.filter(isCheckable)
+        asArray(inputs).filter(isCheckable)
             .forEach(function (input) {
                 if (input.checked) {
                     input.setAttribute('checked', '');
@@ -41,12 +45,12 @@ var documentHelper = (function (documentUtil) {
                 }
             });
 
-        inputs.filter(function (input) { return !isCheckable(input); })
+        asArray(inputs).filter(function (input) { return !isCheckable(input); })
             .forEach(function (input) {
                 input.setAttribute('value', input.value);
             });
 
-        textareas
+        asArray(textareas)
             .forEach(function (textarea) {
                 textarea.textContent = textarea.value;
             });

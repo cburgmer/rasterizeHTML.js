@@ -3,6 +3,10 @@ var documentUtil = (function () {
 
     var module = {};
 
+    var asArray = function (arrayLike) {
+        return Array.prototype.slice.call(arrayLike);
+    };
+
     module.addClassNameRecursively = function (element, className) {
         element.className += ' ' + className;
 
@@ -13,7 +17,7 @@ var documentUtil = (function () {
 
     var changeCssRule = function (rule, newRuleText) {
         var styleSheet = rule.parentStyleSheet,
-            ruleIdx = Array.prototype.indexOf.call(styleSheet.cssRules, rule);
+            ruleIdx = asArray(styleSheet.cssRules).indexOf(rule);
 
         // Exchange rule with the new text
         styleSheet.insertRule(newRuleText, ruleIdx+1);
@@ -28,7 +32,7 @@ var documentUtil = (function () {
     };
 
     var cssRulesToText = function (cssRules) {
-        return Array.prototype.reduce.call(cssRules, function (cssText, rule) {
+        return asArray(cssRules).reduce(function (cssText, rule) {
             return cssText + rule.cssText;
         }, '');
     };
@@ -41,8 +45,8 @@ var documentUtil = (function () {
         // Assume that oldSelector is always prepended with a ':' or '.' for now, so no special handling needed
         var oldSelectorRegex = oldSelector + '(?=\\W|$)';
 
-        Array.prototype.forEach.call(doc.querySelectorAll('style'), function (styleElement) {
-            var matchingRules = Array.prototype.filter.call(styleElement.sheet.cssRules, function (rule) {
+        asArray(doc.querySelectorAll('style')).forEach(function (styleElement) {
+            var matchingRules = asArray(styleElement.sheet.cssRules).filter(function (rule) {
                     return rule.selectorText && new RegExp(oldSelectorRegex).test(rule.selectorText);
                 });
 

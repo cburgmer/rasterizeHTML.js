@@ -164,6 +164,10 @@
     
         var module = {};
     
+        var asArray = function (arrayLike) {
+            return Array.prototype.slice.call(arrayLike);
+        };
+    
         module.addClassNameRecursively = function (element, className) {
             element.className += ' ' + className;
     
@@ -174,7 +178,7 @@
     
         var changeCssRule = function (rule, newRuleText) {
             var styleSheet = rule.parentStyleSheet,
-                ruleIdx = Array.prototype.indexOf.call(styleSheet.cssRules, rule);
+                ruleIdx = asArray(styleSheet.cssRules).indexOf(rule);
     
             // Exchange rule with the new text
             styleSheet.insertRule(newRuleText, ruleIdx+1);
@@ -189,7 +193,7 @@
         };
     
         var cssRulesToText = function (cssRules) {
-            return Array.prototype.reduce.call(cssRules, function (cssText, rule) {
+            return asArray(cssRules).reduce(function (cssText, rule) {
                 return cssText + rule.cssText;
             }, '');
         };
@@ -202,8 +206,8 @@
             // Assume that oldSelector is always prepended with a ':' or '.' for now, so no special handling needed
             var oldSelectorRegex = oldSelector + '(?=\\W|$)';
     
-            Array.prototype.forEach.call(doc.querySelectorAll('style'), function (styleElement) {
-                var matchingRules = Array.prototype.filter.call(styleElement.sheet.cssRules, function (rule) {
+            asArray(doc.querySelectorAll('style')).forEach(function (styleElement) {
+                var matchingRules = asArray(styleElement.sheet.cssRules).filter(function (rule) {
                         return rule.selectorText && new RegExp(oldSelectorRegex).test(rule.selectorText);
                     });
     
@@ -226,6 +230,10 @@
         "use strict";
     
         var module = {};
+    
+        var asArray = function (arrayLike) {
+            return Array.prototype.slice.call(arrayLike);
+        };
     
         module.fakeHover = function (doc, hoverSelector) {
             var elem = doc.querySelector(hoverSelector),
@@ -250,13 +258,13 @@
         };
     
         module.persistInputValues = function (doc) {
-            var inputs = Array.prototype.slice.call(doc.querySelectorAll('input')),
-                textareas = Array.prototype.slice.call(doc.querySelectorAll('textarea')),
+            var inputs = doc.querySelectorAll('input'),
+                textareas = doc.querySelectorAll('textarea'),
                 isCheckable = function (input) {
                     return input.type === 'checkbox' || input.type === 'radio';
                 };
     
-            inputs.filter(isCheckable)
+            asArray(inputs).filter(isCheckable)
                 .forEach(function (input) {
                     if (input.checked) {
                         input.setAttribute('checked', '');
@@ -265,12 +273,12 @@
                     }
                 });
     
-            inputs.filter(function (input) { return !isCheckable(input); })
+            asArray(inputs).filter(function (input) { return !isCheckable(input); })
                 .forEach(function (input) {
                     input.setAttribute('value', input.value);
                 });
     
-            textareas
+            asArray(textareas)
                 .forEach(function (textarea) {
                     textarea.textContent = textarea.value;
                 });
@@ -506,6 +514,10 @@
     
         var module = {};
     
+        var asArray = function (arrayLike) {
+            return Array.prototype.slice.call(arrayLike);
+        };
+    
         var supportsBlobBuilding = function () {
             // Newer WebKit (under PhantomJS) seems to support blob building, but loading an image with the blob fails
             if (window.navigator.userAgent.indexOf("WebKit") >= 0 && window.navigator.userAgent.indexOf("Chrome") < 0) {
@@ -607,7 +619,7 @@
             // DOM. While this does not directly affect the process when rastering to canvas, this is needed for the
             // workaround found in workAroundBrowserBugForBackgroundImages();
             if (window.navigator.userAgent.indexOf("WebKit") >= 0) {
-                Array.prototype.forEach.call(doc.getElementsByTagName("style"), function (style) {
+                asArray(doc.getElementsByTagName("style")).forEach(function (style) {
                     style.textContent = "span {}\n" + style.textContent;
                 });
             }
