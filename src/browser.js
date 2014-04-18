@@ -34,18 +34,18 @@ var browser = (function (util, xhrproxies, ayepromise, theWindow) {
 
         var waitForJavaScriptToRun = function () {
             var d = ayepromise.defer();
-            setTimeout(d.resolve, timeout);
+            if (timeout > 0) {
+                setTimeout(d.resolve, timeout);
+            } else {
+                d.resolve();
+            }
             return d.promise;
         };
 
         iframe.onload = function () {
-            if (timeout > 0) {
-                waitForJavaScriptToRun()
-                    .then(finishNotifyXhrProxy.waitForRequestsToFinish)
-                    .then(doResolve);
-            } else {
-                doResolve();
-            }
+            waitForJavaScriptToRun()
+                .then(finishNotifyXhrProxy.waitForRequestsToFinish)
+                .then(doResolve);
         };
 
         var xhr = iframe.contentWindow.XMLHttpRequest,

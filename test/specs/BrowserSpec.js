@@ -72,6 +72,26 @@ describe("Browser functions", function () {
             }, 100);
         });
 
+        it("should return only when all ajax has loaded, even if timeout is set to 0", function (done) {
+            var callback = jasmine.createSpy('callback');
+
+            mockPromisesToResolveSynchronously();
+            var xhrFinishedDefer = mockFinishNotifyingXHRProxy();
+
+            browser.executeJavascript(doc, undefined, 0).then(callback);
+
+            // HACK fragile test. We need to wait for the iframe.onload to be triggered
+            setTimeout(function () {
+                expect(callback).not.toHaveBeenCalled();
+
+                xhrFinishedDefer.resolve();
+
+                expect(callback).toHaveBeenCalled();
+
+                done();
+            }, 100);
+        });
+
         it("should be able to access CSS", function (done) {
             doc.documentElement.innerHTML = '<head><style>div { height: 20px; }</style></head><body onload="var elem = document.getElementById(\'elem\'); document.body.innerHTML = elem.offsetHeight;"><div id="elem"></div></body>';
 

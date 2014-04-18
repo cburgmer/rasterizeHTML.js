@@ -61,14 +61,16 @@ var testHelper = (function () {
 
     // Poor man's promise implementation
     module.synchronousDefer = function () {
-        var handlers = [];
+        var handlers = [],
+            resolved = false,
+            result;
 
-        var triggerHandlers = function (value) {
+        var triggerHandlers = function () {
             handlers.forEach(function (handler) {
-                var result = handler.func(value);
-                if (result && result.then) {
+                var res = handler.func(result);
+                if (res && res.then) {
                     // chaining
-                    result.then(handler.done);
+                    res.then(handler.done);
                 } else {
                     handler.done();
                 }
@@ -77,7 +79,9 @@ var testHelper = (function () {
 
         return {
             resolve: function (value) {
-                triggerHandlers(value);
+                resolved = true;
+                result = value;
+                triggerHandlers();
             },
             promise: {
                 then: function (handler) {
@@ -86,6 +90,9 @@ var testHelper = (function () {
                         func: handler,
                         done: defer.resolve
                     });
+                    if (resolved) {
+                        triggerHandlers();
+                    }
                     // chaining
                     return defer.promise;
                 }
