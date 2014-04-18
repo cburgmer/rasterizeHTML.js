@@ -18,6 +18,7 @@
     "lib": "./src/",
     "example": "./examples/"
   },
+  "browser": "dist/rasterizeHTML.js",
   "repository": {
     "type": "git",
     "url": "git://github.com/cburgmer/rasterizeHTML.js.git"
