@@ -41,7 +41,9 @@ var util = (function (url) {
         return typeof func === "function";
     };
 
-    module.parseOptionalParameters = function (args) { // args: canvas, options, callback
+    // args: canvas, options
+    // legacy API: args: canvas, options, callback
+    module.parseOptionalParameters = function (args) {
         var parameters = {
             canvas: null,
             options: {},

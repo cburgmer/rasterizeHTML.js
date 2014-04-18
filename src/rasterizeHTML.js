@@ -13,9 +13,23 @@ var rasterizeHTML = (function (util, browser, documentHelper, render, inlinereso
         });
     };
 
+    var operateJavaScriptOnDocument = function (doc, options) {
+        var executeJsTimeout = options.executeJsTimeout || 0;
+
+        return browser.executeJavascript(doc, options.baseUrl, executeJsTimeout)
+            .then(function (result) {
+                var document = result.document;
+                documentHelper.persistInputValues(document);
+
+                return {
+                    document: document,
+                    errors: result.errors
+                };
+            });
+    };
+
     var drawDocument = function (doc, canvas, options) {
-        var executeJsTimeout = options.executeJsTimeout || 0,
-            inlineOptions;
+        var inlineOptions;
 
         inlineOptions = util.clone(options);
         inlineOptions.inlineScripts = options.executeJs === true;
@@ -23,13 +37,10 @@ var rasterizeHTML = (function (util, browser, documentHelper, render, inlinereso
         return inlineresources.inlineReferences(doc, inlineOptions)
             .then(function (errors) {
                 if (options.executeJs) {
-                    return browser.executeJavascript(doc, options.baseUrl, executeJsTimeout)
+                    return operateJavaScriptOnDocument(doc, options)
                         .then(function (result) {
-                            var document = result.document;
-                            documentHelper.persistInputValues(document);
-
                             return {
-                                document: document,
+                                document: result.document,
                                 errors: errors.concat(result.errors)
                             };
                         });
@@ -52,7 +63,7 @@ var rasterizeHTML = (function (util, browser, documentHelper, render, inlinereso
 
     /**
      * Draws a Document to the canvas.
-     * rasterizeHTML.drawDocument( document [, canvas] [, options] [, callback] );
+     * rasterizeHTML.drawDocument( document [, canvas] [, options] ).then(function (result) { ... });
      */
     module.drawDocument = function () {
         var doc = arguments[0],
@@ -84,7 +95,7 @@ var rasterizeHTML = (function (util, browser, documentHelper, render, inlinereso
 
     /**
      * Draws a HTML string to the canvas.
-     * rasterizeHTML.drawHTML( html [, canvas] [, options] [, callback] );
+     * rasterizeHTML.drawHTML( html [, canvas] [, options] ).then(function (result) { ... });
      */
     module.drawHTML = function () {
         var html = arguments[0],
@@ -118,7 +129,7 @@ var rasterizeHTML = (function (util, browser, documentHelper, render, inlinereso
 
     /**
      * Draws a page to the canvas.
-     * rasterizeHTML.drawURL( url [, canvas] [, options] [, callback] );
+     * rasterizeHTML.drawURL( url [, canvas] [, options] ).then(function (result) { ... });
      */
     module.drawURL = function () {
         var url = arguments[0],
