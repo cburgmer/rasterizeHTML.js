@@ -21,26 +21,36 @@ var browser = (function (util, xhrproxies, ayepromise, theWindow) {
         var iframe = createHiddenElement(theWindow.document, "iframe"),
             html = doc.documentElement.outerHTML,
             iframeErrorsMessages = [],
-            defer = ayepromise.defer(),
-            doResolve = function () {
-                var doc = iframe.contentDocument;
-                theWindow.document.getElementsByTagName("body")[0].removeChild(iframe);
-                defer.resolve({
-                    document: doc,
-                    errors: iframeErrorsMessages
-                });
-            };
+            defer = ayepromise.defer();
 
-        if (timeout > 0) {
-            iframe.onload = function () {
-                setTimeout(doResolve, timeout);
-            };
-        } else {
-            iframe.onload = doResolve;
-        }
+        var doResolve = function () {
+            var doc = iframe.contentDocument;
+            theWindow.document.getElementsByTagName("body")[0].removeChild(iframe);
+            defer.resolve({
+                document: doc,
+                errors: iframeErrorsMessages
+            });
+        };
+
+        var waitForJavaScriptToRun = function () {
+            var d = ayepromise.defer();
+            setTimeout(d.resolve, timeout);
+            return d.promise;
+        };
+
+        iframe.onload = function () {
+            if (timeout > 0) {
+                waitForJavaScriptToRun()
+                    .then(finishNotifyXhrProxy.waitForRequestsToFinish)
+                    .then(doResolve);
+            } else {
+                doResolve();
+            }
+        };
 
         var xhr = iframe.contentWindow.XMLHttpRequest,
-            baseUrlXhrProxy = xhrproxies.baseUrlRespecting(xhr, baseUrl);
+            finishNotifyXhrProxy = xhrproxies.finishNotifying(xhr),
+            baseUrlXhrProxy = xhrproxies.baseUrlRespecting(finishNotifyXhrProxy, baseUrl);
 
         iframe.contentDocument.open();
         iframe.contentWindow.XMLHttpRequest = baseUrlXhrProxy;

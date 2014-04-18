@@ -3,6 +3,21 @@ describe("Browser functions", function () {
     describe("executeJavascript", function () {
         var doc;
 
+        var mockPromisesToResolveSynchronously = function () {
+            spyOn(ayepromise, 'defer').and.callFake(testHelper.synchronousDefer);
+        };
+
+        var mockFinishNotifyingXHRProxy = function () {
+            var fakeXhrProxy = jasmine.createSpyObj('finishNotifyingProxy', ['send', 'waitForRequestsToFinish']),
+                defer = testHelper.synchronousDefer();
+
+            fakeXhrProxy.waitForRequestsToFinish.and.returnValue(defer.promise);
+
+            spyOn(xhrproxies, 'finishNotifying').and.returnValue(fakeXhrProxy);
+
+            return defer;
+        };
+
         beforeEach(function () {
             doc = window.document.implementation.createHTMLDocument("");
         });
@@ -35,6 +50,26 @@ describe("Browser functions", function () {
 
                 done();
             });
+        });
+
+        it("should return only when all ajax has loaded", function (done) {
+            var callback = jasmine.createSpy('callback');
+
+            mockPromisesToResolveSynchronously();
+            var xhrFinishedDefer = mockFinishNotifyingXHRProxy();
+
+            browser.executeJavascript(doc, undefined, 10).then(callback);
+
+            // HACK fragile test. We need to wait for the iframe.onload to be triggered
+            setTimeout(function () {
+                expect(callback).not.toHaveBeenCalled();
+
+                xhrFinishedDefer.resolve();
+
+                expect(callback).toHaveBeenCalled();
+
+                done();
+            }, 100);
         });
 
         it("should be able to access CSS", function (done) {

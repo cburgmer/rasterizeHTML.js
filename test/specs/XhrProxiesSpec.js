@@ -1,22 +1,8 @@
 describe("XHR Proxies", function () {
     var oldXHR;
 
-    // Poor man's promise implementation
     var mockPromisesToResolveSynchronously = function () {
-        var handlers = [];
-
-        spyOn(ayepromise, 'defer').and.returnValue({
-            resolve: function (value) {
-                handlers.forEach(function (handler) {
-                    handler(value);
-                });
-            },
-            promise: {
-                then: function (handler) {
-                    handlers.push(handler);
-                }
-            }
-        });
+        spyOn(ayepromise, 'defer').and.returnValue(testHelper.synchronousDefer());
     };
 
     beforeEach(function () {

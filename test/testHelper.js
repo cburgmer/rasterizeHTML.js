@@ -59,5 +59,40 @@ var testHelper = (function () {
         doc.getElementsByTagName('head')[0].appendChild(styleNode);
     };
 
+    // Poor man's promise implementation
+    module.synchronousDefer = function () {
+        var handlers = [];
+
+        var triggerHandlers = function (value) {
+            handlers.forEach(function (handler) {
+                var result = handler.func(value);
+                if (result && result.then) {
+                    // chaining
+                    result.then(handler.done);
+                } else {
+                    handler.done();
+                }
+            });
+        };
+
+        return {
+            resolve: function (value) {
+                triggerHandlers(value);
+            },
+            promise: {
+                then: function (handler) {
+                    var defer = module.synchronousDefer();
+                    handlers.push({
+                        func: handler,
+                        done: defer.resolve
+                    });
+                    // chaining
+                    return defer.promise;
+                }
+            }
+        };
+    };
+
+
     return module;
 }());
