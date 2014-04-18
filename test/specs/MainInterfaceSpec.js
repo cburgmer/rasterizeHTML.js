@@ -407,13 +407,12 @@ describe("Main interface of rasterizeHTML.js", function () {
             ajaxSpy.and.returnValue(rejected({message: "the message"}));
 
             rasterizeHTML.drawURL("non_existing.html", canvas, function (image, errors) {
-                errors = testHelper.deleteAdditionalFieldsFromErrorsUnderPhantomJS(errors);
                 expect(image).toBe(null);
-                expect(errors).toEqual([{
+                expect(errors).toEqual([jasmine.objectContaining({
                     resourceType: "page",
                     url: "non_existing.html",
                     msg: "the message" + " non_existing.html"
-                }]);
+                })]);
 
                 expect(ajaxSpy).toHaveBeenCalled();
 
@@ -467,13 +466,12 @@ describe("Main interface of rasterizeHTML.js", function () {
             setUpDrawDocumentImageError();
 
             rasterizeHTML.drawDocument(doc, canvas, function (image, errors) {
-                errors = testHelper.deleteAdditionalFieldsFromErrorsUnderPhantomJS(errors);
                 expect(drawImageOnCanvas).not.toHaveBeenCalled();
                 expect(image).toBe(null);
-                expect(errors).toEqual([{
+                expect(errors).toEqual([jasmine.objectContaining({
                     resourceType: "document",
                     msg: "Error rendering page"
-                }]);
+                })]);
 
                 done();
             });
@@ -502,12 +500,11 @@ describe("Main interface of rasterizeHTML.js", function () {
             drawImageOnCanvas.and.throwError({});
 
             rasterizeHTML.drawDocument(doc, canvas, function (image, errors) {
-                errors = testHelper.deleteAdditionalFieldsFromErrorsUnderPhantomJS(errors);
                 expect(image).toBe(null);
-                expect(errors).toEqual([{
+                expect(errors).toEqual([jasmine.objectContaining({
                     resourceType: "document",
                     msg: "Error rendering page"
-                }]);
+                })]);
 
                 expect(drawImageOnCanvas).toHaveBeenCalled();
 

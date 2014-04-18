@@ -369,10 +369,10 @@ describe("The rendering process", function () {
             try {
                 render.drawImageOnCanvas(image, canvas);
             } catch (e) {
-                error = testHelper.deleteAdditionalFieldsFromErrorUnderPhantomJS(e);
+                error = e;
             }
 
-            expect(error).toEqual({message: "Error rendering page"});
+            expect(error).toEqual(jasmine.objectContaining({message: "Error rendering page"}));
         });
     });
 });

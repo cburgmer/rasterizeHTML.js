@@ -190,8 +190,7 @@ describe("Utilities function", function () {
                 error = e;
             }
 
-            error = testHelper.deleteAdditionalFieldsFromErrorUnderPhantomJS(error);
-            expect(error).toEqual({message: "Invalid source"});
+            expect(error).toEqual(jasmine.objectContaining({message: "Invalid source"}));
         });
 
         ifNotInPhantomJsIt("should throw an exception if the document is invalid because of a missing namespace", function () {
@@ -202,8 +201,7 @@ describe("Utilities function", function () {
                 error = e;
             }
 
-            error = testHelper.deleteAdditionalFieldsFromErrorUnderPhantomJS(error);
-            expect(error).toEqual({message: "Invalid source"});
+            expect(error).toEqual(jasmine.objectContaining({message: "Invalid source"}));
         });
 
         it("should pass on a valid document", function () {
