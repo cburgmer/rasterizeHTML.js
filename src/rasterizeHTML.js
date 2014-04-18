@@ -1,4 +1,4 @@
-var rasterizeHTML = (function (util, render, inlineresources) {
+var rasterizeHTML = (function (util, browser, documentHelper, render, inlineresources) {
     "use strict";
 
     var module = {};
@@ -23,10 +23,10 @@ var rasterizeHTML = (function (util, render, inlineresources) {
         return inlineresources.inlineReferences(doc, inlineOptions)
             .then(function (errors) {
                 if (options.executeJs) {
-                    return util.executeJavascript(doc, options.baseUrl, executeJsTimeout)
+                    return browser.executeJavascript(doc, options.baseUrl, executeJsTimeout)
                         .then(function (result) {
                             var document = result.document;
-                            util.persistInputValues(document);
+                            documentHelper.persistInputValues(document);
 
                             return {
                                 document: document,
@@ -77,7 +77,7 @@ var rasterizeHTML = (function (util, render, inlineresources) {
     };
 
     var drawHTML = function (html, canvas, options, callback) {
-        var doc = util.parseHTML(html);
+        var doc = browser.parseHTML(html);
 
         return module.drawDocument(doc, canvas, options, callback);
     };
@@ -95,7 +95,7 @@ var rasterizeHTML = (function (util, render, inlineresources) {
     };
 
     var drawURL = function (url, canvas, options, callback) {
-        var promise = util.loadDocument(url, options)
+        var promise = browser.loadDocument(url, options)
             .then(function (doc) {
                 return module.drawDocument(doc, canvas, options);
             });
@@ -129,4 +129,4 @@ var rasterizeHTML = (function (util, render, inlineresources) {
     };
 
     return module;
-}(util, render, inlineresources));
+}(util, browser, documentHelper, render, inlineresources));

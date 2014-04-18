@@ -111,7 +111,7 @@ describe("The rendering process", function () {
             doc.body.innerHTML = "content";
 
             var error = new Error();
-            spyOn(util, 'validateXHTML').and.throwError(error);
+            spyOn(browser, 'validateXHTML').and.throwError(error);
 
             expect(function () { render.getSvgForDocument(doc, 123, 987); }).toThrow(error);
         });
@@ -262,9 +262,9 @@ describe("The rendering process", function () {
         };
 
         beforeEach(function () {
-            spyOn(util, 'fakeHover');
-            spyOn(util, 'fakeActive');
-            spyOn(util, 'calculateDocumentContentSize').and.returnValue(fulfilled({width: 47, height: 11}));
+            spyOn(documentHelper, 'fakeHover');
+            spyOn(documentHelper, 'fakeActive');
+            spyOn(browser, 'calculateDocumentContentSize').and.returnValue(fulfilled({width: 47, height: 11}));
             spyOn(render, 'getSvgForDocument');
             spyOn(render, 'renderSvg');
 
@@ -283,7 +283,7 @@ describe("The rendering process", function () {
             render.drawDocumentImage(doc, canvas, {zoom: 42}).then(function (theImage) {
                 expect(theImage).toBe(image);
 
-                expect(util.calculateDocumentContentSize).toHaveBeenCalledWith(doc, jasmine.any(Number), jasmine.any(Number));
+                expect(browser.calculateDocumentContentSize).toHaveBeenCalledWith(doc, jasmine.any(Number), jasmine.any(Number));
                 expect(render.getSvgForDocument).toHaveBeenCalledWith(doc, 47, 11, 42);
                 expect(render.renderSvg).toHaveBeenCalledWith(svg, canvas);
 
@@ -300,43 +300,43 @@ describe("The rendering process", function () {
         it("should use the canvas width and height as viewport size", function () {
             render.drawDocumentImage(doc, canvas, {});
 
-            expect(util.calculateDocumentContentSize).toHaveBeenCalledWith(doc, 123, 456);
+            expect(browser.calculateDocumentContentSize).toHaveBeenCalledWith(doc, 123, 456);
         });
 
         it("should make the canvas optional and apply default viewport width and height", function () {
             render.drawDocumentImage(doc, null, {});
 
-            expect(util.calculateDocumentContentSize).toHaveBeenCalledWith(doc, 300, 200);
+            expect(browser.calculateDocumentContentSize).toHaveBeenCalledWith(doc, 300, 200);
         });
 
         it("should take an optional width and height", function () {
             render.drawDocumentImage(doc, canvas, {width: 42, height: 4711});
 
-            expect(util.calculateDocumentContentSize).toHaveBeenCalledWith(doc, 42, 4711);
+            expect(browser.calculateDocumentContentSize).toHaveBeenCalledWith(doc, 42, 4711);
         });
 
         it("should trigger hover effect", function () {
             render.drawDocumentImage(doc, canvas, {hover: '.mySpan'});
 
-            expect(util.fakeHover).toHaveBeenCalledWith(doc, '.mySpan');
+            expect(documentHelper.fakeHover).toHaveBeenCalledWith(doc, '.mySpan');
         });
 
         it("should not trigger hover effect by default", function () {
             render.drawDocumentImage(doc, canvas, {});
 
-            expect(util.fakeHover).not.toHaveBeenCalled();
+            expect(documentHelper.fakeHover).not.toHaveBeenCalled();
         });
 
         it("should trigger active effect", function () {
             render.drawDocumentImage(doc, canvas, {active: '.mySpan'});
 
-            expect(util.fakeActive).toHaveBeenCalledWith(doc, '.mySpan');
+            expect(documentHelper.fakeActive).toHaveBeenCalledWith(doc, '.mySpan');
         });
 
         it("should not trigger active effect by default", function () {
             render.drawDocumentImage(doc, canvas, {});
 
-            expect(util.fakeActive).not.toHaveBeenCalled();
+            expect(documentHelper.fakeActive).not.toHaveBeenCalled();
         });
     });
 

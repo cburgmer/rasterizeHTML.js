@@ -1,4 +1,4 @@
-var xhrproxies = (function (ayepromise) {
+var xhrproxies = (function (util, ayepromise) {
     var module = {};
 
     // Bases all XHR calls on the given base URL
@@ -65,4 +65,4 @@ var xhrproxies = (function (ayepromise) {
     };
 
     return module;
-}(ayepromise));
+}(util, ayepromise));

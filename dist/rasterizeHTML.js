@@ -13,7 +13,82 @@
     }
 }(this, function(url, xmlserializer, ayepromise, inlineresources) {
 
-    var xhrproxies = (function (ayepromise) {
+    var util = (function (url) {
+        "use strict";
+    
+        var module = {};
+    
+        var uniqueIdList = [];
+    
+        module.joinUrl = function (baseUrl, relUrl) {
+            return url.resolve(baseUrl, relUrl);
+        };
+    
+        module.getConstantUniqueIdFor = function (element) {
+            // HACK, using a list results in O(n), but how do we hash e.g. a DOM node?
+            if (uniqueIdList.indexOf(element) < 0) {
+                uniqueIdList.push(element);
+            }
+            return uniqueIdList.indexOf(element);
+        };
+    
+        module.clone = function (object) {
+            var theClone = {},
+                i;
+            for (i in object) {
+                if (object.hasOwnProperty(i)) {
+                    theClone[i] = object[i];
+                }
+            }
+            return theClone;
+        };
+    
+        var isObject = function (obj) {
+            return typeof obj === "object" && obj !== null;
+        };
+    
+        var isCanvas = function (obj) {
+            return isObject(obj) &&
+                Object.prototype.toString.apply(obj).match(/\[object (Canvas|HTMLCanvasElement)\]/i);
+        };
+    
+        var isFunction = function (func) {
+            return typeof func === "function";
+        };
+    
+        module.parseOptionalParameters = function (args) { // args: canvas, options, callback
+            var parameters = {
+                canvas: null,
+                options: {},
+                callback: null
+            };
+    
+            if (isFunction(args[0])) {
+                parameters.callback = args[0];
+            } else {
+                if (args[0] == null || isCanvas(args[0])) {
+                    parameters.canvas = args[0] || null;
+    
+                    if (isFunction(args[1])) {
+                        parameters.callback = args[1];
+                    } else {
+                        parameters.options = module.clone(args[1]);
+                        parameters.callback = args[2] || null;
+                    }
+    
+                } else {
+                    parameters.options = module.clone(args[0]);
+                    parameters.callback = args[1] || null;
+                }
+            }
+    
+            return parameters;
+        };
+    
+        return module;
+    }(url));
+    
+    var xhrproxies = (function (util, ayepromise) {
         var module = {};
     
         // Bases all XHR calls on the given base URL
@@ -80,81 +155,133 @@
         };
     
         return module;
-    }(ayepromise));
+    }(util, ayepromise));
     
-    var util = (function (xhrproxies, ayepromise, url, theWindow) {
+    var documentUtil = (function () {
         "use strict";
     
         var module = {};
     
-        var uniqueIdList = [];
+        module.addClassNameRecursively = function (element, className) {
+            element.className += ' ' + className;
     
-        module = {};
-    
-        module.joinUrl = function (baseUrl, relUrl) {
-            return url.resolve(baseUrl, relUrl);
-        };
-    
-        module.getConstantUniqueIdFor = function (element) {
-            // HACK, using a list results in O(n), but how do we hash e.g. a DOM node?
-            if (uniqueIdList.indexOf(element) < 0) {
-                uniqueIdList.push(element);
+            if (element.parentNode !== element.ownerDocument) {
+                module.addClassNameRecursively(element.parentNode, className);
             }
-            return uniqueIdList.indexOf(element);
         };
     
-        module.clone = function (object) {
-            var theClone = {},
-                i;
-            for (i in object) {
-                if (object.hasOwnProperty(i)) {
-                    theClone[i] = object[i];
+        var changeCssRule = function (rule, newRuleText) {
+            var styleSheet = rule.parentStyleSheet,
+                ruleIdx = Array.prototype.indexOf.call(styleSheet.cssRules, rule);
+    
+            // Exchange rule with the new text
+            styleSheet.insertRule(newRuleText, ruleIdx+1);
+            styleSheet.deleteRule(ruleIdx);
+        };
+    
+        var updateRuleSelector = function (rule, updatedSelector) {
+            var styleDefinitions = rule.cssText.replace(/^[^\{]+/, ''),
+                newRule = updatedSelector + ' ' + styleDefinitions;
+    
+            changeCssRule(rule, newRule);
+        };
+    
+        var cssRulesToText = function (cssRules) {
+            return Array.prototype.reduce.call(cssRules, function (cssText, rule) {
+                return cssText + rule.cssText;
+            }, '');
+        };
+    
+        var rewriteStyleContent = function (styleElement) {
+            styleElement.textContent = cssRulesToText(styleElement.sheet.cssRules);
+        };
+    
+        module.rewriteStyleRuleSelector = function (doc, oldSelector, newSelector) {
+            // Assume that oldSelector is always prepended with a ':' or '.' for now, so no special handling needed
+            var oldSelectorRegex = oldSelector + '(?=\\W|$)';
+    
+            Array.prototype.forEach.call(doc.querySelectorAll('style'), function (styleElement) {
+                var matchingRules = Array.prototype.filter.call(styleElement.sheet.cssRules, function (rule) {
+                        return rule.selectorText && new RegExp(oldSelectorRegex).test(rule.selectorText);
+                    });
+    
+                if (matchingRules.length) {
+                    matchingRules.forEach(function (rule) {
+                        var selector = rule.selectorText.replace(new RegExp(oldSelectorRegex, 'g'), newSelector);
+    
+                        updateRuleSelector(rule, selector);
+                    });
+    
+                    rewriteStyleContent(styleElement);
                 }
+            });
+        };
+    
+        return module;
+    }());
+    
+    var documentHelper = (function (documentUtil) {
+        "use strict";
+    
+        var module = {};
+    
+        module.fakeHover = function (doc, hoverSelector) {
+            var elem = doc.querySelector(hoverSelector),
+                fakeHoverClass = 'rasterizehtmlhover';
+            if (! elem) {
+                return;
             }
-            return theClone;
+    
+            documentUtil.addClassNameRecursively(elem, fakeHoverClass);
+            documentUtil.rewriteStyleRuleSelector(doc, ':hover', '.' + fakeHoverClass);
         };
     
-        var isObject = function (obj) {
-            return typeof obj === "object" && obj !== null;
+        module.fakeActive = function (doc, activeSelector) {
+            var elem = doc.querySelector(activeSelector),
+                fakeActiveClass = 'rasterizehtmlactive';
+            if (! elem) {
+                return;
+            }
+    
+            documentUtil.addClassNameRecursively(elem, fakeActiveClass);
+            documentUtil.rewriteStyleRuleSelector(doc, ':active', '.' + fakeActiveClass);
         };
     
-        var isCanvas = function (obj) {
-            return isObject(obj) &&
-                Object.prototype.toString.apply(obj).match(/\[object (Canvas|HTMLCanvasElement)\]/i);
-        };
+        module.persistInputValues = function (doc) {
+            var inputs = Array.prototype.slice.call(doc.querySelectorAll('input')),
+                textareas = Array.prototype.slice.call(doc.querySelectorAll('textarea')),
+                isCheckable = function (input) {
+                    return input.type === 'checkbox' || input.type === 'radio';
+                };
     
-        var isFunction = function (func) {
-            return typeof func === "function";
-        };
-    
-        module.parseOptionalParameters = function (args) { // args: canvas, options, callback
-            var parameters = {
-                canvas: null,
-                options: {},
-                callback: null
-            };
-    
-            if (isFunction(args[0])) {
-                parameters.callback = args[0];
-            } else {
-                if (args[0] == null || isCanvas(args[0])) {
-                    parameters.canvas = args[0] || null;
-    
-                    if (isFunction(args[1])) {
-                        parameters.callback = args[1];
+            inputs.filter(isCheckable)
+                .forEach(function (input) {
+                    if (input.checked) {
+                        input.setAttribute('checked', '');
                     } else {
-                        parameters.options = module.clone(args[1]);
-                        parameters.callback = args[2] || null;
+                        input.removeAttribute('checked');
                     }
+                });
     
-                } else {
-                    parameters.options = module.clone(args[0]);
-                    parameters.callback = args[1] || null;
-                }
-            }
+            inputs.filter(function (input) { return !isCheckable(input); })
+                .forEach(function (input) {
+                    input.setAttribute('value', input.value);
+                });
     
-            return parameters;
+            textareas
+                .forEach(function (textarea) {
+                    textarea.textContent = textarea.value;
+                });
         };
+    
+    
+        return module;
+    }(documentUtil));
+    
+    var browser = (function (util, xhrproxies, ayepromise, theWindow) {
+        "use strict";
+    
+        var module = {};
     
         var createHiddenElement = function (doc, tagName) {
             var element = doc.createElement(tagName);
@@ -369,114 +496,10 @@
                 });
         };
     
-        module.addClassNameRecursively = function (element, className) {
-            element.className += ' ' + className;
-    
-            if (element.parentNode !== element.ownerDocument) {
-                module.addClassNameRecursively(element.parentNode, className);
-            }
-        };
-    
-        var changeCssRule = function (rule, newRuleText) {
-            var styleSheet = rule.parentStyleSheet,
-                ruleIdx = Array.prototype.indexOf.call(styleSheet.cssRules, rule);
-    
-            // Exchange rule with the new text
-            styleSheet.insertRule(newRuleText, ruleIdx+1);
-            styleSheet.deleteRule(ruleIdx);
-        };
-    
-        var updateRuleSelector = function (rule, updatedSelector) {
-            var styleDefinitions = rule.cssText.replace(/^[^\{]+/, ''),
-                newRule = updatedSelector + ' ' + styleDefinitions;
-    
-            changeCssRule(rule, newRule);
-        };
-    
-        var cssRulesToText = function (cssRules) {
-            return Array.prototype.reduce.call(cssRules, function (cssText, rule) {
-                return cssText + rule.cssText;
-            }, '');
-        };
-    
-        var rewriteStyleContent = function (styleElement) {
-            styleElement.textContent = cssRulesToText(styleElement.sheet.cssRules);
-        };
-    
-        module.rewriteStyleRuleSelector = function (doc, oldSelector, newSelector) {
-            // Assume that oldSelector is always prepended with a ':' or '.' for now, so no special handling needed
-            var oldSelectorRegex = oldSelector + '(?=\\W|$)';
-    
-            Array.prototype.forEach.call(doc.querySelectorAll('style'), function (styleElement) {
-                var matchingRules = Array.prototype.filter.call(styleElement.sheet.cssRules, function (rule) {
-                        return rule.selectorText && new RegExp(oldSelectorRegex).test(rule.selectorText);
-                    });
-    
-                if (matchingRules.length) {
-                    matchingRules.forEach(function (rule) {
-                        var selector = rule.selectorText.replace(new RegExp(oldSelectorRegex, 'g'), newSelector);
-    
-                        updateRuleSelector(rule, selector);
-                    });
-    
-                    rewriteStyleContent(styleElement);
-                }
-            });
-        };
-    
-        module.fakeHover = function (doc, hoverSelector) {
-            var elem = doc.querySelector(hoverSelector),
-                fakeHoverClass = 'rasterizehtmlhover';
-            if (! elem) {
-                return;
-            }
-    
-            module.addClassNameRecursively(elem, fakeHoverClass);
-            module.rewriteStyleRuleSelector(doc, ':hover', '.' + fakeHoverClass);
-        };
-    
-        module.fakeActive = function (doc, activeSelector) {
-            var elem = doc.querySelector(activeSelector),
-                fakeActiveClass = 'rasterizehtmlactive';
-            if (! elem) {
-                return;
-            }
-    
-            module.addClassNameRecursively(elem, fakeActiveClass);
-            module.rewriteStyleRuleSelector(doc, ':active', '.' + fakeActiveClass);
-        };
-    
-        module.persistInputValues = function (doc) {
-            var inputs = Array.prototype.slice.call(doc.querySelectorAll('input')),
-                textareas = Array.prototype.slice.call(doc.querySelectorAll('textarea')),
-                isCheckable = function (input) {
-                    return input.type === 'checkbox' || input.type === 'radio';
-                };
-    
-            inputs.filter(isCheckable)
-                .forEach(function (input) {
-                    if (input.checked) {
-                        input.setAttribute('checked', '');
-                    } else {
-                        input.removeAttribute('checked');
-                    }
-                });
-    
-            inputs.filter(function (input) { return !isCheckable(input); })
-                .forEach(function (input) {
-                    input.setAttribute('value', input.value);
-                });
-    
-            textareas
-                .forEach(function (textarea) {
-                    textarea.textContent = textarea.value;
-                });
-        };
-    
         return module;
-    }(xhrproxies, ayepromise, url, window));
+    }(util, xhrproxies, ayepromise, window));
     
-    var render = (function (util, xmlserializer, ayepromise, window) {
+    var render = (function (util, browser, documentHelper, xmlserializer, ayepromise, window) {
         "use strict";
     
         var module = {};
@@ -623,7 +646,7 @@
             workAroundWebkitBugIgnoringTheFirstRuleInCSS(doc);
             xhtml = xmlserializer.serializeToString(doc);
     
-            util.validateXHTML(xhtml);
+            browser.validateXHTML(xhtml);
     
             return (
                 '<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height + '">' +
@@ -701,13 +724,13 @@
             var viewportSize = getViewportSize(canvas, options);
     
             if (options.hover) {
-                util.fakeHover(doc, options.hover);
+                documentHelper.fakeHover(doc, options.hover);
             }
             if (options.active) {
-                util.fakeActive(doc, options.active);
+                documentHelper.fakeActive(doc, options.active);
             }
     
-            return util.calculateDocumentContentSize(doc, viewportSize.width, viewportSize.height)
+            return browser.calculateDocumentContentSize(doc, viewportSize.width, viewportSize.height)
                 .then(function (size) {
                     return module.getSvgForDocument(doc, size.width, size.height, options.zoom);
                 })
@@ -717,9 +740,9 @@
         };
     
         return module;
-    }(util, xmlserializer, ayepromise, window));
+    }(util, browser, documentHelper, xmlserializer, ayepromise, window));
     
-    var rasterizeHTML = (function (util, render, inlineresources) {
+    var rasterizeHTML = (function (util, browser, documentHelper, render, inlineresources) {
         "use strict";
     
         var module = {};
@@ -744,10 +767,10 @@
             return inlineresources.inlineReferences(doc, inlineOptions)
                 .then(function (errors) {
                     if (options.executeJs) {
-                        return util.executeJavascript(doc, options.baseUrl, executeJsTimeout)
+                        return browser.executeJavascript(doc, options.baseUrl, executeJsTimeout)
                             .then(function (result) {
                                 var document = result.document;
-                                util.persistInputValues(document);
+                                documentHelper.persistInputValues(document);
     
                                 return {
                                     document: document,
@@ -798,7 +821,7 @@
         };
     
         var drawHTML = function (html, canvas, options, callback) {
-            var doc = util.parseHTML(html);
+            var doc = browser.parseHTML(html);
     
             return module.drawDocument(doc, canvas, options, callback);
         };
@@ -816,7 +839,7 @@
         };
     
         var drawURL = function (url, canvas, options, callback) {
-            var promise = util.loadDocument(url, options)
+            var promise = browser.loadDocument(url, options)
                 .then(function (doc) {
                     return module.drawDocument(doc, canvas, options);
                 });
@@ -850,7 +873,7 @@
         };
     
         return module;
-    }(util, render, inlineresources));
+    }(util, browser, documentHelper, render, inlineresources));
     
 
     return rasterizeHTML;

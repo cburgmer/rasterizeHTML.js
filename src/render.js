@@ -1,4 +1,4 @@
-var render = (function (util, xmlserializer, ayepromise, window) {
+var render = (function (util, browser, documentHelper, xmlserializer, ayepromise, window) {
     "use strict";
 
     var module = {};
@@ -145,7 +145,7 @@ var render = (function (util, xmlserializer, ayepromise, window) {
         workAroundWebkitBugIgnoringTheFirstRuleInCSS(doc);
         xhtml = xmlserializer.serializeToString(doc);
 
-        util.validateXHTML(xhtml);
+        browser.validateXHTML(xhtml);
 
         return (
             '<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height + '">' +
@@ -223,13 +223,13 @@ var render = (function (util, xmlserializer, ayepromise, window) {
         var viewportSize = getViewportSize(canvas, options);
 
         if (options.hover) {
-            util.fakeHover(doc, options.hover);
+            documentHelper.fakeHover(doc, options.hover);
         }
         if (options.active) {
-            util.fakeActive(doc, options.active);
+            documentHelper.fakeActive(doc, options.active);
         }
 
-        return util.calculateDocumentContentSize(doc, viewportSize.width, viewportSize.height)
+        return browser.calculateDocumentContentSize(doc, viewportSize.width, viewportSize.height)
             .then(function (size) {
                 return module.getSvgForDocument(doc, size.width, size.height, options.zoom);
             })
@@ -239,4 +239,4 @@ var render = (function (util, xmlserializer, ayepromise, window) {
     };
 
     return module;
-}(util, xmlserializer, ayepromise, window));
+}(util, browser, documentHelper, xmlserializer, ayepromise, window));
