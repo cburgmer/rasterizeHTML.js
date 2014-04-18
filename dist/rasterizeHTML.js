@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.8.0 - 2014-04-02
+/*! rasterizeHTML.js - v0.8.0 - 2014-04-18
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2014 Christoph Burgmer; Licensed MIT */
 (function(root, factory) {
@@ -13,7 +13,76 @@
     }
 }(this, function(url, xmlserializer, ayepromise, inlineresources) {
 
-    var util = (function (ayepromise, url, theWindow) {
+    var xhrproxies = (function (ayepromise) {
+        var module = {};
+    
+        // Bases all XHR calls on the given base URL
+        module.baseUrlRespecting = function (XHRObject, baseUrl) {
+            var xhrConstructor = function () {
+                var xhr = new XHRObject(),
+                    open = xhr.open;
+    
+                xhr.open = function () {
+                    var args = Array.prototype.slice.call(arguments),
+                        method = args.shift(),
+                        url = args.shift(),
+                        joinedUrl = util.joinUrl(baseUrl, url);
+    
+                    return open.apply(this, [method, joinedUrl].concat(args));
+                };
+    
+                return xhr;
+            };
+    
+            return xhrConstructor;
+        };
+    
+        // Provides a convenient way of being notified when all pending XHR calls are finished
+        module.finishNotifying = function (XHRObject) {
+            var totalXhrCount = 0,
+                doneXhrCount = 0,
+                waitingForPendingToClose = false,
+                defer = ayepromise.defer();
+    
+            var checkAllRequestsFinished = function () {
+                var pendingXhrCount = totalXhrCount - doneXhrCount;
+    
+                if (pendingXhrCount <= 0 && waitingForPendingToClose) {
+                    defer.resolve({totalCount: totalXhrCount});
+                }
+            };
+    
+            var xhrConstructor = function () {
+                var xhr = new XHRObject(),
+                    send = xhr.send;
+    
+                xhr.send = function () {
+                    totalXhrCount += 1;
+                    return send.apply(this, arguments);
+                };
+    
+                xhr.addEventListener('load', function () {
+                    doneXhrCount += 1;
+    
+                    checkAllRequestsFinished();
+                });
+    
+                return xhr;
+            };
+    
+            xhrConstructor.waitForRequestsToFinish = function () {
+                waitingForPendingToClose = true;
+                checkAllRequestsFinished();
+                return defer.promise;
+            };
+    
+            return xhrConstructor;
+        };
+    
+        return module;
+    }(ayepromise));
+    
+    var util = (function (xhrproxies, ayepromise, url, theWindow) {
         "use strict";
     
         var module = {};
@@ -87,24 +156,6 @@
             return parameters;
         };
     
-        var baseUrlRespectingXMLHttpRequestProxy = function (XHRObject, baseUrl) {
-            return function () {
-                var xhr = new XHRObject(),
-                    open = xhr.open;
-    
-                xhr.open = function () {
-                    var args = Array.prototype.slice.call(arguments),
-                        method = args.shift(),
-                        url = args.shift(),
-                        joinedUrl = util.joinUrl(baseUrl, url);
-    
-                    return open.apply(this, [method, joinedUrl].concat(args));
-                };
-    
-                return xhr;
-            };
-        };
-    
         var createHiddenElement = function (doc, tagName) {
             var element = doc.createElement(tagName);
             // 'display: none' doesn't cut it, as browsers seem to be lazy loading CSS
@@ -141,8 +192,11 @@
                 iframe.onload = doResolve;
             }
     
+            var xhr = iframe.contentWindow.XMLHttpRequest,
+                baseUrlXhrProxy = xhrproxies.baseUrlRespecting(xhr, baseUrl);
+    
             iframe.contentDocument.open();
-            iframe.contentWindow.XMLHttpRequest = baseUrlRespectingXMLHttpRequestProxy(iframe.contentWindow.XMLHttpRequest, baseUrl);
+            iframe.contentWindow.XMLHttpRequest = baseUrlXhrProxy;
             iframe.contentWindow.onerror = function (msg) {
                 iframeErrorsMessages.push({
                     resourceType: "scriptExecution",
@@ -420,7 +474,7 @@
         };
     
         return module;
-    }(ayepromise, url, window));
+    }(xhrproxies, ayepromise, url, window));
     
     var render = (function (util, xmlserializer, ayepromise, window) {
         "use strict";

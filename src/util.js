@@ -1,4 +1,4 @@
-var util = (function (ayepromise, url, theWindow) {
+var util = (function (xhrproxies, ayepromise, url, theWindow) {
     "use strict";
 
     var module = {};
@@ -72,24 +72,6 @@ var util = (function (ayepromise, url, theWindow) {
         return parameters;
     };
 
-    var baseUrlRespectingXMLHttpRequestProxy = function (XHRObject, baseUrl) {
-        return function () {
-            var xhr = new XHRObject(),
-                open = xhr.open;
-
-            xhr.open = function () {
-                var args = Array.prototype.slice.call(arguments),
-                    method = args.shift(),
-                    url = args.shift(),
-                    joinedUrl = util.joinUrl(baseUrl, url);
-
-                return open.apply(this, [method, joinedUrl].concat(args));
-            };
-
-            return xhr;
-        };
-    };
-
     var createHiddenElement = function (doc, tagName) {
         var element = doc.createElement(tagName);
         // 'display: none' doesn't cut it, as browsers seem to be lazy loading CSS
@@ -126,8 +108,11 @@ var util = (function (ayepromise, url, theWindow) {
             iframe.onload = doResolve;
         }
 
+        var xhr = iframe.contentWindow.XMLHttpRequest,
+            baseUrlXhrProxy = xhrproxies.baseUrlRespecting(xhr, baseUrl);
+
         iframe.contentDocument.open();
-        iframe.contentWindow.XMLHttpRequest = baseUrlRespectingXMLHttpRequestProxy(iframe.contentWindow.XMLHttpRequest, baseUrl);
+        iframe.contentWindow.XMLHttpRequest = baseUrlXhrProxy;
         iframe.contentWindow.onerror = function (msg) {
             iframeErrorsMessages.push({
                 resourceType: "scriptExecution",
@@ -405,4 +390,4 @@ var util = (function (ayepromise, url, theWindow) {
     };
 
     return module;
-}(ayepromise, url, window));
+}(xhrproxies, ayepromise, url, window));

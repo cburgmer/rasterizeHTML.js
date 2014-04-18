@@ -38,18 +38,23 @@ var rasterizeHTMLTestHelper = (function () {
     };
 
     module.readHTMLDocumentFixture = function (url, callback) {
-        var fixtureUrl = module.fixturesPath + url,
+        var defer = ayepromise.defer(),
+            fixtureUrl = module.fixturesPath + url,
             xhr = new window.XMLHttpRequest();
+
+        defer.promise.then(callback);
 
         xhr.addEventListener("load", function () {
             if (xhr.status === 200 || xhr.status === 0) {
-                callback(xhr.responseXML);
+                defer.resolve(xhr.responseXML);
             }
         }, false);
 
         xhr.open('GET', fixtureUrl, true);
         xhr.responseType = "document";
         xhr.send(null);
+
+        return defer.promise;
     };
 
     module.readDocumentFixture = function (url) {
