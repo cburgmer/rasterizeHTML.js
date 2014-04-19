@@ -33,33 +33,40 @@ module.exports = function (grunt) {
                 src: 'node_modules/xmlserializer/lib/serializer.js',
                 dest: 'build/dependencies/xmlserializer.js',
                 options: {
-                    'standalone': 'xmlserializer'
+                    bundleOptions: {
+                        standalone: 'xmlserializer'
+                    }
                 }
             },
             url: {
                 src: 'node_modules/url/url.js',
                 dest: 'build/dependencies/url.js',
                 options: {
-                    'standalone': 'url'
+                    bundleOptions: {
+                        standalone: 'url'
+                    }
                 }
             },
             inlineresources: {
                 src: 'node_modules/inlineresources/src/inline.js',
                 dest: 'build/dependencies/inlineresources.js',
                 options: {
-                    'standalone': 'inlineresources'
+                    bundleOptions: {
+                        'standalone': 'inlineresources'
+                    }
                 }
             },
             allinone: {
                 src: 'dist/rasterizeHTML.js',
                 dest: 'build/rasterizeHTML.allinone.js',
                 options: {
-                    'standalone': 'rasterizeHTML'
+                    bundleOptions: {
+                        standalone: 'rasterizeHTML'
+                    }
                 }
             }
         },
         clean: {
-            dist: ['build/*.js', 'build/dependencies/'],
             all: ['build']
         },
         umd: {
@@ -254,7 +261,7 @@ module.exports = function (grunt) {
     ]);
 
     grunt.registerTask('default', [
-        'clean:dist',
+        'clean',
         'deps',
         'test',
         'build'
