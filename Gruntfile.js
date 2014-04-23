@@ -61,8 +61,10 @@ module.exports = function (grunt) {
                 dest: 'build/rasterizeHTML.allinone.js',
                 options: {
                     bundleOptions: {
-                        standalone: 'rasterizeHTML'
-                    }
+                        standalone: 'rasterizeHTML',
+                    },
+                    // Don't use the dependency browserify is providing. Use the one we fixed in package.json
+                    alias: ['node_modules/url/url.js:url']
                 }
             }
         },
