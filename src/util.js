@@ -6,6 +6,9 @@ var util = (function (url) {
     var uniqueIdList = [];
 
     module.joinUrl = function (baseUrl, relUrl) {
+        if (!baseUrl) {
+            return relUrl;
+        }
         return url.resolve(baseUrl, relUrl);
     };
 

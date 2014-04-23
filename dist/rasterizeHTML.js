@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.8.0 - 2014-04-18
+/*! rasterizeHTML.js - v0.8.0 - 2014-04-23
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2014 Christoph Burgmer; Licensed MIT */
 (function(root, factory) {
@@ -21,6 +21,9 @@
         var uniqueIdList = [];
     
         module.joinUrl = function (baseUrl, relUrl) {
+            if (!baseUrl) {
+                return relUrl;
+            }
             return url.resolve(baseUrl, relUrl);
         };
     
