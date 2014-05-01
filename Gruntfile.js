@@ -25,7 +25,8 @@ module.exports = function (grunt) {
                     'test/diffHelper.js',
                     'test/testHelper.js',
                     'test/gruntpath.js'
-                ]
+                ],
+                display: 'short'
             }
         },
         browserify: {
