@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.9.0 - 2014-06-06
+/*! rasterizeHTML.js - v0.9.1 - 2014-06-06
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2014 Christoph Burgmer; Licensed MIT */
 /* Integrated dependencies:
