@@ -27,6 +27,11 @@ describe("Integration test", function () {
         return doc;
     };
 
+    var forceImageSizeForPlatformCompatibility = function (image) {
+        image.width = width;
+        image.height = height;
+    };
+
     beforeEach(function () {
         jasmine.addMatchers(diffHelper.matcher);
         jasmine.addMatchers(imagediff.jasmine);
@@ -43,9 +48,11 @@ describe("Integration test", function () {
         loadDocFixture(testHelper.fixturesPath + "test.html", function (doc) {
             rasterizeHTML.drawDocument(doc, canvas.get(0), {cache: 'none'}).then(function (result) {
                 expect(result.errors).toEqual([]);
-                expect(result.image).toEqualImage(referenceImg.get(0), 1);
 
-                expect(canvas.get(0)).toEqualImage(referenceImg.get(0), 1);
+                forceImageSizeForPlatformCompatibility(result.image);
+                expect(result.image).toEqualImage(referenceImg.get(0), 2);
+
+                expect(canvas.get(0)).toEqualImage(referenceImg.get(0), 2);
                 // expect(canvas.get(0)).toImageDiffEqual(referenceImg.get(0), 10);
 
                 done();
@@ -58,9 +65,11 @@ describe("Integration test", function () {
 
         rasterizeHTML.drawHTML(html, canvas.get(0), {baseUrl: testHelper.fixturesPath, cache: 'none'}).then(function (result) {
             expect(result.errors).toEqual([]);
-            expect(result.image).toEqualImage(referenceImg.get(0), 1);
 
-            expect(canvas.get(0)).toEqualImage(referenceImg.get(0), 1);
+            forceImageSizeForPlatformCompatibility(result.image);
+            expect(result.image).toEqualImage(referenceImg.get(0), 2);
+
+            expect(canvas.get(0)).toEqualImage(referenceImg.get(0), 2);
             // expect(canvas.get(0)).toImageDiffEqual(referenceImg.get(0), 70);
 
             done();
@@ -74,9 +83,10 @@ describe("Integration test", function () {
             zoom: 2
         }).then(function (result) {
             expect(result.errors).toEqual([]);
-            expect(result.image).toEqualImage(referenceImg.get(0), 1);
+            forceImageSizeForPlatformCompatibility(result.image);
+            expect(result.image).toEqualImage(referenceImg.get(0), 2);
 
-            expect(canvas.get(0)).toEqualImage(referenceImg.get(0), 1);
+            expect(canvas.get(0)).toEqualImage(referenceImg.get(0), 2);
             // expect(canvas.get(0)).toImageDiffEqual(referenceImg.get(0), 90);
 
             done();
@@ -92,7 +102,9 @@ describe("Integration test", function () {
             zoom: 2
         }).then(function (result) {
             expect(result.errors).toEqual([]);
-            expect(result.image).toEqualImage(referenceImg.get(0), 1);
+
+            forceImageSizeForPlatformCompatibility(result.image);
+            expect(result.image).toEqualImage(referenceImg.get(0), 2);
             // expect(result.image).toImageDiffEqual(referenceImg.get(0), 90);
 
             done();
