@@ -160,7 +160,7 @@ describe("The rendering process", function () {
 
     describe("on SVG rendering", function () {
         beforeEach(function () {
-            jasmine.addMatchers(diffHelper.matcher);
+            jasmine.addMatchers(imagediff.jasmine);
         });
 
         ifNotInWebkitIt("should render the SVG", function (done) {

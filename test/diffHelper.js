@@ -27,17 +27,6 @@ window.diffHelper = (function () {
                     return result;
                 }
             };
-        },
-        // work around imagediff only supporting jasmine 1.x
-        toImageDiffEqual: function (util, customEqualityTesters) {
-            return {
-                compare: function (actual, expected, tolerancePercentage) {
-                    var context = {actual: actual},
-                        result = {};
-                    result.pass = imagediff.jasmine.toImageDiffEqual.call(context, expected, tolerancePercentage);
-                    return result;
-                }
-            };
         }
     };
 

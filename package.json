@@ -41,7 +41,7 @@
     "grunt-contrib-watch": "~0.6.1",
     "grunt-regex-check": "~0.1.5",
     "grunt-umd": "~1.7.3",
-    "imagediff": "~1.0.6",
+    "imagediff": "git://github.com/cburgmer/js-imagediff#v1.1merged",
     "jasmine-core": "~2.0.0",
     "jquery": "~2.1.0"
   },

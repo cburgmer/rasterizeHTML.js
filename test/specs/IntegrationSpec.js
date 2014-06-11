@@ -29,6 +29,7 @@ describe("Integration test", function () {
 
     beforeEach(function () {
         jasmine.addMatchers(diffHelper.matcher);
+        jasmine.addMatchers(imagediff.jasmine);
 
         canvas = $('<canvas width="' + width + '" height="' + height + '"></canvas>'); // Firefox adds a space between the divs and needs the canvas to fit horizontally for all content to be rendered
 
