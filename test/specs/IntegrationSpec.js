@@ -30,7 +30,9 @@ describe("Integration test", function () {
         testHelper.readHTMLDocumentFixture("test.html").then(function (doc) {
             rasterizeHTML.drawDocument(doc, canvas.get(0), {
                     cache: 'none',
-                    baseUrl: testHelper.fixturesPath // we need this because of workAroundFirefoxNotLoadingStylesheetStyles()
+                    baseUrl: testHelper.fixturesPath, // we need this because of workAroundFirefoxNotLoadingStylesheetStyles()
+                    active: '.bgimage',
+                    hover: '.webfont'
                 }).then(function (result) {
                 expect(result.errors).toEqual([]);
 
@@ -48,7 +50,12 @@ describe("Integration test", function () {
     ifNotInWebkitIt("should take a HTML string, inline all displayable content and render to the given canvas", function (done) {
         var html = testHelper.readHTMLFixture("test.html");
 
-        rasterizeHTML.drawHTML(html, canvas.get(0), {baseUrl: testHelper.fixturesPath, cache: 'none'}).then(function (result) {
+        rasterizeHTML.drawHTML(html, canvas.get(0), {
+                baseUrl: testHelper.fixturesPath,
+                cache: 'none',
+                active: '.bgimage',
+                hover: '.webfont'
+            }).then(function (result) {
             expect(result.errors).toEqual([]);
 
             forceImageSizeForPlatformCompatibility(result.image);
@@ -63,10 +70,13 @@ describe("Integration test", function () {
 
     ifNotInWebkitIt("should take a URL, inline all displayable content and render to the given canvas", function (done) {
         rasterizeHTML.drawURL(testHelper.fixturesPath + "testScaled50PercentWithJs.html", canvas.get(0), {
-            cache: 'none',
-            executeJs: true,
-            zoom: 2
-        }).then(function (result) {
+                cache: 'none',
+                executeJs: true,
+                executeJsTimeout: 100,
+                zoom: 2,
+                active: '.bgimage',
+                hover: '.webfont'
+            }).then(function (result) {
             expect(result.errors).toEqual([]);
             forceImageSizeForPlatformCompatibility(result.image);
             expect(result.image).toEqualImage(referenceImg.get(0), 2);
@@ -78,14 +88,17 @@ describe("Integration test", function () {
         });
     });
 
-    ifNotInWebkitIt("should take a URL, inline all displayable content and return the image", function (done) {
+    ifNotInWebkitIt("should render a URL without canvas", function (done) {
         rasterizeHTML.drawURL(testHelper.fixturesPath + "testScaled50PercentWithJs.html", {
-            cache: 'none',
-            width: width,
-            height: height,
-            executeJs: true,
-            zoom: 2
-        }).then(function (result) {
+                cache: 'none',
+                width: width,
+                height: height,
+                executeJs: true,
+                executeJsTimeout: 100,
+                zoom: 2,
+                active: '.bgimage',
+                hover: '.webfont'
+            }).then(function (result) {
             expect(result.errors).toEqual([]);
 
             forceImageSizeForPlatformCompatibility(result.image);

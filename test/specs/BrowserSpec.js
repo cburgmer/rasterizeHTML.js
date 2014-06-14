@@ -331,8 +331,8 @@ describe("Browser functions", function () {
 
     describe("loadDocument", function () {
         it("should load document from a URL", function (done) {
-            browser.loadDocument(testHelper.fixturesPath + "test.html", {}).then(function (doc) {
-                expect(doc.querySelector('title').textContent).toEqual("Test page with full resource includes");
+            browser.loadDocument(testHelper.fixturesPath + "ajax.html", {}).then(function (doc) {
+                expect(doc.querySelector('title').textContent).toEqual("Test page that tries to load content via AJAX");
 
                 done();
             });

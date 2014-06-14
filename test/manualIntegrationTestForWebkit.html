@@ -13,6 +13,9 @@
     <script type="text/javascript" src="../src/documentHelper.js"></script>
     <script type="text/javascript" src="../src/render.js"></script>
     <script type="text/javascript" src="../src/rasterizeHTML.js"></script>
+
+    <script type="text/javascript" src="../test/testHelper.js"></script>
+
     <style type="text/css">
         canvas,
         .container {
@@ -30,19 +33,16 @@
     <div>
         <canvas id="documentCanvas" width="200" height="100"></canvas>
         <script type="text/javascript">
-            var documentCanvas = document.getElementById("documentCanvas"),
-                documentRequest = new window.XMLHttpRequest();
+            var documentCanvas = document.getElementById("documentCanvas");
 
-            documentRequest.onreadystatechange = function () {
-                if (documentRequest.readyState == 4) {
-                    rasterizeHTML.drawDocument(documentRequest.responseXML, documentCanvas, {cache: false});
-                }
-            };
-            documentRequest.open('GET', "fixtures/test.html", true);
-            // Seems to not work on Safari (https://developer.mozilla.org/en/HTML_in_XMLHttpRequest)
-            documentRequest.responseType = "document";
-            documentRequest.overrideMimeType("text/html");
-            documentRequest.send(null);
+            testHelper.readHTMLDocumentFixture("test.html").then(function (doc) {
+                rasterizeHTML.drawDocument(doc, documentCanvas, {
+                    baseUrl: "fixtures/",
+                    cache: false,
+                    active: '.bgimage',
+                    hover: '.webfont'
+                });
+            });
         </script>
     </div>
 
@@ -58,7 +58,10 @@
                         baseUrl: "fixtures/",
                         cache: false,
                         executeJs: true,
-                        zoom: 2
+                        executeJsTimeout: 100,
+                        zoom: 2,
+                        active: '.bgimage',
+                        hover: '.webfont'
                     });
                 }
             };
@@ -76,7 +79,10 @@
             rasterizeHTML.drawURL("fixtures/testScaled50PercentWithJs.html", urlCanvas, {
                 cache: false,
                 executeJs: true,
-                zoom: 2
+                executeJsTimeout: 100,
+                zoom: 2,
+                active: '.bgimage',
+                hover: '.webfont'
             });
         </script>
     </div>
@@ -89,9 +95,12 @@
             rasterizeHTML.drawURL("fixtures/testScaled50PercentWithJs.html", {
                 cache: false,
                 executeJs: true,
+                executeJsTimeout: 100,
                 zoom: 2,
                 width: 200,
-                height: 100
+                height: 100,
+                active: '.bgimage',
+                hover: '.webfont'
             }).then(function (result) {
                 urlImageContainer.appendChild(result.image);
             });

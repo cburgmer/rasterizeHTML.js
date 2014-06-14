@@ -3,7 +3,7 @@
     src: url('raphaelicons-webfont.woff');
 }
 
-.bgimage {
+.bgimage:active {
     background-image: url("rednblue.png");
     background-size: 100%;
 }
@@ -11,5 +11,8 @@
     font-family: 'RaphaelIcons';
     font-size: 100px;
     line-height: 100px;
+    color: black;
+}
+.webfont:hover {
     color: #f52887;
 }
