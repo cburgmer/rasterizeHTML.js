@@ -9,24 +9,6 @@ describe("Integration test", function () {
         return defer.promise;
     };
 
-    var loadDocFixture = function (url, callback) {
-        var request = new window.XMLHttpRequest(),
-            doc;
-
-        request.onreadystatechange = function () {
-            if (request.readyState === 4) {
-                callback(request.responseXML);
-            }
-        };
-        request.open('GET', url, true);
-        // Seems to not work on Safari (https://developer.mozilla.org/en/HTML_in_XMLHttpRequest)
-        request.responseType = "document";
-        request.overrideMimeType("text/html");
-        request.send(null);
-
-        return doc;
-    };
-
     var forceImageSizeForPlatformCompatibility = function (image) {
         image.width = width;
         image.height = height;
@@ -45,7 +27,7 @@ describe("Integration test", function () {
     });
 
     ifNotInWebkitIt("should take a document, inline all displayable content and render to the given canvas", function (done) {
-        loadDocFixture(testHelper.fixturesPath + "test.html", function (doc) {
+        testHelper.readHTMLDocumentFixture("test.html").then(function (doc) {
             rasterizeHTML.drawDocument(doc, canvas.get(0), {cache: 'none'}).then(function (result) {
                 expect(result.errors).toEqual([]);
 

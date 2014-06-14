@@ -27,6 +27,8 @@ var testHelper = (function () {
 
         xhr.open('GET', fixtureUrl, true);
         xhr.responseType = "document";
+        xhr.overrideMimeType("text/html");
+
         xhr.send(null);
 
         return defer.promise;
