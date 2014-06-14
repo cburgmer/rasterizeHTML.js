@@ -91,7 +91,7 @@ var browser = (function (util, xhrproxies, ayepromise, theWindow) {
             element, rect;
 
         if (selector) {
-            element = doc.documentElement.querySelector(selector);
+            element = doc.querySelector(selector);
 
             if (!element) {
                 throw {

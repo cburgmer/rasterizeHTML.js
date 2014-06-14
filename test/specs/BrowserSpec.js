@@ -327,6 +327,15 @@ describe("Browser functions", function () {
                 });
             });
 
+            it("should match the html dom node", function (done) {
+                browser.calculateDocumentContentSize(doc, 200, 10, 'html').then(function (size) {
+                    expect(size.width).toEqual(200);
+                    expect(size.height).toEqual(300);
+
+                    done();
+                });
+            });
+
             it("should throw an error when the selector is not found", function (done) {
                 browser.calculateDocumentContentSize(doc, 100, 10, 'a').then(null, function (e) {
                     expect(e).toEqual(jasmine.objectContaining({
