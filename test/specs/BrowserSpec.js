@@ -326,6 +326,16 @@ describe("Browser functions", function () {
                     done();
                 });
             });
+
+            it("should throw an error when the selector is not found", function (done) {
+                browser.calculateDocumentContentSize(doc, 100, 10, 'a').then(null, function (e) {
+                    expect(e).toEqual(jasmine.objectContaining({
+                        message: "Clipping selector not found"
+                    }));
+
+                    done();
+                });
+            });
         });
     });
 

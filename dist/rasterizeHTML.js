@@ -386,6 +386,12 @@
             if (selector) {
                 element = doc.documentElement.querySelector(selector);
 
+                if (!element) {
+                    throw {
+                        message: "Clipping selector not found"
+                    };
+                }
+
                 rect = element.getBoundingClientRect();
 
                 size = {
@@ -416,11 +422,17 @@
 
             iframe.onload = function () {
                 var doc = iframe.contentDocument,
+                    size;
+
+                try {
                     size = calculateContentSize(doc, selector);
 
-                theWindow.document.getElementsByTagName("body")[0].removeChild(iframe);
+                    theWindow.document.getElementsByTagName("body")[0].removeChild(iframe);
 
-                defer.resolve(size);
+                    defer.resolve(size);
+                } catch (e) {
+                    defer.reject(e);
+                }
             };
 
             // srcdoc doesn't work in PhantomJS yet
