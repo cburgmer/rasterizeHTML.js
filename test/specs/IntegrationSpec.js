@@ -32,7 +32,8 @@ describe("Integration test", function () {
                     cache: 'none',
                     baseUrl: testHelper.fixturesPath, // we need this because of workAroundFirefoxNotLoadingStylesheetStyles()
                     active: '.bgimage',
-                    hover: '.webfont'
+                    hover: '.webfont',
+                    clip: 'body'
                 }).then(function (result) {
                 expect(result.errors).toEqual([]);
 
@@ -54,7 +55,8 @@ describe("Integration test", function () {
                 baseUrl: testHelper.fixturesPath,
                 cache: 'none',
                 active: '.bgimage',
-                hover: '.webfont'
+                hover: '.webfont',
+                clip: 'body'
             }).then(function (result) {
             expect(result.errors).toEqual([]);
 
