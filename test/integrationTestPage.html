@@ -18,7 +18,10 @@
         rasterizeHTML.drawURL("fixtures/testScaled50PercentWithJs.html", canvas, {
             cache: false,
             executeJs: true,
-            zoom: 2
+            executeJsTimeout: 100,
+            zoom: 2,
+            active: '.bgimage',
+            hover: '.webfont'
         }).then(function (result) {
                 if (result.errors.length > 0) {
                     console.log("Could not load the following resources: ", errors.map(function (e) {

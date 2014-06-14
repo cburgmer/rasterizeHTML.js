@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.9.1 - 2014-06-14
+/*! rasterizeHTML.js - v0.9.1 - 2014-06-15
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2014 Christoph Burgmer; Licensed MIT */
 (function(root, factory) {
@@ -384,7 +384,7 @@
                 element, rect;
 
             if (selector) {
-                element = doc.documentElement.querySelector(selector);
+                element = doc.querySelector(selector);
 
                 if (!element) {
                     throw {
