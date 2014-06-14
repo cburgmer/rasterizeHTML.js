@@ -123,13 +123,17 @@ var render = (function (util, browser, documentHelper, xmlserializer, ayepromise
         }
     };
 
-    var zoomedElementSizingAttributes = function (width, height, zoomFactor) {
+    var zoomedElementSizingAttributes = function (size, zoomFactor) {
         var zoomHtmlInject = '',
-            closestScaledWith, closestScaledHeight;
+            closestScaledWith, closestScaledHeight,
+            offsetX, offsetY;
 
         zoomFactor = zoomFactor || 1;
-        closestScaledWith = Math.round(width / zoomFactor);
-        closestScaledHeight = Math.round(height / zoomFactor);
+        closestScaledWith = Math.round(size.viewportWidth / zoomFactor);
+        closestScaledHeight = Math.round(size.viewportHeight / zoomFactor);
+
+        offsetX = -size.left;
+        offsetY = -size.top;
 
         if (zoomFactor !== 1) {
             zoomHtmlInject = ' style="' +
@@ -139,11 +143,12 @@ var render = (function (util, browser, documentHelper, xmlserializer, ayepromise
                 'transform-origin: top left;"';
         }
 
-        return ' width="' + closestScaledWith + '" height="' + closestScaledHeight + '"' +
+        return ' x="' + offsetX + '" y="' + offsetY + '"' +
+                ' width="' + closestScaledWith + '" height="' + closestScaledHeight + '"' +
                 zoomHtmlInject;
     };
 
-    module.getSvgForDocument = function (doc, width, height, zoomFactor) {
+    module.getSvgForDocument = function (doc, size, zoomFactor) {
         var xhtml;
 
         workAroundWebkitBugIgnoringTheFirstRuleInCSS(doc);
@@ -152,8 +157,8 @@ var render = (function (util, browser, documentHelper, xmlserializer, ayepromise
         browser.validateXHTML(xhtml);
 
         return (
-            '<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height + '">' +
-                '<foreignObject' + zoomedElementSizingAttributes(width, height, zoomFactor) + '>' +
+            '<svg xmlns="http://www.w3.org/2000/svg" width="' + size.width + '" height="' + size.height + '">' +
+                '<foreignObject' + zoomedElementSizingAttributes(size, zoomFactor) + '>' +
                 xhtml +
                 '</foreignObject>' +
             '</svg>'
@@ -233,9 +238,9 @@ var render = (function (util, browser, documentHelper, xmlserializer, ayepromise
             documentHelper.fakeActive(doc, options.active);
         }
 
-        return browser.calculateDocumentContentSize(doc, viewportSize.width, viewportSize.height)
+        return browser.calculateDocumentContentSize(doc, viewportSize.width, viewportSize.height, options.clip)
             .then(function (size) {
-                return module.getSvgForDocument(doc, size.width, size.height, options.zoom);
+                return module.getSvgForDocument(doc, size, options.zoom);
             })
             .then(function (svg) {
                 return module.renderSvg(svg, canvas);

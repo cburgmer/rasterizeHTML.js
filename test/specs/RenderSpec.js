@@ -2,15 +2,26 @@ describe("The rendering process", function () {
     describe("on document to SVG conversion", function () {
         var defaultZoomLevel = 1;
 
+        var aRenderSize = function (width, height, viewportWidth, viewportHeight, left, top) {
+            return {
+                left: left || 0,
+                top: top || 0,
+                width: width || 123,
+                height: height || 456 ,
+                viewportWidth: viewportWidth || width || 123,
+                viewportHeight: viewportHeight || height || 456
+            };
+        };
+
         it("should return a SVG with embeded HTML", function () {
             var doc = document.implementation.createHTMLDocument("");
             doc.body.innerHTML = "Test content";
 
-            var svgCode = render.getSvgForDocument(doc, 123, 456, defaultZoomLevel);
+            var svgCode = render.getSvgForDocument(doc, aRenderSize(), defaultZoomLevel);
 
             expect(svgCode).toMatch(new RegExp(
-                '<svg xmlns="http://www.w3.org/2000/svg" width="123" height="456">' +
-                    '<foreignObject width="123" height="456">' +
+                '<svg xmlns="http://www.w3.org/2000/svg" .*>' +
+                    '<foreignObject .*>' +
                         '<html xmlns="http://www.w3.org/1999/xhtml">' +
                             '<head>' +
                                 '<title(/>|></title>)' +
@@ -29,13 +40,13 @@ describe("The rendering process", function () {
                 canonicalXML;
             doc.body.innerHTML = '<img src="data:image/png;base64,sOmeFAKeBasE64="/>';
 
-            var svgCode = render.getSvgForDocument(doc, 123, 456, defaultZoomLevel);
+            var svgCode = render.getSvgForDocument(doc, aRenderSize(), defaultZoomLevel);
 
             expect(svgCode).not.toBeNull();
             canonicalXML = svgCode.replace(/ +\/>/, '/>');
             expect(canonicalXML).toMatch(new RegExp(
-                '<svg xmlns="http://www.w3.org/2000/svg" width="123" height="456">' +
-                    '<foreignObject width="123" height="456">' +
+                '<svg xmlns="http://www.w3.org/2000/svg" .*>' +
+                    '<foreignObject .*>' +
                         '<html xmlns="http://www.w3.org/1999/xhtml">' +
                             '<head>' +
                                 '<title(/>|></title>)' +
@@ -53,11 +64,11 @@ describe("The rendering process", function () {
             var doc = document.implementation.createHTMLDocument("");
             doc.body.innerHTML = "content";
 
-            var svgCode = render.getSvgForDocument(doc, 123, 987, defaultZoomLevel);
+            var svgCode = render.getSvgForDocument(doc, aRenderSize(123, 987, 200, 1000, 2, 7), defaultZoomLevel);
 
             expect(svgCode).toMatch(new RegExp(
                 '<svg xmlns="http://www.w3.org/2000/svg" width="123" height="987">' +
-                    '<foreignObject width="123" height="987">' +
+                    '<foreignObject x="-2" y="-7" width="200" height="1000">' +
                         '<html xmlns="http://www.w3.org/1999/xhtml">' +
                             '<head>' +
                                 '<title(/>|></title>)' +
@@ -76,11 +87,11 @@ describe("The rendering process", function () {
             doc.body.innerHTML = "content";
 
             var zoomFactor = 10;
-            var svgCode = render.getSvgForDocument(doc, 123, 987, zoomFactor);
+            var svgCode = render.getSvgForDocument(doc, aRenderSize(123, 987), zoomFactor);
 
             expect(svgCode).toMatch(new RegExp(
                 '<svg xmlns="http://www.w3.org/2000/svg" width="123" height="987">' +
-                    '<foreignObject width="12" height="99" style="-webkit-transform: scale\\(10\\); -webkit-transform-origin: top left; transform: scale\\(10\\); transform-origin: top left;">' +
+                    '<foreignObject x="0" y="0" width="12" height="99" style="-webkit-transform: scale\\(10\\); -webkit-transform-origin: top left; transform: scale\\(10\\); transform-origin: top left;">' +
                         '<html xmlns="http://www.w3.org/1999/xhtml">' +
                             '<head>' +
                                 '<title(/>|></title>)' +
@@ -99,10 +110,10 @@ describe("The rendering process", function () {
             doc.body.innerHTML = "content";
 
             var zoomLevel = 0;
-            var svgCode = render.getSvgForDocument(doc, 123, 987, zoomLevel);
+            var svgCode = render.getSvgForDocument(doc, aRenderSize(123, 987), zoomLevel);
 
             expect(svgCode).toMatch(new RegExp(
-                '<foreignObject width="123" height="987">'
+                '<foreignObject x="0" y="0" width="123" height="987">'
             ));
         });
 
@@ -113,7 +124,7 @@ describe("The rendering process", function () {
             var error = new Error();
             spyOn(browser, 'validateXHTML').and.throwError(error);
 
-            expect(function () { render.getSvgForDocument(doc, 123, 987); }).toThrow(error);
+            expect(function () { render.getSvgForDocument(doc, aRenderSize(), 1); }).toThrow(error);
         });
 
         describe("workAroundWebkitBugIgnoringTheFirstRuleInCSS", function () {
@@ -138,7 +149,7 @@ describe("The rendering process", function () {
                 myUserAgent = "WebKit";
                 testHelper.addStyleToDocument(doc, 'span { background-image: url("data:image/png;base64,soMEfAkebASE64="); }');
 
-                svgCode = render.getSvgForDocument(doc, 123, 987);
+                svgCode = render.getSvgForDocument(doc, aRenderSize(), 1);
 
                 expect(svgCode).toMatch(/<style type="text\/css">\s*span \{\}/);
             });
@@ -150,7 +161,7 @@ describe("The rendering process", function () {
                 myUserAgent = "Something else";
                 testHelper.addStyleToDocument(doc, 'span { background-image: url("data:image/png;base64,soMEfAkebASE64="); }');
 
-                svgCode = render.getSvgForDocument(doc, 123, 987);
+                svgCode = render.getSvgForDocument(doc, aRenderSize(), 1);
 
                 expect(svgCode).not.toMatch(/span \{\}/);
             });
@@ -167,7 +178,7 @@ describe("The rendering process", function () {
             var referenceImg = $('<img src="' + testHelper.fixturesPath + 'rednblue.png" alt="test image"/>'),
                 twoColorSvg = (
                     '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">' +
-                        '<foreignObject width="100%" height="100%">' +
+                        '<foreignObject x="0" y="0" width="100%" height="100%">' +
                             '<html xmlns="http://www.w3.org/1999/xhtml">' +
                                 '<head>' +
                                     '<style type="text/css">body { padding: 0; margin: 0}</style>' +
@@ -197,7 +208,7 @@ describe("The rendering process", function () {
             var referenceImg = $('<img src="' + testHelper.fixturesPath + 'rednblue.png" alt="test image"/>'),
                 twoColorSvg = (
                     '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">' +
-                        '<foreignObject width="100%" height="100%">' +
+                        '<foreignObject x="0" y="0" width="100%" height="100%">' +
                             '<html xmlns="http://www.w3.org/1999/xhtml">' +
                                 '<head>' +
                                     '<style type="text/css">body { padding: 0; margin: 0}</style>' +
@@ -247,7 +258,7 @@ describe("The rendering process", function () {
 
     describe("drawDocumentImage", function () {
         var doc = "doc",
-            canvas;
+            calculatedSize, canvas;
 
         var fulfilled = function (value) {
             var defer = ayepromise.defer();
@@ -264,7 +275,8 @@ describe("The rendering process", function () {
         beforeEach(function () {
             spyOn(documentHelper, 'fakeHover');
             spyOn(documentHelper, 'fakeActive');
-            spyOn(browser, 'calculateDocumentContentSize').and.returnValue(fulfilled({width: 47, height: 11}));
+            calculatedSize = 'the_calculated_size';
+            spyOn(browser, 'calculateDocumentContentSize').and.returnValue(fulfilled(calculatedSize));
             spyOn(render, 'getSvgForDocument');
             spyOn(render, 'renderSvg');
 
@@ -283,8 +295,13 @@ describe("The rendering process", function () {
             render.drawDocumentImage(doc, canvas, {zoom: 42}).then(function (theImage) {
                 expect(theImage).toBe(image);
 
-                expect(browser.calculateDocumentContentSize).toHaveBeenCalledWith(doc, jasmine.any(Number), jasmine.any(Number));
-                expect(render.getSvgForDocument).toHaveBeenCalledWith(doc, 47, 11, 42);
+                expect(browser.calculateDocumentContentSize).toHaveBeenCalledWith(
+                    doc,
+                    jasmine.any(Number),
+                    jasmine.any(Number),
+                    undefined
+                );
+                expect(render.getSvgForDocument).toHaveBeenCalledWith(doc, calculatedSize, 42);
                 expect(render.renderSvg).toHaveBeenCalledWith(svg, canvas);
 
                 done();
@@ -300,19 +317,19 @@ describe("The rendering process", function () {
         it("should use the canvas width and height as viewport size", function () {
             render.drawDocumentImage(doc, canvas, {});
 
-            expect(browser.calculateDocumentContentSize).toHaveBeenCalledWith(doc, 123, 456);
+            expect(browser.calculateDocumentContentSize).toHaveBeenCalledWith(doc, 123, 456, undefined);
         });
 
         it("should make the canvas optional and apply default viewport width and height", function () {
             render.drawDocumentImage(doc, null, {});
 
-            expect(browser.calculateDocumentContentSize).toHaveBeenCalledWith(doc, 300, 200);
+            expect(browser.calculateDocumentContentSize).toHaveBeenCalledWith(doc, 300, 200, undefined);
         });
 
         it("should take an optional width and height", function () {
             render.drawDocumentImage(doc, canvas, {width: 42, height: 4711});
 
-            expect(browser.calculateDocumentContentSize).toHaveBeenCalledWith(doc, 42, 4711);
+            expect(browser.calculateDocumentContentSize).toHaveBeenCalledWith(doc, 42, 4711, undefined);
         });
 
         it("should trigger hover effect", function () {
@@ -337,6 +354,17 @@ describe("The rendering process", function () {
             render.drawDocumentImage(doc, canvas, {});
 
             expect(documentHelper.fakeActive).not.toHaveBeenCalled();
+        });
+
+        it("should render the selected element", function () {
+            render.drawDocumentImage(doc, canvas, {clip: '.mySpan'});
+
+            expect(browser.calculateDocumentContentSize).toHaveBeenCalledWith(
+                doc,
+                jasmine.any(Number),
+                jasmine.any(Number),
+                '.mySpan'
+            );
         });
     });
 

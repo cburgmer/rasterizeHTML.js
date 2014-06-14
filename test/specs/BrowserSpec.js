@@ -219,6 +219,7 @@ describe("Browser functions", function () {
 
             browser.calculateDocumentContentSize(doc, 300, 200).then(function (size) {
                 expect(size.height).toEqual(316);
+                expect(size.viewportHeight).toEqual(316);
 
                 done();
             });
@@ -229,6 +230,7 @@ describe("Browser functions", function () {
 
             browser.calculateDocumentContentSize(doc, 300, 200).then(function (size) {
                 expect(size.height).toEqual(200);
+                expect(size.viewportHeight).toEqual(200);
 
                 done();
             });
@@ -239,6 +241,7 @@ describe("Browser functions", function () {
 
             browser.calculateDocumentContentSize(doc, 300, 200).then(function (size) {
                 expect(size.width).toEqual(300);
+                expect(size.viewportWidth).toEqual(300);
 
                 done();
             });
@@ -249,6 +252,7 @@ describe("Browser functions", function () {
 
             browser.calculateDocumentContentSize(doc, 300, 200).then(function (size) {
                 expect(size.width).toEqual(408);
+                expect(size.viewportWidth).toEqual(408);
 
                 done();
             });
@@ -271,6 +275,56 @@ describe("Browser functions", function () {
                 expect(size.height).toEqual(10);
 
                 done();
+            });
+        });
+
+        describe("element selection", function () {
+            beforeEach(function () {
+                setHtml('<style>* { padding: 0; margin: 0; }</style>' +
+                    '<div style="width: 200px; height: 300px; padding: 12px 0 0 34px; box-sizing: border-box;">' +
+                    '<span style="display: inline-block; width: 123px; height: 234px;"></span>' +
+                    '</div>');
+            });
+
+            it("should report the left offset", function (done) {
+                browser.calculateDocumentContentSize(doc, 100, 10, 'span').then(function (size) {
+                    expect(size.left).toEqual(34);
+
+                    done();
+                });
+            });
+
+            it("should report the top offset", function (done) {
+                browser.calculateDocumentContentSize(doc, 100, 10, 'span').then(function (size) {
+                    expect(size.top).toEqual(12);
+
+                    done();
+                });
+            });
+
+            it("should report the width", function (done) {
+                browser.calculateDocumentContentSize(doc, 100, 10, 'span').then(function (size) {
+                    expect(size.width).toEqual(123);
+
+                    done();
+                });
+            });
+
+            it("should report the height", function (done) {
+                browser.calculateDocumentContentSize(doc, 100, 10, 'span').then(function (size) {
+                    expect(size.height).toEqual(234);
+
+                    done();
+                });
+            });
+
+            it("should report the canvas width and height", function (done) {
+                browser.calculateDocumentContentSize(doc, 100, 10, 'span').then(function (size) {
+                    expect(size.viewportWidth).toEqual(200);
+                    expect(size.viewportHeight).toEqual(300);
+
+                    done();
+                });
             });
         });
     });

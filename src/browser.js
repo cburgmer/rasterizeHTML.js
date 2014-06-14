@@ -83,23 +83,51 @@ var browser = (function (util, xhrproxies, ayepromise, theWindow) {
         return iframe;
     };
 
-    module.calculateDocumentContentSize = function (doc, viewportWidth, viewportHeight) {
+    var calculateContentSize = function (doc, selector) {
+            // clientWidth/clientHeight needed for PhantomJS
+        var canvasWidth = Math.max(doc.documentElement.scrollWidth, doc.body.clientWidth),
+            canvasHeight = Math.max(doc.documentElement.scrollHeight, doc.body.scrollHeight, doc.body.clientHeight),
+            size,
+            element, rect;
+
+        if (selector) {
+            element = doc.documentElement.querySelector(selector);
+
+            rect = element.getBoundingClientRect();
+
+            size = {
+                left: rect.left,
+                top: rect.top,
+                width: rect.width,
+                height: rect.height
+            };
+        } else {
+            size = {
+                left: 0,
+                top: 0,
+                width: canvasWidth,
+                height: canvasHeight
+            };
+        }
+
+        size.viewportWidth = canvasWidth;
+        size.viewportHeight = canvasHeight;
+
+        return size;
+    };
+
+    module.calculateDocumentContentSize = function (doc, viewportWidth, viewportHeight, selector) {
         var html = doc.documentElement.outerHTML,
             iframe = createHiddenSandboxedIFrame(theWindow.document, viewportWidth, viewportHeight),
             defer = ayepromise.defer();
 
         iframe.onload = function () {
             var doc = iframe.contentDocument,
-                // clientWidth/clientHeight needed for PhantomJS
-                canvasWidth = Math.max(doc.documentElement.scrollWidth, doc.body.clientWidth),
-                canvasHeight = Math.max(doc.documentElement.scrollHeight, doc.body.scrollHeight, doc.body.clientHeight);
+                size = calculateContentSize(doc, selector);
 
             theWindow.document.getElementsByTagName("body")[0].removeChild(iframe);
 
-            defer.resolve({
-                width: canvasWidth,
-                height: canvasHeight
-            });
+            defer.resolve(size);
         };
 
         // srcdoc doesn't work in PhantomJS yet

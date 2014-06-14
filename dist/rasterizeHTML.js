@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.9.1 - 2014-06-06
+/*! rasterizeHTML.js - v0.9.1 - 2014-06-14
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2014 Christoph Burgmer; Licensed MIT */
 (function(root, factory) {
@@ -376,23 +376,51 @@
             return iframe;
         };
 
-        module.calculateDocumentContentSize = function (doc, viewportWidth, viewportHeight) {
+        var calculateContentSize = function (doc, selector) {
+                // clientWidth/clientHeight needed for PhantomJS
+            var canvasWidth = Math.max(doc.documentElement.scrollWidth, doc.body.clientWidth),
+                canvasHeight = Math.max(doc.documentElement.scrollHeight, doc.body.scrollHeight, doc.body.clientHeight),
+                size,
+                element, rect;
+
+            if (selector) {
+                element = doc.documentElement.querySelector(selector);
+
+                rect = element.getBoundingClientRect();
+
+                size = {
+                    left: rect.left,
+                    top: rect.top,
+                    width: rect.width,
+                    height: rect.height
+                };
+            } else {
+                size = {
+                    left: 0,
+                    top: 0,
+                    width: canvasWidth,
+                    height: canvasHeight
+                };
+            }
+
+            size.viewportWidth = canvasWidth;
+            size.viewportHeight = canvasHeight;
+
+            return size;
+        };
+
+        module.calculateDocumentContentSize = function (doc, viewportWidth, viewportHeight, selector) {
             var html = doc.documentElement.outerHTML,
                 iframe = createHiddenSandboxedIFrame(theWindow.document, viewportWidth, viewportHeight),
                 defer = ayepromise.defer();
 
             iframe.onload = function () {
                 var doc = iframe.contentDocument,
-                    // clientWidth/clientHeight needed for PhantomJS
-                    canvasWidth = Math.max(doc.documentElement.scrollWidth, doc.body.clientWidth),
-                    canvasHeight = Math.max(doc.documentElement.scrollHeight, doc.body.scrollHeight, doc.body.clientHeight);
+                    size = calculateContentSize(doc, selector);
 
                 theWindow.document.getElementsByTagName("body")[0].removeChild(iframe);
 
-                defer.resolve({
-                    width: canvasWidth,
-                    height: canvasHeight
-                });
+                defer.resolve(size);
             };
 
             // srcdoc doesn't work in PhantomJS yet
@@ -647,13 +675,17 @@
             }
         };
 
-        var zoomedElementSizingAttributes = function (width, height, zoomFactor) {
+        var zoomedElementSizingAttributes = function (size, zoomFactor) {
             var zoomHtmlInject = '',
-                closestScaledWith, closestScaledHeight;
+                closestScaledWith, closestScaledHeight,
+                offsetX, offsetY;
 
             zoomFactor = zoomFactor || 1;
-            closestScaledWith = Math.round(width / zoomFactor);
-            closestScaledHeight = Math.round(height / zoomFactor);
+            closestScaledWith = Math.round(size.viewportWidth / zoomFactor);
+            closestScaledHeight = Math.round(size.viewportHeight / zoomFactor);
+
+            offsetX = -size.left;
+            offsetY = -size.top;
 
             if (zoomFactor !== 1) {
                 zoomHtmlInject = ' style="' +
@@ -663,11 +695,12 @@
                     'transform-origin: top left;"';
             }
 
-            return ' width="' + closestScaledWith + '" height="' + closestScaledHeight + '"' +
+            return ' x="' + offsetX + '" y="' + offsetY + '"' +
+                    ' width="' + closestScaledWith + '" height="' + closestScaledHeight + '"' +
                     zoomHtmlInject;
         };
 
-        module.getSvgForDocument = function (doc, width, height, zoomFactor) {
+        module.getSvgForDocument = function (doc, size, zoomFactor) {
             var xhtml;
 
             workAroundWebkitBugIgnoringTheFirstRuleInCSS(doc);
@@ -676,8 +709,8 @@
             browser.validateXHTML(xhtml);
 
             return (
-                '<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height + '">' +
-                    '<foreignObject' + zoomedElementSizingAttributes(width, height, zoomFactor) + '>' +
+                '<svg xmlns="http://www.w3.org/2000/svg" width="' + size.width + '" height="' + size.height + '">' +
+                    '<foreignObject' + zoomedElementSizingAttributes(size, zoomFactor) + '>' +
                     xhtml +
                     '</foreignObject>' +
                 '</svg>'
@@ -757,9 +790,9 @@
                 documentHelper.fakeActive(doc, options.active);
             }
 
-            return browser.calculateDocumentContentSize(doc, viewportSize.width, viewportSize.height)
+            return browser.calculateDocumentContentSize(doc, viewportSize.width, viewportSize.height, options.clip)
                 .then(function (size) {
-                    return module.getSvgForDocument(doc, size.width, size.height, options.zoom);
+                    return module.getSvgForDocument(doc, size, options.zoom);
                 })
                 .then(function (svg) {
                     return module.renderSvg(svg, canvas);
