@@ -10,7 +10,7 @@ build() {
 }
 
 runIntegrationTest() {
-    SLIMERJSLAUNCHER=$FIREFOX_PATH ./node_modules/.bin/slimerjs test/phantomIntegrationTest.js
+    ./node_modules/.bin/slimerjs test/phantomIntegrationTest.js
 }
 
 main() {
@@ -19,7 +19,9 @@ main() {
     fi
 
     build
-    runIntegrationTest
+    runIntegrationTest | tee /tmp/go.$$
+    # Sadly slimerjs cannot return errorcodes
+    cat /tmp/go.$$ | grep success
 }
 
 main
