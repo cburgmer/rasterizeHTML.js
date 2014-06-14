@@ -28,7 +28,10 @@ describe("Integration test", function () {
 
     ifNotInWebkitIt("should take a document, inline all displayable content and render to the given canvas", function (done) {
         testHelper.readHTMLDocumentFixture("test.html").then(function (doc) {
-            rasterizeHTML.drawDocument(doc, canvas.get(0), {cache: 'none'}).then(function (result) {
+            rasterizeHTML.drawDocument(doc, canvas.get(0), {
+                    cache: 'none',
+                    baseUrl: testHelper.fixturesPath // we need this because of workAroundFirefoxNotLoadingStylesheetStyles()
+                }).then(function (result) {
                 expect(result.errors).toEqual([]);
 
                 forceImageSizeForPlatformCompatibility(result.image);

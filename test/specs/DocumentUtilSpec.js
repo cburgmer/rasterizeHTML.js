@@ -80,6 +80,16 @@ describe("HTML Document Utility functions", function () {
             // Use the fact that comments are discarded when processing a style sheet
             expect(doc.querySelector('style').textContent).toMatch(/a comment/);
         });
+
+        // On Firefox this needs a work around because of https://bugzilla.mozilla.org/show_bug.cgi?id=925493
+        ifNotInPhantomJsIt("should integrate with a document loaded through ajax", function (done) {
+            testHelper.readHTMLDocumentFixture("hover.html").then(function (doc) {
+                documentUtil.rewriteStyleRuleSelector(doc, ':hover', '.myfakehover');
+
+                expect(doc.querySelector('style').textContent).toMatch(/body.myfakehover/);
+                done();
+            });
+        });
     });
 
     describe("addClassNameRecursively", function () {

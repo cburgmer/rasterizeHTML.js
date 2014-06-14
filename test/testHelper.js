@@ -14,6 +14,13 @@ var testHelper = (function () {
         return xhr.response;
     };
 
+    // work around https://bugzilla.mozilla.org/show_bug.cgi?id=925493
+    var workAroundFirefoxNotLoadingStylesheetStyles = function (doc) {
+        var d = document.implementation.createHTMLDocument('');
+        d.replaceChild(doc.documentElement, d.documentElement);
+        return d;
+    };
+
     module.readHTMLDocumentFixture = function (url) {
         var defer = ayepromise.defer(),
             fixtureUrl = module.fixturesPath + url,
@@ -21,7 +28,7 @@ var testHelper = (function () {
 
         xhr.addEventListener("load", function () {
             if (xhr.status === 200 || xhr.status === 0) {
-                defer.resolve(xhr.responseXML);
+                defer.resolve(workAroundFirefoxNotLoadingStylesheetStyles(xhr.responseXML));
             }
         }, false);
 
