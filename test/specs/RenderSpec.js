@@ -297,10 +297,8 @@ describe("The rendering process", function () {
 
                 expect(browser.calculateDocumentContentSize).toHaveBeenCalledWith(
                     doc,
-                    jasmine.any(Number),
-                    jasmine.any(Number),
-                    undefined,
-                    42
+                    jasmine.any(Object),
+                    {zoom: 42}
                 );
                 expect(render.getSvgForDocument).toHaveBeenCalledWith(doc, calculatedSize, 42);
                 expect(render.renderSvg).toHaveBeenCalledWith(svg, canvas);
@@ -318,19 +316,19 @@ describe("The rendering process", function () {
         it("should use the canvas width and height as viewport size", function () {
             render.drawDocumentImage(doc, canvas, {});
 
-            expect(browser.calculateDocumentContentSize).toHaveBeenCalledWith(doc, 123, 456, undefined, undefined);
+            expect(browser.calculateDocumentContentSize).toHaveBeenCalledWith(doc, {width: 123, height: 456}, {});
         });
 
         it("should make the canvas optional and apply default viewport width and height", function () {
             render.drawDocumentImage(doc, null, {});
 
-            expect(browser.calculateDocumentContentSize).toHaveBeenCalledWith(doc, 300, 200, undefined, undefined);
+            expect(browser.calculateDocumentContentSize).toHaveBeenCalledWith(doc, {width: 300, height: 200}, {});
         });
 
         it("should take an optional width and height", function () {
             render.drawDocumentImage(doc, canvas, {width: 42, height: 4711});
 
-            expect(browser.calculateDocumentContentSize).toHaveBeenCalledWith(doc, 42, 4711, undefined, undefined);
+            expect(browser.calculateDocumentContentSize).toHaveBeenCalledWith(doc, {width: 42, height: 4711}, jasmine.any(Object));
         });
 
         it("should trigger hover effect", function () {
@@ -362,10 +360,8 @@ describe("The rendering process", function () {
 
             expect(browser.calculateDocumentContentSize).toHaveBeenCalledWith(
                 doc,
-                jasmine.any(Number),
-                jasmine.any(Number),
-                '.mySpan',
-                undefined
+                jasmine.any(Object),
+                {clip: '.mySpan'}
             );
         });
     });

@@ -238,7 +238,7 @@ var render = (function (util, browser, documentHelper, xmlserializer, ayepromise
             documentHelper.fakeActive(doc, options.active);
         }
 
-        return browser.calculateDocumentContentSize(doc, viewportSize.width, viewportSize.height, options.clip, options.zoom)
+        return browser.calculateDocumentContentSize(doc, viewportSize, options)
             .then(function (size) {
                 return module.getSvgForDocument(doc, size, options.zoom);
             })

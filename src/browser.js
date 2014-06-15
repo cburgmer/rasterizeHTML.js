@@ -78,9 +78,14 @@ var browser = (function (util, xhrproxies, ayepromise, theWindow) {
         iframe.style.left = (-10000 - width) + "px";
         // Don't execute JS, all we need from sandboxing is access to the iframe's document
         iframe.sandbox = 'allow-same-origin';
-        // We need to add the element to the document so that its content gets loaded
-        doc.getElementsByTagName("body")[0].appendChild(iframe);
         return iframe;
+    };
+
+    var createIframeWithSizeAtZoomLevel1 = function (viewport, zoom) {
+        var scaledViewportWidth = viewport.width / zoom,
+            scaledViewportHeight = viewport.height / zoom;
+
+        return createHiddenSandboxedIFrame(theWindow.document, scaledViewportWidth, scaledViewportHeight);
     };
 
     var calculateContentSize = function (doc, selector, zoom) {
@@ -122,28 +127,23 @@ var browser = (function (util, xhrproxies, ayepromise, theWindow) {
         return size;
     };
 
-    var createIframeWithSizeAtZoomLevel1 = function (viewportWidth, viewportHeight, zoom) {
-        var scaledViewportWidth = viewportWidth / zoom,
-            scaledViewportHeight = viewportHeight / zoom;
-
-        return createHiddenSandboxedIFrame(theWindow.document, scaledViewportWidth, scaledViewportHeight);
-    };
-
-    module.calculateDocumentContentSize = function (doc, viewportWidth, viewportHeight, selector, zoom) {
+    module.calculateDocumentContentSize = function (doc, viewport, options) {
         var html = doc.documentElement.outerHTML,
             defer = ayepromise.defer(),
+            zoom = options.zoom || 1,
             iframe;
 
-        zoom = zoom || 1;
 
-        iframe = createIframeWithSizeAtZoomLevel1(viewportWidth, viewportHeight, zoom);
+        iframe = createIframeWithSizeAtZoomLevel1(viewport, zoom);
+        // We need to add the element to the document so that its content gets loaded
+        theWindow.document.getElementsByTagName("body")[0].appendChild(iframe);
 
         iframe.onload = function () {
             var doc = iframe.contentDocument,
                 size;
 
             try {
-                size = calculateContentSize(doc, selector, zoom);
+                size = calculateContentSize(doc, options.clip, zoom);
 
                 theWindow.document.getElementsByTagName("body")[0].removeChild(iframe);
 
