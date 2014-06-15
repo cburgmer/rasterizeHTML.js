@@ -129,8 +129,8 @@ var render = (function (util, browser, documentHelper, xmlserializer, ayepromise
             offsetX, offsetY;
 
         zoomFactor = zoomFactor || 1;
-        closestScaledWith = Math.round(size.viewportWidth / zoomFactor);
-        closestScaledHeight = Math.round(size.viewportHeight / zoomFactor);
+        closestScaledWith = Math.round(size.viewportWidth);
+        closestScaledHeight = Math.round(size.viewportHeight);
 
         offsetX = -size.left;
         offsetY = -size.top;
@@ -238,7 +238,7 @@ var render = (function (util, browser, documentHelper, xmlserializer, ayepromise
             documentHelper.fakeActive(doc, options.active);
         }
 
-        return browser.calculateDocumentContentSize(doc, viewportSize.width, viewportSize.height, options.clip)
+        return browser.calculateDocumentContentSize(doc, viewportSize.width, viewportSize.height, options.clip, options.zoom)
             .then(function (size) {
                 return module.getSvgForDocument(doc, size, options.zoom);
             })

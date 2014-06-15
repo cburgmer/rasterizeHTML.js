@@ -83,12 +83,14 @@ var browser = (function (util, xhrproxies, ayepromise, theWindow) {
         return iframe;
     };
 
-    var calculateContentSize = function (doc, selector) {
+    var calculateContentSize = function (doc, selector, zoom) {
             // clientWidth/clientHeight needed for PhantomJS
-        var canvasWidth = Math.max(doc.documentElement.scrollWidth, doc.body.clientWidth),
-            canvasHeight = Math.max(doc.documentElement.scrollHeight, doc.body.scrollHeight, doc.body.clientHeight),
+        var actualViewportWidth = Math.max(doc.documentElement.scrollWidth, doc.body.clientWidth),
+            actualViewportHeight = Math.max(doc.documentElement.scrollHeight, doc.body.scrollHeight, doc.body.clientHeight),
             size,
             element, rect;
+
+        zoom = zoom || 1;
 
         if (selector) {
             element = doc.querySelector(selector);
@@ -111,18 +113,18 @@ var browser = (function (util, xhrproxies, ayepromise, theWindow) {
             size = {
                 left: 0,
                 top: 0,
-                width: canvasWidth,
-                height: canvasHeight
+                width: actualViewportWidth,
+                height: actualViewportHeight
             };
         }
 
-        size.viewportWidth = canvasWidth;
-        size.viewportHeight = canvasHeight;
+        size.viewportWidth = actualViewportWidth / zoom;
+        size.viewportHeight = actualViewportHeight / zoom;
 
         return size;
     };
 
-    module.calculateDocumentContentSize = function (doc, viewportWidth, viewportHeight, selector) {
+    module.calculateDocumentContentSize = function (doc, viewportWidth, viewportHeight, selector, zoom) {
         var html = doc.documentElement.outerHTML,
             iframe = createHiddenSandboxedIFrame(theWindow.document, viewportWidth, viewportHeight),
             defer = ayepromise.defer();
@@ -132,7 +134,7 @@ var browser = (function (util, xhrproxies, ayepromise, theWindow) {
                 size;
 
             try {
-                size = calculateContentSize(doc, selector);
+                size = calculateContentSize(doc, selector, zoom);
 
                 theWindow.document.getElementsByTagName("body")[0].removeChild(iframe);
 

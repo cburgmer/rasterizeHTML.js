@@ -87,7 +87,7 @@ describe("The rendering process", function () {
             doc.body.innerHTML = "content";
 
             var zoomFactor = 10;
-            var svgCode = render.getSvgForDocument(doc, aRenderSize(123, 987), zoomFactor);
+            var svgCode = render.getSvgForDocument(doc, aRenderSize(123, 987, 12, 99), zoomFactor);
 
             expect(svgCode).toMatch(new RegExp(
                 '<svg xmlns="http://www.w3.org/2000/svg" width="123" height="987">' +
@@ -299,7 +299,8 @@ describe("The rendering process", function () {
                     doc,
                     jasmine.any(Number),
                     jasmine.any(Number),
-                    undefined
+                    undefined,
+                    42
                 );
                 expect(render.getSvgForDocument).toHaveBeenCalledWith(doc, calculatedSize, 42);
                 expect(render.renderSvg).toHaveBeenCalledWith(svg, canvas);
@@ -317,19 +318,19 @@ describe("The rendering process", function () {
         it("should use the canvas width and height as viewport size", function () {
             render.drawDocumentImage(doc, canvas, {});
 
-            expect(browser.calculateDocumentContentSize).toHaveBeenCalledWith(doc, 123, 456, undefined);
+            expect(browser.calculateDocumentContentSize).toHaveBeenCalledWith(doc, 123, 456, undefined, undefined);
         });
 
         it("should make the canvas optional and apply default viewport width and height", function () {
             render.drawDocumentImage(doc, null, {});
 
-            expect(browser.calculateDocumentContentSize).toHaveBeenCalledWith(doc, 300, 200, undefined);
+            expect(browser.calculateDocumentContentSize).toHaveBeenCalledWith(doc, 300, 200, undefined, undefined);
         });
 
         it("should take an optional width and height", function () {
             render.drawDocumentImage(doc, canvas, {width: 42, height: 4711});
 
-            expect(browser.calculateDocumentContentSize).toHaveBeenCalledWith(doc, 42, 4711, undefined);
+            expect(browser.calculateDocumentContentSize).toHaveBeenCalledWith(doc, 42, 4711, undefined, undefined);
         });
 
         it("should trigger hover effect", function () {
@@ -363,7 +364,8 @@ describe("The rendering process", function () {
                 doc,
                 jasmine.any(Number),
                 jasmine.any(Number),
-                '.mySpan'
+                '.mySpan',
+                undefined
             );
         });
     });

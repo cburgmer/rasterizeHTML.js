@@ -278,6 +278,32 @@ describe("Browser functions", function () {
             });
         });
 
+        describe("zooming", function () {
+            it("should report half the viewport size for a zoom of 2", function (done) {
+                var zoom = 2;
+                setHtml('<div>The content</div>');
+
+                browser.calculateDocumentContentSize(doc, 300, 200, undefined, zoom).then(function (size) {
+                    expect(size.viewportWidth).toEqual(150);
+                    expect(size.viewportHeight).toEqual(100);
+
+                    done();
+                });
+            });
+
+            it("should ignore a zoom level of 0", function (done) {
+                var zoom = 0;
+                setHtml('<div>The content</div>');
+
+                browser.calculateDocumentContentSize(doc, 300, 200, undefined, zoom).then(function (size) {
+                    expect(size.viewportWidth).toEqual(300);
+                    expect(size.viewportHeight).toEqual(200);
+
+                    done();
+                });
+            });
+        });
+
         describe("element selection", function () {
             beforeEach(function () {
                 setHtml('<style>* { padding: 0; margin: 0; }</style>' +
