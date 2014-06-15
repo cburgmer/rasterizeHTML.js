@@ -208,6 +208,13 @@ describe("Browser functions", function () {
         var doc,
             setHtml = function (html) {
                 doc.documentElement.innerHTML = html;
+            },
+            setElementWithSize = function (size) {
+                var width = size.width ? 'width: ' + size.width + 'px;' : '',
+                    height = size.height? 'height: ' + size.height + 'px;' : '',
+                    element = '<div style="' + width + height + '">content</div>';
+
+                setHtml('<style>* { padding: 0; margin: 0; }</style>' + element);
             };
 
         beforeEach(function () {
@@ -215,18 +222,18 @@ describe("Browser functions", function () {
         });
 
         it("should return the content height of a document greater than the viewport height", function (done) {
-            setHtml('<div style="height: 300px;"></div>');
+            setElementWithSize({height: 300});
 
             browser.calculateDocumentContentSize(doc, {width: 300, height: 200}, {}).then(function (size) {
-                expect(size.height).toEqual(316);
-                expect(size.viewportHeight).toEqual(316);
+                expect(size.height).toEqual(300);
+                expect(size.viewportHeight).toEqual(300);
 
                 done();
             });
         });
 
         it("should return the minimum height viewport", function (done) {
-            setHtml('<div style="height: 100px;"></div>');
+            setElementWithSize({height: 100});
 
             browser.calculateDocumentContentSize(doc, {width: 300, height: 200}, {}).then(function (size) {
                 expect(size.height).toEqual(200);
@@ -237,7 +244,7 @@ describe("Browser functions", function () {
         });
 
         it("should return the minimum width of the viewport", function (done) {
-            setHtml('<div>The content</div>');
+            setElementWithSize({});
 
             browser.calculateDocumentContentSize(doc, {width: 300, height: 200}, {}).then(function (size) {
                 expect(size.width).toEqual(300);
@@ -248,18 +255,18 @@ describe("Browser functions", function () {
         });
 
         it("should return width greater than viewport width", function (done) {
-            setHtml('<div style="width: 400px; height: 10px;"></div>');
+            setElementWithSize({width: 400, height: 10});
 
             browser.calculateDocumentContentSize(doc, {width: 300, height: 200}, {}).then(function (size) {
-                expect(size.width).toEqual(408);
-                expect(size.viewportWidth).toEqual(408);
+                expect(size.width).toEqual(400);
+                expect(size.viewportWidth).toEqual(400);
 
                 done();
             });
         });
 
         it("should remove the iframe when done calculating", function (done) {
-            setHtml('<div>The content</div>');
+            setElementWithSize({});
 
             browser.calculateDocumentContentSize(doc, {width: 300, height: 200}, {}).then(function () {
                 expect($('iframe').length).toEqual(0);
@@ -280,7 +287,7 @@ describe("Browser functions", function () {
 
         describe("zooming", function () {
             it("should report half the viewport size for a zoom of 2", function (done) {
-                setHtml('<div>The content</div>');
+                setElementWithSize({});
 
                 browser.calculateDocumentContentSize(doc, {width: 300, height: 200}, {zoom: 2}).then(function (size) {
                     expect(size.viewportWidth).toEqual(150);
@@ -291,7 +298,7 @@ describe("Browser functions", function () {
             });
 
             it("should ignore a zoom level of 0", function (done) {
-                setHtml('<div>The content</div>');
+                setElementWithSize({});
 
                 browser.calculateDocumentContentSize(doc, {width: 300, height: 200}, {zoom: 0}).then(function (size) {
                     expect(size.viewportWidth).toEqual(300);
@@ -302,8 +309,7 @@ describe("Browser functions", function () {
             });
 
             it("should increase viewport width for wider element", function (done) {
-                setHtml('<style>* { padding: 0; margin: 0; }</style>' +
-                    '<div style="width: 160px;">content</div>');
+                setElementWithSize({width: 160});
 
                 browser.calculateDocumentContentSize(doc, {width: 300, height: 200}, {zoom: 2}).then(function (size) {
                     expect(size.viewportWidth).toEqual(160);
@@ -314,8 +320,7 @@ describe("Browser functions", function () {
             });
 
             it("should increase viewport height for higher element", function (done) {
-                setHtml('<style>* { padding: 0; margin: 0; }</style>' +
-                    '<div style="height: 120px;"></div>');
+                setElementWithSize({height: 120});
 
                 browser.calculateDocumentContentSize(doc, {width: 300, height: 200}, {zoom: 2}).then(function (size) {
                     expect(size.viewportHeight).toEqual(120);
