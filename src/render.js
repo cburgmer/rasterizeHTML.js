@@ -138,9 +138,9 @@ var render = (function (util, browser, documentHelper, xmlserializer, ayepromise
         if (zoomFactor !== 1) {
             zoomHtmlInject = ' style="' +
                 '-webkit-transform: scale(' + zoomFactor + '); ' +
-                '-webkit-transform-origin: top left; ' +
+                '-webkit-transform-origin: 0 0; ' +
                 'transform: scale(' + zoomFactor + '); ' +
-                'transform-origin: top left;"';
+                'transform-origin: 0 0;"';
         }
 
         return ' x="' + offsetX + '" y="' + offsetY + '"' +

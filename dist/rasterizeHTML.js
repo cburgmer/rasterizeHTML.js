@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.9.1 - 2014-06-15
+/*! rasterizeHTML.js - v0.9.1 - 2014-06-16
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2014 Christoph Burgmer; Licensed MIT */
 (function(root, factory) {
@@ -727,9 +727,9 @@
             if (zoomFactor !== 1) {
                 zoomHtmlInject = ' style="' +
                     '-webkit-transform: scale(' + zoomFactor + '); ' +
-                    '-webkit-transform-origin: top left; ' +
+                    '-webkit-transform-origin: 0 0; ' +
                     'transform: scale(' + zoomFactor + '); ' +
-                    'transform-origin: top left;"';
+                    'transform-origin: 0 0;"';
             }
 
             return ' x="' + offsetX + '" y="' + offsetY + '"' +

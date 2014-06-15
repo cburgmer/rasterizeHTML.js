@@ -77,7 +77,8 @@ describe("Integration test", function () {
                 executeJsTimeout: 100,
                 zoom: 2,
                 active: '.bgimage',
-                hover: '.webfont'
+                hover: '.webfont',
+                clip: 'body'
             }).then(function (result) {
             expect(result.errors).toEqual([]);
             forceImageSizeForPlatformCompatibility(result.image);
@@ -99,7 +100,8 @@ describe("Integration test", function () {
                 executeJsTimeout: 100,
                 zoom: 2,
                 active: '.bgimage',
-                hover: '.webfont'
+                hover: '.webfont',
+                clip: 'body'
             }).then(function (result) {
             expect(result.errors).toEqual([]);
 

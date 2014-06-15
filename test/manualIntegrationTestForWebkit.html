@@ -62,7 +62,8 @@
                         executeJsTimeout: 100,
                         zoom: 2,
                         active: '.bgimage',
-                        hover: '.webfont'
+                        hover: '.webfont',
+                        clip: 'body'
                     });
                 }
             };
@@ -83,7 +84,8 @@
                 executeJsTimeout: 100,
                 zoom: 2,
                 active: '.bgimage',
-                hover: '.webfont'
+                hover: '.webfont',
+                clip: 'body'
             });
         </script>
     </div>
@@ -101,7 +103,8 @@
                 width: 200,
                 height: 100,
                 active: '.bgimage',
-                hover: '.webfont'
+                hover: '.webfont',
+                clip: 'body'
             }).then(function (result) {
                 urlImageContainer.appendChild(result.image);
             });
