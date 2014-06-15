@@ -90,8 +90,6 @@ var browser = (function (util, xhrproxies, ayepromise, theWindow) {
             size,
             element, rect;
 
-        zoom = zoom || 1;
-
         if (selector) {
             element = doc.querySelector(selector);
 
@@ -113,21 +111,32 @@ var browser = (function (util, xhrproxies, ayepromise, theWindow) {
             size = {
                 left: 0,
                 top: 0,
-                width: actualViewportWidth,
-                height: actualViewportHeight
+                width: actualViewportWidth * zoom,
+                height: actualViewportHeight * zoom
             };
         }
 
-        size.viewportWidth = actualViewportWidth / zoom;
-        size.viewportHeight = actualViewportHeight / zoom;
+        size.viewportWidth = actualViewportWidth;
+        size.viewportHeight = actualViewportHeight;
 
         return size;
     };
 
+    var createIframeWithSizeAtZoomLevel1 = function (viewportWidth, viewportHeight, zoom) {
+        var scaledViewportWidth = viewportWidth / zoom,
+            scaledViewportHeight = viewportHeight / zoom;
+
+        return createHiddenSandboxedIFrame(theWindow.document, scaledViewportWidth, scaledViewportHeight);
+    };
+
     module.calculateDocumentContentSize = function (doc, viewportWidth, viewportHeight, selector, zoom) {
         var html = doc.documentElement.outerHTML,
-            iframe = createHiddenSandboxedIFrame(theWindow.document, viewportWidth, viewportHeight),
-            defer = ayepromise.defer();
+            defer = ayepromise.defer(),
+            iframe;
+
+        zoom = zoom || 1;
+
+        iframe = createIframeWithSizeAtZoomLevel1(viewportWidth, viewportHeight, zoom);
 
         iframe.onload = function () {
             var doc = iframe.contentDocument,

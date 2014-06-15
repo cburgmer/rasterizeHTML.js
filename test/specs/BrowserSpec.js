@@ -302,6 +302,32 @@ describe("Browser functions", function () {
                     done();
                 });
             });
+
+            it("should increase viewport width for wider element", function (done) {
+                var zoom = 2;
+                setHtml('<style>* { padding: 0; margin: 0; }</style>' +
+                    '<div style="width: 160px;">content</div>');
+
+                browser.calculateDocumentContentSize(doc, 300, 200, undefined, zoom).then(function (size) {
+                    expect(size.viewportWidth).toEqual(160);
+                    expect(size.width).toEqual(320);
+
+                    done();
+                });
+            });
+
+            it("should increase viewport height for higher element", function (done) {
+                var zoom = 2;
+                setHtml('<style>* { padding: 0; margin: 0; }</style>' +
+                    '<div style="height: 120px;"></div>');
+
+                browser.calculateDocumentContentSize(doc, 300, 200, undefined, zoom).then(function (size) {
+                    expect(size.viewportHeight).toEqual(120);
+                    expect(size.height).toEqual(240);
+
+                    done();
+                });
+            });
         });
 
         describe("element selection", function () {

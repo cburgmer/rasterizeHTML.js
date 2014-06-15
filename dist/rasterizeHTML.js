@@ -376,10 +376,10 @@
             return iframe;
         };
 
-        var calculateContentSize = function (doc, selector) {
+        var calculateContentSize = function (doc, selector, zoom) {
                 // clientWidth/clientHeight needed for PhantomJS
-            var canvasWidth = Math.max(doc.documentElement.scrollWidth, doc.body.clientWidth),
-                canvasHeight = Math.max(doc.documentElement.scrollHeight, doc.body.scrollHeight, doc.body.clientHeight),
+            var actualViewportWidth = Math.max(doc.documentElement.scrollWidth, doc.body.clientWidth),
+                actualViewportHeight = Math.max(doc.documentElement.scrollHeight, doc.body.scrollHeight, doc.body.clientHeight),
                 size,
                 element, rect;
 
@@ -404,28 +404,39 @@
                 size = {
                     left: 0,
                     top: 0,
-                    width: canvasWidth,
-                    height: canvasHeight
+                    width: actualViewportWidth * zoom,
+                    height: actualViewportHeight * zoom
                 };
             }
 
-            size.viewportWidth = canvasWidth;
-            size.viewportHeight = canvasHeight;
+            size.viewportWidth = actualViewportWidth;
+            size.viewportHeight = actualViewportHeight;
 
             return size;
         };
 
-        module.calculateDocumentContentSize = function (doc, viewportWidth, viewportHeight, selector) {
+        var createIframeWithSizeAtZoomLevel1 = function (viewportWidth, viewportHeight, zoom) {
+            var scaledViewportWidth = viewportWidth / zoom,
+                scaledViewportHeight = viewportHeight / zoom;
+
+            return createHiddenSandboxedIFrame(theWindow.document, scaledViewportWidth, scaledViewportHeight);
+        };
+
+        module.calculateDocumentContentSize = function (doc, viewportWidth, viewportHeight, selector, zoom) {
             var html = doc.documentElement.outerHTML,
-                iframe = createHiddenSandboxedIFrame(theWindow.document, viewportWidth, viewportHeight),
-                defer = ayepromise.defer();
+                defer = ayepromise.defer(),
+                iframe;
+
+            zoom = zoom || 1;
+
+            iframe = createIframeWithSizeAtZoomLevel1(viewportWidth, viewportHeight, zoom);
 
             iframe.onload = function () {
                 var doc = iframe.contentDocument,
                     size;
 
                 try {
-                    size = calculateContentSize(doc, selector);
+                    size = calculateContentSize(doc, selector, zoom);
 
                     theWindow.document.getElementsByTagName("body")[0].removeChild(iframe);
 
@@ -693,8 +704,8 @@
                 offsetX, offsetY;
 
             zoomFactor = zoomFactor || 1;
-            closestScaledWith = Math.round(size.viewportWidth / zoomFactor);
-            closestScaledHeight = Math.round(size.viewportHeight / zoomFactor);
+            closestScaledWith = Math.round(size.viewportWidth);
+            closestScaledHeight = Math.round(size.viewportHeight);
 
             offsetX = -size.left;
             offsetY = -size.top;
@@ -802,7 +813,7 @@
                 documentHelper.fakeActive(doc, options.active);
             }
 
-            return browser.calculateDocumentContentSize(doc, viewportSize.width, viewportSize.height, options.clip)
+            return browser.calculateDocumentContentSize(doc, viewportSize.width, viewportSize.height, options.clip, options.zoom)
                 .then(function (size) {
                     return module.getSvgForDocument(doc, size, options.zoom);
                 })
