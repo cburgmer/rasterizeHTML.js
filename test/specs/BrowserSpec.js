@@ -329,6 +329,20 @@ describe("Browser functions", function () {
                     done();
                 });
             });
+
+            it("should deal with fractions in scaling", function (done) {
+                setElementWithSize({});
+
+                browser.calculateDocumentContentSize(doc, {width: 200, height: 200}, {zoom: 3}).then(function (size) {
+                    expect(size.viewportWidth).toEqual(66); // not 66.6 or 67
+                    expect(size.width).toEqual(200); // not 3*66=198 or 3*67 = 201
+
+                    expect(size.viewportHeight).toEqual(66);
+                    expect(size.height).toEqual(200);
+
+                    done();
+                });
+            });
         });
 
         describe("element selection", function () {

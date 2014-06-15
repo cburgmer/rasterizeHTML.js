@@ -375,18 +375,25 @@
         };
 
         var createIframeWithSizeAtZoomLevel1 = function (viewport, zoom) {
-            var scaledViewportWidth = viewport.width / zoom,
-                scaledViewportHeight = viewport.height / zoom;
+            var scaledViewportWidth = Math.floor(viewport.width / zoom),
+                scaledViewportHeight = Math.floor(viewport.height / zoom);
 
             return createHiddenSandboxedIFrame(theWindow.document, scaledViewportWidth, scaledViewportHeight);
         };
 
-        var calculateContentSize = function (doc, selector, zoom) {
+        var calculateZoomedContentSizeAndRoundUp = function (actualViewport, requestedViewport, zoom) {
+            return {
+                width: Math.max(actualViewport.width * zoom, requestedViewport.width),
+                height: Math.max(actualViewport.height * zoom, requestedViewport.height)
+            };
+        };
+
+        var calculateContentSize = function (doc, selector, requestedViewport, zoom) {
                 // clientWidth/clientHeight needed for PhantomJS
             var actualViewportWidth = Math.max(doc.documentElement.scrollWidth, doc.body.clientWidth),
                 actualViewportHeight = Math.max(doc.documentElement.scrollHeight, doc.body.scrollHeight, doc.body.clientHeight),
-                size,
-                element, rect;
+                top, left, originalWidth, originalHeight,
+                element, rect, contentSize;
 
             if (selector) {
                 element = doc.querySelector(selector);
@@ -399,25 +406,32 @@
 
                 rect = element.getBoundingClientRect();
 
-                size = {
-                    left: rect.left,
-                    top: rect.top,
-                    width: rect.width,
-                    height: rect.height
-                };
+                top = rect.top;
+                left = rect.left;
+                originalWidth = rect.width;
+                originalHeight = rect.height;
             } else {
-                size = {
-                    left: 0,
-                    top: 0,
-                    width: actualViewportWidth * zoom,
-                    height: actualViewportHeight * zoom
-                };
+                top = 0;
+                left = 0;
+                originalWidth = actualViewportWidth;
+                originalHeight = actualViewportHeight;
             }
 
-            size.viewportWidth = actualViewportWidth;
-            size.viewportHeight = actualViewportHeight;
+            contentSize = calculateZoomedContentSizeAndRoundUp({
+                    width: originalWidth,
+                    height: originalHeight
+                },
+                requestedViewport,
+                zoom);
 
-            return size;
+            return {
+                left: left,
+                top: top,
+                width: contentSize.width,
+                height: contentSize.height,
+                viewportWidth: actualViewportWidth,
+                viewportHeight: actualViewportHeight
+            };
         };
 
         module.calculateDocumentContentSize = function (doc, viewport, options) {
@@ -436,7 +450,7 @@
                     size;
 
                 try {
-                    size = calculateContentSize(doc, options.clip, zoom);
+                    size = calculateContentSize(doc, options.clip, viewport, zoom);
 
                     theWindow.document.getElementsByTagName("body")[0].removeChild(iframe);
 
