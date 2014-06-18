@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.9.1 - 2014-06-16
+/*! rasterizeHTML.js - v0.9.1 - 2014-06-18
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2014 Christoph Burgmer; Licensed MIT */
 (function(root, factory) {
@@ -713,8 +713,7 @@
         };
 
         var zoomedElementSizingAttributes = function (size, zoomFactor) {
-            var zoomHtmlInject = '',
-                closestScaledWith, closestScaledHeight,
+            var closestScaledWith, closestScaledHeight,
                 offsetX, offsetY;
 
             zoomFactor = zoomFactor || 1;
@@ -724,17 +723,38 @@
             offsetX = -size.left;
             offsetY = -size.top;
 
+            var attributes = {
+                 'x': offsetX,
+                 'y': offsetY,
+                 'width': closestScaledWith,
+                 'height': closestScaledHeight
+            };
+
             if (zoomFactor !== 1) {
-                zoomHtmlInject = ' style="' +
+                attributes.style =
                     '-webkit-transform: scale(' + zoomFactor + '); ' +
                     '-webkit-transform-origin: 0 0; ' +
                     'transform: scale(' + zoomFactor + '); ' +
-                    'transform-origin: 0 0;"';
+                    'transform-origin: 0 0;';
             }
 
-            return ' x="' + offsetX + '" y="' + offsetY + '"' +
-                    ' width="' + closestScaledWith + '" height="' + closestScaledHeight + '"' +
-                    zoomHtmlInject;
+            return attributes;
+        };
+
+        var workAroundCollapsingMarginsAcrossSVGElementInWebKitLike = function (attributes) {
+            var style = attributes.style || '';
+            attributes.style = style + 'float: left;';
+        };
+
+        var serializeAttributes = function (attributes) {
+            var keys = Object.keys(attributes);
+            if (!keys.length) {
+                return '';
+            }
+
+            return ' ' + keys.map(function (key) {
+                return key + '="' + attributes[key] + '"';
+            }).join(' ');
         };
 
         module.getSvgForDocument = function (doc, size, zoomFactor) {
@@ -745,9 +765,13 @@
 
             browser.validateXHTML(xhtml);
 
+            var attributes = zoomedElementSizingAttributes(size, zoomFactor);
+
+            workAroundCollapsingMarginsAcrossSVGElementInWebKitLike(attributes);
+
             return (
                 '<svg xmlns="http://www.w3.org/2000/svg" width="' + size.width + '" height="' + size.height + '">' +
-                    '<foreignObject' + zoomedElementSizingAttributes(size, zoomFactor) + '>' +
+                    '<foreignObject' + serializeAttributes(attributes) + '>' +
                     xhtml +
                     '</foreignObject>' +
                 '</svg>'

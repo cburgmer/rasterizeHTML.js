@@ -102,7 +102,7 @@ describe("The rendering process", function () {
 
             expect(svgCode).toMatch(new RegExp(
                 '<svg xmlns="http://www.w3.org/2000/svg" width="123" height="987">' +
-                    '<foreignObject x="0" y="0" width="12" height="99" style="-webkit-transform: scale\\(10\\); -webkit-transform-origin: 0 0; transform: scale\\(10\\); transform-origin: 0 0;".*>' +
+                    '<foreignObject x="0" y="0" width="12" height="99" style="-webkit-transform: scale\\(10\\); -webkit-transform-origin: 0 0; transform: scale\\(10\\); transform-origin: 0 0;.*">' +
                         '<html xmlns="http://www.w3.org/1999/xhtml">' +
                             '<head>' +
                                 '<title(/>|></title>)' +
@@ -177,7 +177,7 @@ describe("The rendering process", function () {
 
         });
 
-        it("workaround for WebKit collapsing margins in Chrome & Safari", function () {
+        it("should work around collapsing margins in Chrome & Safari", function () {
             // Bottom margin that would trigger a collapsing margin with the following SVG
             var topChild = document.createElement('div');
             topChild.style.marginBottom = "200px";
