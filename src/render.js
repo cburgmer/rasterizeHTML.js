@@ -148,6 +148,10 @@ var render = (function (util, browser, documentHelper, xmlserializer, ayepromise
                 zoomHtmlInject;
     };
 
+    var workAroundCollapsingMarginsAcrossSVGElementInWebKitLike = function () {
+        return ' style="float: left;"';
+    };
+
     module.getSvgForDocument = function (doc, size, zoomFactor) {
         var xhtml;
 
@@ -158,7 +162,8 @@ var render = (function (util, browser, documentHelper, xmlserializer, ayepromise
 
         return (
             '<svg xmlns="http://www.w3.org/2000/svg" width="' + size.width + '" height="' + size.height + '">' +
-                '<foreignObject' + zoomedElementSizingAttributes(size, zoomFactor) + '>' +
+                '<foreignObject' + zoomedElementSizingAttributes(size, zoomFactor) +
+                workAroundCollapsingMarginsAcrossSVGElementInWebKitLike() + '>' +
                 xhtml +
                 '</foreignObject>' +
             '</svg>'
