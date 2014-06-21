@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.9.1 - 2014-06-18
+/*! rasterizeHTML.js - v0.9.1 - 2014-06-21
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2014 Christoph Burgmer; Licensed MIT */
 (function(root, factory) {
@@ -592,10 +592,6 @@
 
         var module = {};
 
-        var asArray = function (arrayLike) {
-            return Array.prototype.slice.call(arrayLike);
-        };
-
         var supportsBlobBuilding = function () {
             // Newer WebKit (under PhantomJS) seems to support blob building, but loading an image with the blob fails
             if (window.navigator.userAgent.indexOf("WebKit") >= 0 && window.navigator.userAgent.indexOf("Chrome") < 0) {
@@ -647,71 +643,6 @@
             }
         };
 
-        var createHiddenElement = function (doc, tagName) {
-            var element = doc.createElement(tagName);
-            // 'display: none' doesn't cut it, as browsers seem to be lazy loading CSS
-            element.style.visibility = "hidden";
-            element.style.width = "0px";
-            element.style.height = "0px";
-            element.style.position = "absolute";
-            element.style.top = "-10000px";
-            element.style.left = "-10000px";
-            // We need to add the element to the document so that its content gets loaded
-            doc.getElementsByTagName("body")[0].appendChild(element);
-            return element;
-        };
-
-        var getOrCreateHiddenDivWithId = function (doc, id) {
-            var div = doc.getElementById(id);
-            if (! div) {
-                div = createHiddenElement(doc, "div");
-                div.id = id;
-            }
-
-            return div;
-        };
-
-        var WORKAROUND_ID = "rasterizeHTML_js_FirefoxWorkaround";
-
-        var needsBackgroundImageWorkaround = function () {
-            var firefoxMatch = window.navigator.userAgent.match(/Firefox\/(\d+).0/);
-            return !firefoxMatch || !firefoxMatch[1] || parseInt(firefoxMatch[1], 10) < 17;
-        };
-
-        var workAroundBrowserBugForBackgroundImages = function (svg, canvas) {
-            // Firefox < 17, Chrome & Safari will (sometimes) not show an inlined background-image until the svg is
-            // connected to the DOM it seems.
-            var uniqueId = util.getConstantUniqueIdFor(svg),
-                doc = canvas ? canvas.ownerDocument : window.document,
-                workaroundDiv;
-
-            if (needsBackgroundImageWorkaround()) {
-                workaroundDiv = getOrCreateHiddenDivWithId(doc, WORKAROUND_ID + uniqueId);
-                workaroundDiv.innerHTML = svg;
-                workaroundDiv.className = WORKAROUND_ID; // Make if findable for debugging & testing purposes
-            }
-        };
-
-        var workAroundWebkitBugIgnoringTheFirstRuleInCSS = function (doc) {
-            // Works around bug with webkit ignoring the first rule in each style declaration when rendering the SVG to the
-            // DOM. While this does not directly affect the process when rastering to canvas, this is needed for the
-            // workaround found in workAroundBrowserBugForBackgroundImages();
-            if (window.navigator.userAgent.indexOf("WebKit") >= 0) {
-                asArray(doc.getElementsByTagName("style")).forEach(function (style) {
-                    style.textContent = "span {}\n" + style.textContent;
-                });
-            }
-        };
-
-        var cleanUpAfterWorkAroundForBackgroundImages = function (svg, canvas) {
-            var uniqueId = util.getConstantUniqueIdFor(svg),
-                doc = canvas ? canvas.ownerDocument : window.document,
-                div = doc.getElementById(WORKAROUND_ID + uniqueId);
-            if (div) {
-                div.parentNode.removeChild(div);
-            }
-        };
-
         var zoomedElementSizingAttributes = function (size, zoomFactor) {
             var closestScaledWith, closestScaledHeight,
                 offsetX, offsetY;
@@ -760,7 +691,6 @@
         module.getSvgForDocument = function (doc, size, zoomFactor) {
             var xhtml;
 
-            workAroundWebkitBugIgnoringTheFirstRuleInCSS(doc);
             xhtml = xmlserializer.serializeToString(doc);
 
             browser.validateXHTML(xhtml);
@@ -782,7 +712,7 @@
             return {message: "Error rendering page"};
         };
 
-        module.renderSvg = function (svg, canvas) {
+        module.renderSvg = function (svg) {
             var url, image,
                 defer = ayepromise.defer(),
                 resetEventHandlers = function () {
@@ -793,10 +723,7 @@
                     if (url) {
                         cleanUpUrl(url);
                     }
-                    cleanUpAfterWorkAroundForBackgroundImages(svg, canvas);
                 };
-
-            workAroundBrowserBugForBackgroundImages(svg, canvas);
 
             url = buildImageUrl(svg);
 
@@ -856,7 +783,7 @@
                     return module.getSvgForDocument(doc, size, options.zoom);
                 })
                 .then(function (svg) {
-                    return module.renderSvg(svg, canvas);
+                    return module.renderSvg(svg);
                 });
         };
 

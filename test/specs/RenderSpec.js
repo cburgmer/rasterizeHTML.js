@@ -136,47 +136,6 @@ describe("The rendering process", function () {
             expect(function () { render.getSvgForDocument(doc, aRenderSize(), 1); }).toThrow(error);
         });
 
-        describe("workAroundWebkitBugIgnoringTheFirstRuleInCSS", function () {
-            var originalUserAgent, myUserAgent;
-
-            beforeEach(function () {
-                originalUserAgent = window.navigator.userAgent;
-                // Mock userAgent, does not work under Safari
-                navigator.__defineGetter__('userAgent', function () {
-                    return myUserAgent;
-                });
-            });
-
-            afterEach(function () {
-                myUserAgent = originalUserAgent;
-            });
-
-            it("should add a workaround for Webkit to account for first CSS rules being ignored", function () {
-                var doc = document.implementation.createHTMLDocument(""),
-                    svgCode;
-
-                myUserAgent = "WebKit";
-                testHelper.addStyleToDocument(doc, 'span { background-image: url("data:image/png;base64,soMEfAkebASE64="); }');
-
-                svgCode = render.getSvgForDocument(doc, aRenderSize(), 1);
-
-                expect(svgCode).toMatch(/<style type="text\/css">\s*span \{\}/);
-            });
-
-            ifNotInWebkitIt("should not add a workaround outside of WebKit", function () {
-                var doc = document.implementation.createHTMLDocument(""),
-                    svgCode;
-
-                myUserAgent = "Something else";
-                testHelper.addStyleToDocument(doc, 'span { background-image: url("data:image/png;base64,soMEfAkebASE64="); }');
-
-                svgCode = render.getSvgForDocument(doc, aRenderSize(), 1);
-
-                expect(svgCode).not.toMatch(/span \{\}/);
-            });
-
-        });
-
         it("should work around collapsing margins in Chrome & Safari", function () {
             // Bottom margin that would trigger a collapsing margin with the following SVG
             var topChild = document.createElement('div');
@@ -337,7 +296,7 @@ describe("The rendering process", function () {
                     {zoom: 42}
                 );
                 expect(render.getSvgForDocument).toHaveBeenCalledWith(doc, calculatedSize, 42);
-                expect(render.renderSvg).toHaveBeenCalledWith(svg, canvas);
+                expect(render.renderSvg).toHaveBeenCalledWith(svg);
 
                 done();
             });
