@@ -128,6 +128,25 @@ describe("Integration test", function () {
         });
     });
 
+    ifNotInWebKitAndNotLocalRunnerIt("should work around Firefox bug with `null` style properties", function (done) {
+        // The bug only turns up when there's no JS executed which creates a new document
+        // In addition this test will due to https://bugzilla.mozilla.org/show_bug.cgi?id=942138
+        rasterizeHTML.drawURL(testHelper.fixturesPath + "test.html", {
+                cache: 'none',
+                active: '.bgimage',
+                hover: '.webfont',
+                clip: 'body',
+                width: 200,
+                height: 100
+            })
+            .then(function (result) {
+                forceImageSizeForPlatformCompatibility(result.image);
+                expect(result.image).toEqualImage(referenceImg.get(0), 2);
+
+                done();
+            });
+    });
+
     ifNotInPhantomJsIt("should report a source error on invalid input from HTML", function (done) {
         rasterizeHTML.drawHTML("<html><weird:element></html>", {cache: 'none'}).then(null, function (error) {
             expect(error.message).toEqual("Invalid source");

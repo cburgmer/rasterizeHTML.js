@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.9.1 - 2014-06-21
+/*! rasterizeHTML.js - v0.9.1 - 2014-06-22
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2014 Christoph Burgmer; Licensed MIT */
 (function(root, factory) {
@@ -897,10 +897,28 @@
             return drawHTML(html, params.canvas, params.options, params.callback);
         };
 
+        // work around https://bugzilla.mozilla.org/show_bug.cgi?id=925493
+        var workAroundFirefoxNotLoadingStylesheetStyles = function (doc, url, options) {
+            var d = document.implementation.createHTMLDocument('');
+            d.replaceChild(doc.documentElement, d.documentElement);
+
+            var extendedOptions = options ? util.clone(options) : {};
+
+            if (!options.baseUrl) {
+                extendedOptions.baseUrl = url;
+            }
+
+            return {
+                document: d,
+                options: extendedOptions
+            };
+        };
+
         var drawURL = function (url, canvas, options, callback) {
             var promise = browser.loadDocument(url, options)
                 .then(function (doc) {
-                    return module.drawDocument(doc, canvas, options);
+                    var workaround = workAroundFirefoxNotLoadingStylesheetStyles(doc, url, options);
+                    return module.drawDocument(workaround.document, canvas, workaround.options);
                 });
 
             // legacy API

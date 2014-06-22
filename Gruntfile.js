@@ -195,6 +195,7 @@ module.exports = function (grunt) {
                         ifNotInWebkitIt: true,
                         ifNotInPhantomJsIt: true,
                         ifNotInPhantomJSAndNotLocalRunnerIt: true,
+                        ifNotInWebKitAndNotLocalRunnerIt: true,
                         testHelper: true,
                         diffHelper: true,
 
