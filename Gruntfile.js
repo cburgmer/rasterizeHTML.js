@@ -18,7 +18,7 @@ module.exports = function (grunt) {
                 specs: 'test/specs/*.js',
                 vendor: [
                     'node_modules/imagediff/imagediff.js',
-                    'node_modules/jquery/dist/jquery.js',
+                    'node_modules/jquery/dist/jquery.js'
                 ],
                 helpers: [
                     'test/helpers.js',
@@ -62,7 +62,7 @@ module.exports = function (grunt) {
                 dest: 'build/rasterizeHTML.allinone.js',
                 options: {
                     bundleOptions: {
-                        standalone: 'rasterizeHTML',
+                        standalone: 'rasterizeHTML'
                     },
                     // Don't use the dependency browserify is providing. Use the one we fixed in package.json
                     alias: ['node_modules/url/url.js:url']
@@ -177,7 +177,7 @@ module.exports = function (grunt) {
             },
             uses_defaults: [
                 'src/*.js',
-                'Gruntfile.js',
+                'Gruntfile.js'
             ],
             with_overrides: {
                 options: {
@@ -226,11 +226,11 @@ module.exports = function (grunt) {
                 'test/*.html',
                 'test/*.js',
                 'test/specs/*.js',
-                'test/*/*.html',
+                'test/*/*.html'
             ],
             options: {
                 pattern : /FIXME/g
-            },
+            }
         },
     });
 
@@ -253,7 +253,7 @@ module.exports = function (grunt) {
     grunt.registerTask('test', [
         'jshint',
         'jasmine',
-        'regex-check',
+        'regex-check'
     ]);
 
     grunt.registerTask('build', [
