@@ -178,10 +178,10 @@ var render = (function (util, browser, documentHelper, xmlserializer, ayepromise
             height: height
         };
     };
-
-    module.drawDocumentImage = function (doc, canvas, options) {
-        var viewportSize = getViewportSize(canvas, options);
-
+    
+    module.drawDocumentSvg = function (doc, options) {
+        var viewportSize = options.viewportSize;
+        
         if (options.hover) {
             documentHelper.fakeHover(doc, options.hover);
         }
@@ -192,7 +192,14 @@ var render = (function (util, browser, documentHelper, xmlserializer, ayepromise
         return browser.calculateDocumentContentSize(doc, viewportSize, options)
             .then(function (size) {
                 return module.getSvgForDocument(doc, size, options.zoom);
-            })
+            });
+    };
+
+    module.drawDocumentImage = function (doc, canvas, options) {
+        options = options || {};
+        options.viewportSize = getViewportSize(canvas, options);
+
+        return module.drawDocumentSvg(doc, options)
             .then(function (svg) {
                 return module.renderSvg(svg);
             });

@@ -16,6 +16,9 @@
     <canvas id="canvas" width="600" height="200"></canvas>
 
     <textarea id="input" cols="80" rows="10" style="width: 600px; height: 250px"></textarea>
+    
+    <button id="svg-button">Get SVG!</button>
+    <textarea id="svg-textarea" style="display: none;"></textarea>
 
     <div id="template" style="display: none">
         You can type HTML into this <span style='color: green'>canvas</span>.
@@ -39,16 +42,30 @@
         var input = document.getElementById("input"),
             canvas = document.getElementById("canvas"),
             template = document.getElementById("template"),
-            oldText = input.value;
+            oldText = input.value,
+            svgButton = document.getElementById("svg-button"),
+            svgText = document.getElementById("svg-textarea");
 
         input.onkeyup = function () {
             if (input.value !== oldText) {
                 oldText = input.value;
-                canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+                canvas.getContext("2d").clearRect(0, 0, canvas.with, canvas.height);
 
                 rasterizeHTML.drawHTML(input.value, canvas);
             }
         };
+        
+        svgButton.addEventListener("click", function (e) {
+            rasterizeHTML.drawHTMLtoSVG(input.value, {
+                viewportSize: {
+                    width: canvas.width,
+                    height: canvas.height
+                }
+            }).then(function (svg) {
+                svgText.textContent = svg;
+                svgText.style.display = "block";
+            });
+        });
 
         if (!input.value) {
             input.value = template.innerHTML.replace(/^ {8}/gm, "").replace(/^\n/g, "").replace(/\n +$/g, "\n");

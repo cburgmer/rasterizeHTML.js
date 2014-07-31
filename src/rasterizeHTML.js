@@ -62,6 +62,23 @@ var rasterizeHTML = (function (util, browser, documentHelper, render, inlinereso
     };
 
     /**
+     * Draws a Document to an SVG
+     * rasterizeHTML.drawDocumentSVG( doc [, options] ).then(function (result) { ... });
+     */
+    module.drawDocumentSVG = function (doc, options) {
+        return render.drawDocumentSvg(doc, options);
+    };
+
+    /**
+     * Draws a HTML string to an SVG
+     * rasterizeHTML.drawHTMLtoSVG( html [, options] ).then(function (result) { ... });
+     */
+    module.drawHTMLtoSVG = function (html, options) {
+        var doc = browser.parseHTML(html);
+        return module.drawDocumentSVG(doc, options);
+    };
+    
+    /**
      * Draws a Document to the canvas.
      * rasterizeHTML.drawDocument( document [, canvas] [, options] ).then(function (result) { ... });
      */
