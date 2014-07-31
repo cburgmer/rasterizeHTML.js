@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.9.1 - 2014-06-22
+/*! rasterizeHTML.js - v0.9.1 - 2014-07-31
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2014 Christoph Burgmer; Licensed MIT */
 (function(root, factory) {
@@ -767,10 +767,10 @@
                 height: height
             };
         };
-
-        module.drawDocumentImage = function (doc, canvas, options) {
-            var viewportSize = getViewportSize(canvas, options);
-
+        
+        module.drawDocumentSvg = function (doc, options) {
+            var viewportSize = options.viewportSize;
+            
             if (options.hover) {
                 documentHelper.fakeHover(doc, options.hover);
             }
@@ -781,7 +781,14 @@
             return browser.calculateDocumentContentSize(doc, viewportSize, options)
                 .then(function (size) {
                     return module.getSvgForDocument(doc, size, options.zoom);
-                })
+                });
+        };
+
+        module.drawDocumentImage = function (doc, canvas, options) {
+            options = options || {};
+            options.viewportSize = getViewportSize(canvas, options);
+
+            return module.drawDocumentSvg(doc, options)
                 .then(function (svg) {
                     return module.renderSvg(svg);
                 });
@@ -853,6 +860,23 @@
                 });
         };
 
+        /**
+         * Draws a Document to an SVG
+         * rasterizeHTML.drawDocumentSVG( doc [, options] ).then(function (result) { ... });
+         */
+        module.drawDocumentSVG = function (doc, options) {
+            return render.drawDocumentSvg(doc, options);
+        };
+
+        /**
+         * Draws a HTML string to an SVG
+         * rasterizeHTML.drawHTMLtoSVG( html [, options] ).then(function (result) { ... });
+         */
+        module.drawHTMLtoSVG = function (html, options) {
+            var doc = browser.parseHTML(html);
+            return module.drawDocumentSVG(doc, options);
+        };
+        
         /**
          * Draws a Document to the canvas.
          * rasterizeHTML.drawDocument( document [, canvas] [, options] ).then(function (result) { ... });
