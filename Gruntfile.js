@@ -13,7 +13,7 @@ module.exports = function (grunt) {
                 'src/browser.js',
                 'src/render.js',
                 'src/rasterize.js',
-                'src/rasterizeHTML.js'
+                'src/index.js'
             ],
             options: {
                 specs: 'test/specs/*.js',
@@ -94,7 +94,7 @@ module.exports = function (grunt) {
                     'src/browser.js',
                     'src/render.js',
                     'src/rasterize.js',
-                    'src/rasterizeHTML.js'
+                    'src/index.js'
                 ],
                 dest: 'build/rasterizeHTML.concat.js'
             },
