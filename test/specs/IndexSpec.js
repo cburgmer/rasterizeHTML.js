@@ -53,7 +53,18 @@ describe("Main", function () {
                 expect(result.image).toEqual(svgImage);
                 expect(result.errors).toEqual([]);
 
-                expect(rasterize.rasterize).toHaveBeenCalledWith(doc, canvas, {});
+                expect(rasterize.rasterize).toHaveBeenCalledWith(doc, canvas, jasmine.any(Object));
+
+                done();
+            });
+        });
+
+        it("should use the canvas width and height as viewport size", function (done) {
+            rasterizeHTML.drawDocument(doc, canvas).then(function () {
+                expect(rasterize.rasterize).toHaveBeenCalledWith(doc, canvas, {
+                    width: 123,
+                    height: 456
+                });
 
                 done();
             });
@@ -63,9 +74,20 @@ describe("Main", function () {
             rasterizeHTML.drawDocument(doc).then(function (result) {
                 expect(result.image).toEqual(svgImage);
 
-                expect(rasterize.rasterize).toHaveBeenCalledWith(doc, null, {});
+                expect(rasterize.rasterize).toHaveBeenCalledWith(doc, null, jasmine.any(Object));
 
                 expect(util.parseOptionalParameters).toHaveBeenCalled();
+
+                done();
+            });
+        });
+
+        it("should apply default viewport width and height without canvas and specific options", function (done) {
+            rasterizeHTML.drawDocument(doc).then(function () {
+                expect(rasterize.rasterize).toHaveBeenCalledWith(doc, null, {
+                    width: 300,
+                    height: 200
+                });
 
                 done();
             });

@@ -3,6 +3,31 @@ var rasterizeHTML = (function (util, browser, rasterize) {
 
     var module = {};
 
+    var getViewportSize = function (canvas, options) {
+        var defaultWidth = 300,
+            defaultHeight = 200,
+            fallbackWidth = canvas ? canvas.width : defaultWidth,
+            fallbackHeight = canvas ? canvas.height : defaultHeight,
+            width = options.width !== undefined ? options.width : fallbackWidth,
+            height = options.height !== undefined ? options.height : fallbackHeight;
+
+        return {
+            width: width,
+            height: height
+        };
+    };
+
+    var constructOptions = function (params) {
+        var viewport = getViewportSize(params.canvas, params.options),
+            options;
+
+        options = util.clone(params.options);
+        options.width = viewport.width;
+        options.height = viewport.height;
+
+        return options;
+    };
+
     /**
      * Draws a Document to the canvas.
      * rasterizeHTML.drawDocument( document [, canvas] [, options] ).then(function (result) { ... });
@@ -12,7 +37,7 @@ var rasterizeHTML = (function (util, browser, rasterize) {
             optionalArguments = Array.prototype.slice.call(arguments, 1),
             params = util.parseOptionalParameters(optionalArguments);
 
-        var promise = rasterize.rasterize(doc, params.canvas, params.options);
+        var promise = rasterize.rasterize(doc, params.canvas, constructOptions(params));
 
         // legacy API
         if (params.callback) {

@@ -754,22 +754,11 @@
             }
         };
 
-        var getViewportSize = function (canvas, options) {
-            var defaultWidth = 300,
-                defaultHeight = 200,
-                fallbackWidth = canvas ? canvas.width : defaultWidth,
-                fallbackHeight = canvas ? canvas.height : defaultHeight,
-                width = options.width !== undefined ? options.width : fallbackWidth,
-                height = options.height !== undefined ? options.height : fallbackHeight;
-
-            return {
-                width: width,
-                height: height
+        module.drawDocumentImage = function (doc, options) {
+            var viewportSize = {
+                width: options.width,
+                height: options.height
             };
-        };
-
-        module.drawDocumentImage = function (doc, canvas, options) {
-            var viewportSize = getViewportSize(canvas, options);
 
             if (options.hover) {
                 documentHelper.fakeHover(doc, options.hover);
@@ -796,7 +785,7 @@
         var module = {};
 
         var doDraw = function (doc, canvas, options) {
-            return render.drawDocumentImage(doc, canvas, options).then(function (image) {
+            return render.drawDocumentImage(doc, options).then(function (image) {
                 if (canvas) {
                     render.drawImageOnCanvas(image, canvas);
                 }
@@ -805,24 +794,12 @@
             });
         };
 
-        var getViewportSize = function (canvas, options) {
-            var defaultWidth = 300,
-                defaultHeight = 200,
-                fallbackWidth = canvas ? canvas.width : defaultWidth,
-                fallbackHeight = canvas ? canvas.height : defaultHeight,
-                width = options.width !== undefined ? options.width : fallbackWidth,
-                height = options.height !== undefined ? options.height : fallbackHeight;
+        var operateJavaScriptOnDocument = function (doc, options) {
+            var executeJsTimeout = options.executeJsTimeout || 0,
+                width = options.width,
+                height = options.height;
 
-            return {
-                width: width,
-                height: height
-            };
-        };
-
-        var operateJavaScriptOnDocument = function (doc, canvas, options) {
-            var executeJsTimeout = options.executeJsTimeout || 0;
-
-            return browser.executeJavascript(doc, options.baseUrl, executeJsTimeout, getViewportSize(canvas, options))
+            return browser.executeJavascript(doc, options.baseUrl, executeJsTimeout, {width: width, height: height})
                 .then(function (result) {
                     var document = result.document;
                     documentHelper.persistInputValues(document);
@@ -843,7 +820,7 @@
             return inlineresources.inlineReferences(doc, inlineOptions)
                 .then(function (errors) {
                     if (options.executeJs) {
-                        return operateJavaScriptOnDocument(doc, canvas, options)
+                        return operateJavaScriptOnDocument(doc, options)
                             .then(function (result) {
                                 return {
                                     document: result.document,
@@ -875,6 +852,31 @@
 
         var module = {};
 
+        var getViewportSize = function (canvas, options) {
+            var defaultWidth = 300,
+                defaultHeight = 200,
+                fallbackWidth = canvas ? canvas.width : defaultWidth,
+                fallbackHeight = canvas ? canvas.height : defaultHeight,
+                width = options.width !== undefined ? options.width : fallbackWidth,
+                height = options.height !== undefined ? options.height : fallbackHeight;
+
+            return {
+                width: width,
+                height: height
+            };
+        };
+
+        var constructOptions = function (params) {
+            var viewport = getViewportSize(params.canvas, params.options),
+                options;
+
+            options = util.clone(params.options);
+            options.width = viewport.width;
+            options.height = viewport.height;
+
+            return options;
+        };
+
         /**
          * Draws a Document to the canvas.
          * rasterizeHTML.drawDocument( document [, canvas] [, options] ).then(function (result) { ... });
@@ -884,7 +886,7 @@
                 optionalArguments = Array.prototype.slice.call(arguments, 1),
                 params = util.parseOptionalParameters(optionalArguments);
 
-            var promise = rasterize.rasterize(doc, params.canvas, params.options);
+            var promise = rasterize.rasterize(doc, params.canvas, constructOptions(params));
 
             // legacy API
             if (params.callback) {

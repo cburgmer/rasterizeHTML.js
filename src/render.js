@@ -165,22 +165,11 @@ var render = (function (util, browser, documentHelper, xmlserializer, ayepromise
         }
     };
 
-    var getViewportSize = function (canvas, options) {
-        var defaultWidth = 300,
-            defaultHeight = 200,
-            fallbackWidth = canvas ? canvas.width : defaultWidth,
-            fallbackHeight = canvas ? canvas.height : defaultHeight,
-            width = options.width !== undefined ? options.width : fallbackWidth,
-            height = options.height !== undefined ? options.height : fallbackHeight;
-
-        return {
-            width: width,
-            height: height
+    module.drawDocumentImage = function (doc, options) {
+        var viewportSize = {
+            width: options.width,
+            height: options.height
         };
-    };
-
-    module.drawDocumentImage = function (doc, canvas, options) {
-        var viewportSize = getViewportSize(canvas, options);
 
         if (options.hover) {
             documentHelper.fakeHover(doc, options.hover);

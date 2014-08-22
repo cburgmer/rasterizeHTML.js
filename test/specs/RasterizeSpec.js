@@ -61,7 +61,7 @@ describe("Rasterize", function () {
                 expect(result.errors).toEqual([]);
 
                 expect(inlineReferences).toHaveBeenCalledWith(doc, {inlineScripts: false});
-                expect(render.drawDocumentImage).toHaveBeenCalledWith(doc, canvas, {});
+                expect(render.drawDocumentImage).toHaveBeenCalledWith(doc, {});
                 expect(drawImageOnCanvas).toHaveBeenCalledWith(svgImage, canvas);
 
                 done();
@@ -73,7 +73,7 @@ describe("Rasterize", function () {
                 expect(result.image).toEqual(svgImage);
 
                 expect(inlineReferences).toHaveBeenCalledWith(doc, {inlineScripts : false});
-                expect(render.drawDocumentImage).toHaveBeenCalledWith(doc, null, {});
+                expect(render.drawDocumentImage).toHaveBeenCalledWith(doc, {});
                 expect(drawImageOnCanvas).not.toHaveBeenCalled();
 
                 done();
@@ -90,7 +90,7 @@ describe("Rasterize", function () {
 
         it("should pass on render options", function (done) {
             rasterize.rasterize(doc, canvas, {width: 123, height: 234, hover: '.aSelector', active: '#anotherSelector', zoom: 42}).then(function () {
-                expect(render.drawDocumentImage).toHaveBeenCalledWith(doc, canvas, {width: 123, height: 234, hover: '.aSelector', active: '#anotherSelector', zoom: 42});
+                expect(render.drawDocumentImage).toHaveBeenCalledWith(doc, {width: 123, height: 234, hover: '.aSelector', active: '#anotherSelector', zoom: 42});
 
                 done();
             });
