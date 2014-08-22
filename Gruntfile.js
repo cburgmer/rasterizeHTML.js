@@ -12,6 +12,7 @@ module.exports = function (grunt) {
                 'src/documentHelper.js',
                 'src/browser.js',
                 'src/render.js',
+                'src/rasterize.js',
                 'src/rasterizeHTML.js'
             ],
             options: {
@@ -167,13 +168,14 @@ module.exports = function (grunt) {
                     documentHelper: true,
                     browser: true,
                     render: true,
+                    rasterize: true,
 
                     url: true,
                     xmlserializer: true,
                     ayepromise: true,
                     inlineresources: true
                 },
-                exported: ['rasterizeHTML', 'render', 'util', 'xhrproxies', 'browser', 'documentUtil', 'documentHelper']
+                exported: ['rasterizeHTML', 'rasterize', 'render', 'util', 'xhrproxies', 'browser', 'documentUtil', 'documentHelper']
             },
             uses_defaults: [
                 'src/*.js',
@@ -205,6 +207,7 @@ module.exports = function (grunt) {
                         documentHelper: true,
                         browser: true,
                         render: true,
+                        rasterize: true,
                         rasterizeHTML: true,
 
                         url: true,
