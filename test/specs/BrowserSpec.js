@@ -18,6 +18,13 @@ describe("Browser functions", function () {
             return defer;
         };
 
+        var viewport = function (width, height) {
+            return {
+                width: width || 12,
+                height: height || 34
+            };
+        };
+
         beforeEach(function () {
             doc = window.document.implementation.createHTMLDocument("");
         });
@@ -25,7 +32,7 @@ describe("Browser functions", function () {
         it("should load an URL and execute the included JS", function (done) {
             doc.documentElement.innerHTML = "<body><script>document.body.innerHTML = 'dynamic content';</script></body>";
 
-            browser.executeJavascript(doc, undefined, 0).then(function (result) {
+            browser.executeJavascript(doc, undefined, 0, viewport()).then(function (result) {
                 expect(result.document.body.innerHTML).toEqual('dynamic content');
 
                 done();
@@ -35,7 +42,7 @@ describe("Browser functions", function () {
         it("should remove the iframe element when done", function (done) {
             doc.documentElement.innerHTML = "<body></body>";
 
-            browser.executeJavascript(doc, undefined, 0).then(function () {
+            browser.executeJavascript(doc, undefined, 0, viewport()).then(function () {
                 expect($("iframe").length).toEqual(0);
 
                 done();
@@ -45,7 +52,7 @@ describe("Browser functions", function () {
         it("should wait a configured period of time before calling back", function (done) {
             doc.documentElement.innerHTML = "<body onload=\"setTimeout(function () {document.body.innerHTML = 'dynamic content';}, 1);\"></body>";
 
-            browser.executeJavascript(doc, undefined, 20).then(function (result) {
+            browser.executeJavascript(doc, undefined, 20, viewport()).then(function (result) {
                 expect(result.document.body.innerHTML).toEqual('dynamic content');
 
                 done();
@@ -58,7 +65,7 @@ describe("Browser functions", function () {
             mockPromisesToResolveSynchronously();
             var xhrFinishedDefer = mockFinishNotifyingXHRProxy();
 
-            browser.executeJavascript(doc, undefined, 10).then(callback);
+            browser.executeJavascript(doc, undefined, 10, viewport()).then(callback);
 
             // HACK fragile test. We need to wait for the iframe.onload to be triggered
             setTimeout(function () {
@@ -78,7 +85,7 @@ describe("Browser functions", function () {
             mockPromisesToResolveSynchronously();
             var xhrFinishedDefer = mockFinishNotifyingXHRProxy();
 
-            browser.executeJavascript(doc, undefined, 0).then(callback);
+            browser.executeJavascript(doc, undefined, 0, viewport()).then(callback);
 
             // HACK fragile test. We need to wait for the iframe.onload to be triggered
             setTimeout(function () {
@@ -95,7 +102,7 @@ describe("Browser functions", function () {
         it("should be able to access CSS", function (done) {
             doc.documentElement.innerHTML = '<head><style>div { height: 20px; }</style></head><body onload="var elem = document.getElementById(\'elem\'); document.body.innerHTML = elem.offsetHeight;"><div id="elem"></div></body>';
 
-            browser.executeJavascript(doc, undefined, 0).then(function (result) {
+            browser.executeJavascript(doc, undefined, 0, viewport()).then(function (result) {
                 expect(result.document.body.innerHTML).toEqual('20');
 
                 done();
@@ -105,7 +112,7 @@ describe("Browser functions", function () {
         it("should report failing JS", function (done) {
             doc.documentElement.innerHTML = "<body><script>undefinedVar.t = 42</script></body>";
 
-            browser.executeJavascript(doc, undefined, 0).then(function (result) {
+            browser.executeJavascript(doc, undefined, 0, viewport()).then(function (result) {
                 expect(result.errors).toEqual([{
                     resourceType: "scriptExecution",
                     msg: jasmine.any(String)
@@ -120,7 +127,7 @@ describe("Browser functions", function () {
             doc.documentElement.innerHTML = '<head></head><body onload="document.body.innerHTML = document.querySelectorAll(\'[myattr]\').length;"></body>';
             doc.documentElement.setAttribute('myattr', 'myvalue');
 
-            browser.executeJavascript(doc, undefined, 0).then(function (result) {
+            browser.executeJavascript(doc, undefined, 0, viewport()).then(function (result) {
                 expect(result.document.body.innerHTML).toEqual('1');
 
                 done();
@@ -129,14 +136,44 @@ describe("Browser functions", function () {
 
         ifNotInPhantomJsIt("should be able to load content via AJAX from the correct url", function (done) {
             testHelper.readHTMLDocumentFixture('ajax.html').then(function (doc) {
-                browser.executeJavascript(doc, testHelper.fixturesPath, 100).then(function (result) {
+                browser.executeJavascript(doc, testHelper.fixturesPath, 100, viewport()).then(function (result) {
                     expect(result.document.querySelector('div').textContent.trim()).toEqual('The content');
 
                     done();
                 });
             });
         });
-    });
+
+        ifNotInPhantomJsIt("should support window.matchMedia() with 'width' media queries", function (done) {
+            doc.documentElement.innerHTML = '<body onload="document.body.innerHTML = window.matchMedia(\'(min-width: 42px)\').matches;"></body>';
+
+            browser.executeJavascript(doc, undefined, 0, viewport(42, 21)).then(function (result) {
+                expect(result.document.body.innerHTML).toEqual('true');
+
+                done();
+            });
+        });
+
+        ifNotInPhantomJsIt("should support window.matchMedia() with 'height' media queries", function (done) {
+            doc.documentElement.innerHTML = '<body onload="document.body.innerHTML = window.matchMedia(\'(min-height: 123px)\').matches;"></body>';
+
+            browser.executeJavascript(doc, undefined, 0, viewport(10, 123)).then(function (result) {
+                expect(result.document.body.innerHTML).toEqual('true');
+
+                done();
+            });
+        });
+
+        it("should correctly set canvas size for media queries", function (done) {
+            doc.documentElement.innerHTML = '<body onload="document.body.innerHTML = window.matchMedia(\'(max-height: 123px)\').matches;"></body>';
+
+            browser.executeJavascript(doc, undefined, 0, viewport(20, 123)).then(function (result) {
+                expect(result.document.body.innerHTML).toEqual('true');
+
+                done();
+            });
+        });
+     });
 
     describe("parseHTML", function () {
         var oldDOMParser = window.DOMParser;

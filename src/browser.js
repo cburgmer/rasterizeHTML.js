@@ -3,22 +3,22 @@ var browser = (function (util, xhrproxies, ayepromise, theWindow) {
 
     var module = {};
 
-    var createHiddenElement = function (doc, tagName) {
+    var createHiddenElement = function (doc, tagName, width, height) {
         var element = doc.createElement(tagName);
         // 'display: none' doesn't cut it, as browsers seem to be lazy loading CSS
         element.style.visibility = "hidden";
-        element.style.width = "0px";
-        element.style.height = "0px";
+        element.style.width = width + "px";
+        element.style.height = height + "px";
         element.style.position = "absolute";
-        element.style.top = "-10000px";
-        element.style.left = "-10000px";
+        element.style.top = (-10000 - height) + "px";
+        element.style.left = (-10000 - width) + "px";
         // We need to add the element to the document so that its content gets loaded
         doc.getElementsByTagName("body")[0].appendChild(element);
         return element;
     };
 
-    module.executeJavascript = function (doc, baseUrl, timeout) {
-        var iframe = createHiddenElement(theWindow.document, "iframe"),
+    module.executeJavascript = function (doc, baseUrl, timeout, viewport) {
+        var iframe = createHiddenElement(theWindow.document, "iframe", viewport.width, viewport.height),
             html = doc.documentElement.outerHTML,
             iframeErrorsMessages = [],
             defer = ayepromise.defer();

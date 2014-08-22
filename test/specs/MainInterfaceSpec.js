@@ -123,8 +123,8 @@ describe("Main interface of rasterizeHTML.js", function () {
                     fulfilled({document: doc, errors: []})
                 );
 
-            rasterizeHTML.drawDocument(doc, {executeJs: true}).then(function () {
-                expect(executeJavascript).toHaveBeenCalledWith(doc, undefined, 0);
+            rasterizeHTML.drawDocument(doc, {executeJs: true, width: 123, height: 456}).then(function () {
+                expect(executeJavascript).toHaveBeenCalledWith(doc, undefined, 0, {width: 123, height: 456});
                 expect(documentHelper.persistInputValues).toHaveBeenCalledWith(doc);
 
                 done();
@@ -150,7 +150,7 @@ describe("Main interface of rasterizeHTML.js", function () {
 
 
             rasterizeHTML.drawDocument(doc, {executeJs: true, executeJsTimeout: 42}).then(function () {
-                expect(executeJavascript).toHaveBeenCalledWith(doc, undefined, 42);
+                expect(executeJavascript).toHaveBeenCalledWith(doc, undefined, 42, jasmine.any(Object));
 
                 done();
             });

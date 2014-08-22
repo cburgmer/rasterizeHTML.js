@@ -13,10 +13,24 @@ var rasterizeHTML = (function (util, browser, documentHelper, render, inlinereso
         });
     };
 
-    var operateJavaScriptOnDocument = function (doc, options) {
+    var getViewportSize = function (canvas, options) {
+        var defaultWidth = 300,
+            defaultHeight = 200,
+            fallbackWidth = canvas ? canvas.width : defaultWidth,
+            fallbackHeight = canvas ? canvas.height : defaultHeight,
+            width = options.width !== undefined ? options.width : fallbackWidth,
+            height = options.height !== undefined ? options.height : fallbackHeight;
+
+        return {
+            width: width,
+            height: height
+        };
+    };
+
+    var operateJavaScriptOnDocument = function (doc, canvas, options) {
         var executeJsTimeout = options.executeJsTimeout || 0;
 
-        return browser.executeJavascript(doc, options.baseUrl, executeJsTimeout)
+        return browser.executeJavascript(doc, options.baseUrl, executeJsTimeout, getViewportSize(canvas, options))
             .then(function (result) {
                 var document = result.document;
                 documentHelper.persistInputValues(document);
@@ -37,7 +51,7 @@ var rasterizeHTML = (function (util, browser, documentHelper, render, inlinereso
         return inlineresources.inlineReferences(doc, inlineOptions)
             .then(function (errors) {
                 if (options.executeJs) {
-                    return operateJavaScriptOnDocument(doc, options)
+                    return operateJavaScriptOnDocument(doc, canvas, options)
                         .then(function (result) {
                             return {
                                 document: result.document,

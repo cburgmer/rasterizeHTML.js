@@ -1,4 +1,4 @@
-/*! rasterizeHTML.js - v0.9.1 - 2014-06-22
+/*! rasterizeHTML.js - v0.9.1 - 2014-08-22
 * http://www.github.com/cburgmer/rasterizeHTML.js
 * Copyright (c) 2014 Christoph Burgmer; Licensed MIT */
 (function(root, factory) {
@@ -296,22 +296,22 @@
 
         var module = {};
 
-        var createHiddenElement = function (doc, tagName) {
+        var createHiddenElement = function (doc, tagName, width, height) {
             var element = doc.createElement(tagName);
             // 'display: none' doesn't cut it, as browsers seem to be lazy loading CSS
             element.style.visibility = "hidden";
-            element.style.width = "0px";
-            element.style.height = "0px";
+            element.style.width = width + "px";
+            element.style.height = height + "px";
             element.style.position = "absolute";
-            element.style.top = "-10000px";
-            element.style.left = "-10000px";
+            element.style.top = (-10000 - height) + "px";
+            element.style.left = (-10000 - width) + "px";
             // We need to add the element to the document so that its content gets loaded
             doc.getElementsByTagName("body")[0].appendChild(element);
             return element;
         };
 
-        module.executeJavascript = function (doc, baseUrl, timeout) {
-            var iframe = createHiddenElement(theWindow.document, "iframe"),
+        module.executeJavascript = function (doc, baseUrl, timeout, viewport) {
+            var iframe = createHiddenElement(theWindow.document, "iframe", viewport.width, viewport.height),
                 html = doc.documentElement.outerHTML,
                 iframeErrorsMessages = [],
                 defer = ayepromise.defer();
@@ -805,10 +805,24 @@
             });
         };
 
-        var operateJavaScriptOnDocument = function (doc, options) {
+        var getViewportSize = function (canvas, options) {
+            var defaultWidth = 300,
+                defaultHeight = 200,
+                fallbackWidth = canvas ? canvas.width : defaultWidth,
+                fallbackHeight = canvas ? canvas.height : defaultHeight,
+                width = options.width !== undefined ? options.width : fallbackWidth,
+                height = options.height !== undefined ? options.height : fallbackHeight;
+
+            return {
+                width: width,
+                height: height
+            };
+        };
+
+        var operateJavaScriptOnDocument = function (doc, canvas, options) {
             var executeJsTimeout = options.executeJsTimeout || 0;
 
-            return browser.executeJavascript(doc, options.baseUrl, executeJsTimeout)
+            return browser.executeJavascript(doc, options.baseUrl, executeJsTimeout, getViewportSize(canvas, options))
                 .then(function (result) {
                     var document = result.document;
                     documentHelper.persistInputValues(document);
@@ -829,7 +843,7 @@
             return inlineresources.inlineReferences(doc, inlineOptions)
                 .then(function (errors) {
                     if (options.executeJs) {
-                        return operateJavaScriptOnDocument(doc, options)
+                        return operateJavaScriptOnDocument(doc, canvas, options)
                             .then(function (result) {
                                 return {
                                     document: result.document,
