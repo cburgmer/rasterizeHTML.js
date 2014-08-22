@@ -166,11 +166,6 @@ var render = (function (util, browser, documentHelper, xmlserializer, ayepromise
     };
 
     module.drawDocumentImage = function (doc, options) {
-        var viewportSize = {
-            width: options.width,
-            height: options.height
-        };
-
         if (options.hover) {
             documentHelper.fakeHover(doc, options.hover);
         }
@@ -178,7 +173,7 @@ var render = (function (util, browser, documentHelper, xmlserializer, ayepromise
             documentHelper.fakeActive(doc, options.active);
         }
 
-        return browser.calculateDocumentContentSize(doc, viewportSize, options)
+        return browser.calculateDocumentContentSize(doc, options)
             .then(function (size) {
                 return module.getSvgForDocument(doc, size, options.zoom);
             })

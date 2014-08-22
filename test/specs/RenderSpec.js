@@ -288,8 +288,7 @@ describe("The rendering process", function () {
 
                 expect(browser.calculateDocumentContentSize).toHaveBeenCalledWith(
                     doc,
-                    jasmine.any(Object),
-                    {zoom: 42}
+                    jasmine.objectContaining({zoom: 42})
                 );
                 expect(render.getSvgForDocument).toHaveBeenCalledWith(doc, calculatedSize, 42);
                 expect(render.renderSvg).toHaveBeenCalledWith(svg);
@@ -307,7 +306,7 @@ describe("The rendering process", function () {
         it("should take an optional width and height", function () {
             render.drawDocumentImage(doc, {width: 42, height: 4711});
 
-            expect(browser.calculateDocumentContentSize).toHaveBeenCalledWith(doc, {width: 42, height: 4711}, jasmine.any(Object));
+            expect(browser.calculateDocumentContentSize).toHaveBeenCalledWith(doc, {width: 42, height: 4711});
         });
 
         it("should trigger hover effect", function () {
@@ -339,8 +338,7 @@ describe("The rendering process", function () {
 
             expect(browser.calculateDocumentContentSize).toHaveBeenCalledWith(
                 doc,
-                jasmine.any(Object),
-                {clip: '.mySpan'}
+                jasmine.objectContaining({clip: '.mySpan'})
             );
         });
     });

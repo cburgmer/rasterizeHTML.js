@@ -82,21 +82,21 @@ var browser = (function (util, xhrproxies, ayepromise, theWindow) {
         return iframe;
     };
 
-    var createIframeWithSizeAtZoomLevel1 = function (viewport, zoom) {
-        var scaledViewportWidth = Math.floor(viewport.width / zoom),
-            scaledViewportHeight = Math.floor(viewport.height / zoom);
+    var createIframeWithSizeAtZoomLevel1 = function (width, height, zoom) {
+        var scaledViewportWidth = Math.floor(width / zoom),
+            scaledViewportHeight = Math.floor(height / zoom);
 
         return createHiddenSandboxedIFrame(theWindow.document, scaledViewportWidth, scaledViewportHeight);
     };
 
-    var calculateZoomedContentSizeAndRoundUp = function (actualViewport, requestedViewport, zoom) {
+    var calculateZoomedContentSizeAndRoundUp = function (actualViewport, requestedWidth, requestedHeight, zoom) {
         return {
-            width: Math.max(actualViewport.width * zoom, requestedViewport.width),
-            height: Math.max(actualViewport.height * zoom, requestedViewport.height)
+            width: Math.max(actualViewport.width * zoom, requestedWidth),
+            height: Math.max(actualViewport.height * zoom, requestedHeight)
         };
     };
 
-    var calculateContentSize = function (doc, selector, requestedViewport, zoom) {
+    var calculateContentSize = function (doc, selector, requestedWidth, requestedHeight, zoom) {
             // clientWidth/clientHeight needed for PhantomJS
         var actualViewportWidth = Math.max(doc.documentElement.scrollWidth, doc.body.clientWidth),
             actualViewportHeight = Math.max(doc.documentElement.scrollHeight, doc.body.scrollHeight, doc.body.clientHeight),
@@ -129,7 +129,8 @@ var browser = (function (util, xhrproxies, ayepromise, theWindow) {
                 width: originalWidth,
                 height: originalHeight
             },
-            requestedViewport,
+            requestedWidth,
+            requestedHeight,
             zoom);
 
         return {
@@ -142,14 +143,14 @@ var browser = (function (util, xhrproxies, ayepromise, theWindow) {
         };
     };
 
-    module.calculateDocumentContentSize = function (doc, viewport, options) {
+    module.calculateDocumentContentSize = function (doc, options) {
         var html = doc.documentElement.outerHTML,
             defer = ayepromise.defer(),
             zoom = options.zoom || 1,
             iframe;
 
 
-        iframe = createIframeWithSizeAtZoomLevel1(viewport, zoom);
+        iframe = createIframeWithSizeAtZoomLevel1(options.width, options.height, zoom);
         // We need to add the element to the document so that its content gets loaded
         theWindow.document.getElementsByTagName("body")[0].appendChild(iframe);
 
@@ -158,7 +159,7 @@ var browser = (function (util, xhrproxies, ayepromise, theWindow) {
                 size;
 
             try {
-                size = calculateContentSize(doc, options.clip, viewport, zoom);
+                size = calculateContentSize(doc, options.clip, options.width, options.height, zoom);
 
                 theWindow.document.getElementsByTagName("body")[0].removeChild(iframe);
 

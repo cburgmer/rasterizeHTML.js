@@ -275,7 +275,7 @@ describe("Browser functions", function () {
         it("should return the content height of a document greater than the viewport height", function (done) {
             setElementWithSize({height: 300});
 
-            browser.calculateDocumentContentSize(doc, {width: 300, height: 200}, {}).then(function (size) {
+            browser.calculateDocumentContentSize(doc, {width: 300, height: 200}).then(function (size) {
                 expect(size.height).toEqual(300);
                 expect(size.viewportHeight).toEqual(300);
 
@@ -286,7 +286,7 @@ describe("Browser functions", function () {
         it("should return the minimum height viewport", function (done) {
             setElementWithSize({height: 100});
 
-            browser.calculateDocumentContentSize(doc, {width: 300, height: 200}, {}).then(function (size) {
+            browser.calculateDocumentContentSize(doc, {width: 300, height: 200}).then(function (size) {
                 expect(size.height).toEqual(200);
                 expect(size.viewportHeight).toEqual(200);
 
@@ -297,7 +297,7 @@ describe("Browser functions", function () {
         it("should return the minimum width of the viewport", function (done) {
             setElementWithSize({});
 
-            browser.calculateDocumentContentSize(doc, {width: 300, height: 200}, {}).then(function (size) {
+            browser.calculateDocumentContentSize(doc, {width: 300, height: 200}).then(function (size) {
                 expect(size.width).toEqual(300);
                 expect(size.viewportWidth).toEqual(300);
 
@@ -308,7 +308,7 @@ describe("Browser functions", function () {
         it("should return width greater than viewport width", function (done) {
             setElementWithSize({width: 400, height: 10});
 
-            browser.calculateDocumentContentSize(doc, {width: 300, height: 200}, {}).then(function (size) {
+            browser.calculateDocumentContentSize(doc, {width: 300, height: 200}).then(function (size) {
                 expect(size.width).toEqual(400);
                 expect(size.viewportWidth).toEqual(400);
 
@@ -319,7 +319,7 @@ describe("Browser functions", function () {
         it("should remove the iframe when done calculating", function (done) {
             setElementWithSize({});
 
-            browser.calculateDocumentContentSize(doc, {width: 300, height: 200}, {}).then(function () {
+            browser.calculateDocumentContentSize(doc, {width: 300, height: 200}).then(function () {
                 expect($('iframe').length).toEqual(0);
 
                 done();
@@ -329,7 +329,7 @@ describe("Browser functions", function () {
         it("should not execute JavaScript", function (done) {
             setHtml('<div></div><script>document.querySelector("div").style.height="100";</script>');
 
-            browser.calculateDocumentContentSize(doc, {width: 300, height: 10}, {}).then(function (size) {
+            browser.calculateDocumentContentSize(doc, {width: 300, height: 10}).then(function (size) {
                 expect(size.height).toEqual(10);
 
                 done();
@@ -340,7 +340,7 @@ describe("Browser functions", function () {
             it("should report half the viewport size for a zoom of 2", function (done) {
                 setElementWithSize({});
 
-                browser.calculateDocumentContentSize(doc, {width: 300, height: 200}, {zoom: 2}).then(function (size) {
+                browser.calculateDocumentContentSize(doc, {width: 300, height: 200, zoom: 2}).then(function (size) {
                     expect(size.viewportWidth).toEqual(150);
                     expect(size.viewportHeight).toEqual(100);
 
@@ -351,7 +351,7 @@ describe("Browser functions", function () {
             it("should ignore a zoom level of 0", function (done) {
                 setElementWithSize({});
 
-                browser.calculateDocumentContentSize(doc, {width: 300, height: 200}, {zoom: 0}).then(function (size) {
+                browser.calculateDocumentContentSize(doc, {width: 300, height: 200, zoom: 0}).then(function (size) {
                     expect(size.viewportWidth).toEqual(300);
                     expect(size.viewportHeight).toEqual(200);
 
@@ -362,7 +362,7 @@ describe("Browser functions", function () {
             it("should increase viewport width for wider element", function (done) {
                 setElementWithSize({width: 160});
 
-                browser.calculateDocumentContentSize(doc, {width: 300, height: 200}, {zoom: 2}).then(function (size) {
+                browser.calculateDocumentContentSize(doc, {width: 300, height: 200, zoom: 2}).then(function (size) {
                     expect(size.viewportWidth).toEqual(160);
                     expect(size.width).toEqual(320);
 
@@ -373,7 +373,7 @@ describe("Browser functions", function () {
             it("should increase viewport height for higher element", function (done) {
                 setElementWithSize({height: 120});
 
-                browser.calculateDocumentContentSize(doc, {width: 300, height: 200}, {zoom: 2}).then(function (size) {
+                browser.calculateDocumentContentSize(doc, {width: 300, height: 200, zoom: 2}).then(function (size) {
                     expect(size.viewportHeight).toEqual(120);
                     expect(size.height).toEqual(240);
 
@@ -384,7 +384,7 @@ describe("Browser functions", function () {
             it("should deal with fractions in scaling", function (done) {
                 setElementWithSize({});
 
-                browser.calculateDocumentContentSize(doc, {width: 200, height: 200}, {zoom: 3}).then(function (size) {
+                browser.calculateDocumentContentSize(doc, {width: 200, height: 200, zoom: 3}).then(function (size) {
                     expect(size.viewportWidth).toEqual(66); // not 66.6 or 67
                     expect(size.width).toEqual(200); // not 3*66=198 or 3*67 = 201
 
@@ -405,7 +405,7 @@ describe("Browser functions", function () {
             });
 
             it("should report the left offset", function (done) {
-                browser.calculateDocumentContentSize(doc, {width: 100, height: 10}, {clip: 'span'}).then(function (size) {
+                browser.calculateDocumentContentSize(doc, {width: 100, height: 10, clip: 'span'}).then(function (size) {
                     expect(size.left).toEqual(34);
 
                     done();
@@ -413,7 +413,7 @@ describe("Browser functions", function () {
             });
 
             it("should report the top offset", function (done) {
-                browser.calculateDocumentContentSize(doc, {width: 100, height: 10}, {clip: 'span'}).then(function (size) {
+                browser.calculateDocumentContentSize(doc, {width: 100, height: 10, clip: 'span'}).then(function (size) {
                     expect(size.top).toEqual(12);
 
                     done();
@@ -421,7 +421,7 @@ describe("Browser functions", function () {
             });
 
             it("should report the width", function (done) {
-                browser.calculateDocumentContentSize(doc, {width: 100, height: 10}, {clip: 'span'}).then(function (size) {
+                browser.calculateDocumentContentSize(doc, {width: 100, height: 10, clip: 'span'}).then(function (size) {
                     expect(size.width).toEqual(123);
 
                     done();
@@ -429,7 +429,7 @@ describe("Browser functions", function () {
             });
 
             it("should report the height", function (done) {
-                browser.calculateDocumentContentSize(doc, {width: 100, height: 10}, {clip: 'span'}).then(function (size) {
+                browser.calculateDocumentContentSize(doc, {width: 100, height: 10, clip: 'span'}).then(function (size) {
                     expect(size.height).toEqual(234);
 
                     done();
@@ -437,7 +437,7 @@ describe("Browser functions", function () {
             });
 
             it("should report the canvas width and height", function (done) {
-                browser.calculateDocumentContentSize(doc, {width: 100, height: 10}, {clip: 'span'}).then(function (size) {
+                browser.calculateDocumentContentSize(doc, {width: 100, height: 10, clip: 'span'}).then(function (size) {
                     expect(size.viewportWidth).toEqual(200);
                     expect(size.viewportHeight).toEqual(300);
 
@@ -446,7 +446,7 @@ describe("Browser functions", function () {
             });
 
             it("should match the html dom node", function (done) {
-                browser.calculateDocumentContentSize(doc, {width: 200, height: 10}, {clip: 'html'}).then(function (size) {
+                browser.calculateDocumentContentSize(doc, {width: 200, height: 10, clip: 'html'}).then(function (size) {
                     expect(size.width).toEqual(200);
                     expect(size.height).toEqual(300);
 
@@ -455,7 +455,7 @@ describe("Browser functions", function () {
             });
 
             it("should throw an error when the selector is not found", function (done) {
-                browser.calculateDocumentContentSize(doc, {width: 100, height: 10}, {clip: 'a'}).then(null, function (e) {
+                browser.calculateDocumentContentSize(doc, {width: 100, height: 10, clip: 'a'}).then(null, function (e) {
                     expect(e).toEqual(jasmine.objectContaining({
                         message: "Clipping selector not found"
                     }));
