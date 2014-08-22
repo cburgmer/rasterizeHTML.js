@@ -93,6 +93,7 @@ module.exports = function (grunt) {
                     'src/documentHelper.js',
                     'src/browser.js',
                     'src/render.js',
+                    'src/rasterize.js',
                     'src/rasterizeHTML.js'
                 ],
                 dest: 'build/rasterizeHTML.concat.js'

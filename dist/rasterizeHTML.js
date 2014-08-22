@@ -790,7 +790,7 @@
         return module;
     }(util, browser, documentHelper, xmlserializer, ayepromise, window));
 
-    var rasterizeHTML = (function (util, browser, documentHelper, render, inlineresources) {
+    var rasterize = (function (util, browser, documentHelper, render, inlineresources) {
         "use strict";
 
         var module = {};
@@ -834,7 +834,7 @@
                 });
         };
 
-        var drawDocument = function (doc, canvas, options) {
+        module.rasterize = function (doc, canvas, options) {
             var inlineOptions;
 
             inlineOptions = util.clone(options);
@@ -867,6 +867,14 @@
                 });
         };
 
+        return module;
+    }(util, browser, documentHelper, render, inlineresources));
+
+    var rasterizeHTML = (function (util, browser, rasterize) {
+        "use strict";
+
+        var module = {};
+
         /**
          * Draws a Document to the canvas.
          * rasterizeHTML.drawDocument( document [, canvas] [, options] ).then(function (result) { ... });
@@ -876,7 +884,7 @@
                 optionalArguments = Array.prototype.slice.call(arguments, 1),
                 params = util.parseOptionalParameters(optionalArguments);
 
-            var promise = drawDocument(doc, params.canvas, params.options);
+            var promise = rasterize.rasterize(doc, params.canvas, params.options);
 
             // legacy API
             if (params.callback) {
@@ -964,7 +972,7 @@
         };
 
         return module;
-    }(util, browser, documentHelper, render, inlineresources));
+    }(util, browser, rasterize));
 
 
     return rasterizeHTML;

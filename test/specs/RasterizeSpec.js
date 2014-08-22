@@ -69,11 +69,11 @@ describe("Rasterize", function () {
         });
 
         it("should make the canvas optional", function (done) {
-            rasterize.rasterize(doc, undefined, {}).then(function (result) {
+            rasterize.rasterize(doc, null, {}).then(function (result) {
                 expect(result.image).toEqual(svgImage);
 
                 expect(inlineReferences).toHaveBeenCalledWith(doc, {inlineScripts : false});
-                expect(render.drawDocumentImage).toHaveBeenCalledWith(doc, undefined, {});
+                expect(render.drawDocumentImage).toHaveBeenCalledWith(doc, null, {});
                 expect(drawImageOnCanvas).not.toHaveBeenCalled();
 
                 done();
@@ -101,7 +101,7 @@ describe("Rasterize", function () {
                     fulfilled({document: doc, errors: []})
                 );
 
-            rasterize.rasterize(doc, undefined, {executeJs: true, width: 123, height: 456}).then(function () {
+            rasterize.rasterize(doc, null, {executeJs: true, width: 123, height: 456}).then(function () {
                 expect(executeJavascript).toHaveBeenCalledWith(doc, undefined, 0, {width: 123, height: 456});
                 expect(documentHelper.persistInputValues).toHaveBeenCalledWith(doc);
 
@@ -114,7 +114,7 @@ describe("Rasterize", function () {
                 fulfilled({document: doc, errors: []})
             );
 
-            rasterize.rasterize(doc, undefined, {executeJs: true}).then(function () {
+            rasterize.rasterize(doc, null, {executeJs: true}).then(function () {
                 expect(inlineReferences).toHaveBeenCalledWith(doc, {executeJs : true, inlineScripts: true});
 
                 done();
@@ -127,7 +127,7 @@ describe("Rasterize", function () {
                 );
 
 
-            rasterize.rasterize(doc, undefined, {executeJs: true, executeJsTimeout: 42}).then(function () {
+            rasterize.rasterize(doc, null, {executeJs: true, executeJsTimeout: 42}).then(function () {
                 expect(executeJavascript).toHaveBeenCalledWith(doc, undefined, 42, jasmine.any(Object));
 
                 done();
