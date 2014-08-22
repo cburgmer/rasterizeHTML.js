@@ -14,11 +14,7 @@ var rasterize = (function (util, browser, documentHelper, render, inlineresource
     };
 
     var operateJavaScriptOnDocument = function (doc, options) {
-        var executeJsTimeout = options.executeJsTimeout || 0,
-            width = options.width,
-            height = options.height;
-
-        return browser.executeJavascript(doc, options.baseUrl, executeJsTimeout, {width: width, height: height})
+        return browser.executeJavascript(doc, options)
             .then(function (result) {
                 var document = result.document;
                 documentHelper.persistInputValues(document);

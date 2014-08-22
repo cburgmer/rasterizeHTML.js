@@ -310,11 +310,12 @@
             return element;
         };
 
-        module.executeJavascript = function (doc, baseUrl, timeout, viewport) {
-            var iframe = createHiddenElement(theWindow.document, "iframe", viewport.width, viewport.height),
+        module.executeJavascript = function (doc, options) {
+            var iframe = createHiddenElement(theWindow.document, "iframe", options.width, options.height),
                 html = doc.documentElement.outerHTML,
                 iframeErrorsMessages = [],
-                defer = ayepromise.defer();
+                defer = ayepromise.defer(),
+                timeout = options.executeJsTimeout || 0;
 
             var doResolve = function () {
                 var doc = iframe.contentDocument;
@@ -343,7 +344,7 @@
 
             var xhr = iframe.contentWindow.XMLHttpRequest,
                 finishNotifyXhrProxy = xhrproxies.finishNotifying(xhr),
-                baseUrlXhrProxy = xhrproxies.baseUrlRespecting(finishNotifyXhrProxy, baseUrl);
+                baseUrlXhrProxy = xhrproxies.baseUrlRespecting(finishNotifyXhrProxy, options.baseUrl);
 
             iframe.contentDocument.open();
             iframe.contentWindow.XMLHttpRequest = baseUrlXhrProxy;
@@ -795,11 +796,7 @@
         };
 
         var operateJavaScriptOnDocument = function (doc, options) {
-            var executeJsTimeout = options.executeJsTimeout || 0,
-                width = options.width,
-                height = options.height;
-
-            return browser.executeJavascript(doc, options.baseUrl, executeJsTimeout, {width: width, height: height})
+            return browser.executeJavascript(doc, options)
                 .then(function (result) {
                     var document = result.document;
                     documentHelper.persistInputValues(document);

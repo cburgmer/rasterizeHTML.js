@@ -102,7 +102,7 @@ describe("Rasterize", function () {
                 );
 
             rasterize.rasterize(doc, null, {executeJs: true, width: 123, height: 456}).then(function () {
-                expect(executeJavascript).toHaveBeenCalledWith(doc, undefined, 0, {width: 123, height: 456});
+                expect(executeJavascript).toHaveBeenCalledWith(doc, jasmine.objectContaining({width: 123, height: 456}));
                 expect(documentHelper.persistInputValues).toHaveBeenCalledWith(doc);
 
                 done();
@@ -128,7 +128,7 @@ describe("Rasterize", function () {
 
 
             rasterize.rasterize(doc, null, {executeJs: true, executeJsTimeout: 42}).then(function () {
-                expect(executeJavascript).toHaveBeenCalledWith(doc, undefined, 42, jasmine.any(Object));
+                expect(executeJavascript).toHaveBeenCalledWith(doc, jasmine.objectContaining({executeJsTimeout: 42}));
 
                 done();
             });
