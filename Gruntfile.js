@@ -135,6 +135,7 @@ module.exports = function (grunt) {
                         ' * CSSOM.js (MIT License),\n' +
                         ' * ayepromise (BSD License & WTFPL),\n' +
                         ' * xmlserializer (MIT License),\n' +
+                        ' * css-font-face-src (BSD License),\n' +
                         ' * inlineresources (MIT License) */\n'
                 },
                 files: {
