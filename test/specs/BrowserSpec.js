@@ -34,6 +34,14 @@ describe("Browser functions", function () {
             };
         };
 
+        var optionsWithViewport = function (width, height) {
+            return {
+                width: width || 12,
+                height: height || 34,
+                executeJsTimeout: 10
+            };
+        };
+
         beforeEach(function () {
             doc = window.document.implementation.createHTMLDocument("");
         });
@@ -159,9 +167,9 @@ describe("Browser functions", function () {
         });
 
         ifNotInPhantomJsIt("should support window.matchMedia() with 'width' media queries", function (done) {
-            doc.documentElement.innerHTML = '<body onload="document.body.innerHTML = window.matchMedia(\'(min-width: 42px)\').matches;"></body>';
+            doc.documentElement.innerHTML = '<body onload="setTimeout(function () {document.body.innerHTML = window.matchMedia(\'(min-width: 30px)\').matches; }, 0);"></body>';
 
-            browser.executeJavascript(doc, defaultOptionsWithViewport(42, 21)).then(function (result) {
+            browser.executeJavascript(doc, optionsWithViewport(42, 21)).then(function (result) {
                 expect(result.document.body.innerHTML).toEqual('true');
 
                 done();
@@ -169,9 +177,9 @@ describe("Browser functions", function () {
         });
 
         ifNotInPhantomJsIt("should support window.matchMedia() with 'height' media queries", function (done) {
-            doc.documentElement.innerHTML = '<body onload="document.body.innerHTML = window.matchMedia(\'(min-height: 123px)\').matches;"></body>';
+            doc.documentElement.innerHTML = '<body onload="setTimeout(function () {document.body.innerHTML = window.matchMedia(\'(min-height: 123px)\').matches; }, 0);"></body>';
 
-            browser.executeJavascript(doc, defaultOptionsWithViewport(10, 123)).then(function (result) {
+            browser.executeJavascript(doc, optionsWithViewport(10, 123)).then(function (result) {
                 expect(result.document.body.innerHTML).toEqual('true');
 
                 done();
