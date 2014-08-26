@@ -10,6 +10,13 @@ Renders HTML into the browser's canvas.
 
 See the [API](https://github.com/cburgmer/rasterizeHTML.js/wiki/API).
 
+Install
+-------
+
+    $ npm install rasterizehtml
+
+Then include `node_modules/rasterizehtml/dist/rasterizeHTML.allinone.js`.
+
 Example
 -------
 
