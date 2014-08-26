@@ -407,7 +407,7 @@ describe("Browser functions", function () {
         describe("element selection", function () {
             beforeEach(function () {
                 setHtml('<style>* { padding: 0; margin: 0; }</style>' +
-                    '<div style="width: 200px; height: 300px; padding: 12px 0 0 34px; box-sizing: border-box;">' +
+                    '<div style="width: 200px; height: 300px; padding: 12px 0 0 34px; -moz-box-sizing: border-box; box-sizing: border-box;">' +
                     '<span style="display: inline-block; width: 123px; height: 234px;"></span>' +
                     '</div>');
             });
