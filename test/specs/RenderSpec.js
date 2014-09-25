@@ -78,7 +78,7 @@ describe("The rendering process", function () {
             var svgCode = render.getSvgForDocument(doc, aRenderSize(123, 987, 200, 1000, 2, 7), defaultZoomLevel);
 
             expect(svgCode).toMatch(new RegExp(
-                '<svg xmlns="http://www.w3.org/2000/svg" width="123" height="987">' +
+                '<svg xmlns="http://www.w3.org/2000/svg" width="123" height="987"[^>]*>' +
                     '<foreignObject x="-2" y="-7" width="200" height="1000".*>' +
                         '<html xmlns="http://www.w3.org/1999/xhtml">' +
                             '<head>' +
@@ -101,7 +101,7 @@ describe("The rendering process", function () {
             var svgCode = render.getSvgForDocument(doc, aRenderSize(123, 987, 12, 99), zoomFactor);
 
             expect(svgCode).toMatch(new RegExp(
-                '<svg xmlns="http://www.w3.org/2000/svg" width="123" height="987">' +
+                '<svg xmlns="http://www.w3.org/2000/svg" width="123" height="987"[^>]*>' +
                     '<foreignObject x="0" y="0" width="12" height="99" style="-webkit-transform: scale\\(10\\); -webkit-transform-origin: 0 0; transform: scale\\(10\\); transform-origin: 0 0;.*">' +
                         '<html xmlns="http://www.w3.org/1999/xhtml">' +
                             '<head>' +
@@ -124,6 +124,29 @@ describe("The rendering process", function () {
             var svgCode = render.getSvgForDocument(doc, aRenderSize(123, 987), zoomLevel);
 
             expect(svgCode).not.toMatch(new RegExp("scale"));
+        });
+
+        it("should return a SVG with a root font size to preserve rem units", function () {
+            var doc = document.implementation.createHTMLDocument("");
+            doc.documentElement.style.fontSize = "14px";
+            doc.body.innerHTML = "Test content";
+
+            var svgCode = render.getSvgForDocument(doc, aRenderSize(), defaultZoomLevel);
+
+            expect(svgCode).toMatch(new RegExp(
+                '<svg xmlns="http://www.w3.org/2000/svg" [^>]*font-size="14px"[^>]*>' +
+                    '<foreignObject .*>' +
+                        '<html xmlns="http://www.w3.org/1999/xhtml"[^>]*>' +
+                            '<head>' +
+                                '<title(/>|></title>)' +
+                            '</head>' +
+                            '<body>' +
+                                "Test content" +
+                            '</body>' +
+                        '</html>' +
+                    '</foreignObject>' +
+                '</svg>'
+            ));
         });
 
         it("should raise an error on invalid source", function () {
