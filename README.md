@@ -41,7 +41,7 @@ Limitations
 
 All resources (HTML page, CSS, images, fonts and JS) that are needed for drawing the page can only be loaded if from the [same origin](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Same_origin_policy_for_JavaScript), unless techniques like [CORS](http://enable-cors.org) are used. I.E. `drawURL()` can only load pages from the same domain as the current page and all draw methods can equally only embed styling and images from that domain.
 
-The code is tested under Firefox, Chrome & Safari. However [IE up to version 11 does not honour `<foreignObject>`](http://status.modern.ie/#svgforeignobjectelement) and is unsupported.
+The code is tested under Firefox, Chrome & Safari. However [IE up to version 11 does not honour `<foreignObject>`](https://status.modern.ie/svgforeignobjectelement) and is unsupported.
 
 At the time of writing it seems that the individual browsers still have some issues with rendering SVGs with embedded HTML to the canvas. See the [wiki for a list of known issues](https://github.com/cburgmer/rasterizeHTML.js/wiki/Browser-issues) and do add your findings there.
 
