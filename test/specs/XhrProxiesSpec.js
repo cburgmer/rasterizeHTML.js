@@ -1,17 +1,7 @@
 describe("XHR Proxies", function () {
-    var oldXHR;
-
     var mockPromisesToResolveSynchronously = function () {
         spyOn(ayepromise, 'defer').and.returnValue(testHelper.synchronousDefer());
     };
-
-    beforeEach(function () {
-        oldXHR = window.XMLHttpRequest;
-    });
-
-    afterEach(function () {
-        window.XMLHttpRequest = oldXHR;
-    });
 
     describe("finishNotifying", function () {
         describe("mocked XHR", function () {
@@ -109,19 +99,37 @@ describe("XHR Proxies", function () {
 
         describe("integration", function () {
             it("should notify after file has loaded", function (done) {
-                var callback = jasmine.createSpy('callback');
-                var finishNotifyingProxy = xhrproxies.finishNotifying(window.XMLHttpRequest);
-                window.XMLHttpRequest = finishNotifyingProxy;
+                var callback = jasmine.createSpy('callback'),
+                    FinishNotifyingProxy = xhrproxies.finishNotifying(window.XMLHttpRequest),
+                    xhr = new FinishNotifyingProxy();
 
-                var loadPromise = testHelper.readHTMLDocumentFixture('test.html');
+                xhr.onload = callback;
+                xhr.open('GET', testHelper.fixturesPath + 'test.html', true);
+                xhr.send(null);
 
-                finishNotifyingProxy.waitForRequestsToFinish().then(callback);
-
-                loadPromise.then(function () {
-                    expect(callback).toHaveBeenCalledWith({totalCount: 1});
+                FinishNotifyingProxy.waitForRequestsToFinish().then(function (result) {
+                    expect(callback).toHaveBeenCalled();
+                    expect(result).toEqual({totalCount: 1});
 
                     done();
                 });
+            });
+        });
+    });
+
+    describe("baseUrlRespecting", function () {
+        describe("integration", function () {
+            it("should load file relative to given base url", function (done) {
+                var baseUrl = testHelper.fixturesPath,
+                    BaseUrlRespectingProxy = xhrproxies.baseUrlRespecting(window.XMLHttpRequest, baseUrl),
+                    xhr = new BaseUrlRespectingProxy();
+
+                xhr.onload = function () {
+                    expect(xhr.responseText).toMatch(/Test page/);
+                    done();
+                };
+                xhr.open('GET', 'test.html', true);
+                xhr.send(null);
             });
         });
     });
