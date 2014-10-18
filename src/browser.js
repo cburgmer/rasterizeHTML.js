@@ -55,6 +55,7 @@ var browser = (function (util, xhrproxies, ayepromise, theWindow) {
 
         iframe.contentDocument.open();
         iframe.contentWindow.XMLHttpRequest = baseUrlXhrProxy;
+        iframe.contentWindow.Image = xhrproxies.baseUrlRespectingImage(iframe.contentWindow.Image, options.baseUrl);
         iframe.contentWindow.onerror = function (msg) {
             iframeErrorsMessages.push({
                 resourceType: "scriptExecution",

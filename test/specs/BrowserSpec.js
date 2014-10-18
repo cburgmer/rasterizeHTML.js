@@ -166,6 +166,20 @@ describe("Browser functions", function () {
             });
         });
 
+        it("should load images relative to base URL", function (done) {
+            doc.documentElement.innerHTML = '<body><script>var i = new Image(); i.onload=function () { document.body.innerHTML = "1"; }; i.setAttribute("src", "green.png");</script></body>';
+
+            browser.executeJavascript(doc, {
+                baseUrl: testHelper.fixturesPath,
+                width: 123,
+                height: 456
+            }).then(function (result) {
+                expect(result.document.body.innerHTML).toEqual('1');
+
+                done();
+            });
+        });
+
         ifNotInPhantomJsIt("should support window.matchMedia() with 'width' media queries", function (done) {
             doc.documentElement.innerHTML = '<body onload="setTimeout(function () {document.body.innerHTML = window.matchMedia(\'(min-width: 30px)\').matches; }, 0);"></body>';
 
