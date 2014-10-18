@@ -2,6 +2,19 @@
 var xhrproxies = (function (util, ayepromise) {
     var module = {};
 
+    var monkeyPatchInstanceMethod = function (object, methodName, proxyFunc) {
+        var originalFunc = object[methodName];
+
+        object[methodName] = function () {
+            var args = Array.prototype.slice.call(arguments);
+
+            return proxyFunc.apply(this, [args, originalFunc]);
+        };
+
+        return originalFunc;
+    };
+
+    // Bases the image's source on the given base URL
     module.baseUrlRespectingImage = function (ImageObject, baseUrl) {
         var emptyStringIfUndefined = function (src) {
             return src === undefined ? '' : src;
@@ -12,8 +25,7 @@ var xhrproxies = (function (util, ayepromise) {
 
         var imageConstructor = function () {
             var image = new ImageObject(),
-                setAttribute = image.setAttribute,
-                getAttribute = image.getAttribute,
+                setAttribute, getAttribute,
                 originalSrc;
 
             var augmentSrc = function (src) {
@@ -21,31 +33,30 @@ var xhrproxies = (function (util, ayepromise) {
                 return util.joinUrl(baseUrl, src);
             };
 
+            setAttribute = monkeyPatchInstanceMethod(image, 'setAttribute', function (args, originalSetAttribute) {
+                var attr = args.shift(),
+                    value = args.shift();
+
+                if (attr === 'src') {
+                    value = augmentSrc(value);
+                }
+                return originalSetAttribute.apply(this, [attr, value].concat(args));
+            });
+            getAttribute = monkeyPatchInstanceMethod(image, 'getAttribute', function (args, originalGetAttribute) {
+                var attr = args.shift();
+
+                if (attr === 'src') {
+                    return nullIfUndefined(originalSrc);
+                }
+                return originalGetAttribute.apply(this, [attr].concat(args));
+            });
+
             image.__defineSetter__('src', function (url) {
                 setAttribute.call(image, 'src', augmentSrc(url));
             });
             image.__defineGetter__('src', function () {
                 return emptyStringIfUndefined(originalSrc);
             });
-            image.setAttribute = function () {
-                var args = Array.prototype.slice.call(arguments),
-                    attr = args.shift(),
-                    value = args.shift();
-
-                if (attr === 'src') {
-                    value = augmentSrc(value);
-                }
-                return setAttribute.apply(image, [attr, value].concat(args));
-            };
-            image.getAttribute = function () {
-                var args = Array.prototype.slice.call(arguments),
-                    attr = args.shift();
-
-                if (attr === 'src') {
-                    return nullIfUndefined(originalSrc);
-                }
-                return getAttribute.apply(image, [attr].concat(args));
-            };
 
             return image;
         };
@@ -56,17 +67,15 @@ var xhrproxies = (function (util, ayepromise) {
     // Bases all XHR calls on the given base URL
     module.baseUrlRespecting = function (XHRObject, baseUrl) {
         var xhrConstructor = function () {
-            var xhr = new XHRObject(),
-                open = xhr.open;
+            var xhr = new XHRObject();
 
-            xhr.open = function () {
-                var args = Array.prototype.slice.call(arguments),
-                    method = args.shift(),
+            monkeyPatchInstanceMethod(xhr, 'open', function (args, originalOpen) {
+                var method = args.shift(),
                     url = args.shift(),
                     joinedUrl = util.joinUrl(baseUrl, url);
 
-                return open.apply(this, [method, joinedUrl].concat(args));
-            };
+                return originalOpen.apply(this, [method, joinedUrl].concat(args));
+            });
 
             return xhr;
         };
@@ -90,13 +99,12 @@ var xhrproxies = (function (util, ayepromise) {
         };
 
         var xhrConstructor = function () {
-            var xhr = new XHRObject(),
-                send = xhr.send;
+            var xhr = new XHRObject();
 
-            xhr.send = function () {
+            monkeyPatchInstanceMethod(xhr, 'send', function (_, originalSend) {
                 totalXhrCount += 1;
-                return send.apply(this, arguments);
-            };
+                return originalSend.apply(this, arguments);
+            });
 
             xhr.addEventListener('load', function () {
                 doneXhrCount += 1;
