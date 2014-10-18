@@ -118,19 +118,61 @@ describe("XHR Proxies", function () {
     });
 
     describe("baseUrlRespecting", function () {
-        describe("integration", function () {
-            it("should load file relative to given base url", function (done) {
-                var baseUrl = testHelper.fixturesPath,
-                    BaseUrlRespectingProxy = xhrproxies.baseUrlRespecting(window.XMLHttpRequest, baseUrl),
-                    xhr = new BaseUrlRespectingProxy();
+        it("should load file relative to given base url", function (done) {
+            var baseUrl = testHelper.fixturesPath,
+                BaseUrlRespectingProxy = xhrproxies.baseUrlRespecting(window.XMLHttpRequest, baseUrl),
+                xhr = new BaseUrlRespectingProxy();
 
-                xhr.onload = function () {
-                    expect(xhr.responseText).toMatch(/Test page/);
-                    done();
-                };
-                xhr.open('GET', 'test.html', true);
-                xhr.send(null);
-            });
+            xhr.onload = function () {
+                expect(xhr.responseText).toMatch(/Test page/);
+                done();
+            };
+            xhr.open('GET', 'test.html', true);
+            xhr.send(null);
+        });
+    });
+
+    describe("baseUrlRespectingImage", function () {
+        var baseUrl, BaseUrlRespectingProxy, img;
+
+        beforeEach(function () {
+            baseUrl = testHelper.fixturesPath;
+            BaseUrlRespectingProxy = xhrproxies.baseUrlRespectingImage(window.Image, baseUrl);
+            img = new BaseUrlRespectingProxy();
+        });
+
+        ifNotInPhantomJsIt("should load file relative to given base url when specified through 'src' attribute", function (done) {
+            img.onload = done;
+            img.src = "green.png";
+        });
+
+        it("should load file relative to given base url when specified through 'setAttribute' call", function (done) {
+            img.onload = done;
+            img.setAttribute('src', "green.png");
+        });
+
+        ifNotInPhantomJsIt("should report the original url via 'src'", function (done) {
+            img.onload = function () {
+                expect(img.src).toEqual("green.png");
+                done();
+            };
+            img.src = "green.png";
+        });
+
+        it("should report the original url via 'getAttribute'", function (done) {
+            img.onload = function () {
+                expect(img.getAttribute('src')).toEqual("green.png");
+                done();
+            };
+            img.setAttribute('src', "green.png");
+        });
+
+        it("should report and empty src initially", function () {
+            expect(img.src).toBe("");
+        });
+
+        it("should report and empty src attribute value initially", function () {
+            expect(img.getAttribute('src')).toBe(null);
         });
     });
 });

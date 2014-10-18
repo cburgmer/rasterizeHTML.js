@@ -1,5 +1,57 @@
+// Proxy objects by monkey patching
 var xhrproxies = (function (util, ayepromise) {
     var module = {};
+
+    module.baseUrlRespectingImage = function (ImageObject, baseUrl) {
+        var emptyStringIfUndefined = function (src) {
+            return src === undefined ? '' : src;
+        };
+        var nullIfUndefined = function (src) {
+            return src === undefined ? null : src;
+        };
+
+        var imageConstructor = function () {
+            var image = new ImageObject(),
+                setAttribute = image.setAttribute,
+                getAttribute = image.getAttribute,
+                originalSrc;
+
+            var augmentSrc = function (src) {
+                originalSrc = src;
+                return util.joinUrl(baseUrl, src);
+            };
+
+            image.__defineSetter__('src', function (url) {
+                setAttribute.call(image, 'src', augmentSrc(url));
+            });
+            image.__defineGetter__('src', function () {
+                return emptyStringIfUndefined(originalSrc);
+            });
+            image.setAttribute = function () {
+                var args = Array.prototype.slice.call(arguments),
+                    attr = args.shift(),
+                    value = args.shift();
+
+                if (attr === 'src') {
+                    value = augmentSrc(value);
+                }
+                return setAttribute.apply(image, [attr, value].concat(args));
+            };
+            image.getAttribute = function () {
+                var args = Array.prototype.slice.call(arguments),
+                    attr = args.shift();
+
+                if (attr === 'src') {
+                    return nullIfUndefined(originalSrc);
+                }
+                return getAttribute.apply(image, [attr].concat(args));
+            };
+
+            return image;
+        };
+
+        return imageConstructor;
+    };
 
     // Bases all XHR calls on the given base URL
     module.baseUrlRespecting = function (XHRObject, baseUrl) {
