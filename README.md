@@ -15,7 +15,7 @@ Install
 
     $ npm install rasterizehtml
 
-Then include `node_modules/rasterizehtml/dist/rasterizeHTML.allinone.js`.
+Then include a script tag with `node_modules/rasterizehtml/dist/rasterizeHTML.allinone.js` or require through [browserify](https://github.com/substack/node-browserify).
 
 Example
 -------
