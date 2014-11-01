@@ -54,10 +54,6 @@ var svg2image = (function (ayepromise, window) {
         }
     };
 
-    var generalDrawError = function () {
-        return {message: "Error rendering page"};
-    };
-
     module.renderSvg = function (svg) {
         var url, image,
             defer = ayepromise.defer(),
@@ -84,7 +80,7 @@ var svg2image = (function (ayepromise, window) {
             cleanUp();
 
             // Webkit calls the onerror handler if the SVG is faulty
-            defer.reject(generalDrawError());
+            defer.reject();
         };
         image.src = url;
 

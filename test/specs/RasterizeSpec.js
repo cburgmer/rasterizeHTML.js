@@ -230,14 +230,13 @@ describe("Rasterize", function () {
         });
 
         it("should fail the returned promise on error from inlining when rendering the image", function (done) {
-            var canvas = aMockCanvas(),
-                error = new Error();
+            var canvas = aMockCanvas();
 
             setUpDrawDocumentAsSvg(theSvg);
-            setUpRenderSvgError(error);
+            setUpRenderSvgError(new Error());
 
-            rasterize.rasterize(doc, canvas, {}).fail(function (e) {
-                expect(e).toBe(error);
+            rasterize.rasterize(doc, canvas, {}).fail(function (error) {
+                expect(error).toEqual(jasmine.objectContaining({message: "Error rendering page"}));
 
                 expect(canvas.getContext('2d').drawImage).not.toHaveBeenCalled();
 

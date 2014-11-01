@@ -7,6 +7,13 @@ var rasterize = (function (util, browser, documentHelper, document2svg, svg2imag
         return {message: "Error rendering page"};
     };
 
+    var drawSvgAsImg = function (svg) {
+        return svg2image.renderSvg(svg)
+            .then(null, function () {
+                throw generalDrawError();
+            });
+    };
+
     var drawImageOnCanvas = function (image, canvas) {
         try {
             canvas.getContext("2d").drawImage(image, 0, 0);
@@ -18,9 +25,7 @@ var rasterize = (function (util, browser, documentHelper, document2svg, svg2imag
 
     var doDraw = function (doc, canvas, options) {
         return document2svg.drawDocumentAsSvg(doc, options)
-            .then(function (svg) {
-                return svg2image.renderSvg(svg);
-            })
+            .then(drawSvgAsImg)
             .then(function (image) {
                 if (canvas) {
                     drawImageOnCanvas(image, canvas);
