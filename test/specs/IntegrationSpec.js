@@ -35,15 +35,16 @@ describe("Integration test", function () {
                     hover: '.webfont',
                     clip: 'body'
                 }).then(function (result) {
-                expect(result.errors).toEqual([]);
+                    expect(result.errors).toEqual([]);
+                    expect(result.svg).toMatch(/<svg[^]+body[^]+bgimage/);
 
-                forceImageSizeForPlatformCompatibility(result.image);
-                expect(result.image).toEqualImage(referenceImg.get(0), 2);
+                    forceImageSizeForPlatformCompatibility(result.image);
+                    expect(result.image).toEqualImage(referenceImg.get(0), 2);
 
-                expect(canvas.get(0)).toEqualImage(referenceImg.get(0), 2);
-                // expect(canvas.get(0)).toImageDiffEqual(referenceImg.get(0), 10);
+                    expect(canvas.get(0)).toEqualImage(referenceImg.get(0), 2);
+                    // expect(canvas.get(0)).toImageDiffEqual(referenceImg.get(0), 10);
 
-                done();
+                    done();
             });
         });
     });

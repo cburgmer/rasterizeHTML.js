@@ -1,6 +1,6 @@
 describe("Rasterize", function () {
     var theSvg = "the svg",
-        rasterizedImage = "svg image",
+        rasterizedImage = "rasterized image",
         doc,
         inlineReferences;
 
@@ -81,14 +81,35 @@ describe("Rasterize", function () {
         it("should take a document, inline all displayable content and render to the given canvas", function (done) {
             var canvas = aMockCanvas();
 
-            rasterize.rasterize(doc, canvas, {}).then(function (result) {
-                expect(result.image).toEqual(rasterizedImage);
-                expect(result.errors).toEqual([]);
-
+            rasterize.rasterize(doc, canvas, {}).then(function () {
                 expect(inlineReferences).toHaveBeenCalledWith(doc, {inlineScripts: false});
                 expect(document2svg.drawDocumentAsSvg).toHaveBeenCalledWith(doc, {});
                 expect(svg2image.renderSvg).toHaveBeenCalledWith(theSvg);
                 expect(canvas.getContext('2d').drawImage).toHaveBeenCalledWith(rasterizedImage, 0, 0);
+
+                done();
+            });
+        });
+
+        it("should return the rendered image", function (done) {
+            rasterize.rasterize(doc, aMockCanvas(), {}).then(function (result) {
+                expect(result.image).toEqual(rasterizedImage);
+
+                done();
+            });
+        });
+
+        it("should report empty errors", function (done) {
+            rasterize.rasterize(doc, aMockCanvas(), {}).then(function (result) {
+                expect(result.errors).toEqual([]);
+
+                done();
+            });
+        });
+
+        it("should return the internal SVG representation", function (done) {
+            rasterize.rasterize(doc, aMockCanvas(), {}).then(function (result) {
+                expect(result.svg).toEqual(theSvg);
 
                 done();
             });

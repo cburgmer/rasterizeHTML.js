@@ -9,7 +9,12 @@ var rasterize = (function (util, browser, documentHelper, document2svg, svg2imag
 
     var drawSvgAsImg = function (svg) {
         return svg2image.renderSvg(svg)
-            .then(null, function () {
+            .then(function (image) {
+                return {
+                    image: image,
+                    svg: svg
+                };
+            }, function () {
                 throw generalDrawError();
             });
     };
@@ -26,12 +31,12 @@ var rasterize = (function (util, browser, documentHelper, document2svg, svg2imag
     var doDraw = function (doc, canvas, options) {
         return document2svg.drawDocumentAsSvg(doc, options)
             .then(drawSvgAsImg)
-            .then(function (image) {
+            .then(function (result) {
                 if (canvas) {
-                    drawImageOnCanvas(image, canvas);
+                    drawImageOnCanvas(result.image, canvas);
                 }
 
-                return image;
+                return result;
             });
     };
 
@@ -72,9 +77,10 @@ var rasterize = (function (util, browser, documentHelper, document2svg, svg2imag
                 }
             }).then(function (result) {
                 return doDraw(result.document, canvas, options)
-                    .then(function (image) {
+                    .then(function (drawResult) {
                         return {
-                            image: image,
+                            image: drawResult.image,
+                            svg: drawResult.svg,
                             errors: result.errors
                         };
                     });
