@@ -164,7 +164,7 @@ describe("The rendering process", function () {
         });
     });
 
-    describe("drawDocumentImage", function () {
+    describe("drawDocumentAsSvg", function () {
         var doc = "doc",
             calculatedSize;
 
@@ -186,68 +186,59 @@ describe("The rendering process", function () {
             calculatedSize = 'the_calculated_size';
             spyOn(browser, 'calculateDocumentContentSize').and.returnValue(fulfilled(calculatedSize));
             spyOn(render, 'getSvgForDocument');
-            spyOn(svgtoimage, 'renderSvg');
         });
 
-        it("should draw the image", function (done) {
+        it("should draw as svg", function (done) {
             var svg = "the svg",
                 image = "the image";
 
             render.getSvgForDocument.and.returnValue(svg);
-            svgtoimage.renderSvg.and.returnValue(fulfilled(image));
 
-            render.drawDocumentImage(doc, {zoom: 42}).then(function (theImage) {
-                expect(theImage).toBe(image);
+            render.drawDocumentAsSvg(doc, {zoom: 42}).then(function (theSvg) {
+                expect(theSvg).toBe(svg);
 
                 expect(browser.calculateDocumentContentSize).toHaveBeenCalledWith(
                     doc,
                     jasmine.objectContaining({zoom: 42})
                 );
                 expect(render.getSvgForDocument).toHaveBeenCalledWith(doc, calculatedSize, 42);
-                expect(svgtoimage.renderSvg).toHaveBeenCalledWith(svg);
 
                 done();
             });
         });
 
-        it("should report an error when constructing the SVG image", function (done) {
-            svgtoimage.renderSvg.and.returnValue(rejected());
-
-            render.drawDocumentImage(doc, {}).fail(done);
-        });
-
         it("should take an optional width and height", function () {
-            render.drawDocumentImage(doc, {width: 42, height: 4711});
+            render.drawDocumentAsSvg(doc, {width: 42, height: 4711});
 
             expect(browser.calculateDocumentContentSize).toHaveBeenCalledWith(doc, {width: 42, height: 4711});
         });
 
         it("should trigger hover effect", function () {
-            render.drawDocumentImage(doc, {hover: '.mySpan'});
+            render.drawDocumentAsSvg(doc, {hover: '.mySpan'});
 
             expect(documentHelper.fakeHover).toHaveBeenCalledWith(doc, '.mySpan');
         });
 
         it("should not trigger hover effect by default", function () {
-            render.drawDocumentImage(doc, {});
+            render.drawDocumentAsSvg(doc, {});
 
             expect(documentHelper.fakeHover).not.toHaveBeenCalled();
         });
 
         it("should trigger active effect", function () {
-            render.drawDocumentImage(doc, {active: '.mySpan'});
+            render.drawDocumentAsSvg(doc, {active: '.mySpan'});
 
             expect(documentHelper.fakeActive).toHaveBeenCalledWith(doc, '.mySpan');
         });
 
         it("should not trigger active effect by default", function () {
-            render.drawDocumentImage(doc, {});
+            render.drawDocumentAsSvg(doc, {});
 
             expect(documentHelper.fakeActive).not.toHaveBeenCalled();
         });
 
         it("should render the selected element", function () {
-            render.drawDocumentImage(doc, {clip: '.mySpan'});
+            render.drawDocumentAsSvg(doc, {clip: '.mySpan'});
 
             expect(browser.calculateDocumentContentSize).toHaveBeenCalledWith(
                 doc,

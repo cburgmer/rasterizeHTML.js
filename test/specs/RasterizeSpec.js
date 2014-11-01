@@ -1,12 +1,12 @@
 describe("Rasterize", function () {
-    var svgImage = "svg image",
+    var theSvg = "the svg",
+        rasterizedImage = "svg image",
         doc,
         inlineReferences;
 
     var withoutErrors = function () {
         return withErrors([]);
     };
-
     var withErrors = function (errors) {
         return fulfilled(errors);
     };
@@ -16,45 +16,52 @@ describe("Rasterize", function () {
         defer.resolve(value);
         return defer.promise;
     };
-
     var rejected = function (error) {
         var defer = ayepromise.defer();
         defer.reject(error);
         return defer.promise;
     };
 
-    var setUpDrawDocumentImage = function (image) {
-            render.drawDocumentImage.and.returnValue(fulfilled(image));
-        },
-        setUpDrawDocumentImageError = function (e) {
-            render.drawDocumentImage.and.returnValue(rejected(e));
-        };
+    var setUpDrawDocumentAsSvg = function (svg) {
+        render.drawDocumentAsSvg.and.returnValue(fulfilled(svg));
+    };
+    var setUpDrawDocumentAsSvgError = function (e) {
+        render.drawDocumentAsSvg.and.returnValue(rejected(e));
+    };
+
+    var setUpRenderSvg = function (image) {
+        svgtoimage.renderSvg.and.returnValue(fulfilled(image));
+    };
+    var setUpRenderSvgError = function (e) {
+        svgtoimage.renderSvg.and.returnValue(rejected(e));
+    };
 
     var aMockCanvas = function () {
-            var canvas = jasmine.createSpyObj("canvas", ["getContext"]),
-                context = jasmine.createSpyObj("context", ["drawImage"]);
+        var canvas = jasmine.createSpyObj("canvas", ["getContext"]),
+            context = jasmine.createSpyObj("context", ["drawImage"]);
 
-            canvas.getContext.and.callFake(function (howManyD) {
-                if (howManyD === "2d") {
-                    return context;
-                }
-            });
-            return canvas;
-        },
-        aMockCanvasWithDrawError = function () {
-            var canvas = jasmine.createSpyObj("canvas", ["getContext"]),
-                context = jasmine.createSpyObj("context", ["drawImage"]);
+        canvas.getContext.and.callFake(function (howManyD) {
+            if (howManyD === "2d") {
+                return context;
+            }
+        });
+        return canvas;
+    };
+    var aMockCanvasWithDrawError = function () {
+        var canvas = jasmine.createSpyObj("canvas", ["getContext"]),
+            context = jasmine.createSpyObj("context", ["drawImage"]);
 
-            canvas.getContext.and.returnValue(context);
-            context.drawImage.and.throwError("error");
-            return canvas;
-        };
+        canvas.getContext.and.returnValue(context);
+        context.drawImage.and.throwError("error");
+        return canvas;
+    };
 
     beforeEach(function () {
         doc = document.implementation.createHTMLDocument('');
 
-        spyOn(render, 'drawDocumentImage');
-        spyOn(browser, "loadDocument");
+        spyOn(render, 'drawDocumentAsSvg');
+        spyOn(browser, 'loadDocument');
+        spyOn(svgtoimage, 'renderSvg');
     });
 
     describe("Rendering", function () {
@@ -67,19 +74,21 @@ describe("Rasterize", function () {
 
             spyOn(documentHelper, 'persistInputValues');
 
-            setUpDrawDocumentImage(svgImage);
+            setUpDrawDocumentAsSvg(theSvg);
+            setUpRenderSvg(rasterizedImage);
         });
 
         it("should take a document, inline all displayable content and render to the given canvas", function (done) {
             var canvas = aMockCanvas();
-            
+
             rasterize.rasterize(doc, canvas, {}).then(function (result) {
-                expect(result.image).toEqual(svgImage);
+                expect(result.image).toEqual(rasterizedImage);
                 expect(result.errors).toEqual([]);
 
                 expect(inlineReferences).toHaveBeenCalledWith(doc, {inlineScripts: false});
-                expect(render.drawDocumentImage).toHaveBeenCalledWith(doc, {});
-                expect(canvas.getContext('2d').drawImage).toHaveBeenCalledWith(svgImage, 0, 0);
+                expect(render.drawDocumentAsSvg).toHaveBeenCalledWith(doc, {});
+                expect(svgtoimage.renderSvg).toHaveBeenCalledWith(theSvg);
+                expect(canvas.getContext('2d').drawImage).toHaveBeenCalledWith(rasterizedImage, 0, 0);
 
                 done();
             });
@@ -87,10 +96,10 @@ describe("Rasterize", function () {
 
         it("should make the canvas optional", function (done) {
             rasterize.rasterize(doc, null, {}).then(function (result) {
-                expect(result.image).toEqual(svgImage);
+                expect(result.image).toEqual(rasterizedImage);
 
                 expect(inlineReferences).toHaveBeenCalledWith(doc, {inlineScripts : false});
-                expect(render.drawDocumentImage).toHaveBeenCalledWith(doc, {});
+                expect(render.drawDocumentAsSvg).toHaveBeenCalledWith(doc, {});
 
                 done();
             });
@@ -106,7 +115,7 @@ describe("Rasterize", function () {
 
         it("should pass on render options", function (done) {
             rasterize.rasterize(doc, aMockCanvas(), {width: 123, height: 234, hover: '.aSelector', active: '#anotherSelector', zoom: 42}).then(function () {
-                expect(render.drawDocumentImage).toHaveBeenCalledWith(doc, {width: 123, height: 234, hover: '.aSelector', active: '#anotherSelector', zoom: 42});
+                expect(render.drawDocumentAsSvg).toHaveBeenCalledWith(doc, {width: 123, height: 234, hover: '.aSelector', active: '#anotherSelector', zoom: 42});
 
                 done();
             });
@@ -161,12 +170,13 @@ describe("Rasterize", function () {
         });
 
         it("should pass through an error from inlining on drawDocument", function (done) {
-            setUpDrawDocumentImage(svgImage);
+            setUpDrawDocumentAsSvg(theSvg);
+            setUpRenderSvg(rasterizedImage);
 
             inlineReferences = spyOn(inlineresources, "inlineReferences").and.returnValue(withErrors(["the error"]));
 
             rasterize.rasterize(doc, aMockCanvas(), {}).then(function (result) {
-                expect(result.image).toEqual(svgImage);
+                expect(result.image).toEqual(rasterizedImage);
                 expect(result.errors).toEqual(["the error"]);
 
                 expect(inlineReferences).toHaveBeenCalled();
@@ -180,10 +190,11 @@ describe("Rasterize", function () {
             spyOn(browser, "executeJavascript").and.returnValue(
                 fulfilled({document: doc, errors: ["the error"]})
             );
-            setUpDrawDocumentImage(svgImage);
+            setUpDrawDocumentAsSvg(theSvg);
+            setUpRenderSvg(rasterizedImage);
 
             rasterize.rasterize(doc, aMockCanvas(), {executeJs: true}).then(function (result) {
-                expect(result.image).toBe(svgImage);
+                expect(result.image).toBe(rasterizedImage);
                 expect(result.errors).toEqual(["the error"]);
 
                 done();
@@ -203,11 +214,27 @@ describe("Rasterize", function () {
             spyOn(documentHelper, 'persistInputValues');
         });
 
-        it("should fail the returned promise on error from inlining when rendering the SVG", function (done) {
+        it("should fail the returned promise on error from inlining when drawing the SVG", function (done) {
             var canvas = aMockCanvas(),
                 error = new Error();
 
-            setUpDrawDocumentImageError(error);
+            setUpDrawDocumentAsSvgError(error);
+
+            rasterize.rasterize(doc, canvas, {}).fail(function (e) {
+                expect(e).toBe(error);
+
+                expect(canvas.getContext('2d').drawImage).not.toHaveBeenCalled();
+
+                done();
+            });
+        });
+
+        it("should fail the returned promise on error from inlining when rendering the image", function (done) {
+            var canvas = aMockCanvas(),
+                error = new Error();
+
+            setUpDrawDocumentAsSvg(theSvg);
+            setUpRenderSvgError(error);
 
             rasterize.rasterize(doc, canvas, {}).fail(function (e) {
                 expect(e).toBe(error);
@@ -221,7 +248,8 @@ describe("Rasterize", function () {
         it("should fail the returned promise on error from inlining when drawing the image on the canvas", function (done) {
             var canvas = aMockCanvasWithDrawError();
 
-            setUpDrawDocumentImage(svgImage);
+            setUpDrawDocumentAsSvg(theSvg);
+            setUpRenderSvg(rasterizedImage);
 
             rasterize.rasterize(doc, canvas, {}).fail(function (error) {
                 expect(error).toEqual(jasmine.objectContaining({message: "Error rendering page"}));

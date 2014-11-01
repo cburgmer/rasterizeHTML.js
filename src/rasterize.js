@@ -1,4 +1,4 @@
-var rasterize = (function (util, browser, documentHelper, render, inlineresources) {
+var rasterize = (function (util, browser, documentHelper, render, svgtoimage, inlineresources) {
     "use strict";
 
     var module = {};
@@ -17,13 +17,17 @@ var rasterize = (function (util, browser, documentHelper, render, inlineresource
     };
 
     var doDraw = function (doc, canvas, options) {
-        return render.drawDocumentImage(doc, options).then(function (image) {
-            if (canvas) {
-                drawImageOnCanvas(image, canvas);
-            }
+        return render.drawDocumentAsSvg(doc, options)
+            .then(function (svg) {
+                return svgtoimage.renderSvg(svg);
+            })
+            .then(function (image) {
+                if (canvas) {
+                    drawImageOnCanvas(image, canvas);
+                }
 
-            return image;
-        });
+                return image;
+            });
     };
 
     var operateJavaScriptOnDocument = function (doc, options) {
@@ -73,4 +77,4 @@ var rasterize = (function (util, browser, documentHelper, render, inlineresource
     };
 
     return module;
-}(util, browser, documentHelper, render, inlineresources));
+}(util, browser, documentHelper, render, svgtoimage, inlineresources));

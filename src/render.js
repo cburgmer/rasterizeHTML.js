@@ -1,4 +1,4 @@
-var render = (function (util, browser, svgtoimage, documentHelper, xmlserializer) {
+var render = (function (util, browser, documentHelper, xmlserializer) {
     "use strict";
 
     var module = {};
@@ -49,9 +49,7 @@ var render = (function (util, browser, svgtoimage, documentHelper, xmlserializer
     };
 
     module.getSvgForDocument = function (doc, size, zoomFactor) {
-        var xhtml;
-
-        xhtml = xmlserializer.serializeToString(doc);
+        var xhtml = xmlserializer.serializeToString(doc);
 
         browser.validateXHTML(xhtml);
 
@@ -68,7 +66,7 @@ var render = (function (util, browser, svgtoimage, documentHelper, xmlserializer
         );
     };
 
-    module.drawDocumentImage = function (doc, options) {
+    module.drawDocumentAsSvg = function (doc, options) {
         if (options.hover) {
             documentHelper.fakeHover(doc, options.hover);
         }
@@ -79,11 +77,8 @@ var render = (function (util, browser, svgtoimage, documentHelper, xmlserializer
         return browser.calculateDocumentContentSize(doc, options)
             .then(function (size) {
                 return module.getSvgForDocument(doc, size, options.zoom);
-            })
-            .then(function (svg) {
-                return svgtoimage.renderSvg(svg);
             });
     };
 
     return module;
-}(util, browser, svgtoimage, documentHelper, xmlserializer));
+}(util, browser, documentHelper, xmlserializer));
