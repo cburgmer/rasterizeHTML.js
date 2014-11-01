@@ -22,7 +22,7 @@ describe("Svg to Image", function () {
                     '</svg>'
                 );
 
-            svgtoimage.renderSvg(twoColorSvg, null).then(function (image) {
+            svg2image.renderSvg(twoColorSvg, null).then(function (image) {
                 // This fails in Chrome & Safari, possibly due to a bug with same origin policy stuff
                 try {
                     expect(image).toImageDiffEqual(referenceImg.get(0));
@@ -51,7 +51,7 @@ describe("Svg to Image", function () {
                     '</svg>'
                 );
 
-            svgtoimage.renderSvg(twoColorSvg, null).then(function (image) {
+            svg2image.renderSvg(twoColorSvg, null).then(function (image) {
                 // This fails in Chrome & Safari, possibly due to a bug with same origin policy stuff
                 try {
                     expect(image).toImageDiffEqual(referenceImg.get(0));
@@ -69,7 +69,7 @@ describe("Svg to Image", function () {
             // We need to mock, as only Chrome & Safari seem to throw errors on a faulty SVG
             spyOn(window, "Image").and.returnValue(imageSpy);
 
-            svgtoimage.renderSvg("svg", null).fail(done);
+            svg2image.renderSvg("svg", null).fail(done);
 
             imageSpy.onerror();
         });
@@ -77,7 +77,7 @@ describe("Svg to Image", function () {
         it("should return an image without event listeners attached", function (done) {
             var anSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"></svg>';
 
-            svgtoimage.renderSvg(anSvg, null).then(function (image) {
+            svg2image.renderSvg(anSvg, null).then(function (image) {
                 expect(image.onerror).toBeNull();
                 expect(image.onload).toBeNull();
 

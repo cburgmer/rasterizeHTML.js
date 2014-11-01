@@ -30,10 +30,10 @@ describe("Rasterize", function () {
     };
 
     var setUpRenderSvg = function (image) {
-        svgtoimage.renderSvg.and.returnValue(fulfilled(image));
+        svg2image.renderSvg.and.returnValue(fulfilled(image));
     };
     var setUpRenderSvgError = function (e) {
-        svgtoimage.renderSvg.and.returnValue(rejected(e));
+        svg2image.renderSvg.and.returnValue(rejected(e));
     };
 
     var aMockCanvas = function () {
@@ -61,7 +61,7 @@ describe("Rasterize", function () {
 
         spyOn(document2svg, 'drawDocumentAsSvg');
         spyOn(browser, 'loadDocument');
-        spyOn(svgtoimage, 'renderSvg');
+        spyOn(svg2image, 'renderSvg');
     });
 
     describe("Rendering", function () {
@@ -87,7 +87,7 @@ describe("Rasterize", function () {
 
                 expect(inlineReferences).toHaveBeenCalledWith(doc, {inlineScripts: false});
                 expect(document2svg.drawDocumentAsSvg).toHaveBeenCalledWith(doc, {});
-                expect(svgtoimage.renderSvg).toHaveBeenCalledWith(theSvg);
+                expect(svg2image.renderSvg).toHaveBeenCalledWith(theSvg);
                 expect(canvas.getContext('2d').drawImage).toHaveBeenCalledWith(rasterizedImage, 0, 0);
 
                 done();

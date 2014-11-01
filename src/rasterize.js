@@ -1,4 +1,4 @@
-var rasterize = (function (util, browser, documentHelper, document2svg, svgtoimage, inlineresources) {
+var rasterize = (function (util, browser, documentHelper, document2svg, svg2image, inlineresources) {
     "use strict";
 
     var module = {};
@@ -19,7 +19,7 @@ var rasterize = (function (util, browser, documentHelper, document2svg, svgtoima
     var doDraw = function (doc, canvas, options) {
         return document2svg.drawDocumentAsSvg(doc, options)
             .then(function (svg) {
-                return svgtoimage.renderSvg(svg);
+                return svg2image.renderSvg(svg);
             })
             .then(function (image) {
                 if (canvas) {
@@ -77,4 +77,4 @@ var rasterize = (function (util, browser, documentHelper, document2svg, svgtoima
     };
 
     return module;
-}(util, browser, documentHelper, document2svg, svgtoimage, inlineresources));
+}(util, browser, documentHelper, document2svg, svg2image, inlineresources));

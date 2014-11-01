@@ -1,4 +1,4 @@
-var svgtoimage = (function (ayepromise, window) {
+var svg2image = (function (ayepromise, window) {
     "use strict";
 
     var module = {};
