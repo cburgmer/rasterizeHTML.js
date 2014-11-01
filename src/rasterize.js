@@ -3,10 +3,23 @@ var rasterize = (function (util, browser, documentHelper, render, inlineresource
 
     var module = {};
 
+    var generalDrawError = function () {
+        return {message: "Error rendering page"};
+    };
+
+    var drawImageOnCanvas = function (image, canvas) {
+        try {
+            canvas.getContext("2d").drawImage(image, 0, 0);
+        } catch (e) {
+            // Firefox throws a 'NS_ERROR_NOT_AVAILABLE' if the SVG is faulty
+            throw generalDrawError();
+        }
+    };
+
     var doDraw = function (doc, canvas, options) {
         return render.drawDocumentImage(doc, options).then(function (image) {
             if (canvas) {
-                render.drawImageOnCanvas(image, canvas);
+                drawImageOnCanvas(image, canvas);
             }
 
             return image;

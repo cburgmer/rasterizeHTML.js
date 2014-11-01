@@ -255,40 +255,4 @@ describe("The rendering process", function () {
             );
         });
     });
-
-    describe("on drawing the image on the canvas", function () {
-        it("should render the image", function () {
-            var image = "the_image",
-                canvas = jasmine.createSpyObj("canvas", ["getContext"]),
-                context = jasmine.createSpyObj("context", ["drawImage"]);
-
-            canvas.getContext.and.callFake(function (howManyD) {
-                if (howManyD === "2d") {
-                    return context;
-                }
-            });
-
-            render.drawImageOnCanvas(image, canvas);
-
-            expect(context.drawImage).toHaveBeenCalledWith(image, 0, 0);
-        });
-
-        it("should handle an error", function () {
-            var image = "the_image",
-                canvas = jasmine.createSpyObj("canvas", ["getContext"]),
-                context = jasmine.createSpyObj("context", ["drawImage"]),
-                error;
-
-            canvas.getContext.and.returnValue(context);
-            context.drawImage.and.throwError("error");
-
-            try {
-                render.drawImageOnCanvas(image, canvas);
-            } catch (e) {
-                error = e;
-            }
-
-            expect(error).toEqual(jasmine.objectContaining({message: "Error rendering page"}));
-        });
-    });
 });

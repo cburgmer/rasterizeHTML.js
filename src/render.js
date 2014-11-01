@@ -68,19 +68,6 @@ var render = (function (util, browser, svgtoimage, documentHelper, xmlserializer
         );
     };
 
-    var generalDrawError = function () {
-        return {message: "Error rendering page"};
-    };
-
-    module.drawImageOnCanvas = function (image, canvas) {
-        try {
-            canvas.getContext("2d").drawImage(image, 0, 0);
-        } catch (e) {
-            // Firefox throws a 'NS_ERROR_NOT_AVAILABLE' if the SVG is faulty
-            throw generalDrawError();
-        }
-    };
-
     module.drawDocumentImage = function (doc, options) {
         if (options.hover) {
             documentHelper.fakeHover(doc, options.hover);
