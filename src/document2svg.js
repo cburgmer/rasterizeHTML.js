@@ -1,4 +1,4 @@
-var render = (function (util, browser, documentHelper, xmlserializer) {
+var document2svg = (function (util, browser, documentHelper, xmlserializer) {
     "use strict";
 
     var module = {};

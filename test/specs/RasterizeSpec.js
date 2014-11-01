@@ -23,10 +23,10 @@ describe("Rasterize", function () {
     };
 
     var setUpDrawDocumentAsSvg = function (svg) {
-        render.drawDocumentAsSvg.and.returnValue(fulfilled(svg));
+        document2svg.drawDocumentAsSvg.and.returnValue(fulfilled(svg));
     };
     var setUpDrawDocumentAsSvgError = function (e) {
-        render.drawDocumentAsSvg.and.returnValue(rejected(e));
+        document2svg.drawDocumentAsSvg.and.returnValue(rejected(e));
     };
 
     var setUpRenderSvg = function (image) {
@@ -59,7 +59,7 @@ describe("Rasterize", function () {
     beforeEach(function () {
         doc = document.implementation.createHTMLDocument('');
 
-        spyOn(render, 'drawDocumentAsSvg');
+        spyOn(document2svg, 'drawDocumentAsSvg');
         spyOn(browser, 'loadDocument');
         spyOn(svgtoimage, 'renderSvg');
     });
@@ -86,7 +86,7 @@ describe("Rasterize", function () {
                 expect(result.errors).toEqual([]);
 
                 expect(inlineReferences).toHaveBeenCalledWith(doc, {inlineScripts: false});
-                expect(render.drawDocumentAsSvg).toHaveBeenCalledWith(doc, {});
+                expect(document2svg.drawDocumentAsSvg).toHaveBeenCalledWith(doc, {});
                 expect(svgtoimage.renderSvg).toHaveBeenCalledWith(theSvg);
                 expect(canvas.getContext('2d').drawImage).toHaveBeenCalledWith(rasterizedImage, 0, 0);
 
@@ -99,7 +99,7 @@ describe("Rasterize", function () {
                 expect(result.image).toEqual(rasterizedImage);
 
                 expect(inlineReferences).toHaveBeenCalledWith(doc, {inlineScripts : false});
-                expect(render.drawDocumentAsSvg).toHaveBeenCalledWith(doc, {});
+                expect(document2svg.drawDocumentAsSvg).toHaveBeenCalledWith(doc, {});
 
                 done();
             });
@@ -115,7 +115,7 @@ describe("Rasterize", function () {
 
         it("should pass on render options", function (done) {
             rasterize.rasterize(doc, aMockCanvas(), {width: 123, height: 234, hover: '.aSelector', active: '#anotherSelector', zoom: 42}).then(function () {
-                expect(render.drawDocumentAsSvg).toHaveBeenCalledWith(doc, {width: 123, height: 234, hover: '.aSelector', active: '#anotherSelector', zoom: 42});
+                expect(document2svg.drawDocumentAsSvg).toHaveBeenCalledWith(doc, {width: 123, height: 234, hover: '.aSelector', active: '#anotherSelector', zoom: 42});
 
                 done();
             });
