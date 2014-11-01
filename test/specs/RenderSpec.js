@@ -164,93 +164,6 @@ describe("The rendering process", function () {
         });
     });
 
-    describe("on SVG rendering", function () {
-        beforeEach(function () {
-            jasmine.addMatchers(imagediff.jasmine);
-        });
-
-        ifNotInWebkitIt("should render the SVG", function (done) {
-            var referenceImg = $('<img src="' + testHelper.fixturesPath + 'rednblue.png" alt="test image"/>'),
-                twoColorSvg = (
-                    '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">' +
-                        '<foreignObject x="0" y="0" width="100%" height="100%">' +
-                            '<html xmlns="http://www.w3.org/1999/xhtml">' +
-                                '<head>' +
-                                    '<style type="text/css">body { padding: 0; margin: 0}</style>' +
-                                '</head>' +
-                                '<body>' +
-                                    '<div style="background-color: #ff7700; height: 50px"></div>' +
-                                    '<div style="background-color: #1000ff; height: 50px"></div>' +
-                                '</body>' +
-                            '</html>' +
-                        '</foreignObject>' +
-                    '</svg>'
-                );
-
-            render.renderSvg(twoColorSvg, null).then(function (image) {
-                // This fails in Chrome & Safari, possibly due to a bug with same origin policy stuff
-                try {
-                    expect(image).toImageDiffEqual(referenceImg.get(0));
-                } catch (err) {
-                    expect(err.message).toBeNull();
-                }
-
-                done();
-            });
-        });
-
-        ifNotInWebkitIt("should render an SVG with inline image", function (done) {
-            var referenceImg = $('<img src="' + testHelper.fixturesPath + 'rednblue.png" alt="test image"/>'),
-                twoColorSvg = (
-                    '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">' +
-                        '<foreignObject x="0" y="0" width="100%" height="100%">' +
-                            '<html xmlns="http://www.w3.org/1999/xhtml">' +
-                                '<head>' +
-                                    '<style type="text/css">body { padding: 0; margin: 0}</style>' +
-                                '</head>' +
-                                '<body>' +
-                                    '<img id="image" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAABAUlEQVR4nO3RMQ3AABDEsINQtoX/hdEMHrxHyu7d0bG/AzAkzZAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMidmzOzoMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMifkA6bsjwS/Y5YIAAAAASUVORK5CYII=" alt="test image"/>' +
-                                '</body>' +
-                            '</html>' +
-                        '</foreignObject>' +
-                    '</svg>'
-                );
-
-            render.renderSvg(twoColorSvg, null).then(function (image) {
-                // This fails in Chrome & Safari, possibly due to a bug with same origin policy stuff
-                try {
-                    expect(image).toImageDiffEqual(referenceImg.get(0));
-                } catch (err) {
-                    expect(err.message).toBeNull();
-                }
-
-                done();
-            });
-        });
-
-        it("should return an error when the SVG cannot be rendered", function (done) {
-            var imageSpy = {};
-
-            // We need to mock, as only Chrome & Safari seem to throw errors on a faulty SVG
-            spyOn(window, "Image").and.returnValue(imageSpy);
-
-            render.renderSvg("svg", null).fail(done);
-
-            imageSpy.onerror();
-        });
-
-        it("should return an image without event listeners attached", function (done) {
-            var anSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"></svg>';
-
-            render.renderSvg(anSvg, null).then(function (image) {
-                expect(image.onerror).toBeNull();
-                expect(image.onload).toBeNull();
-
-                done();
-            });
-        });
-    });
-
     describe("drawDocumentImage", function () {
         var doc = "doc",
             calculatedSize;
@@ -273,7 +186,7 @@ describe("The rendering process", function () {
             calculatedSize = 'the_calculated_size';
             spyOn(browser, 'calculateDocumentContentSize').and.returnValue(fulfilled(calculatedSize));
             spyOn(render, 'getSvgForDocument');
-            spyOn(render, 'renderSvg');
+            spyOn(svgtoimage, 'renderSvg');
         });
 
         it("should draw the image", function (done) {
@@ -281,7 +194,7 @@ describe("The rendering process", function () {
                 image = "the image";
 
             render.getSvgForDocument.and.returnValue(svg);
-            render.renderSvg.and.returnValue(fulfilled(image));
+            svgtoimage.renderSvg.and.returnValue(fulfilled(image));
 
             render.drawDocumentImage(doc, {zoom: 42}).then(function (theImage) {
                 expect(theImage).toBe(image);
@@ -291,14 +204,14 @@ describe("The rendering process", function () {
                     jasmine.objectContaining({zoom: 42})
                 );
                 expect(render.getSvgForDocument).toHaveBeenCalledWith(doc, calculatedSize, 42);
-                expect(render.renderSvg).toHaveBeenCalledWith(svg);
+                expect(svgtoimage.renderSvg).toHaveBeenCalledWith(svg);
 
                 done();
             });
         });
 
         it("should report an error when constructing the SVG image", function (done) {
-            render.renderSvg.and.returnValue(rejected());
+            svgtoimage.renderSvg.and.returnValue(rejected());
 
             render.drawDocumentImage(doc, {}).fail(done);
         });
