@@ -8,12 +8,12 @@ describe("Browser functions", function () {
         };
 
         var mockFinishNotifyingXHRProxy = function () {
-            var fakeXhrProxy = jasmine.createSpyObj('finishNotifyingProxy', ['send', 'waitForRequestsToFinish']),
+            var fakeXhrProxy = jasmine.createSpyObj('finishNotifyingXhrProxy', ['send', 'waitForRequestsToFinish']),
                 defer = testHelper.synchronousDefer();
 
             fakeXhrProxy.waitForRequestsToFinish.and.returnValue(defer.promise);
 
-            spyOn(xhrproxies, 'finishNotifying').and.returnValue(fakeXhrProxy);
+            spyOn(xhrproxies, 'finishNotifyingXhr').and.returnValue(fakeXhrProxy);
 
             return defer;
         };

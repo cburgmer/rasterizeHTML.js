@@ -65,7 +65,7 @@ var xhrproxies = (function (util, ayepromise) {
     };
 
     // Bases all XHR calls on the given base URL
-    module.baseUrlRespecting = function (XHRObject, baseUrl) {
+    module.baseUrlRespectingXhr = function (XHRObject, baseUrl) {
         var xhrConstructor = function () {
             var xhr = new XHRObject();
 
@@ -84,7 +84,7 @@ var xhrproxies = (function (util, ayepromise) {
     };
 
     // Provides a convenient way of being notified when all pending XHR calls are finished
-    module.finishNotifying = function (XHRObject) {
+    module.finishNotifyingXhr = function (XHRObject) {
         var totalXhrCount = 0,
             doneXhrCount = 0,
             waitingForPendingToClose = false,

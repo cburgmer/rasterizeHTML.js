@@ -50,8 +50,8 @@ var browser = (function (util, xhrproxies, ayepromise, theWindow) {
         };
 
         var xhr = iframe.contentWindow.XMLHttpRequest,
-            finishNotifyXhrProxy = xhrproxies.finishNotifying(xhr),
-            baseUrlXhrProxy = xhrproxies.baseUrlRespecting(finishNotifyXhrProxy, options.baseUrl);
+            finishNotifyXhrProxy = xhrproxies.finishNotifyingXhr(xhr),
+            baseUrlXhrProxy = xhrproxies.baseUrlRespectingXhr(finishNotifyXhrProxy, options.baseUrl);
 
         iframe.contentDocument.open();
         iframe.contentWindow.XMLHttpRequest = baseUrlXhrProxy;

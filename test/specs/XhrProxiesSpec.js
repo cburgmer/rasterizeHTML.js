@@ -3,7 +3,7 @@ describe("XHR Proxies", function () {
         spyOn(ayepromise, 'defer').and.returnValue(testHelper.synchronousDefer());
     };
 
-    describe("finishNotifying", function () {
+    describe("finishNotifyingXhr", function () {
         describe("mocked XHR", function () {
             var callback, originalXHRInstance, xhrMockConstructor;
 
@@ -33,13 +33,13 @@ describe("XHR Proxies", function () {
             it("should notify when a pending AJAX request has finished", function () {
                 mockPromisesToResolveSynchronously();
 
-                var finishNotifyingProxy = xhrproxies.finishNotifying(xhrMockConstructor),
-                    xhr = finishNotifyingProxy();
+                var finishNotifyingXhrProxy = xhrproxies.finishNotifyingXhr(xhrMockConstructor),
+                    xhr = finishNotifyingXhrProxy();
 
                 // Start XHR request
                 xhr.send();
 
-                finishNotifyingProxy.waitForRequestsToFinish().then(callback);
+                finishNotifyingXhrProxy.waitForRequestsToFinish().then(callback);
 
                 expect(callback).not.toHaveBeenCalled();
 
@@ -51,15 +51,15 @@ describe("XHR Proxies", function () {
             it("should notify when multipel pending AJAX request have finished", function () {
                 mockPromisesToResolveSynchronously();
 
-                var finishNotifyingProxy = xhrproxies.finishNotifying(xhrMockConstructor),
-                    xhr1 = finishNotifyingProxy(),
-                    xhr2 = finishNotifyingProxy();
+                var finishNotifyingXhrProxy = xhrproxies.finishNotifyingXhr(xhrMockConstructor),
+                    xhr1 = finishNotifyingXhrProxy(),
+                    xhr2 = finishNotifyingXhrProxy();
 
                 // Start XHR request
                 xhr1.send();
                 xhr2.send();
 
-                finishNotifyingProxy.waitForRequestsToFinish().then(callback);
+                finishNotifyingXhrProxy.waitForRequestsToFinish().then(callback);
 
                 originalXHRInstance[0].mockDone();
                 expect(callback).not.toHaveBeenCalled();
@@ -69,45 +69,45 @@ describe("XHR Proxies", function () {
             });
 
             it("should handle an onload handler attached to the proxied instance", function (done) {
-                var finishNotifyingProxy = xhrproxies.finishNotifying(xhrMockConstructor),
-                    xhr = finishNotifyingProxy();
+                var finishNotifyingXhrProxy = xhrproxies.finishNotifyingXhr(xhrMockConstructor),
+                    xhr = finishNotifyingXhrProxy();
 
                 xhr.onload = function myOwnOnLoadHandler() {};
                 xhr.send();
 
-                finishNotifyingProxy.waitForRequestsToFinish().then(done);
+                finishNotifyingXhrProxy.waitForRequestsToFinish().then(done);
 
                 originalXHRInstance[0].mockDone();
             });
 
             it("should finish when no XHR request has been started", function (done) {
-                var finishNotifyingProxy = xhrproxies.finishNotifying(xhrMockConstructor);
+                var finishNotifyingXhrProxy = xhrproxies.finishNotifyingXhr(xhrMockConstructor);
 
-                finishNotifyingProxy.waitForRequestsToFinish().then(done);
+                finishNotifyingXhrProxy.waitForRequestsToFinish().then(done);
             });
 
             it("should notify even if called after all requests resovled", function (done) {
-                var finishNotifyingProxy = xhrproxies.finishNotifying(xhrMockConstructor),
-                    xhr = finishNotifyingProxy();
+                var finishNotifyingXhrProxy = xhrproxies.finishNotifyingXhr(xhrMockConstructor),
+                    xhr = finishNotifyingXhrProxy();
 
                 xhr.send();
                 originalXHRInstance[0].mockDone();
 
-                finishNotifyingProxy.waitForRequestsToFinish().then(done);
+                finishNotifyingXhrProxy.waitForRequestsToFinish().then(done);
             });
         });
 
         describe("integration", function () {
             it("should notify after file has loaded", function (done) {
                 var callback = jasmine.createSpy('callback'),
-                    FinishNotifyingProxy = xhrproxies.finishNotifying(window.XMLHttpRequest),
-                    xhr = new FinishNotifyingProxy();
+                    FinishNotifyingXhrProxy = xhrproxies.finishNotifyingXhr(window.XMLHttpRequest),
+                    xhr = new FinishNotifyingXhrProxy();
 
                 xhr.onload = callback;
                 xhr.open('GET', testHelper.fixturesPath + 'test.html', true);
                 xhr.send(null);
 
-                FinishNotifyingProxy.waitForRequestsToFinish().then(function (result) {
+                FinishNotifyingXhrProxy.waitForRequestsToFinish().then(function (result) {
                     expect(callback).toHaveBeenCalled();
                     expect(result).toEqual({totalCount: 1});
 
@@ -117,10 +117,10 @@ describe("XHR Proxies", function () {
         });
     });
 
-    describe("baseUrlRespecting", function () {
+    describe("baseUrlRespectingXhr", function () {
         it("should load file relative to given base url", function (done) {
             var baseUrl = testHelper.fixturesPath,
-                BaseUrlRespectingProxy = xhrproxies.baseUrlRespecting(window.XMLHttpRequest, baseUrl),
+                BaseUrlRespectingProxy = xhrproxies.baseUrlRespectingXhr(window.XMLHttpRequest, baseUrl),
                 xhr = new BaseUrlRespectingProxy();
 
             xhr.onload = function () {
