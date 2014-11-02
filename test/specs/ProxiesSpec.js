@@ -33,7 +33,7 @@ describe("XHR Proxies", function () {
             it("should notify when a pending AJAX request has finished", function () {
                 mockPromisesToResolveSynchronously();
 
-                var finishNotifyingXhrProxy = xhrproxies.finishNotifyingXhr(xhrMockConstructor),
+                var finishNotifyingXhrProxy = proxies.finishNotifyingXhr(xhrMockConstructor),
                     xhr = finishNotifyingXhrProxy();
 
                 // Start XHR request
@@ -51,7 +51,7 @@ describe("XHR Proxies", function () {
             it("should notify when multipel pending AJAX request have finished", function () {
                 mockPromisesToResolveSynchronously();
 
-                var finishNotifyingXhrProxy = xhrproxies.finishNotifyingXhr(xhrMockConstructor),
+                var finishNotifyingXhrProxy = proxies.finishNotifyingXhr(xhrMockConstructor),
                     xhr1 = finishNotifyingXhrProxy(),
                     xhr2 = finishNotifyingXhrProxy();
 
@@ -69,7 +69,7 @@ describe("XHR Proxies", function () {
             });
 
             it("should handle an onload handler attached to the proxied instance", function (done) {
-                var finishNotifyingXhrProxy = xhrproxies.finishNotifyingXhr(xhrMockConstructor),
+                var finishNotifyingXhrProxy = proxies.finishNotifyingXhr(xhrMockConstructor),
                     xhr = finishNotifyingXhrProxy();
 
                 xhr.onload = function myOwnOnLoadHandler() {};
@@ -81,13 +81,13 @@ describe("XHR Proxies", function () {
             });
 
             it("should finish when no XHR request has been started", function (done) {
-                var finishNotifyingXhrProxy = xhrproxies.finishNotifyingXhr(xhrMockConstructor);
+                var finishNotifyingXhrProxy = proxies.finishNotifyingXhr(xhrMockConstructor);
 
                 finishNotifyingXhrProxy.waitForRequestsToFinish().then(done);
             });
 
             it("should notify even if called after all requests resovled", function (done) {
-                var finishNotifyingXhrProxy = xhrproxies.finishNotifyingXhr(xhrMockConstructor),
+                var finishNotifyingXhrProxy = proxies.finishNotifyingXhr(xhrMockConstructor),
                     xhr = finishNotifyingXhrProxy();
 
                 xhr.send();
@@ -100,7 +100,7 @@ describe("XHR Proxies", function () {
         describe("integration", function () {
             it("should notify after file has loaded", function (done) {
                 var callback = jasmine.createSpy('callback'),
-                    FinishNotifyingXhrProxy = xhrproxies.finishNotifyingXhr(window.XMLHttpRequest),
+                    FinishNotifyingXhrProxy = proxies.finishNotifyingXhr(window.XMLHttpRequest),
                     xhr = new FinishNotifyingXhrProxy();
 
                 xhr.onload = callback;
@@ -120,7 +120,7 @@ describe("XHR Proxies", function () {
     describe("baseUrlRespectingXhr", function () {
         it("should load file relative to given base url", function (done) {
             var baseUrl = testHelper.fixturesPath,
-                BaseUrlRespectingProxy = xhrproxies.baseUrlRespectingXhr(window.XMLHttpRequest, baseUrl),
+                BaseUrlRespectingProxy = proxies.baseUrlRespectingXhr(window.XMLHttpRequest, baseUrl),
                 xhr = new BaseUrlRespectingProxy();
 
             xhr.onload = function () {
@@ -137,7 +137,7 @@ describe("XHR Proxies", function () {
 
         beforeEach(function () {
             baseUrl = testHelper.fixturesPath;
-            BaseUrlRespectingProxy = xhrproxies.baseUrlRespectingImage(window.Image, baseUrl);
+            BaseUrlRespectingProxy = proxies.baseUrlRespectingImage(window.Image, baseUrl);
             img = new BaseUrlRespectingProxy();
         });
 

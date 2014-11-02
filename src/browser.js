@@ -1,4 +1,4 @@
-var browser = (function (util, xhrproxies, ayepromise, theWindow) {
+var browser = (function (util, proxies, ayepromise, theWindow) {
     "use strict";
 
     var module = {};
@@ -50,12 +50,12 @@ var browser = (function (util, xhrproxies, ayepromise, theWindow) {
         };
 
         var xhr = iframe.contentWindow.XMLHttpRequest,
-            finishNotifyXhrProxy = xhrproxies.finishNotifyingXhr(xhr),
-            baseUrlXhrProxy = xhrproxies.baseUrlRespectingXhr(finishNotifyXhrProxy, options.baseUrl);
+            finishNotifyXhrProxy = proxies.finishNotifyingXhr(xhr),
+            baseUrlXhrProxy = proxies.baseUrlRespectingXhr(finishNotifyXhrProxy, options.baseUrl);
 
         iframe.contentDocument.open();
         iframe.contentWindow.XMLHttpRequest = baseUrlXhrProxy;
-        iframe.contentWindow.Image = xhrproxies.baseUrlRespectingImage(iframe.contentWindow.Image, options.baseUrl);
+        iframe.contentWindow.Image = proxies.baseUrlRespectingImage(iframe.contentWindow.Image, options.baseUrl);
         iframe.contentWindow.onerror = function (msg) {
             iframeErrorsMessages.push({
                 resourceType: "scriptExecution",
@@ -295,4 +295,4 @@ var browser = (function (util, xhrproxies, ayepromise, theWindow) {
     };
 
     return module;
-}(util, xhrproxies, ayepromise, window));
+}(util, proxies, ayepromise, window));

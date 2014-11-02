@@ -1,5 +1,5 @@
 // Proxy objects by monkey patching
-var xhrproxies = (function (util, ayepromise) {
+var proxies = (function (util, ayepromise) {
     var module = {};
 
     var monkeyPatchInstanceMethod = function (object, methodName, proxyFunc) {

@@ -7,7 +7,7 @@ module.exports = function (grunt) {
                 'build/dependencies/*.js',
                 'node_modules/ayepromise/ayepromise.js',
                 'src/util.js',
-                'src/xhrproxies.js',
+                'src/proxies.js',
                 'src/documentUtil.js',
                 'src/documentHelper.js',
                 'src/browser.js',
@@ -89,7 +89,7 @@ module.exports = function (grunt) {
             one: {
                 src: [
                     'src/util.js',
-                    'src/xhrproxies.js',
+                    'src/proxies.js',
                     'src/documentUtil.js',
                     'src/documentHelper.js',
                     'src/browser.js',
@@ -167,7 +167,7 @@ module.exports = function (grunt) {
                 browser: true,
                 globals: {
                     util: true,
-                    xhrproxies: true,
+                    proxies: true,
                     documentUtil: true,
                     documentHelper: true,
                     browser: true,
@@ -180,7 +180,7 @@ module.exports = function (grunt) {
                     ayepromise: true,
                     inlineresources: true
                 },
-                exported: ['rasterizeHTML', 'rasterize', 'document2svg', 'svg2image', 'util', 'xhrproxies', 'browser', 'documentUtil', 'documentHelper']
+                exported: ['rasterizeHTML', 'rasterize', 'document2svg', 'svg2image', 'util', 'proxies', 'browser', 'documentUtil', 'documentHelper']
             },
             uses_defaults: [
                 'src/*.js',
@@ -207,7 +207,7 @@ module.exports = function (grunt) {
                         diffHelper: true,
 
                         util: true,
-                        xhrproxies: true,
+                        proxies: true,
                         documentUtil: true,
                         documentHelper: true,
                         browser: true,

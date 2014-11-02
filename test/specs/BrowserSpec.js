@@ -13,7 +13,7 @@ describe("Browser functions", function () {
 
             fakeXhrProxy.waitForRequestsToFinish.and.returnValue(defer.promise);
 
-            spyOn(xhrproxies, 'finishNotifyingXhr').and.returnValue(fakeXhrProxy);
+            spyOn(proxies, 'finishNotifyingXhr').and.returnValue(fakeXhrProxy);
 
             return defer;
         };
