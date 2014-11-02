@@ -121,19 +121,25 @@ rasterizeHTML.drawDocument( document [, canvas] [, options] )</pre>
 
     sizeCanvas(canvas);
 
+    var doDraw = function () {
+        rasterizeHTML.drawHTML(input.value, canvas).then(function (result) {
+            console.log('errors', result.errors);
+        });
+    };
+
     input.onkeyup = function () {
         if (input.value !== oldText) {
             oldText = input.value;
             canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 
-            rasterizeHTML.drawHTML(input.value, canvas);
+            doDraw();
         }
     };
 
     if (!input.value) {
         input.value = template.innerHTML.replace(/^ {4}/gm, "").replace(/^\n/g, "").replace(/\n +$/g, "\n");
     }
-    rasterizeHTML.drawHTML(input.value, canvas);
+    doDraw();
 }());
 </script>
 
