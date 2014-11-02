@@ -57,29 +57,12 @@ var document2svg = (function (util, browser, documentHelper, xmlserializer) {
 
         workAroundCollapsingMarginsAcrossSVGElementInWebKitLike(attributes);
 
-        var fontSize = window.getComputedStyle ?
-            // All modern/decent browsers
-            window.getComputedStyle(doc.documentElement).fontSize :
-            // IE
-            doc.documentElement ?
-                // Standards Mode IE
-                doc.documentElement.currentStyle.fontSize :
-                // Compatibility Mode IE
-                doc.body.currentStyle.fontSize;
-
-        if (!fontSize) {
-          // If the document is detached, getComputedStyle may fail
-          // See https://bugs.webkit.org/show_bug.cgi?id=14563
-          // Fallback to using the font-size declared on the element, if any
-          fontSize = doc.documentElement ?
-              doc.documentElement.style.fontSize :
-              doc.body.style.fontSize;
-        }
-
-        var fontSizeAttr = fontSize ? ' font-size="' + fontSize + '"' : '';
-
         return (
-            '<svg xmlns="http://www.w3.org/2000/svg" width="' + size.width + '" height="' + size.height + '"' + fontSizeAttr + '>' +
+            '<svg xmlns="http://www.w3.org/2000/svg"' +
+                ' width="' + size.width + '"' +
+                ' height="' + size.height + '"' +
+                ' font-size="' + size.rootFontSize + '"' +
+                '>' +
                 '<foreignObject' + serializeAttributes(attributes) + '>' +
                 xhtml +
                 '</foreignObject>' +

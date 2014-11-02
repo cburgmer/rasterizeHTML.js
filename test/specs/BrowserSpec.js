@@ -338,6 +338,16 @@ describe("Browser functions", function () {
             });
         });
 
+        it("should calculate the document's root font size", function (done) {
+            setHtml('<style>html { font-size: 4711px; }</style>');
+
+            browser.calculateDocumentContentSize(doc, {width: 300, height: 200}).then(function (size) {
+                expect(size.rootFontSize).toBe('4711px');
+
+                done();
+            });
+        });
+
         it("should remove the iframe when done calculating", function (done) {
             setElementWithSize({});
 

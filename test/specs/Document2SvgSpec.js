@@ -9,8 +9,15 @@ describe("Document to SVG conversion", function () {
                 width: width || 123,
                 height: height || 456 ,
                 viewportWidth: viewportWidth || width || 123,
-                viewportHeight: viewportHeight || height || 456
+                viewportHeight: viewportHeight || height || 456,
+                rootFontSize: '123px'
             };
+        };
+
+        var aRenderSizeWithRootFontSize = function (rootFontSize) {
+            var size = aRenderSize();
+            size.rootFontSize = rootFontSize;
+            return size;
         };
 
         var sandbox;
@@ -128,13 +135,12 @@ describe("Document to SVG conversion", function () {
 
         it("should return a SVG with a root font size to preserve rem units", function () {
             var doc = document.implementation.createHTMLDocument("");
-            doc.documentElement.style.fontSize = "14px";
             doc.body.innerHTML = "Test content";
 
-            var svgCode = document2svg.getSvgForDocument(doc, aRenderSize(), defaultZoomLevel);
+            var svgCode = document2svg.getSvgForDocument(doc, aRenderSizeWithRootFontSize('42px'), defaultZoomLevel);
 
             expect(svgCode).toMatch(new RegExp(
-                '<svg xmlns="http://www.w3.org/2000/svg" [^>]*font-size="14px"[^>]*>' +
+                '<svg xmlns="http://www.w3.org/2000/svg" [^>]*font-size="42px"[^>]*>' +
                     '<foreignObject .*>' +
                         '<html xmlns="http://www.w3.org/1999/xhtml"[^>]*>' +
                             '<head>' +

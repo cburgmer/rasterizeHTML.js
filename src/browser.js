@@ -101,7 +101,7 @@ var browser = (function (util, proxies, ayepromise, theWindow) {
             // clientWidth/clientHeight needed for PhantomJS
         var actualViewportWidth = Math.max(doc.documentElement.scrollWidth, doc.body.clientWidth),
             actualViewportHeight = Math.max(doc.documentElement.scrollHeight, doc.body.scrollHeight, doc.body.clientHeight),
-            top, left, originalWidth, originalHeight,
+            top, left, originalWidth, originalHeight, rootFontSize,
             element, rect, contentSize;
 
         if (selector) {
@@ -134,13 +134,17 @@ var browser = (function (util, proxies, ayepromise, theWindow) {
             requestedHeight,
             zoom);
 
+        rootFontSize = theWindow.getComputedStyle(doc.documentElement).fontSize;
+
         return {
             left: left,
             top: top,
             width: contentSize.width,
             height: contentSize.height,
             viewportWidth: actualViewportWidth,
-            viewportHeight: actualViewportHeight
+            viewportHeight: actualViewportHeight,
+
+            rootFontSize: rootFontSize
         };
     };
 
