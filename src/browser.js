@@ -166,11 +166,11 @@ var browser = (function (util, proxies, ayepromise, theWindow) {
             try {
                 size = calculateContentSize(doc, options.clip, options.width, options.height, zoom);
 
-                theWindow.document.getElementsByTagName("body")[0].removeChild(iframe);
-
                 defer.resolve(size);
             } catch (e) {
                 defer.reject(e);
+            } finally {
+                theWindow.document.getElementsByTagName("body")[0].removeChild(iframe);
             }
         };
 

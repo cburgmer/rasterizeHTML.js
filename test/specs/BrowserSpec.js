@@ -495,6 +495,14 @@ describe("Browser functions", function () {
                     done();
                 });
             });
+
+            it("should remove the iframe when the selector is not found", function (done) {
+                browser.calculateDocumentContentSize(doc, {width: 100, height: 10, clip: 'a'}).then(null, function () {
+                    expect($('iframe').length).toBe(0);
+
+                    done();
+                });
+            });
         });
     });
 
