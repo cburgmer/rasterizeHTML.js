@@ -13,6 +13,7 @@ module.exports = function (grunt) {
                 'src/browser.js',
                 'src/svg2image.js',
                 'src/document2svg.js',
+                'src/prerender.js',
                 'src/rasterize.js',
                 'src/index.js'
             ],
@@ -173,6 +174,7 @@ module.exports = function (grunt) {
                     browser: true,
                     svg2image: true,
                     document2svg: true,
+                    prerender: true,
                     rasterize: true,
 
                     url: true,
@@ -180,7 +182,7 @@ module.exports = function (grunt) {
                     ayepromise: true,
                     inlineresources: true
                 },
-                exported: ['rasterizeHTML', 'rasterize', 'document2svg', 'svg2image', 'util', 'proxies', 'browser', 'documentUtil', 'documentHelper']
+                exported: ['rasterizeHTML', 'rasterize', 'prerender', 'document2svg', 'svg2image', 'util', 'proxies', 'browser', 'documentUtil', 'documentHelper']
             },
             uses_defaults: [
                 'src/*.js',
@@ -213,6 +215,7 @@ module.exports = function (grunt) {
                         browser: true,
                         svg2image: true,
                         document2svg: true,
+                        prerender: true,
                         rasterize: true,
                         rasterizeHTML: true,
 

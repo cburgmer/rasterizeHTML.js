@@ -232,7 +232,7 @@ describe("Pre-rendering", function () {
                     expect(result.size.viewportHeight).toEqual(300);
 
                     done();
-                }, function (e) { console.log(e); });
+                });
             });
 
             it("should return the minimum height viewport", function (done) {
