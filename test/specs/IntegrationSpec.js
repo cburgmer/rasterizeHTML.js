@@ -96,7 +96,7 @@ describe("Integration test", function () {
         rasterizeHTML.drawURL(testHelper.fixturesPath + "testScaled50PercentWithJs.html", {
                 cache: 'none',
                 width: width,
-                height: height,
+                height: 10,
                 executeJs: true,
                 executeJsTimeout: 100,
                 zoom: 2,
