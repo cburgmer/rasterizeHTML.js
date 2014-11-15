@@ -91,25 +91,24 @@ var prerender = (function (util, proxies, ayepromise, theWindow) {
             executeJs = options.executeJs || false,
             timeout = options.executeJsTimeout || 0,
             iframe;
-
         iframe = createIframeWithSizeAtZoomLevel1(options.width, options.height, zoom, executeJs);
 
         var doResolve = function () {
-            var doc = iframe.contentDocument,
+            var renderedDoc = iframe.contentDocument,
                 size;
 
             try {
-                size = calculateContentSize(doc, options.clip, options.width, options.height, zoom);
-
+                size = calculateContentSize(renderedDoc, options.clip, options.width, options.height, zoom);
+                
                 defer.resolve({
-                    document: doc,
+                    document: renderedDoc,
                     size: size,
                     errors: iframeErrorsMessages
                 });
             } catch (e) {
                 defer.reject(e);
             } finally {
-                theWindow.document.getElementsByTagName("body")[0].removeChild(iframe);
+                //theWindow.document.getElementsByTagName("body")[0].removeChild(iframe);
             }
         };
 

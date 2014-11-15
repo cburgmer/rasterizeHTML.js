@@ -28,28 +28,15 @@ var rasterize = (function (util, browser, documentHelper, document2svg, svg2imag
         }
     };
 
-    var doDraw = function (doc, canvas, options) {
-        return document2svg.drawDocumentAsSvg(doc, {}, options)
-            .then(drawSvgAsImg)
+    var doDraw = function (doc, size, canvas, options) {
+        var svg = document2svg.drawDocumentAsSvg(doc, size, options);
+        return drawSvgAsImg(svg)
             .then(function (result) {
                 if (canvas) {
                     drawImageOnCanvas(result.image, canvas);
                 }
 
                 return result;
-            });
-    };
-
-    var operateJavaScriptOnDocument = function (doc, options) {
-        return browser.executeJavascript(doc, options)
-            .then(function (result) {
-                var document = result.document;
-                documentHelper.persistInputValues(document);
-
-                return {
-                    document: document,
-                    errors: result.errors
-                };
             });
     };
 
@@ -61,22 +48,21 @@ var rasterize = (function (util, browser, documentHelper, document2svg, svg2imag
 
         return inlineresources.inlineReferences(doc, inlineOptions)
             .then(function (errors) {
-                if (options.executeJs) {
-                    return operateJavaScriptOnDocument(doc, options)
-                        .then(function (result) {
-                            return {
-                                document: result.document,
-                                errors: errors.concat(result.errors)
-                            };
-                        });
-                } else {
-                    return {
-                        document: doc,
-                        errors: errors
-                    };
-                }
-            }).then(function (result) {
-                return doDraw(result.document, canvas, options)
+                return prerender.prerender(doc, options)
+                    .then(function (result) {
+                        return {
+                            document: result.document,
+                            size: result.size,
+                            errors: errors.concat(result.errors)
+                        };
+                    });
+            })
+            .then(function (result) {
+                documentHelper.persistInputValues(result.document);
+                return result;
+            })
+            .then(function (result) {
+                return doDraw(result.document, result.size, canvas, options)
                     .then(function (drawResult) {
                         return {
                             image: drawResult.image,

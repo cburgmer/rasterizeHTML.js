@@ -23,10 +23,10 @@ describe("Rasterize", function () {
     };
 
     var setUpDrawDocumentAsSvg = function (svg) {
-        document2svg.drawDocumentAsSvg.and.returnValue(fulfilled(svg));
+        document2svg.drawDocumentAsSvg.and.returnValue(svg);
     };
     var setUpDrawDocumentAsSvgError = function (e) {
-        document2svg.drawDocumentAsSvg.and.returnValue(rejected(e));
+        document2svg.drawDocumentAsSvg.and.throwError(e);
     };
 
     var setUpRenderSvg = function (image) {
@@ -62,6 +62,10 @@ describe("Rasterize", function () {
         spyOn(document2svg, 'drawDocumentAsSvg');
         spyOn(browser, 'loadDocument');
         spyOn(svg2image, 'renderSvg');
+        spyOn(prerender, "prerender").and.returnValue(
+            fulfilled({document: doc, size: {}, errors: []})
+        );
+        spyOn(documentHelper, 'persistInputValues');
     });
 
     describe("Rendering", function () {
@@ -71,8 +75,6 @@ describe("Rasterize", function () {
             callback = jasmine.createSpy("drawCallback");
 
             inlineReferences = spyOn(inlineresources, "inlineReferences").and.returnValue(withoutErrors());
-
-            spyOn(documentHelper, 'persistInputValues');
 
             setUpDrawDocumentAsSvg(theSvg);
             setUpRenderSvg(rasterizedImage);
@@ -143,12 +145,12 @@ describe("Rasterize", function () {
         });
 
         it("should optionally execute JavaScript in the page", function (done) {
-            var executeJavascript = spyOn(browser, "executeJavascript").and.returnValue(
-                    fulfilled({document: doc, errors: []})
-                );
-
             rasterize.rasterize(doc, null, {executeJs: true, width: 123, height: 456}).then(function () {
-                expect(executeJavascript).toHaveBeenCalledWith(doc, jasmine.objectContaining({width: 123, height: 456}));
+                expect(prerender.prerender).toHaveBeenCalledWith(doc, jasmine.objectContaining({
+                    executeJs: true,
+                    width: 123,
+                    height: 456
+                }));
                 expect(documentHelper.persistInputValues).toHaveBeenCalledWith(doc);
 
                 done();
@@ -168,13 +170,11 @@ describe("Rasterize", function () {
         });
 
         it("should follow optional timeout when executing JavaScript", function (done) {
-            var executeJavascript = spyOn(browser, "executeJavascript").and.returnValue(
-                    fulfilled({document: doc, errors: []})
-                );
-
-
             rasterize.rasterize(doc, null, {executeJs: true, executeJsTimeout: 42}).then(function () {
-                expect(executeJavascript).toHaveBeenCalledWith(doc, jasmine.objectContaining({executeJsTimeout: 42}));
+                expect(prerender.prerender).toHaveBeenCalledWith(doc, jasmine.objectContaining({
+                    executeJs: true,
+                    executeJsTimeout: 42
+                }));
 
                 done();
             });
@@ -186,8 +186,6 @@ describe("Rasterize", function () {
 
         beforeEach(function () {
             callback = jasmine.createSpy("drawCallback");
-
-            spyOn(documentHelper, 'persistInputValues');
         });
 
         it("should pass through an error from inlining on drawDocument", function (done) {
@@ -208,8 +206,8 @@ describe("Rasterize", function () {
 
         it("should pass through a JS error", function (done) {
             spyOn(inlineresources, "inlineReferences").and.returnValue(withoutErrors());
-            spyOn(browser, "executeJavascript").and.returnValue(
-                fulfilled({document: doc, errors: ["the error"]})
+            prerender.prerender.and.returnValue(
+                fulfilled({document: doc, size: {}, errors: ["the error"]})
             );
             setUpDrawDocumentAsSvg(theSvg);
             setUpRenderSvg(rasterizedImage);
@@ -232,7 +230,6 @@ describe("Rasterize", function () {
             inlineReferences = spyOn(inlineresources, "inlineReferences").and.returnValue(withoutErrors());
 
             executeJavascript = spyOn(browser, "executeJavascript");
-            spyOn(documentHelper, 'persistInputValues');
         });
 
         it("should fail the returned promise on error from inlining when drawing the SVG", function (done) {
