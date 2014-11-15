@@ -288,11 +288,22 @@ describe("Pre-rendering", function () {
                 });
             });
 
-            it("should not execute JavaScript", function (done) {
+            it("should not execute JavaScript by default", function (done) {
                 setHtml('<div></div><script>document.querySelector("div").style.height="100";</script>');
 
                 prerender.prerender(doc, {width: 300, height: 10}).then(function (result) {
                     expect(result.size.height).toEqual(10);
+
+                    done();
+                });
+            });
+
+            it("should calculate height after JavaScript executed", function (done) {
+                setHtml('<style>* { margin: 0; }</style>' +
+                        '<div></div><script>document.querySelector("div").style.height="100";</script>');
+
+                prerender.prerender(doc, {width: 300, height: 10, executeJs: true}).then(function (result) {
+                    expect(result.size.height).toEqual(100);
 
                     done();
                 });
