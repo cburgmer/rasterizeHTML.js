@@ -206,17 +206,17 @@ describe("Document to SVG conversion", function () {
         beforeEach(function () {
             spyOn(documentHelper, 'fakeHover');
             spyOn(documentHelper, 'fakeActive');
-            calculatedSize = 'the_calculated_size';
+            calculatedSize = {the: 'calculated_size'};
             spyOn(browser, 'calculateDocumentContentSize').and.returnValue(fulfilled(calculatedSize));
             spyOn(document2svg, 'getSvgForDocument');
         });
 
-        it("should draw as svg", function (done) {
+        it("should draw as svg (legacy)", function (done) {
             var svg = "the svg";
 
             document2svg.getSvgForDocument.and.returnValue(svg);
 
-            document2svg.drawDocumentAsSvg(doc, {zoom: 42}).then(function (theSvg) {
+            document2svg.drawDocumentAsSvg(doc, {}, {zoom: 42}).then(function (theSvg) {
                 expect(theSvg).toBe(svg);
 
                 expect(browser.calculateDocumentContentSize).toHaveBeenCalledWith(
@@ -229,38 +229,52 @@ describe("Document to SVG conversion", function () {
             });
         });
 
+        it("should draw as svg", function () {
+            var svg = "the svg";
+
+            document2svg.getSvgForDocument.and.returnValue(svg);
+
+            var theSvg = document2svg.drawDocumentAsSvg(doc, calculatedSize, {zoom: 42});
+
+            expect(theSvg).toBe(svg);
+
+            expect(browser.calculateDocumentContentSize).not.toHaveBeenCalled();
+
+            expect(document2svg.getSvgForDocument).toHaveBeenCalledWith(doc, calculatedSize, 42);
+        });
+
         it("should take an optional width and height", function () {
-            document2svg.drawDocumentAsSvg(doc, {width: 42, height: 4711});
+            document2svg.drawDocumentAsSvg(doc, {}, {width: 42, height: 4711});
 
             expect(browser.calculateDocumentContentSize).toHaveBeenCalledWith(doc, {width: 42, height: 4711});
         });
 
         it("should trigger hover effect", function () {
-            document2svg.drawDocumentAsSvg(doc, {hover: '.mySpan'});
+            document2svg.drawDocumentAsSvg(doc, {}, {hover: '.mySpan'});
 
             expect(documentHelper.fakeHover).toHaveBeenCalledWith(doc, '.mySpan');
         });
 
         it("should not trigger hover effect by default", function () {
-            document2svg.drawDocumentAsSvg(doc, {});
+            document2svg.drawDocumentAsSvg(doc, {}, {});
 
             expect(documentHelper.fakeHover).not.toHaveBeenCalled();
         });
 
         it("should trigger active effect", function () {
-            document2svg.drawDocumentAsSvg(doc, {active: '.mySpan'});
+            document2svg.drawDocumentAsSvg(doc, {}, {active: '.mySpan'});
 
             expect(documentHelper.fakeActive).toHaveBeenCalledWith(doc, '.mySpan');
         });
 
         it("should not trigger active effect by default", function () {
-            document2svg.drawDocumentAsSvg(doc, {});
+            document2svg.drawDocumentAsSvg(doc, {}, {});
 
             expect(documentHelper.fakeActive).not.toHaveBeenCalled();
         });
 
         it("should render the selected element", function () {
-            document2svg.drawDocumentAsSvg(doc, {clip: '.mySpan'});
+            document2svg.drawDocumentAsSvg(doc, {}, {clip: '.mySpan'});
 
             expect(browser.calculateDocumentContentSize).toHaveBeenCalledWith(
                 doc,

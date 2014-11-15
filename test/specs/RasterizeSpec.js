@@ -83,7 +83,7 @@ describe("Rasterize", function () {
 
             rasterize.rasterize(doc, canvas, {}).then(function () {
                 expect(inlineReferences).toHaveBeenCalledWith(doc, {inlineScripts: false});
-                expect(document2svg.drawDocumentAsSvg).toHaveBeenCalledWith(doc, {});
+                expect(document2svg.drawDocumentAsSvg).toHaveBeenCalledWith(doc, {}, {});
                 expect(svg2image.renderSvg).toHaveBeenCalledWith(theSvg);
                 expect(canvas.getContext('2d').drawImage).toHaveBeenCalledWith(rasterizedImage, 0, 0);
 
@@ -120,7 +120,7 @@ describe("Rasterize", function () {
                 expect(result.image).toEqual(rasterizedImage);
 
                 expect(inlineReferences).toHaveBeenCalledWith(doc, {inlineScripts : false});
-                expect(document2svg.drawDocumentAsSvg).toHaveBeenCalledWith(doc, {});
+                expect(document2svg.drawDocumentAsSvg).toHaveBeenCalledWith(doc, {}, {});
 
                 done();
             });
@@ -136,7 +136,7 @@ describe("Rasterize", function () {
 
         it("should pass on render options", function (done) {
             rasterize.rasterize(doc, aMockCanvas(), {width: 123, height: 234, hover: '.aSelector', active: '#anotherSelector', zoom: 42}).then(function () {
-                expect(document2svg.drawDocumentAsSvg).toHaveBeenCalledWith(doc, {width: 123, height: 234, hover: '.aSelector', active: '#anotherSelector', zoom: 42});
+                expect(document2svg.drawDocumentAsSvg).toHaveBeenCalledWith(doc, {}, {width: 123, height: 234, hover: '.aSelector', active: '#anotherSelector', zoom: 42});
 
                 done();
             });

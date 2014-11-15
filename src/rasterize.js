@@ -29,7 +29,7 @@ var rasterize = (function (util, browser, documentHelper, document2svg, svg2imag
     };
 
     var doDraw = function (doc, canvas, options) {
-        return document2svg.drawDocumentAsSvg(doc, options)
+        return document2svg.drawDocumentAsSvg(doc, {}, options)
             .then(drawSvgAsImg)
             .then(function (result) {
                 if (canvas) {

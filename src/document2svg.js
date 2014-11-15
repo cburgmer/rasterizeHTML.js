@@ -70,7 +70,7 @@ var document2svg = (function (util, browser, documentHelper, xmlserializer) {
         );
     };
 
-    module.drawDocumentAsSvg = function (doc, options) {
+    module.drawDocumentAsSvg = function (doc, size, options) {
         if (options.hover) {
             documentHelper.fakeHover(doc, options.hover);
         }
@@ -78,10 +78,14 @@ var document2svg = (function (util, browser, documentHelper, xmlserializer) {
             documentHelper.fakeActive(doc, options.active);
         }
 
-        return browser.calculateDocumentContentSize(doc, options)
-            .then(function (size) {
-                return module.getSvgForDocument(doc, size, options.zoom);
-            });
+        if (Object.keys(size).length) {
+            return module.getSvgForDocument(doc, size, options.zoom);
+        } else {
+            return browser.calculateDocumentContentSize(doc, options)
+                .then(function (size) {
+                    return module.getSvgForDocument(doc, size, options.zoom);
+                });
+        }
     };
 
     return module;
