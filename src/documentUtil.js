@@ -62,5 +62,27 @@ var documentUtil = (function () {
         });
     };
 
+    module.lowercaseTagNameSelectors = function (doc, matchingTagNames) {
+        var oldSelectorRegex = '(?:^|\\W)' + '(' + matchingTagNames.join('|') + ')' + '(?=\\W|$)';
+
+        asArray(doc.querySelectorAll('style')).forEach(function (styleElement) {
+            var matchingRules = asArray(styleElement.sheet.cssRules).filter(function (rule) {
+                return rule.selectorText && new RegExp(oldSelectorRegex, 'i').test(rule.selectorText);
+            });
+
+            if (matchingRules.length) {
+                matchingRules.forEach(function (rule) {
+                    var selector = rule.selectorText.replace(new RegExp(oldSelectorRegex, 'gi'), function (match) {
+                        return match.toLowerCase();
+                    });
+
+                    updateRuleSelector(rule, selector);
+                });
+
+                rewriteStyleContent(styleElement);
+            }
+        });
+    };
+
     return module;
 }());
