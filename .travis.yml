@@ -13,6 +13,3 @@ deploy:
     tags: true
     repo: cburgmer/rasterizeHTML.js
     all_branches: true
-branches:
-  only:
-    - master
