@@ -10,7 +10,7 @@ describe("HTML Document Utility functions", function () {
 
     describe("rewriteCssSelectorWith", function () {
         it("should rewrite CSS rules with the new selector", function () {
-            setHtml('<head><style type="text/css">a:hover { color: blue; }</style></head><body><span></span></body>');
+            setHtml('<head><style>a:hover { color: blue; }</style></head><body><span></span></body>');
 
             documentUtil.rewriteCssSelectorWith(doc, ':hover', '.myFakeHover');
 
@@ -18,7 +18,7 @@ describe("HTML Document Utility functions", function () {
         });
 
         it("should correctly handle complex selectors", function () {
-            setHtml('<style type="text/css">body:hover span { color: blue; }</style>');
+            setHtml('<style>body:hover span { color: blue; }</style>');
 
             documentUtil.rewriteCssSelectorWith(doc, ':hover', '.myFakeHover');
 
@@ -26,7 +26,7 @@ describe("HTML Document Utility functions", function () {
         });
 
         it("should correctly handle simple selector occurrence", function () {
-            setHtml('<style type="text/css">:hover { color: blue; }</style>');
+            setHtml('<style>:hover { color: blue; }</style>');
 
             documentUtil.rewriteCssSelectorWith(doc, ':hover', '.myFakeHover');
 
@@ -34,7 +34,7 @@ describe("HTML Document Utility functions", function () {
         });
 
         it("should not match partial selector occurrence", function () {
-            setHtml('<style type="text/css">.myClass { color: blue; }</style>');
+            setHtml('<style>.myClass { color: blue; }</style>');
 
             documentUtil.rewriteCssSelectorWith(doc, '.my', '.myFakeHover');
 
@@ -42,7 +42,7 @@ describe("HTML Document Utility functions", function () {
         });
 
         it("should correctly handle multiple selector occurrence in same rule selector", function () {
-            setHtml('<style type="text/css">i:hover, a:hover { color: blue; }</style>');
+            setHtml('<style>i:hover, a:hover { color: blue; }</style>');
 
             documentUtil.rewriteCssSelectorWith(doc, ':hover', '.myFakeHover');
 
@@ -50,7 +50,7 @@ describe("HTML Document Utility functions", function () {
         });
 
         it("should correctly handle multiple sub-selector", function () {
-            setHtml('<style type="text/css">i:active::after { color: blue; }</style>');
+            setHtml('<style>i:active::after { color: blue; }</style>');
 
             documentUtil.rewriteCssSelectorWith(doc, ':active', '.myFakeActive');
 
@@ -58,7 +58,7 @@ describe("HTML Document Utility functions", function () {
         });
 
         it("should correctly handle multiple selector occurrences in different rules", function () {
-            setHtml('<style type="text/css">a:active {color: green;}i:active { color: blue; }</style>');
+            setHtml('<style>a:active {color: green;}i:active { color: blue; }</style>');
 
             documentUtil.rewriteCssSelectorWith(doc, ':active', '.myFakeActive');
 
@@ -66,13 +66,13 @@ describe("HTML Document Utility functions", function () {
         });
 
         it("should cope with non CSSStyleRule", function () {
-            setHtml('<head><style type="text/css">@font-face { font-family: "RaphaelIcons"; src: url("raphaelicons-webfont.woff"); }</style></head><body><span></span></body>');
+            setHtml('<head><style>@font-face { font-family: "RaphaelIcons"; src: url("raphaelicons-webfont.woff"); }</style></head><body><span></span></body>');
 
             documentUtil.rewriteCssSelectorWith(doc, ':hover', '.myFakeHover');
         });
 
         it("should not touch style elements without a matching selector", function () {
-            setHtml('<style type="text/css">a { color: blue; }/* a comment*/</style>');
+            setHtml('<style>a { color: blue; }/* a comment*/</style>');
 
             documentUtil.rewriteCssSelectorWith(doc, ':hover', '.myFakeHover');
 
@@ -140,7 +140,7 @@ describe("HTML Document Utility functions", function () {
             expect(doc.querySelector('style').textContent).toMatch(/LI \{/);
         });
 
-        ifNotInPhantomJsIt("should convert complext selectors", function () {
+        ifNotInPhantomJsIt("should convert complex selectors", function () {
             setHtml('<style>BODY LI.COMPLEX:active { color: blue; }</style>');
 
             documentUtil.lowercaseCssTypeSelectors(doc, ['li']);
