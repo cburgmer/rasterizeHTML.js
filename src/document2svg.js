@@ -49,6 +49,8 @@ var document2svg = (function (util, browser, documentHelper, xmlserializer) {
     };
 
     module.getSvgForDocument = function (doc, size, zoomFactor) {
+        documentHelper.rewriteTagNameSelectorsToLowerCase(doc);
+
         var xhtml = xmlserializer.serializeToString(doc);
 
         browser.validateXHTML(xhtml);

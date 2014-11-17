@@ -56,5 +56,9 @@ var documentHelper = (function (documentUtil) {
             });
     };
 
+    module.rewriteTagNameSelectorsToLowerCase = function (doc) {
+        documentUtil.lowercaseTagNameSelectors(doc, documentUtil.findHtmlOnlyNodeNames(doc));
+    };
+
     return module;
 }(documentUtil));

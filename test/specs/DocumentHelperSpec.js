@@ -122,4 +122,21 @@ describe("Document Helper functions", function () {
             documentHelper.fakeActive(doc, 'div');
         });
     });
+
+    describe("rewriteTagNameSelectorsToLowerCase", function () {
+        beforeEach(function () {
+            spyOn(documentUtil, 'findHtmlOnlyNodeNames');
+            spyOn(documentUtil, 'lowercaseTagNameSelectors');
+        });
+
+        it("show convert all HTML-only tag names to lower case", function () {
+            var doc = "document";
+
+            documentUtil.findHtmlOnlyNodeNames.and.returnValue(['a', 'node', 'name']);
+
+            documentHelper.rewriteTagNameSelectorsToLowerCase(doc);
+
+            expect(documentUtil.lowercaseTagNameSelectors).toHaveBeenCalledWith(doc, ['a', 'node', 'name']);
+        });
+    });
 });

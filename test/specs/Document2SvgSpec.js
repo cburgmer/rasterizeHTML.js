@@ -1,5 +1,5 @@
 describe("Document to SVG conversion", function () {
-    describe("on document to SVG conversion", function () {
+    describe("getSvgForDocument", function () {
         var defaultZoomLevel = 1;
 
         var aRenderSize = function (width, height, viewportWidth, viewportHeight, left, top) {
@@ -25,6 +25,8 @@ describe("Document to SVG conversion", function () {
         beforeEach(function () {
             sandbox = document.createElement('div');
             document.body.appendChild(sandbox);
+
+            spyOn(documentHelper, 'rewriteTagNameSelectorsToLowerCase');
         });
 
         afterEach(function () {
@@ -190,6 +192,14 @@ describe("Document to SVG conversion", function () {
             sandbox.querySelector('svg').style.position = "relative";
 
             expect(sandbox.querySelector('.svgContent').offsetTop).toBe(200);
+        });
+
+        it("should work around XHTML case-sensitivity for tag name selectors", function () {
+            var doc = document.implementation.createHTMLDocument("");
+
+            document2svg.getSvgForDocument(doc, aRenderSize(), 1);
+
+            expect(documentHelper.rewriteTagNameSelectorsToLowerCase).toHaveBeenCalledWith(doc);
         });
     });
 
