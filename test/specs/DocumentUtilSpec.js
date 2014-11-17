@@ -80,6 +80,14 @@ describe("HTML Document Utility functions", function () {
             expect(doc.querySelector('style').textContent).toMatch(/a comment/);
         });
 
+        it("should match pseudo selector independent of letter case", function () {
+            setHtml('<style>a:HOver { color: blue; }/* a comment*/</style>');
+
+            documentUtil.rewriteStyleRuleSelector(doc, ':hover', '.myFakeHover');
+
+            expect(doc.querySelector('style').textContent).toMatch(/a.myFakeHover/);
+        });
+
         // On Firefox this needs a work around because of https://bugzilla.mozilla.org/show_bug.cgi?id=925493
         ifNotInPhantomJsIt("should integrate with a document loaded through ajax", function (done) {
             testHelper.readHTMLDocumentFixture("hover.html").then(function (doc) {

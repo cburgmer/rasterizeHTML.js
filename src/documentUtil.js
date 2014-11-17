@@ -41,18 +41,27 @@ var documentUtil = (function () {
         styleElement.textContent = cssRulesToText(styleElement.sheet.cssRules);
     };
 
-    module.rewriteStyleRuleSelector = function (doc, oldSelector, newSelector) {
-        // Assume that oldSelector is always prepended with a ':' or '.' for now, so no special handling needed
-        var oldSelectorRegex = oldSelector + '(?=\\W|$)';
+    var matchingSimpleSelectorsRegex = function (simpleSelectorList) {
+        return '(' +
+            '(?:^|\\W)' +                  // start of string or non-alphabetic character,
+            '|' +                          // ... or ...
+            '(?=\\W)' +                    // the next character parsed is not an alphabetic character
+            ')' +
+            simpleSelectorList.join('|') + // one out of the given simple selectors
+            '(?=\\W|$)';                   // followed either by a non-alphabetic character or the end of the string
+    };
+
+    var replaceSimpleSelectorsBy = function (doc, simpleSelectorList, caseInsensitiveReplaceFunc) {
+        var selectorRegex = matchingSimpleSelectorsRegex(simpleSelectorList);
 
         asArray(doc.querySelectorAll('style')).forEach(function (styleElement) {
             var matchingRules = asArray(styleElement.sheet.cssRules).filter(function (rule) {
-                    return rule.selectorText && new RegExp(oldSelectorRegex).test(rule.selectorText);
-                });
+                return rule.selectorText && new RegExp(selectorRegex, 'i').test(rule.selectorText);
+            });
 
             if (matchingRules.length) {
                 matchingRules.forEach(function (rule) {
-                    var selector = rule.selectorText.replace(new RegExp(oldSelectorRegex, 'g'), newSelector);
+                    var selector = rule.selectorText.replace(new RegExp(selectorRegex, 'gi'), caseInsensitiveReplaceFunc);
 
                     updateRuleSelector(rule, selector);
                 });
@@ -62,25 +71,15 @@ var documentUtil = (function () {
         });
     };
 
+    module.rewriteStyleRuleSelector = function (doc, oldSelector, newSelector) {
+        replaceSimpleSelectorsBy(doc, [oldSelector], function () {
+            return newSelector;
+        });
+    };
+
     module.lowercaseTagNameSelectors = function (doc, matchingTagNames) {
-        var oldSelectorRegex = '(?:^|\\W)' + '(' + matchingTagNames.join('|') + ')' + '(?=\\W|$)';
-
-        asArray(doc.querySelectorAll('style')).forEach(function (styleElement) {
-            var matchingRules = asArray(styleElement.sheet.cssRules).filter(function (rule) {
-                return rule.selectorText && new RegExp(oldSelectorRegex, 'i').test(rule.selectorText);
-            });
-
-            if (matchingRules.length) {
-                matchingRules.forEach(function (rule) {
-                    var selector = rule.selectorText.replace(new RegExp(oldSelectorRegex, 'gi'), function (match) {
-                        return match.toLowerCase();
-                    });
-
-                    updateRuleSelector(rule, selector);
-                });
-
-                rewriteStyleContent(styleElement);
-            }
+        replaceSimpleSelectorsBy(doc, matchingTagNames, function (match) {
+            return match.toLowerCase();
         });
     };
 
