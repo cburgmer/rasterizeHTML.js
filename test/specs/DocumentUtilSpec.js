@@ -178,4 +178,34 @@ describe("HTML Document Utility functions", function () {
             expect(doc.querySelector('span').className).toEqual('');
         });
     });
+
+    describe("findHtmlOnlyNodeNames", function () {
+        it("should find html node names", function () {
+            setHtml("<html><body><p><span class='whatever'><br>content</span></p></body></html>");
+
+            var nodeNames = documentUtil.findHtmlOnlyNodeNames(doc);
+
+            expect(nodeNames).toEqual(['html', 'head', 'body', 'p', 'span', 'br']);
+        });
+
+        it("should not include tags from other namespaces", function () {
+            setHtml("<html><body><svg xmlns='http://www.w3.org/2000/svg'><rect/></svg></body></html>");
+
+            var nodeNames = documentUtil.findHtmlOnlyNodeNames(doc);
+
+            expect(nodeNames).toEqual(['html', 'head', 'body']);
+        });
+
+        it("should not include HTML tags if they conflict with ones from other namespaces", function () {
+            setHtml('<html><body>' +
+                    '<svg width="10" height="10" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">' +
+                    '<a xlink:href="target"></a>' +
+                    '</svg>' +
+                    '<a href="anotherTarget"></a></body></html>');
+
+            var nodeNames = documentUtil.findHtmlOnlyNodeNames(doc);
+
+            expect(nodeNames).toEqual(['html', 'head', 'body']);
+        });
+    });
 });

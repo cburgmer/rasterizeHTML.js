@@ -84,5 +84,25 @@ var documentUtil = (function () {
         });
     };
 
+    module.findHtmlOnlyNodeNames = function (doc) {
+        var treeWalker = doc.createTreeWalker(doc, NodeFilter.SHOW_ELEMENT),
+            htmlNodeNames = {},
+            nonHtmlNodeNames = {},
+            currentTagName;
+
+        while(treeWalker.nextNode()) {
+            currentTagName = treeWalker.currentNode.tagName.toLowerCase();
+            if (treeWalker.currentNode.namespaceURI === 'http://www.w3.org/1999/xhtml') {
+                htmlNodeNames[currentTagName] = true;
+            } else {
+                nonHtmlNodeNames[currentTagName] = true;
+            }
+        }
+
+        return Object.keys(htmlNodeNames).filter(function (tagName) {
+            return !nonHtmlNodeNames[tagName];
+        });
+    };
+
     return module;
 }());
