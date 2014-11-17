@@ -15,7 +15,7 @@ var documentHelper = (function (documentUtil) {
         }
 
         documentUtil.addClassNameRecursively(elem, fakeHoverClass);
-        documentUtil.rewriteStyleRuleSelector(doc, ':hover', '.' + fakeHoverClass);
+        documentUtil.rewriteCssSelectorWith(doc, ':hover', '.' + fakeHoverClass);
     };
 
     module.fakeActive = function (doc, activeSelector) {
@@ -26,7 +26,7 @@ var documentHelper = (function (documentUtil) {
         }
 
         documentUtil.addClassNameRecursively(elem, fakeActiveClass);
-        documentUtil.rewriteStyleRuleSelector(doc, ':active', '.' + fakeActiveClass);
+        documentUtil.rewriteCssSelectorWith(doc, ':active', '.' + fakeActiveClass);
     };
 
     module.persistInputValues = function (doc) {
@@ -57,7 +57,7 @@ var documentHelper = (function (documentUtil) {
     };
 
     module.rewriteTagNameSelectorsToLowerCase = function (doc) {
-        documentUtil.lowercaseTagNameSelectors(doc, documentUtil.findHtmlOnlyNodeNames(doc));
+        documentUtil.lowercaseCssTypeSelectors(doc, documentUtil.findHtmlOnlyNodeNames(doc));
     };
 
     return module;

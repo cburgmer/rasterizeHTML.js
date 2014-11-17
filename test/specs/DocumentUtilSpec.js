@@ -8,11 +8,11 @@ describe("HTML Document Utility functions", function () {
         doc = document.implementation.createHTMLDocument('');
     });
 
-    describe("rewriteStyleRuleSelector", function () {
+    describe("rewriteCssSelectorWith", function () {
         it("should rewrite CSS rules with the new selector", function () {
             setHtml('<head><style type="text/css">a:hover { color: blue; }</style></head><body><span></span></body>');
 
-            documentUtil.rewriteStyleRuleSelector(doc, ':hover', '.myFakeHover');
+            documentUtil.rewriteCssSelectorWith(doc, ':hover', '.myFakeHover');
 
             expect(doc.querySelector('style').textContent).toMatch(/a.myFakeHover \{\s*color: blue;\s*\}/);
         });
@@ -20,7 +20,7 @@ describe("HTML Document Utility functions", function () {
         it("should correctly handle complex selectors", function () {
             setHtml('<style type="text/css">body:hover span { color: blue; }</style>');
 
-            documentUtil.rewriteStyleRuleSelector(doc, ':hover', '.myFakeHover');
+            documentUtil.rewriteCssSelectorWith(doc, ':hover', '.myFakeHover');
 
             expect(doc.querySelector('style').textContent).toMatch(/body.myFakeHover span \{\s*color: blue;\s*\}/);
         });
@@ -28,7 +28,7 @@ describe("HTML Document Utility functions", function () {
         it("should correctly handle simple selector occurrence", function () {
             setHtml('<style type="text/css">:hover { color: blue; }</style>');
 
-            documentUtil.rewriteStyleRuleSelector(doc, ':hover', '.myFakeHover');
+            documentUtil.rewriteCssSelectorWith(doc, ':hover', '.myFakeHover');
 
             expect(doc.querySelector('style').textContent).toMatch(/.myFakeHover \{\s*color: blue;\s*\}/);
         });
@@ -36,7 +36,7 @@ describe("HTML Document Utility functions", function () {
         it("should not match partial selector occurrence", function () {
             setHtml('<style type="text/css">.myClass { color: blue; }</style>');
 
-            documentUtil.rewriteStyleRuleSelector(doc, '.my', '.myFakeHover');
+            documentUtil.rewriteCssSelectorWith(doc, '.my', '.myFakeHover');
 
             expect(doc.querySelector('style').textContent).toMatch(/.myClass \{\s*color: blue;\s*\}/);
         });
@@ -44,7 +44,7 @@ describe("HTML Document Utility functions", function () {
         it("should correctly handle multiple selector occurrence in same rule selector", function () {
             setHtml('<style type="text/css">i:hover, a:hover { color: blue; }</style>');
 
-            documentUtil.rewriteStyleRuleSelector(doc, ':hover', '.myFakeHover');
+            documentUtil.rewriteCssSelectorWith(doc, ':hover', '.myFakeHover');
 
             expect(doc.querySelector('style').textContent).toMatch(/i.myFakeHover, a.myFakeHover \{\s*color: blue;\s*\}/);
         });
@@ -52,7 +52,7 @@ describe("HTML Document Utility functions", function () {
         it("should correctly handle multiple sub-selector", function () {
             setHtml('<style type="text/css">i:active::after { color: blue; }</style>');
 
-            documentUtil.rewriteStyleRuleSelector(doc, ':active', '.myFakeActive');
+            documentUtil.rewriteCssSelectorWith(doc, ':active', '.myFakeActive');
 
             expect(doc.querySelector('style').textContent).toMatch(/i.myFakeActive::?after \{\s*color: blue;\s*\}/);
         });
@@ -60,7 +60,7 @@ describe("HTML Document Utility functions", function () {
         it("should correctly handle multiple selector occurrences in different rules", function () {
             setHtml('<style type="text/css">a:active {color: green;}i:active { color: blue; }</style>');
 
-            documentUtil.rewriteStyleRuleSelector(doc, ':active', '.myFakeActive');
+            documentUtil.rewriteCssSelectorWith(doc, ':active', '.myFakeActive');
 
             expect(doc.querySelector('style').textContent).toMatch(/i.myFakeActive \{\s*color: blue;\s*\}/);
         });
@@ -68,13 +68,13 @@ describe("HTML Document Utility functions", function () {
         it("should cope with non CSSStyleRule", function () {
             setHtml('<head><style type="text/css">@font-face { font-family: "RaphaelIcons"; src: url("raphaelicons-webfont.woff"); }</style></head><body><span></span></body>');
 
-            documentUtil.rewriteStyleRuleSelector(doc, ':hover', '.myFakeHover');
+            documentUtil.rewriteCssSelectorWith(doc, ':hover', '.myFakeHover');
         });
 
         it("should not touch style elements without a matching selector", function () {
             setHtml('<style type="text/css">a { color: blue; }/* a comment*/</style>');
 
-            documentUtil.rewriteStyleRuleSelector(doc, ':hover', '.myFakeHover');
+            documentUtil.rewriteCssSelectorWith(doc, ':hover', '.myFakeHover');
 
             // Use the fact that comments are discarded when processing a style sheet
             expect(doc.querySelector('style').textContent).toMatch(/a comment/);
@@ -83,7 +83,7 @@ describe("HTML Document Utility functions", function () {
         it("should match pseudo selector independent of letter case", function () {
             setHtml('<style>a:HOver { color: blue; }/* a comment*/</style>');
 
-            documentUtil.rewriteStyleRuleSelector(doc, ':hover', '.myFakeHover');
+            documentUtil.rewriteCssSelectorWith(doc, ':hover', '.myFakeHover');
 
             expect(doc.querySelector('style').textContent).toMatch(/a.myFakeHover/);
         });
@@ -91,7 +91,7 @@ describe("HTML Document Utility functions", function () {
         // On Firefox this needs a work around because of https://bugzilla.mozilla.org/show_bug.cgi?id=925493
         ifNotInPhantomJsIt("should integrate with a document loaded through ajax", function (done) {
             testHelper.readHTMLDocumentFixture("hover.html").then(function (doc) {
-                documentUtil.rewriteStyleRuleSelector(doc, ':hover', '.myfakehover');
+                documentUtil.rewriteCssSelectorWith(doc, ':hover', '.myfakehover');
 
                 expect(doc.querySelector('style').textContent).toMatch(/body.myfakehover/);
                 done();
@@ -99,11 +99,11 @@ describe("HTML Document Utility functions", function () {
         });
     });
 
-    describe("lowercaseTagNameSelectors", function () {
+    describe("lowercaseCssTypeSelectors", function () {
         it("should convert matching tag name to lower case", function () {
             setHtml('<style>A { color: blue; }</style>');
 
-            documentUtil.lowercaseTagNameSelectors(doc, ['a']);
+            documentUtil.lowercaseCssTypeSelectors(doc, ['a']);
 
             expect(doc.querySelector('style').textContent).toMatch(/a \{/);
         });
@@ -111,7 +111,7 @@ describe("HTML Document Utility functions", function () {
         it("should convert matching tag name with mixed letter case to lower case", function () {
             setHtml('<style>sPAn { color: blue; }</style>');
 
-            documentUtil.lowercaseTagNameSelectors(doc, ['span']);
+            documentUtil.lowercaseCssTypeSelectors(doc, ['span']);
 
             expect(doc.querySelector('style').textContent).toMatch(/span \{/);
         });
@@ -119,7 +119,7 @@ describe("HTML Document Utility functions", function () {
         it("should convert matching tag name from a list of names to lower case", function () {
             setHtml('<style>SPAN { color: blue; }</style>');
 
-            documentUtil.lowercaseTagNameSelectors(doc, ['a', 'span']);
+            documentUtil.lowercaseCssTypeSelectors(doc, ['a', 'span']);
 
             expect(doc.querySelector('style').textContent).toMatch(/span \{/);
         });
@@ -127,7 +127,7 @@ describe("HTML Document Utility functions", function () {
         it("should not touch selector parts outside of the tag name", function () {
             setHtml('<style>SPAN.aClassName { color: blue; }</style>');
 
-            documentUtil.lowercaseTagNameSelectors(doc, ['span']);
+            documentUtil.lowercaseCssTypeSelectors(doc, ['span']);
 
             expect(doc.querySelector('style').textContent).toMatch(/span.aClassName \{/);
         });
@@ -135,7 +135,7 @@ describe("HTML Document Utility functions", function () {
         it("should not match any tag names with a matching suffix", function () {
             setHtml('<style>LI { color: blue; }</style>');
 
-            documentUtil.lowercaseTagNameSelectors(doc, ['i']);
+            documentUtil.lowercaseCssTypeSelectors(doc, ['i']);
 
             expect(doc.querySelector('style').textContent).toMatch(/LI \{/);
         });
@@ -143,7 +143,7 @@ describe("HTML Document Utility functions", function () {
         ifNotInPhantomJsIt("should convert complext selectors", function () {
             setHtml('<style>BODY LI.COMPLEX:active { color: blue; }</style>');
 
-            documentUtil.lowercaseTagNameSelectors(doc, ['li']);
+            documentUtil.lowercaseCssTypeSelectors(doc, ['li']);
 
             expect(doc.querySelector('style').textContent).toMatch(/BODY li.COMPLEX:active \{/);
         });
@@ -151,7 +151,7 @@ describe("HTML Document Utility functions", function () {
         it("should convert multiple different matches", function () {
             setHtml('<style>BODY LI { color: blue; }</style>');
 
-            documentUtil.lowercaseTagNameSelectors(doc, ['body', 'li']);
+            documentUtil.lowercaseCssTypeSelectors(doc, ['body', 'li']);
 
             expect(doc.querySelector('style').textContent).toMatch(/body li \{/);
         });

@@ -71,13 +71,13 @@ var documentUtil = (function () {
         });
     };
 
-    module.rewriteStyleRuleSelector = function (doc, oldSelector, newSelector) {
+    module.rewriteCssSelectorWith = function (doc, oldSelector, newSelector) {
         replaceSimpleSelectorsBy(doc, [oldSelector], function () {
             return newSelector;
         });
     };
 
-    module.lowercaseTagNameSelectors = function (doc, matchingTagNames) {
+    module.lowercaseCssTypeSelectors = function (doc, matchingTagNames) {
         replaceSimpleSelectorsBy(doc, matchingTagNames, function (match) {
             return match.toLowerCase();
         });

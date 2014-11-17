@@ -88,7 +88,7 @@ describe("Document Helper functions", function () {
     describe("fakeHover", function () {
         beforeEach(function () {
             spyOn(documentUtil, 'addClassNameRecursively');
-            spyOn(documentUtil, 'rewriteStyleRuleSelector');
+            spyOn(documentUtil, 'rewriteCssSelectorWith');
         });
 
         it("should add a fake class to the selected element and adapt the document's stylesheet", function () {
@@ -96,7 +96,7 @@ describe("Document Helper functions", function () {
             documentHelper.fakeHover(doc, 'span');
 
             expect(documentUtil.addClassNameRecursively).toHaveBeenCalledWith(doc.querySelector('span'), 'rasterizehtmlhover');
-            expect(documentUtil.rewriteStyleRuleSelector).toHaveBeenCalledWith(doc, ':hover', '.rasterizehtmlhover');
+            expect(documentUtil.rewriteCssSelectorWith).toHaveBeenCalledWith(doc, ':hover', '.rasterizehtmlhover');
         });
 
         it("should ignore non-existent selector", function () {
@@ -107,7 +107,7 @@ describe("Document Helper functions", function () {
     describe("fakeActive", function () {
         beforeEach(function () {
             spyOn(documentUtil, 'addClassNameRecursively');
-            spyOn(documentUtil, 'rewriteStyleRuleSelector');
+            spyOn(documentUtil, 'rewriteCssSelectorWith');
         });
 
         it("should add a fake class to the selected element and adapt the document's stylesheet", function () {
@@ -115,7 +115,7 @@ describe("Document Helper functions", function () {
             documentHelper.fakeActive(doc, 'span');
 
             expect(documentUtil.addClassNameRecursively).toHaveBeenCalledWith(doc.querySelector('span'), 'rasterizehtmlactive');
-            expect(documentUtil.rewriteStyleRuleSelector).toHaveBeenCalledWith(doc, ':active', '.rasterizehtmlactive');
+            expect(documentUtil.rewriteCssSelectorWith).toHaveBeenCalledWith(doc, ':active', '.rasterizehtmlactive');
         });
 
         it("should ignore non-existent selector", function () {
@@ -126,7 +126,7 @@ describe("Document Helper functions", function () {
     describe("rewriteTagNameSelectorsToLowerCase", function () {
         beforeEach(function () {
             spyOn(documentUtil, 'findHtmlOnlyNodeNames');
-            spyOn(documentUtil, 'lowercaseTagNameSelectors');
+            spyOn(documentUtil, 'lowercaseCssTypeSelectors');
         });
 
         it("show convert all HTML-only tag names to lower case", function () {
@@ -136,7 +136,7 @@ describe("Document Helper functions", function () {
 
             documentHelper.rewriteTagNameSelectorsToLowerCase(doc);
 
-            expect(documentUtil.lowercaseTagNameSelectors).toHaveBeenCalledWith(doc, ['a', 'node', 'name']);
+            expect(documentUtil.lowercaseCssTypeSelectors).toHaveBeenCalledWith(doc, ['a', 'node', 'name']);
         });
     });
 });
