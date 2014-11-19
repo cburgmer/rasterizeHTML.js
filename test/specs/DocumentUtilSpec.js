@@ -140,12 +140,21 @@ describe("HTML Document Utility functions", function () {
             expect(doc.querySelector('style').textContent).toMatch(/LI \{/);
         });
 
-        ifNotInPhantomJsIt("should convert complex selectors", function () {
-            setHtml('<style>BODY LI.COMPLEX:active { color: blue; }</style>');
+        it("should convert complex selectors", function () {
+            setHtml('<style>LI.COMPLEX:active { color: blue; }</style>');
 
             documentUtil.lowercaseCssTypeSelectors(doc, ['li']);
 
-            expect(doc.querySelector('style').textContent).toMatch(/BODY li.COMPLEX:active \{/);
+            expect(doc.querySelector('style').textContent).toMatch(/li.COMPLEX:active \{/);
+        });
+
+        // Chrome and WebKit don't seem to care about tag name selector case sensitivity for XML documents. Why should we?
+        ifNotInWebkitIt("should only convert mentioned tag names", function () {
+            setHtml('<style>BODY LI { color: blue; }</style>');
+
+            documentUtil.lowercaseCssTypeSelectors(doc, ['li']);
+
+            expect(doc.querySelector('style').textContent).toMatch(/BODY li \{/);
         });
 
         it("should convert multiple different matches", function () {
