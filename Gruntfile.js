@@ -28,7 +28,8 @@ module.exports = function (grunt) {
                     'test/testHelper.js',
                     'test/gruntpath.js'
                 ],
-                display: 'short'
+                display: 'short',
+                summary: true
             }
         },
         browserify: {

@@ -43,11 +43,13 @@ var documentUtil = (function () {
 
     var matchingSimpleSelectorsRegex = function (simpleSelectorList) {
         return '(' +
-            '(?:^|\\W)' +                  // start of string or non-alphabetic character,
+            '(?:^|[^.#:\\w])' +            // start of string or not a simple selector character,
             '|' +                          // ... or ...
-            '(?=\\W)' +                    // the next character parsed is not an alphabetic character
+            '(?=\\W)' +                    // the next character parsed is not an alphabetic character (and thus a natural boundary)
             ')' +
+            '(' +
             simpleSelectorList.join('|') + // one out of the given simple selectors
+            ')' +
             '(?=\\W|$)';                   // followed either by a non-alphabetic character or the end of the string
     };
 

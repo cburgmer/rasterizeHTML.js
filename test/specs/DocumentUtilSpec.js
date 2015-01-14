@@ -140,6 +140,22 @@ describe("HTML Document Utility functions", function () {
             expect(doc.querySelector('style').textContent).toMatch(/LI \{/);
         });
 
+        it("should not match any IDs with a matching alphabetical part", function () {
+            setHtml('<style>#A { color: blue; }</style>');
+
+            documentUtil.lowercaseCssTypeSelectors(doc, ['a']);
+
+            expect(doc.querySelector('style').textContent).toMatch(/#A \{/);
+        });
+
+        it("should not match a substring if the selector is in the middle of the tag list", function () {
+            setHtml('<style>#timeTaken { color: blue; }');
+
+            documentUtil.lowercaseCssTypeSelectors(doc, ['a', 'meta', 'i']);
+
+            expect(doc.querySelector('style').textContent).toMatch(/#timeTaken \{/);
+        });
+
         it("should convert complex selectors", function () {
             setHtml('<style>LI.COMPLEX:active { color: blue; }</style>');
 
