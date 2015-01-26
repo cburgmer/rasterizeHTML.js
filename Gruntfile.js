@@ -232,11 +232,8 @@ module.exports = function (grunt) {
         "regex-check": {
             files: [
                 'src/*',
-                // 'test/{,*/}*'
-                'test/*.html',
-                'test/*.js',
-                'test/specs/*.js',
-                'test/*/*.html'
+                'test/**/*.html',
+                'test/**/*.js'
             ],
             options: {
                 pattern : /FIXME/g
