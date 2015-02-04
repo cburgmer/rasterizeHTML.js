@@ -1,3 +1,4 @@
+/* globals isEqual */
 var fs = require("fs");
 
 var getDataUriForBase64PNG = function (pngBase64) {

@@ -1,0 +1,47 @@
+{
+    "extends": "../src/.jshintrc",
+    "devel": true,
+    "phantom": true,
+    "globals": {
+        "$": true,
+        "jasmine": true,
+        "describe": true,
+        "it": true,
+        "xit": true,
+        "beforeEach": true,
+        "afterEach": true,
+        "expect": true,
+        "spyOn": true,
+
+        "require": true,
+
+        "ifNotInWebkitIt": true,
+        "ifNotInPhantomJsIt": true,
+        "ifNotInPhantomJSAndNotLocalRunnerIt": true,
+        "ifNotInWebKitAndNotLocalRunnerIt": true,
+        "testHelper": true,
+        "diffHelper": true,
+
+        "util": true,
+        "proxies": true,
+        "documentUtil": true,
+        "documentHelper": true,
+        "browser": true,
+        "svg2image": true,
+        "document2svg": true,
+        "rasterize": true,
+        "rasterizeHTML": true,
+
+        "url": true,
+        "ayepromise": true,
+        "inlineresources": true,
+
+        "imagediff": true
+    },
+    "exported": [
+        "ifNotInWebkitIt",
+        "ifNotInPhantomJsIt",
+        "ifNotInPhantomJSAndNotLocalRunnerIt",
+        "ifNotInWebKitAndNotLocalRunnerIt"
+    ]
+}

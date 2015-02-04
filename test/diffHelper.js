@@ -13,13 +13,13 @@ window.diffHelper = (function () {
 
         for (i = 0; i < length; i++) {
             sumDifferences += Math.abs(aData[i] - bData[i]);
-        };
+        }
 
         return sumDifferences / (255 * length) <= tolerancePercentage / 100;
     };
 
     module.matcher = {
-        toEqualImage: function (util, customEqualityTesters) {
+        toEqualImage: function () {
             return {
                 compare: function (actual, expected, tolerancePercentage) {
                     var result = {};

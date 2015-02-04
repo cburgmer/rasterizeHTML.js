@@ -1,11 +1,11 @@
-var testHelper = (function () {
+window.testHelper = (function () {
     "use strict";
 
     var module = {};
 
     module.fixturesPath = 'fixtures/';
 
-    module.readHTMLFixture = function (url, callback) {
+    module.readHTMLFixture = function (url) {
         var fixtureUrl = module.fixturesPath + url,
             xhr = new window.XMLHttpRequest();
 

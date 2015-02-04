@@ -154,79 +154,9 @@ module.exports = function (grunt) {
             tasks: ['jshint', 'jasmine']
         },
         jshint: {
+            all: ["src/**/*.js", "test/**/*.js", "*.js"],
             options: {
-                curly: true,
-                eqeqeq: true,
-                immed: true,
-                latedef: true,
-                newcap: true,
-                noarg: true,
-                undef: true,
-                unused: true,
-                eqnull: true,
-                trailing: true,
-                browser: true,
-                globals: {
-                    util: true,
-                    proxies: true,
-                    documentUtil: true,
-                    documentHelper: true,
-                    browser: true,
-                    svg2image: true,
-                    document2svg: true,
-                    rasterize: true,
-
-                    url: true,
-                    xmlserializer: true,
-                    ayepromise: true,
-                    inlineresources: true
-                },
-                exported: ['rasterizeHTML', 'rasterize', 'document2svg', 'svg2image', 'util', 'proxies', 'browser', 'documentUtil', 'documentHelper']
-            },
-            uses_defaults: [
-                'src/*.js',
-                'Gruntfile.js'
-            ],
-            with_overrides: {
-                options: {
-                    globals: {
-                        "$": true,
-                        jasmine: true,
-                        describe: true,
-                        it: true,
-                        xit: true,
-                        beforeEach: true,
-                        afterEach: true,
-                        expect: true,
-                        spyOn: true,
-
-                        ifNotInWebkitIt: true,
-                        ifNotInPhantomJsIt: true,
-                        ifNotInPhantomJSAndNotLocalRunnerIt: true,
-                        ifNotInWebKitAndNotLocalRunnerIt: true,
-                        testHelper: true,
-                        diffHelper: true,
-
-                        util: true,
-                        proxies: true,
-                        documentUtil: true,
-                        documentHelper: true,
-                        browser: true,
-                        svg2image: true,
-                        document2svg: true,
-                        rasterize: true,
-                        rasterizeHTML: true,
-
-                        url: true,
-                        ayepromise: true,
-                        inlineresources: true,
-
-                        imagediff: true
-                    }
-                },
-                files: {
-                    src: ['test/specs/*.js']
-                }
+                jshintrc: true
             }
         },
         "regex-check": {
