@@ -1,4 +1,6 @@
 describe("Integration test", function () {
+    "use strict";
+
     var canvas, finished, callback, referenceImg,
         width = 200,
         height = 100;

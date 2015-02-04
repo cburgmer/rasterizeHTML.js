@@ -9,6 +9,7 @@
     "unused": true,
     "eqnull": true,
     "trailing": true,
+    "strict": true,
     "browser": true,
     "globals": {
         "util": true,

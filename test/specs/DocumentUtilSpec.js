@@ -1,4 +1,6 @@
 describe("HTML Document Utility functions", function () {
+    "use strict";
+
     var doc,
         setHtml = function (html) {
             doc.documentElement.innerHTML = html;

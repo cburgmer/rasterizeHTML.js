@@ -1,4 +1,5 @@
 describe("diffHelper", function () {
+    "use strict";
 
     describe("toEqualImage matcher", function () {
 

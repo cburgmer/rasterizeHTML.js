@@ -1,4 +1,6 @@
 describe("Rasterize", function () {
+    "use strict";
+
     var theSvg = "the svg",
         rasterizedImage = "rasterized image",
         doc,

@@ -1,4 +1,6 @@
 describe("Document to SVG conversion", function () {
+    "use strict";
+
     describe("getSvgForDocument", function () {
         var defaultZoomLevel = 1;
 

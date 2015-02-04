@@ -1,4 +1,6 @@
 describe("Main", function () {
+    "use strict";
+
     var svgImage = "svg image",
         doc, canvas;
 

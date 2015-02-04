@@ -1,5 +1,7 @@
 // Proxy objects by monkey patching
 var proxies = (function (util, ayepromise) {
+    "use strict";
+
     var module = {};
 
     var monkeyPatchInstanceMethod = function (object, methodName, proxyFunc) {

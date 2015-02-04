@@ -1,4 +1,6 @@
 /* globals isEqual */
+"use strict";
+
 var fs = require("fs");
 
 var getDataUriForBase64PNG = function (pngBase64) {

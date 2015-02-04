@@ -37,11 +37,5 @@
         "inlineresources": true,
 
         "imagediff": true
-    },
-    "exported": [
-        "ifNotInWebkitIt",
-        "ifNotInPhantomJsIt",
-        "ifNotInPhantomJSAndNotLocalRunnerIt",
-        "ifNotInWebKitAndNotLocalRunnerIt"
-    ]
+    }
 }

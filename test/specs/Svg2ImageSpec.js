@@ -1,4 +1,6 @@
 describe("Svg to Image", function () {
+    "use strict";
+
     describe("on SVG rendering", function () {
         beforeEach(function () {
             jasmine.addMatchers(imagediff.jasmine);

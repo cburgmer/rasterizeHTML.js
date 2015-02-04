@@ -1,4 +1,5 @@
 describe("Utilities function", function () {
+    "use strict";
     // TODO tests for log and getConstantUniqueIdFor
 
     describe("joinUrl", function () {

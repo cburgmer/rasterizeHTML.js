@@ -1,4 +1,5 @@
 describe("Browser functions", function () {
+    "use strict";
 
     describe("executeJavascript", function () {
         var doc;

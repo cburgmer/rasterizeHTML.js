@@ -1,4 +1,6 @@
 window.diffHelper = (function () {
+    "use strict";
+
     var module = {};
 
     // Work around https://github.com/HumbleSoftware/js-imagediff/issues/18

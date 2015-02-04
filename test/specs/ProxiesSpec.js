@@ -1,4 +1,6 @@
 describe("XHR Proxies", function () {
+    "use strict";
+
     var mockPromisesToResolveSynchronously = function () {
         spyOn(ayepromise, 'defer').and.returnValue(testHelper.synchronousDefer());
     };
