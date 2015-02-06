@@ -16,6 +16,7 @@
         "require": true,
 
         "ifNotInWebkitIt": true,
+        "ifNotInWebkitOrBlinkIt": true,
         "ifNotInPhantomJsIt": true,
         "ifNotInPhantomJSAndNotLocalRunnerIt": true,
         "ifNotInWebKitAndNotLocalRunnerIt": true,

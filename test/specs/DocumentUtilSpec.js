@@ -167,7 +167,7 @@ describe("HTML Document Utility functions", function () {
         });
 
         // Chrome and WebKit don't seem to care about tag name selector case sensitivity for XML documents. Why should we?
-        ifNotInWebkitIt("should only convert mentioned tag names", function () {
+        ifNotInWebkitOrBlinkIt("should only convert mentioned tag names", function () {
             setHtml('<style>BODY LI { color: blue; }</style>');
 
             documentUtil.lowercaseCssTypeSelectors(doc, ['li']);

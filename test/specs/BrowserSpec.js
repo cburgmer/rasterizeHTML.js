@@ -525,7 +525,7 @@ describe("Browser functions", function () {
         });
 
         // Seems to be generally broken, see https://github.com/cburgmer/rasterizeHTML.js/issues/51
-        ifNotInWebkitIt("should error on failing parse", function (done) {
+        ifNotInWebkitOrBlinkIt("should error on failing parse", function (done) {
             browser.loadDocument(testHelper.fixturesPath + "invalidInput.html", {}).fail(function (e) {
                 expect(e).toEqual({message: "Invalid source"});
 
