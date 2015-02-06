@@ -4,53 +4,29 @@ var svg2image = (function (ayepromise, window) {
     var module = {};
 
     var supportsBlobBuilding = function () {
-        // Newer WebKit (under PhantomJS) seems to support blob building, but loading an image with the blob fails
-        if (window.navigator.userAgent.indexOf("WebKit") >= 0 && window.navigator.userAgent.indexOf("Chrome") < 0) {
-            return false;
-        }
-        if (window.BlobBuilder || window.MozBlobBuilder || window.WebKitBlobBuilder) {
-            // Deprecated interface
-            return true;
-        } else {
-            if (window.Blob) {
-                // Available as constructor only in newer builds for all Browsers
-                try {
-                    new window.Blob(['<b></b>'], { "type" : "text\/xml" });
-                    return true;
-                } catch (err) {
-                    return false;
-                }
-            }
+        if (window.Blob) {
+            // Available as constructor only in newer builds for all browsers
+            try {
+                new Blob(['<b></b>'], { "type" : "text/xml" });
+                return true;
+            } catch (err) {}
         }
         return false;
     };
 
-    var getBlob = function (data) {
-       var imageType = "image/svg+xml;charset=utf-8",
-           BLOBBUILDER = window.BlobBuilder || window.MozBlobBuilder || window.WebKitBlobBuilder,
-           svg;
-       if (BLOBBUILDER) {
-           svg = new BLOBBUILDER();
-           svg.append(data);
-           return svg.getBlob(imageType);
-       } else {
-           return new window.Blob([data], {"type": imageType});
-       }
-    };
+    var useBlobs = supportsBlobBuilding() && window.URL;
 
     var buildImageUrl = function (svg) {
-        var DOMURL = window.URL || window.webkitURL || window;
-        if (supportsBlobBuilding()) {
-            return DOMURL.createObjectURL(getBlob(svg));
+        if (useBlobs) {
+            return URL.createObjectURL(new Blob([svg], {"type": "image/svg+xml"}));
         } else {
             return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
         }
     };
 
     var cleanUpUrl = function (url) {
-        var DOMURL = window.URL || window.webkitURL || window;
-        if (supportsBlobBuilding()) {
-            DOMURL.revokeObjectURL(url);
+        if (useBlobs) {
+            URL.revokeObjectURL(url);
         }
     };
 
