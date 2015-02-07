@@ -41,6 +41,25 @@ window.testHelper = (function () {
         return defer.promise;
     };
 
+    module.readHTMLFixture = function (url) {
+        var defer = ayepromise.defer(),
+            fixtureUrl = module.fixturesPath + url,
+            xhr = new window.XMLHttpRequest();
+
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                defer.resolve(xhr.responseText);
+            }
+        };
+
+        xhr.open('GET', fixtureUrl, true);
+        xhr.overrideMimeType("text/html");
+
+        xhr.send(null);
+
+        return defer.promise;
+    };
+
     module.readDocumentFixture = function (url) {
         var fixtureUrl = module.fixturesPath + url,
             xhr = new window.XMLHttpRequest();
