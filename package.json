@@ -40,7 +40,7 @@
     "grunt-contrib-uglify": "~0.7.0",
     "grunt-contrib-watch": "~0.6.1",
     "grunt-regex-check": "~0.1.9",
-    "grunt-umd": "~1.7.4",
+    "grunt-umd": "~2.3.0",
     "imagediff": "git://github.com/cburgmer/js-imagediff#v1.1merged",
     "jasmine-core": "2.2.0",
     "jquery": "~2.1.0",
