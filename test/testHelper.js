@@ -5,15 +5,6 @@ window.testHelper = (function () {
 
     module.fixturesPath = 'fixtures/';
 
-    module.readHTMLFixture = function (url) {
-        var fixtureUrl = module.fixturesPath + url,
-            xhr = new window.XMLHttpRequest();
-
-        xhr.open('GET', fixtureUrl, false);
-        xhr.send(null);
-        return xhr.response;
-    };
-
     // work around https://bugzilla.mozilla.org/show_bug.cgi?id=925493
     var workAroundFirefoxNotLoadingStylesheetStyles = function (doc) {
         var d = document.implementation.createHTMLDocument('');
@@ -68,23 +59,6 @@ window.testHelper = (function () {
         xhr.overrideMimeType('text/xml');
         xhr.send(null);
         return xhr.responseXML;
-    };
-
-    module.readDocumentFixtureWithoutBaseURI = function (url) {
-        var html = module.readHTMLFixture(url),
-            doc = document.implementation.createHTMLDocument("");
-
-        doc.documentElement.innerHTML = html;
-        return doc;
-    };
-
-    module.addStyleToDocument = function (doc, styleContent) {
-        var styleNode = doc.createElement("style");
-
-        styleNode.type = "text/css";
-        styleNode.appendChild(doc.createTextNode(styleContent));
-
-        doc.getElementsByTagName('head')[0].appendChild(styleNode);
     };
 
     // Poor man's promise implementation

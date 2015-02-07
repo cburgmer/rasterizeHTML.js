@@ -52,24 +52,24 @@ describe("Integration test", function () {
     });
 
     ifNotInWebkitIt("should take a HTML string, inline all displayable content and render to the given canvas", function (done) {
-        var html = testHelper.readHTMLFixture("test.html");
-
-        rasterizeHTML.drawHTML(html, canvas.get(0), {
+        testHelper.readHTMLFixture("test.html").then(function (html) {
+            rasterizeHTML.drawHTML(html, canvas.get(0), {
                 baseUrl: testHelper.fixturesPath,
                 cache: 'none',
                 active: '.bgimage',
                 hover: '.webfont',
                 clip: 'body'
             }).then(function (result) {
-            expect(result.errors).toEqual([]);
+                expect(result.errors).toEqual([]);
 
-            forceImageSizeForPlatformCompatibility(result.image);
-            expect(result.image).toEqualImage(referenceImg.get(0), 2);
+                forceImageSizeForPlatformCompatibility(result.image);
+                expect(result.image).toEqualImage(referenceImg.get(0), 2);
 
-            expect(canvas.get(0)).toEqualImage(referenceImg.get(0), 2);
-            // expect(canvas.get(0)).toImageDiffEqual(referenceImg.get(0), 70);
+                expect(canvas.get(0)).toEqualImage(referenceImg.get(0), 2);
+                // expect(canvas.get(0)).toImageDiffEqual(referenceImg.get(0), 70);
 
-            done();
+                done();
+            });
         });
     });
 
