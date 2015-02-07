@@ -1,117 +1,140 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title>Manual integration test</title>
-    <script src="../build/dependencies/xmlserializer.js"></script>
-    <script src="../build/dependencies/url.js"></script>
-    <script src="../build/dependencies/inlineresources.js"></script>
-    <script src="../node_modules/ayepromise/ayepromise.js"></script>
-    <script src="../src/util.js"></script>
-    <script src="../src/proxies.js"></script>
-    <script src="../src/browser.js"></script>
-    <script src="../src/documentUtil.js"></script>
-    <script src="../src/documentHelper.js"></script>
-    <script src="../src/document2svg.js"></script>
-    <script src="../src/svg2image.js"></script>
-    <script src="../src/rasterize.js"></script>
-    <script src="../src/index.js"></script>
+    <head>
+        <title>Manual integration test</title>
+        <script src="../build/dependencies/xmlserializer.js"></script>
+        <script src="../build/dependencies/url.js"></script>
+        <script src="../build/dependencies/inlineresources.js"></script>
+        <script src="../node_modules/ayepromise/ayepromise.js"></script>
+        <script src="../src/util.js"></script>
+        <script src="../src/proxies.js"></script>
+        <script src="../src/browser.js"></script>
+        <script src="../src/documentUtil.js"></script>
+        <script src="../src/documentHelper.js"></script>
+        <script src="../src/document2svg.js"></script>
+        <script src="../src/svg2image.js"></script>
+        <script src="../src/rasterize.js"></script>
+        <script src="../src/index.js"></script>
 
-    <script src="../test/testHelper.js"></script>
+        <script src="../test/testHelper.js"></script>
 
-    <style type="text/css">
-        canvas,
-        .container {
-            border: 1px solid gray;
-            display: inline-block;
-        }
-    </style>
-</head>
-<body>
-    <p>Due to <a href="https://bugs.webkit.org/show_bug.cgi?id=17352">this issue in Webkit</a> (and in older Chromes due to <a href="https://code.google.com/p/chromium/issues/detail?id=294129">this issue in Blink</a>) certain automatic tests that need to read the canvas will fail there and are disabled in those environments. Use these manual tests here instead.</p>
-    <p>All four canvases below should show the following image:<br><img src="fixtures/testResult.png" alt="reference image"></p>
+        <style type="text/css">
+         canvas,
+         .container {
+             border: 1px solid gray;
+             display: inline-block;
+         }
+        </style>
+    </head>
+    <body>
+        <p>Due to <a href="https://bugs.webkit.org/show_bug.cgi?id=17352">this issue in Webkit</a> (and in older Chromes due to <a href="https://code.google.com/p/chromium/issues/detail?id=294129">this issue in Blink</a>) certain automatic tests that need to read the canvas will fail there and are disabled in those environments. Use these manual tests here instead.</p>
+        <p>All four canvases below should show the following image:<br><img src="fixtures/testResult.png" alt="reference image"></p>
 
-    <h3>Test cases</h3>
+        <h3>Test cases</h3>
 
-    <div>
-        <canvas id="documentCanvas" width="200" height="100"></canvas>
-        <script type="text/javascript">
-            var documentCanvas = document.getElementById("documentCanvas");
+        <div>
+            <canvas id="documentCanvas" width="200" height="100"></canvas>
+            <script type="text/javascript">
+             var documentCanvas = document.getElementById("documentCanvas");
 
-            testHelper.readHTMLDocumentFixture("test.html").then(function (doc) {
-                rasterizeHTML.drawDocument(doc, documentCanvas, {
-                    baseUrl: "fixtures/",
-                    cache: false,
-                    active: '.bgimage',
-                    hover: '.webfont',
-                    clip: 'body'
-                });
-            });
-        </script>
-    </div>
+             testHelper.readHTMLDocumentFixture("test.html").then(function (doc) {
+                 rasterizeHTML.drawDocument(doc, documentCanvas, {
+                     baseUrl: "fixtures/",
+                     cache: false,
+                     active: '.bgimage',
+                     hover: '.webfont',
+                     clip: 'body'
+                 });
+             });
+            </script>
+        </div>
 
-    <div>
-        <canvas id="htmlCanvas" width="200" height="100"></canvas>
-        <script type="text/javascript">
-            var htmlCanvas = document.getElementById("htmlCanvas"),
-                htmlRequest = new window.XMLHttpRequest();
+        <div>
+            <canvas id="htmlNoJsCanvas" width="200" height="100"></canvas>
+            <script type="text/javascript">
+             var htmlNoJsCanvas = document.getElementById("htmlNoJsCanvas"),
+                 htmlNoJsRequest = new window.XMLHttpRequest();
 
-            htmlRequest.onreadystatechange = function () {
-                if (htmlRequest.readyState == 4) {
-                    rasterizeHTML.drawHTML(htmlRequest.responseText, htmlCanvas, {
-                        baseUrl: "fixtures/",
-                        cache: false,
-                        executeJs: true,
-                        executeJsTimeout: 100,
-                        zoom: 2,
-                        active: '.bgimage',
-                        hover: '.webfont',
-                        clip: 'body'
-                    });
-                }
-            };
-            htmlRequest.open('GET', "fixtures/testScaled50PercentWithJs.html", true);
-            htmlRequest.overrideMimeType("text/html");
-            htmlRequest.send(null);
-        </script>
-    </div>
+             htmlNoJsRequest.onreadystatechange = function () {
+                 if (htmlNoJsRequest.readyState == 4) {
+                     rasterizeHTML.drawHTML(htmlNoJsRequest.responseText, htmlNoJsCanvas, {
+                         baseUrl: "fixtures/",
+                         cache: false,
+                         active: '.bgimage',
+                         hover: '.webfont',
+                         clip: 'body'
+                     });
+                 }
+             };
+             htmlNoJsRequest.open('GET', "fixtures/test.html", true);
+             htmlNoJsRequest.overrideMimeType("text/html");
+             htmlNoJsRequest.send(null);
+            </script>
+        </div>
 
-    <div>
-        <canvas id="urlCanvas" width="200" height="100"></canvas>
-        <script type="text/javascript">
-            var urlCanvas = document.getElementById("urlCanvas");
+        <div>
+            <canvas id="htmlCanvas" width="200" height="100"></canvas>
+            <script type="text/javascript">
+             var htmlCanvas = document.getElementById("htmlCanvas"),
+                 htmlRequest = new window.XMLHttpRequest();
 
-            rasterizeHTML.drawURL("fixtures/testScaled50PercentWithJs.html", urlCanvas, {
-                cache: false,
-                executeJs: true,
-                executeJsTimeout: 100,
-                zoom: 2,
-                active: '.bgimage',
-                hover: '.webfont',
-                clip: 'body'
-            });
-        </script>
-    </div>
+             htmlRequest.onreadystatechange = function () {
+                 if (htmlRequest.readyState == 4) {
+                     rasterizeHTML.drawHTML(htmlRequest.responseText, htmlCanvas, {
+                         baseUrl: "fixtures/",
+                         cache: false,
+                         executeJs: true,
+                         executeJsTimeout: 100,
+                         zoom: 2,
+                         active: '.bgimage',
+                         hover: '.webfont',
+                         clip: 'body'
+                     });
+                 }
+             };
+             htmlRequest.open('GET', "fixtures/testScaled50PercentWithJs.html", true);
+             htmlRequest.overrideMimeType("text/html");
+             htmlRequest.send(null);
+            </script>
+        </div>
 
-    <div>
-        <div id="urlImageContainer" class="container"></div>
-        <script type="text/javascript">
-            var urlImageContainer = document.getElementById("urlImageContainer");
+        <div>
+            <canvas id="urlCanvas" width="200" height="100"></canvas>
+            <script type="text/javascript">
+             var urlCanvas = document.getElementById("urlCanvas");
 
-            rasterizeHTML.drawURL("fixtures/testScaled50PercentWithJs.html", {
-                cache: false,
-                executeJs: true,
-                executeJsTimeout: 100,
-                zoom: 2,
-                width: 200,
-                height: 100,
-                active: '.bgimage',
-                hover: '.webfont',
-                clip: 'body'
-            }).then(function (result) {
-                urlImageContainer.appendChild(result.image);
-            });
-        </script>
-    </div>
+             rasterizeHTML.drawURL("fixtures/testScaled50PercentWithJs.html", urlCanvas, {
+                 cache: false,
+                 executeJs: true,
+                 executeJsTimeout: 100,
+                 zoom: 2,
+                 active: '.bgimage',
+                 hover: '.webfont',
+                 clip: 'body'
+             });
+            </script>
+        </div>
 
-</body>
+        <div>
+            <div id="urlImageContainer" class="container"></div>
+            <script type="text/javascript">
+             var urlImageContainer = document.getElementById("urlImageContainer");
+
+             rasterizeHTML.drawURL("fixtures/testScaled50PercentWithJs.html", {
+                 cache: false,
+                 executeJs: true,
+                 executeJsTimeout: 100,
+                 zoom: 2,
+                 width: 200,
+                 height: 100,
+                 active: '.bgimage',
+                 hover: '.webfont',
+                 clip: 'body'
+             }).then(function (result) {
+                 urlImageContainer.appendChild(result.image);
+             });
+            </script>
+        </div>
+
+    </body>
 </html>
