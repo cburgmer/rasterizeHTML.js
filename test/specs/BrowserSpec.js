@@ -210,7 +210,15 @@ describe("Browser functions", function () {
                 done();
             });
         });
-     });
+
+        it("should correctly set the doctype (see issue #89)", function (done) {
+            browser.executeJavascript(doc, defaultOptionsWithViewport()).then(function (result) {
+                expect(result.document.doctype.name).toEqual('html');
+
+                done();
+            });
+        });
+    });
 
     describe("parseHTML", function () {
         var oldDOMParser = window.DOMParser;

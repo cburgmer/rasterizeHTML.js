@@ -63,6 +63,7 @@ var browser = (function (util, proxies, ayepromise, theWindow) {
             });
         };
 
+        iframe.contentDocument.write('<!DOCTYPE html>');
         iframe.contentDocument.write(html);
         iframe.contentDocument.close();
 
