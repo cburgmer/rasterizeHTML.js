@@ -383,11 +383,18 @@ describe("Browser functions", function () {
             });
         });
 
-        it("should respect lettercase in selectors (see issue #89)", function (done) {
-            setHtml('<style>.mixedLetterCase { height: 100px; } * { margin: 0; }</style><body class="mixedLetterCase"></body>');
+        it("should use standards mode to calculate sizes", function (done) {
+            /* Awkward test setup just to test that we don't get any of those:
+               https://developer.mozilla.org/en-US/docs/Mozilla_Quirks_Mode_Behavior */
+            setHtml('<style>' +
+                    'body { margin: 0; padding: 0; font-size: 10px; line-height: 100%; }' +
+                    'ul { list-style: none; margin: 0; } li { display: inline-block; }' +
+                    '</style>' +
+                    '<body><ul><li></li></ul></body>');
 
-            browser.calculateDocumentContentSize(doc, {width: 300, height: 10}).then(function (size) {
-                expect(size.height).toEqual(100);
+            browser.calculateDocumentContentSize(doc, {width: 300, height: 5}).then(function (size) {
+                // In quirks mode the ul seems to be considered empty and doesn't get a height
+                expect(size.height).toEqual(10);
 
                 done();
             });
