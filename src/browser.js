@@ -177,6 +177,7 @@ var browser = (function (util, proxies, ayepromise, theWindow) {
 
         // srcdoc doesn't work in PhantomJS yet
         iframe.contentDocument.open();
+        iframe.contentDocument.write('<!DOCTYPE html>');
         iframe.contentDocument.write(html);
         iframe.contentDocument.close();
 

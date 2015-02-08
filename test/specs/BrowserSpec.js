@@ -383,6 +383,16 @@ describe("Browser functions", function () {
             });
         });
 
+        it("should respect lettercase in selectors (see issue #89)", function (done) {
+            setHtml('<style>.mixedLetterCase { height: 100px; } * { margin: 0; }</style><body class="mixedLetterCase"></body>');
+
+            browser.calculateDocumentContentSize(doc, {width: 300, height: 10}).then(function (size) {
+                expect(size.height).toEqual(100);
+
+                done();
+            });
+        });
+
         describe("zooming", function () {
             it("should report half the viewport size for a zoom of 2", function (done) {
                 setElementWithSize({});
