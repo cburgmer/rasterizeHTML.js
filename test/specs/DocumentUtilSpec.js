@@ -90,6 +90,14 @@ describe("HTML Document Utility functions", function () {
             expect(doc.querySelector('style').textContent).toMatch(/a.myFakeHover/);
         });
 
+        it("should correctly replace match with preceding not() functional form", function () {
+            setHtml('<style>a:not([disabled]):hover { color: blue; }</style>');
+
+            documentUtil.rewriteCssSelectorWith(doc, ':hover', '.myFakeHover');
+
+            expect(doc.querySelector('style').textContent).toMatch(/a(.myFakeHover:not\(\[disabled\]\)|:not\(\[disabled\]\).myFakeHover)/);
+        });
+
         // On Firefox this needs a work around because of https://bugzilla.mozilla.org/show_bug.cgi?id=925493
         ifNotInPhantomJsIt("should integrate with a document loaded through ajax", function (done) {
             testHelper.readHTMLDocumentFixture("hover.html").then(function (doc) {
