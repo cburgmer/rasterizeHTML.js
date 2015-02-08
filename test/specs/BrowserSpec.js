@@ -256,6 +256,12 @@ describe("Browser functions", function () {
         it("should deal with a missing 'html' tag", function () {
             browser.parseHTML('<div></div>');
         });
+
+        it("should correctly set the doctype (see issue #89)", function () {
+            var doc = browser.parseHTML('<b></b>');
+
+            expect(doc.doctype.name).toEqual('html');
+        });
     });
 
     describe("validateXHTML", function () {

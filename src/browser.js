@@ -204,15 +204,11 @@ var browser = (function (util, proxies, ayepromise, theWindow) {
     };
 
     module.parseHTML = function (html) {
-        var doc;
-        if ((new DOMParser()).parseFromString('<a></a>', 'text/html')) {
-            doc = (new DOMParser()).parseFromString(html, 'text/html');
-        } else {
-            doc = theWindow.document.implementation.createHTMLDocument('');
-            doc.documentElement.innerHTML = html;
+        // We should be using the DOMParser, but it is not supported in older browsers
+        var doc = theWindow.document.implementation.createHTMLDocument('');
+        doc.documentElement.innerHTML = html;
 
-            addHTMLTagAttributes(doc, html);
-        }
+        addHTMLTagAttributes(doc, html);
         return doc;
     };
 
