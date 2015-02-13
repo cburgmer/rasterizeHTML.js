@@ -63,12 +63,14 @@ var documentUtil = (function () {
 
             if (matchingRules.length) {
                 matchingRules.forEach(function (rule) {
-                    var selector = rule.selectorText.replace(new RegExp(selectorRegex, 'gi'),
+                    var newSelector = rule.selectorText.replace(new RegExp(selectorRegex, 'gi'),
                                                              function (_, prefixMatch, selectorMatch) {
                         return prefixMatch + caseInsensitiveReplaceFunc(selectorMatch);
                     });
 
-                    updateRuleSelector(rule, selector);
+                    if (newSelector !== rule.selectorText) {
+                        updateRuleSelector(rule, newSelector);
+                    }
                 });
 
                 rewriteStyleContent(styleElement);

@@ -190,6 +190,15 @@ describe("HTML Document Utility functions", function () {
 
             expect(doc.querySelector('style').textContent).toMatch(/body li \{/);
         });
+
+        it("should be minimally invasive so we don't touch selectors that might fail unless there's actual change", function () {
+            setHtml('<style>esi\\:include, a { color: blue; }</style>');
+
+            documentUtil.lowercaseCssTypeSelectors(doc, ['a']);
+
+            // expect this not to fail (Chrome would complain about the insertion of an invalid selector:
+            // "SyntaxError: Failed to execute 'insertRule' on 'CSSStyleSheet': Failed to parse the rule 'esi:include, a { color: blue; }'.")
+        });
     });
 
     describe("addClassNameRecursively", function () {
