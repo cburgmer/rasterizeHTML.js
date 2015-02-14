@@ -228,7 +228,7 @@ var browser = (function (util, proxies, ayepromise, theWindow) {
     };
 
     var failOnParseError = function (doc) {
-        if (isParseError(doc)) {
+        if (doc === null || isParseError(doc)) {
             throw {
                 message: "Invalid source"
             };

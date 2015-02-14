@@ -279,7 +279,7 @@ describe("Browser functions", function () {
         ifNotInPhantomJsIt("should throw an exception if the document is invalid because of a missing namespace", function () {
             var error;
             try {
-                browser.validateXHTML("<html><weird:element></html>");
+                browser.validateXHTML('<html xmlns="http://www.w3.org/1999/xhtml"><weird:element></html>');
             } catch (e) {
                 error = e;
             }
@@ -555,10 +555,9 @@ describe("Browser functions", function () {
             });
         });
 
-        // Seems to be generally broken, see https://github.com/cburgmer/rasterizeHTML.js/issues/51
-        ifNotInWebkitOrBlinkIt("should error on failing parse", function (done) {
-            browser.loadDocument(testHelper.fixturesPath + "invalidInput.html", {}).fail(function (e) {
-                expect(e).toEqual({message: "Invalid source"});
+        it("should error on failing parse", function (done) {
+            browser.loadDocument(testHelper.fixturesPath + "invalidInput.xhtml", {}).fail(function (e) {
+                expect(e).toEqual(jasmine.objectContaining({message: "Invalid source"}));
 
                 done();
             });
