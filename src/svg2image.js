@@ -11,6 +11,12 @@ var svg2image = (function (ayepromise, window) {
         }
     };
 
+    var cleanUpUrl = function (url) {
+        if (url instanceof Blob) {
+            URL.revokeObjectURL(url);
+        }
+    };
+
     var simpleForeignObjectSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"><foreignObject></foreignObject></svg>';
 
     var supportsReadingObjectFromCanvas = function (url) {
@@ -29,6 +35,7 @@ var svg2image = (function (ayepromise, window) {
                 defer.resolve(false);
             }
         };
+        image.onerror = defer.reject;
         image.src = url;
 
         return defer.promise;
@@ -36,8 +43,10 @@ var svg2image = (function (ayepromise, window) {
 
     var readingBackFromCanvasBenefitsFromOldSchoolDataUris = function () {
         // Check for work around for https://code.google.com/p/chromium/issues/detail?id=294129
-        return supportsReadingObjectFromCanvas(urlForSvg(simpleForeignObjectSvg, true))
+        var blobUrl = urlForSvg(simpleForeignObjectSvg, true);
+        return supportsReadingObjectFromCanvas(blobUrl)
             .then(function (supportsReadingFromBlobs) {
+                cleanUpUrl(blobUrl);
                 if (supportsReadingFromBlobs) {
                     return false;
                 }
@@ -45,6 +54,8 @@ var svg2image = (function (ayepromise, window) {
                     .then(function (s) {
                         return s;
                     });
+            }, function () {
+                return false;
             });
     };
 
@@ -66,6 +77,8 @@ var svg2image = (function (ayepromise, window) {
             readingBackFromCanvasBenefitsFromOldSchoolDataUris()
                 .then(function (doesBenefit) {
                     defer.resolve(! doesBenefit);
+                }, function () {
+                    defer.reject();
                 });
         } else {
             defer.resolve(false);
@@ -90,12 +103,6 @@ var svg2image = (function (ayepromise, window) {
         });
     };
 
-    var cleanUpUrl = function (url) {
-        if (url instanceof Blob) {
-            URL.revokeObjectURL(url);
-        }
-    };
-
     module.renderSvg = function (svg) {
         var url, image,
             defer = ayepromise.defer(),
@@ -109,7 +116,7 @@ var svg2image = (function (ayepromise, window) {
                 }
             };
 
-        image = new window.Image();
+        image = new Image();
         image.onload = function() {
             resetEventHandlers();
             cleanUp();
@@ -122,10 +129,11 @@ var svg2image = (function (ayepromise, window) {
             // Webkit calls the onerror handler if the SVG is faulty
             defer.reject();
         };
+
         buildImageUrl(svg).then(function (imageUrl) {
             url = imageUrl;
             image.src = url;
-        });
+        }, defer.reject);
 
         return defer.promise;
     };

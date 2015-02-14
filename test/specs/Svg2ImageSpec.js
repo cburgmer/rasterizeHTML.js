@@ -66,13 +66,20 @@ describe("Svg to Image", function () {
         });
 
         it("should return an error when the SVG cannot be rendered", function (done) {
-            var imageSpy = {};
+            var OldImage = window.Image,
+                imageSpy;
 
             // We need to mock, as only Chrome & Safari seem to throw errors on a faulty SVG
-            spyOn(window, "Image").and.returnValue(imageSpy);
+            spyOn(window, "Image").and.callFake(function () {
+                // HACK only spy on the first call
+                if (!imageSpy) {
+                    imageSpy = {};
+                    return imageSpy;
+                }
+                return new OldImage();
+            });
 
             svg2image.renderSvg("svg", null).fail(done);
-
             imageSpy.onerror();
         });
 
