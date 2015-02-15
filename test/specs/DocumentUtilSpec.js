@@ -107,6 +107,16 @@ describe("HTML Document Utility functions", function () {
                 done();
             });
         });
+
+        // Chrome and WebKit don't seem to care about tag name selector case sensitivity for XML documents.
+        // https://github.com/cburgmer/rasterizeHTML.js/issues/91
+        ifNotInWebkitOrBlinkIt("should keep letter case", function () {
+            setHtml('<style>foreignObject:hover { color: blue; }</style>');
+
+            documentUtil.rewriteCssSelectorWith(doc, ':hover', '.myfakehover');
+
+            expect(doc.querySelector('style').textContent).toMatch(/foreignObject.myfakehover/);
+        });
     });
 
     describe("lowercaseCssTypeSelectors", function () {
@@ -174,7 +184,8 @@ describe("HTML Document Utility functions", function () {
             expect(doc.querySelector('style').textContent).toMatch(/li.COMPLEX:active \{/);
         });
 
-        // Chrome and WebKit don't seem to care about tag name selector case sensitivity for XML documents. Why should we?
+        // Chrome and WebKit don't seem to care about tag name selector case sensitivity for XML documents.
+        // https://github.com/cburgmer/rasterizeHTML.js/issues/91
         ifNotInWebkitOrBlinkIt("should only convert mentioned tag names", function () {
             setHtml('<style>BODY LI { color: blue; }</style>');
 
