@@ -218,6 +218,16 @@ describe("HTML Document Utility functions", function () {
             // expect this not to fail (Chrome would complain about the insertion of an invalid selector:
             // "SyntaxError: Failed to execute 'insertRule' on 'CSSStyleSheet': Failed to parse the rule 'esi:include, a { color: blue; }'.")
         });
+
+        // Document https://github.com/cburgmer/rasterizeHTML.js/issues/92
+        xit("should not conflate rules targeting SVGs with ones targeting only HTML", function () {
+            // lowercase matches SVG and HTML, while uppercase matches HTML only (case-insensitive)
+            setHtml('<style>a { color: blue; } A { color: green; }</style>');
+
+            documentUtil.lowercaseCssTypeSelectors(doc, ['a']);
+
+            expect(doc.querySelector('style').textContent).not.toMatch(/\}\s*a \{ color: green/);
+        });
     });
 
     describe("addClassNameRecursively", function () {
