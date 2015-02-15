@@ -5,11 +5,3 @@ env:
   - DISPLAY=:99.0
 before_script:
   - "sh -e /etc/init.d/xvfb start"
-deploy:
-  provider: npm
-  api_key:
-    secure: FNqFg3zOU5Qd0MsGDUMHITm8Zc6GeS4+Y5JwWc+rPUKoXQPNYGBELuCOAngTa9OpKHpur8GCvdZ85IIx7XT6gbvSSrfQeuof1apVvv7ekU+wQljtSV0NoY8S4EdhNr4vysuI/lEE9/EhY0QmBnQk02EmFOLq7WuAzXQL9iDsCbw=
-  on:
-    tags: true
-    repo: cburgmer/rasterizeHTML.js
-    all_branches: true
