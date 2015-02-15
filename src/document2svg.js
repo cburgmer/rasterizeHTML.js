@@ -37,6 +37,13 @@ var document2svg = (function (util, browser, documentHelper, xmlserializer) {
         attributes.style = style + 'float: left;';
     };
 
+    var workAroundSafariSometimesNotShowingExternalResources = function (attributes) {
+        /* Let's hope that works some magic. The spec says SVGLoad only fires
+         * now when all externals are available.
+         * http://www.w3.org/TR/SVG/struct.html#ExternalResourcesRequired */
+        attributes.externalResourcesRequired = true;
+    };
+
     var serializeAttributes = function (attributes) {
         var keys = Object.keys(attributes);
         if (!keys.length) {
@@ -58,6 +65,7 @@ var document2svg = (function (util, browser, documentHelper, xmlserializer) {
         var attributes = zoomedElementSizingAttributes(size, zoomFactor);
 
         workAroundCollapsingMarginsAcrossSVGElementInWebKitLike(attributes);
+        workAroundSafariSometimesNotShowingExternalResources(attributes);
 
         return (
             '<svg xmlns="http://www.w3.org/2000/svg"' +
