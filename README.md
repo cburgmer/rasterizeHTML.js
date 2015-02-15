@@ -43,16 +43,16 @@ All resources (HTML page, CSS, images, fonts and JS) that are needed for drawing
 
 The code is tested under Firefox, Chrome & Safari. However [IE up to version 11 does not honour `<foreignObject>`](https://status.modern.ie/svgforeignobjectelement) and is unsupported.
 
-At the time of writing it seems that the individual browsers still have some issues with rendering SVGs with embedded HTML to the canvas. See the [wiki for a list of known issues](https://github.com/cburgmer/rasterizeHTML.js/wiki/Browser-issues) and do add your findings there.
+Also the individual browsers still have some issues when rendering SVGs with embedded HTML to the canvas.
+
+[The full list of limitations is here](https://github.com/cburgmer/rasterizeHTML.js/wiki/Limitations).
 
 Development
 -----------
 
-For linting, tests and minification install Node.js and run
+Run `npm install && npm test`. There's also a vagrant image that installs all necessary build dependencies.
 
-    $ ./go
-
-For the integration test under Chrome and Safari open `test/manualIntegrationTestForWebkit.html` (under Chrome you will either need to start the browser passing in the option `--allow-file-access-from-files` or load the page through a local webserver).
+For tests against individual browsers open `test/SpecRunner.html`, for integration tests under Safari open `test/manualIntegrationTestForWebkit.html` (under Chrome you will either need to start the browser passing in the option `--allow-file-access-from-files` or load the page through a local webserver).
 
 [![Build Status](https://travis-ci.org/cburgmer/rasterizeHTML.js.svg?branch=master)](https://travis-ci.org/cburgmer/rasterizeHTML.js)
 
