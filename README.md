@@ -59,7 +59,7 @@ For tests against individual browsers open `test/SpecRunner.html`, for integrati
 Where is it used?
 -----------------
 
-* [CSS Critic](https://github.com/cburgmer/csscritic), a lightweight framework for regression testing of Cascading Style Sheets
+* [CSS Critic](https://github.com/cburgmer/csscritic), a lightweight tool for regression testing of Cascading Style Sheets
 * ...
 
 Author
