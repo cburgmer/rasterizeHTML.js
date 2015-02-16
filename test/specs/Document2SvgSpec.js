@@ -218,6 +218,7 @@ describe("Document to SVG conversion", function () {
         beforeEach(function () {
             spyOn(documentHelper, 'fakeHover');
             spyOn(documentHelper, 'fakeActive');
+            spyOn(documentHelper, 'fakeFocus');
             calculatedSize = 'the_calculated_size';
             spyOn(browser, 'calculateDocumentContentSize').and.returnValue(fulfilled(calculatedSize));
             spyOn(document2svg, 'getSvgForDocument');
@@ -269,6 +270,18 @@ describe("Document to SVG conversion", function () {
             document2svg.drawDocumentAsSvg(doc, {});
 
             expect(documentHelper.fakeActive).not.toHaveBeenCalled();
+        });
+
+        it("should trigger focus effect", function () {
+            document2svg.drawDocumentAsSvg(doc, {focus: '.mySpan'});
+
+            expect(documentHelper.fakeFocus).toHaveBeenCalledWith(doc, '.mySpan');
+        });
+
+        it("should not trigger focus effect by default", function () {
+            document2svg.drawDocumentAsSvg(doc, {});
+
+            expect(documentHelper.fakeFocus).not.toHaveBeenCalled();
         });
 
         it("should render the selected element", function () {

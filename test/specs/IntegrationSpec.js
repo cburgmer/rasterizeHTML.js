@@ -75,14 +75,15 @@ describe("Integration test", function () {
 
     ifNotInWebkitIt("should take a URL, inline all displayable content and render to the given canvas", function (done) {
         rasterizeHTML.drawURL(testHelper.fixturesPath + "testScaled50PercentWithJs.html", canvas.get(0), {
-                cache: 'none',
-                executeJs: true,
-                executeJsTimeout: 100,
-                zoom: 2,
-                active: '.bgimage',
-                hover: '.webfont',
-                clip: 'body'
-            }).then(function (result) {
+            cache: 'none',
+            executeJs: true,
+            executeJsTimeout: 100,
+            zoom: 2,
+            active: '.bgimage',
+            hover: '.webfont',
+            focus: 'img',
+            clip: 'body'
+        }).then(function (result) {
             expect(result.errors).toEqual([]);
             forceImageSizeForPlatformCompatibility(result.image);
             expect(result.image).toEqualImage(referenceImg.get(0), 2);
@@ -96,16 +97,17 @@ describe("Integration test", function () {
 
     ifNotInWebkitIt("should render a URL without canvas", function (done) {
         rasterizeHTML.drawURL(testHelper.fixturesPath + "testScaled50PercentWithJs.html", {
-                cache: 'none',
-                width: width,
-                height: height,
-                executeJs: true,
-                executeJsTimeout: 100,
-                zoom: 2,
-                active: '.bgimage',
-                hover: '.webfont',
-                clip: 'body'
-            }).then(function (result) {
+            cache: 'none',
+            width: width,
+            height: height,
+            executeJs: true,
+            executeJsTimeout: 100,
+            zoom: 2,
+            active: '.bgimage',
+            hover: '.webfont',
+            focus: 'img',
+            clip: 'body'
+        }).then(function (result) {
             expect(result.errors).toEqual([]);
 
             forceImageSizeForPlatformCompatibility(result.image);

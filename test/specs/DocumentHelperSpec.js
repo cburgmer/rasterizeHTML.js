@@ -125,6 +125,21 @@ describe("Document Helper functions", function () {
         });
     });
 
+    describe("fakeFocus", function () {
+        beforeEach(function () {
+            spyOn(documentUtil, 'addClassNameRecursively');
+            spyOn(documentUtil, 'rewriteCssSelectorWith');
+        });
+
+        it("should add a fake class to the selected element and adapt the document's stylesheet", function () {
+            setHtml("<span>a span</span>");
+            documentHelper.fakeFocus(doc, 'span');
+
+            expect(documentUtil.addClassNameRecursively).toHaveBeenCalledWith(doc.querySelector('span'), 'rasterizehtmlfocus');
+            expect(documentUtil.rewriteCssSelectorWith).toHaveBeenCalledWith(doc, ':focus', '.rasterizehtmlfocus');
+        });
+    });
+
     describe("rewriteTagNameSelectorsToLowerCase", function () {
         beforeEach(function () {
             spyOn(documentUtil, 'findHtmlOnlyNodeNames');

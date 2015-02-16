@@ -29,6 +29,17 @@ var documentHelper = (function (documentUtil) {
         documentUtil.rewriteCssSelectorWith(doc, ':active', '.' + fakeActiveClass);
     };
 
+    module.fakeFocus = function (doc, focusSelector) {
+        var elem = doc.querySelector(focusSelector),
+            fakeFocusClass = 'rasterizehtmlfocus';
+        if (! elem) {
+            return;
+        }
+
+        documentUtil.addClassNameRecursively(elem, fakeFocusClass);
+        documentUtil.rewriteCssSelectorWith(doc, ':focus', '.' + fakeFocusClass);
+    };
+
     module.persistInputValues = function (doc) {
         var inputs = doc.querySelectorAll('input'),
             textareas = doc.querySelectorAll('textarea'),

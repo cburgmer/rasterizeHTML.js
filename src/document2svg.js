@@ -87,6 +87,9 @@ var document2svg = (function (util, browser, documentHelper, xmlserializer) {
         if (options.active) {
             documentHelper.fakeActive(doc, options.active);
         }
+        if (options.focus) {
+            documentHelper.fakeFocus(doc, options.focus);
+        }
 
         return browser.calculateDocumentContentSize(doc, options)
             .then(function (size) {

@@ -23,6 +23,10 @@
         Active selector:
         <input type="text" id="active">
     </label>
+    <label>
+        Focus selector:
+        <input type="text" id="focusSelector">
+    </label>
     <textarea id="input" cols="80" rows="10" style="width: 600px; height: 350px"></textarea>
 
     <script type="text/template" id="template">
@@ -40,6 +44,9 @@
             a:active {
                 color: green;
             }
+            a:focus {
+                outline: 3px solid red;
+            }
             div:active::after, div:hover::after {
                 font-size: 8px;
                 color: green;
@@ -55,23 +62,20 @@
     </script>
 
     <script type="text/javascript">
-        var input = document.getElementById("input"),
-            hover = document.getElementById("hover"),
-            active = document.getElementById("active"),
-            canvas = document.getElementById("canvas"),
-            template = document.getElementById("template"),
-            oldText = input.value;
+        var oldText = input.value;
 
         var render = function () {
             var html = input.value,
                 hoverSelector = hover.value,
-                activeSelector = active.value;
+                activeSelector = active.value,
+                focus = focusSelector.value;
 
             canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 
             rasterizeHTML.drawHTML(input.value, canvas, {
                 hover: hoverSelector,
-                active: activeSelector
+                active: activeSelector,
+                focus: focus
             });
         };
 
@@ -83,6 +87,7 @@
         };
         hover.onchange = render;
         active.onchange = render;
+        focusSelector.onchange = render;
 
         if (!input.value) {
             input.value = template.innerHTML.replace(/^ {8}/gm, "").replace(/^\n/g, "").replace(/\n +$/g, "\n");
