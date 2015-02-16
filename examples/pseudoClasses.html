@@ -17,11 +17,11 @@
 
     <label>
         Hover selector:
-        <input type="text" id="hover" value=".link">
+        <input type="text" id="hoverSelector" value=".link">
     </label>
     <label>
         Active selector:
-        <input type="text" id="active">
+        <input type="text" id="activeSelector">
     </label>
     <label>
         Focus selector:
@@ -66,15 +66,15 @@
 
         var render = function () {
             var html = input.value,
-                hoverSelector = hover.value,
-                activeSelector = active.value,
+                hover = hoverSelector.value,
+                active = activeSelector.value,
                 focus = focusSelector.value;
 
             canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 
             rasterizeHTML.drawHTML(input.value, canvas, {
-                hover: hoverSelector,
-                active: activeSelector,
+                hover: hover,
+                active: active,
                 focus: focus
             });
         };
@@ -85,8 +85,8 @@
                 render();
             }
         };
-        hover.onchange = render;
-        active.onchange = render;
+        hoverSelector.onchange = render;
+        activeSelector.onchange = render;
         focusSelector.onchange = render;
 
         if (!input.value) {
