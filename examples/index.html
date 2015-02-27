@@ -41,19 +41,25 @@
             template = document.getElementById("template"),
             oldText = input.value;
 
+        var draw = function () {
+            rasterizeHTML.drawHTML(input.value, canvas, {hover: 'span'}).then(function (result) {
+                console.log(result);
+            });
+        };
+
         input.onkeyup = function () {
             if (input.value !== oldText) {
                 oldText = input.value;
                 canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 
-                rasterizeHTML.drawHTML(input.value, canvas);
+                draw();
             }
         };
 
         if (!input.value) {
             input.value = template.innerHTML.replace(/^ {8}/gm, "").replace(/^\n/g, "").replace(/\n +$/g, "\n");
         }
-        rasterizeHTML.drawHTML(input.value, canvas);
+        draw();
     </script>
 </body>
 </html>
