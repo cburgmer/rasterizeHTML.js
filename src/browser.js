@@ -244,7 +244,7 @@ var browser = (function (util, proxies, ayepromise, theWindow) {
     var lastCacheDate = null;
 
     var getUncachableURL = function (url, cache) {
-        if (cache === false || cache === 'none' || cache === 'repeated') {
+        if (cache === 'none' || cache === 'repeated') {
             if (lastCacheDate === null || cache !== 'repeated') {
                 lastCacheDate = Date.now();
             }

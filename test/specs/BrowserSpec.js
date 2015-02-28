@@ -568,13 +568,6 @@ describe("Browser functions", function () {
                 expect(ajaxRequest.open.calls.mostRecent().args[1]).toMatch(/^non_existing_url.html\?_=[0123456789]+$/);
             });
 
-            it("should attach an unique parameter to the given URL to circumvent caching if requested (legacy: 'false')", function () {
-                browser.loadDocument("non_existing_url.html", {cache: false});
-
-                expect(ajaxRequest.open).toHaveBeenCalledWith('GET', jasmine.any(String), true);
-                expect(ajaxRequest.open.calls.mostRecent().args[1]).toMatch(/^non_existing_url.html\?_=[0123456789]+$/);
-            });
-
             it("should not attach an unique parameter to the given URL by default", function () {
                 browser.loadDocument("non_existing_url.html", {});
 
