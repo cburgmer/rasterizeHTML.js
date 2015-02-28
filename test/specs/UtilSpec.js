@@ -71,72 +71,39 @@ describe("Utilities function", function () {
         });
 
         it("should copy options", function () {
-            var params = util.parseOptionalParameters([canvas, options, callback]);
+            var params = util.parseOptionalParameters([canvas, options]);
             expect(params.options).toEqual(options);
             expect(params.options).not.toBe(options);
         });
 
         it("should return all parameters", function () {
-            var params = util.parseOptionalParameters([canvas, options, callback]);
-            expect(params.canvas).toBe(canvas);
-            expect(params.options).toEqual(options);
-            expect(params.callback).toBe(callback);
-        });
-
-        it("should deal with a null canvas", function () {
-            var params = util.parseOptionalParameters([null, options, callback]);
-            expect(params.canvas).toBe(null);
-            expect(params.options).toEqual(options);
-            expect(params.callback).toBe(callback);
-        });
-
-        it("should make canvas optional", function () {
-            var params = util.parseOptionalParameters([options, callback]);
-            expect(params.canvas).toBe(null);
-            expect(params.options).toEqual(options);
-            expect(params.callback).toBe(callback);
-        });
-
-        it("should make options optional", function () {
-            var params = util.parseOptionalParameters([canvas, callback]);
-            expect(params.canvas).toBe(canvas);
-            expect(params.options).toEqual({});
-            expect(params.callback).toBe(callback);
-        });
-
-        it("should make callback optional", function () {
             var params = util.parseOptionalParameters([canvas, options]);
             expect(params.canvas).toBe(canvas);
             expect(params.options).toEqual(options);
-            expect(params.callback).toBe(null);
         });
 
-        it("should work with canvas only", function () {
-            var params = util.parseOptionalParameters([canvas]);
-            expect(params.canvas).toBe(canvas);
-            expect(params.options).toEqual({});
-            expect(params.callback).toBe(null);
+        it("should deal with a null canvas", function () {
+            var params = util.parseOptionalParameters([null, options]);
+            expect(params.canvas).toBe(null);
+            expect(params.options).toEqual(options);
         });
 
-        it("should work with options only", function () {
+        it("should make canvas optional", function () {
             var params = util.parseOptionalParameters([options]);
             expect(params.canvas).toBe(null);
             expect(params.options).toEqual(options);
-            expect(params.callback).toBe(null);
         });
 
-        it("should work with callback only", function () {
-            var params = util.parseOptionalParameters([callback]);
-            expect(params.canvas).toBe(null);
+        it("should make options optional", function () {
+            var params = util.parseOptionalParameters([canvas]);
+            expect(params.canvas).toBe(canvas);
             expect(params.options).toEqual({});
-            expect(params.callback).toBe(callback);
         });
 
         it("should work with empty parameter list", function () {
             var params = util.parseOptionalParameters([]);
             expect(params.canvas).toBe(null);
             expect(params.options).toEqual({});
-            expect(params.callback).toBe(null);
         });
     });
 });

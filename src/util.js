@@ -40,36 +40,19 @@ var util = (function (url) {
             Object.prototype.toString.apply(obj).match(/\[object (Canvas|HTMLCanvasElement)\]/i);
     };
 
-    var isFunction = function (func) {
-        return typeof func === "function";
-    };
-
     // args: canvas, options
-    // legacy API: args: canvas, options, callback
     module.parseOptionalParameters = function (args) {
         var parameters = {
             canvas: null,
-            options: {},
-            callback: null
+            options: {}
         };
 
-        if (isFunction(args[0])) {
-            parameters.callback = args[0];
+        if (args[0] == null || isCanvas(args[0])) {
+            parameters.canvas = args[0] || null;
+
+            parameters.options = module.clone(args[1]);
         } else {
-            if (args[0] == null || isCanvas(args[0])) {
-                parameters.canvas = args[0] || null;
-
-                if (isFunction(args[1])) {
-                    parameters.callback = args[1];
-                } else {
-                    parameters.options = module.clone(args[1]);
-                    parameters.callback = args[2] || null;
-                }
-
-            } else {
-                parameters.options = module.clone(args[0]);
-                parameters.callback = args[1] || null;
-            }
+            parameters.options = module.clone(args[0]);
         }
 
         return parameters;

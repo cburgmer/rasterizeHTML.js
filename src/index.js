@@ -37,27 +37,13 @@ var rasterizeHTML = (function (util, browser, rasterize) {
             optionalArguments = Array.prototype.slice.call(arguments, 1),
             params = util.parseOptionalParameters(optionalArguments);
 
-        var promise = rasterize.rasterize(doc, params.canvas, constructOptions(params));
-
-        // legacy API
-        if (params.callback) {
-            promise.then(function (result) {
-                params.callback(result.image, result.errors);
-            }, function () {
-                params.callback(null, [{
-                    resourceType: "document",
-                    msg: "Error rendering page"
-                }]);
-            });
-        }
-
-        return promise;
+        return rasterize.rasterize(doc, params.canvas, constructOptions(params));
     };
 
-    var drawHTML = function (html, canvas, options, callback) {
+    var drawHTML = function (html, canvas, options) {
         var doc = browser.parseHTML(html);
 
-        return module.drawDocument(doc, canvas, options, callback);
+        return module.drawDocument(doc, canvas, options);
     };
 
     /**
@@ -69,7 +55,7 @@ var rasterizeHTML = (function (util, browser, rasterize) {
             optionalArguments = Array.prototype.slice.call(arguments, 1),
             params = util.parseOptionalParameters(optionalArguments);
 
-        return drawHTML(html, params.canvas, params.options, params.callback);
+        return drawHTML(html, params.canvas, params.options);
     };
 
     // work around https://bugzilla.mozilla.org/show_bug.cgi?id=925493
@@ -89,27 +75,12 @@ var rasterizeHTML = (function (util, browser, rasterize) {
         };
     };
 
-    var drawURL = function (url, canvas, options, callback) {
-        var promise = browser.loadDocument(url, options)
+    var drawURL = function (url, canvas, options) {
+        return browser.loadDocument(url, options)
             .then(function (doc) {
                 var workaround = workAroundFirefoxNotLoadingStylesheetStyles(doc, url, options);
                 return module.drawDocument(workaround.document, canvas, workaround.options);
             });
-
-        // legacy API
-        if (callback) {
-            promise.then(function (result) {
-                    callback(result.image, result.errors);
-                }, function (e) {
-                    callback(null, [{
-                        resourceType: "page",
-                        url: url,
-                        msg: e.message + ' ' + url
-                    }]);
-                });
-        }
-
-        return promise;
     };
 
     /**
@@ -121,7 +92,7 @@ var rasterizeHTML = (function (util, browser, rasterize) {
             optionalArguments = Array.prototype.slice.call(arguments, 1),
             params = util.parseOptionalParameters(optionalArguments);
 
-        return drawURL(url, params.canvas, params.options, params.callback);
+        return drawURL(url, params.canvas, params.options);
     };
 
     return module;

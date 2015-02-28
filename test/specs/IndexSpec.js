@@ -120,15 +120,6 @@ describe("Main", function () {
                 done();
             });
         });
-
-        it("should provide a callback for legacy reasons for drawDocument", function (done) {
-            rasterizeHTML.drawDocument(doc, canvas, function (image, errors) {
-                expect(image).toEqual(svgImage);
-                expect(errors).toEqual([]);
-
-                done();
-            });
-        });
     });
 
     describe("drawHTML", function () {
@@ -149,26 +140,7 @@ describe("Main", function () {
                 expect(result.image).toEqual(svgImage);
                 expect(result.errors).toEqual([]);
 
-                expect(drawDocumentSpy).toHaveBeenCalledWith(doc, canvas, {}, null);
-
-                done();
-            });
-        });
-
-        it("should provide a callback for legacy reasons for drawHTML", function (done) {
-            var drawDocumentSpy = spyOn(rasterizeHTML, "drawDocument").and.callFake(function (document, canvas, options, callback) {
-                    callback(svgImage, []);
-                    return fulfilled({
-                        image: svgImage,
-                        errors: []
-                    });
-                });
-
-            rasterizeHTML.drawHTML("some html", canvas, function (image, errors) {
-                expect(image).toEqual(svgImage);
-                expect(errors).toEqual([]);
-
-                expect(drawDocumentSpy).toHaveBeenCalledWith(doc, canvas, {}, jasmine.any(Function));
+                expect(drawDocumentSpy).toHaveBeenCalledWith(doc, canvas, {});
 
                 done();
             });
@@ -183,7 +155,7 @@ describe("Main", function () {
 
             rasterizeHTML.drawHTML(html, {width: 999, height: 987}).then(function (result) {
                 expect(result.image).toEqual(svgImage);
-                expect(drawDocumentSpy).toHaveBeenCalledWith(jasmine.any(Object), null, {width: 999, height: 987}, null);
+                expect(drawDocumentSpy).toHaveBeenCalledWith(jasmine.any(Object), null, {width: 999, height: 987});
 
                 done();
             });
@@ -197,7 +169,7 @@ describe("Main", function () {
                 }));
 
             rasterizeHTML.drawHTML(html, canvas, {baseUrl: "a_baseUrl"}).then(function () {
-                expect(drawDocumentSpy).toHaveBeenCalledWith(jasmine.any(Object), canvas, {baseUrl: "a_baseUrl"}, null);
+                expect(drawDocumentSpy).toHaveBeenCalledWith(jasmine.any(Object), canvas, {baseUrl: "a_baseUrl"});
 
                 done();
             });
@@ -211,7 +183,7 @@ describe("Main", function () {
                 }));
 
             rasterizeHTML.drawHTML(html, canvas, {cache: 'none'}).then(function () {
-                expect(drawDocumentSpy).toHaveBeenCalledWith(jasmine.any(Object), canvas, {cache: 'none'}, null);
+                expect(drawDocumentSpy).toHaveBeenCalledWith(jasmine.any(Object), canvas, {cache: 'none'});
 
                 done();
             });
@@ -235,24 +207,6 @@ describe("Main", function () {
 
                 expect(drawDocumentSpy).toHaveBeenCalledWith(jasmine.any(Object), canvas, jasmine.any(Object));
                 expect(drawDocumentSpy.calls.mostRecent().args[0].documentElement).toBe(documentElement);
-
-                done();
-            });
-        });
-
-        it("should provide a callback for legacy reasons for drawURL", function (done) {
-            var drawDocumentSpy = spyOn(rasterizeHTML, "drawDocument").and.returnValue(fulfilled({
-                    image: svgImage,
-                    errors: []
-                }));
-
-            setUpLoadDocument();
-
-            rasterizeHTML.drawURL("fixtures/image.html", canvas, function (image, errors) {
-                expect(image).toEqual(svgImage);
-                expect(errors).toEqual([]);
-
-                expect(drawDocumentSpy).toHaveBeenCalledWith(jasmine.any(Object), canvas, jasmine.any(Object));
 
                 done();
             });
@@ -332,23 +286,6 @@ describe("Main", function () {
             });
         });
 
-        it("should report an error through callback for legacy reasons on loading a broken URL", function (done) {
-            setUpLoadDocumentError({message: "the message"});
-
-            rasterizeHTML.drawURL("non_existing.html", canvas, function (image, errors) {
-                expect(image).toBe(null);
-                expect(errors).toEqual([jasmine.objectContaining({
-                    resourceType: "page",
-                    url: "non_existing.html",
-                    msg: "the message" + " non_existing.html"
-                })]);
-
-                expect(browser.loadDocument).toHaveBeenCalled();
-
-                done();
-            });
-        });
-
         it("should report an error on loading a broken URL", function (done) {
             setUpLoadDocumentError("the error");
 
@@ -368,20 +305,6 @@ describe("Main", function () {
 
             rasterizeHTML.drawDocument(doc, canvas).fail(function (e) {
                 expect(e).toBe(error);
-
-                done();
-            });
-        });
-
-        it("should pass through an error from inlining to the callback for legacy reasons when rendering the SVG on drawDocument", function (done) {
-            setUpRasterizeError();
-
-            rasterizeHTML.drawDocument(doc, canvas, function (image, errors) {
-                expect(image).toBe(null);
-                expect(errors).toEqual([jasmine.objectContaining({
-                    resourceType: "document",
-                    msg: "Error rendering page"
-                })]);
 
                 done();
             });
