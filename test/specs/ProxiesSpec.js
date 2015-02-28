@@ -133,48 +133,4 @@ describe("XHR Proxies", function () {
             xhr.send(null);
         });
     });
-
-    describe("baseUrlRespectingImage", function () {
-        var baseUrl, BaseUrlRespectingProxy, img;
-
-        beforeEach(function () {
-            baseUrl = testHelper.fixturesPath;
-            BaseUrlRespectingProxy = proxies.baseUrlRespectingImage(window.Image, baseUrl);
-            img = new BaseUrlRespectingProxy();
-        });
-
-        ifNotInPhantomJsIt("should load file relative to given base url when specified through 'src' attribute", function (done) {
-            img.onload = done;
-            img.src = "green.png";
-        });
-
-        it("should load file relative to given base url when specified through 'setAttribute' call", function (done) {
-            img.onload = done;
-            img.setAttribute('src', "green.png");
-        });
-
-        ifNotInPhantomJsIt("should report the original url via 'src'", function (done) {
-            img.onload = function () {
-                expect(img.src).toEqual("green.png");
-                done();
-            };
-            img.src = "green.png";
-        });
-
-        it("should report the original url via 'getAttribute'", function (done) {
-            img.onload = function () {
-                expect(img.getAttribute('src')).toEqual("green.png");
-                done();
-            };
-            img.setAttribute('src', "green.png");
-        });
-
-        it("should report and empty src initially", function () {
-            expect(img.src).toBe("");
-        });
-
-        it("should report and empty src attribute value initially", function () {
-            expect(img.getAttribute('src')).toBe(null);
-        });
-    });
 });
