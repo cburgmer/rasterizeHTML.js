@@ -44,6 +44,11 @@ var document2svg = (function (util, browser, documentHelper, xmlserializer) {
         attributes.externalResourcesRequired = true;
     };
 
+    var workAroundNegativeZIndexVanishingBehindBackground = function () {
+        // Create a stacking context (http://philipwalton.com/articles/what-no-one-told-you-about-z-index/#stacking-contexts)
+        return '<style scoped="">body { isolation: isolate; }</style>';
+    };
+
     var serializeAttributes = function (attributes) {
         var keys = Object.keys(attributes);
         if (!keys.length) {
@@ -73,6 +78,7 @@ var document2svg = (function (util, browser, documentHelper, xmlserializer) {
                 ' height="' + size.height + '"' +
                 ' font-size="' + size.rootFontSize + '"' +
                 '>' +
+                workAroundNegativeZIndexVanishingBehindBackground(attributes) +
                 '<foreignObject' + serializeAttributes(attributes) + '>' +
                 xhtml +
                 '</foreignObject>' +

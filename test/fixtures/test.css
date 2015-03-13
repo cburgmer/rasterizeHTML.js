@@ -7,6 +7,8 @@
 .bgimage:active {
     background-image: url("rednblue.png");
     background-size: 100%;
+    position: relative;
+    z-index: -1;
 }
 .webfont {
     font-family: 'RaphaelIcons';

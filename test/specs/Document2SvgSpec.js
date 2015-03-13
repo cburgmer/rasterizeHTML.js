@@ -90,6 +90,7 @@ describe("Document to SVG conversion", function () {
 
             expect(svgCode).toMatch(new RegExp(
                 '<svg xmlns="http://www.w3.org/2000/svg" width="123" height="987"[^>]*>' +
+                    '.*' +
                     '<foreignObject x="-2" y="-7" width="200" height="1000".*>' +
                         '<html xmlns="http://www.w3.org/1999/xhtml">' +
                             '<head>' +
@@ -113,6 +114,7 @@ describe("Document to SVG conversion", function () {
 
             expect(svgCode).toMatch(new RegExp(
                 '<svg xmlns="http://www.w3.org/2000/svg" width="123" height="987"[^>]*>' +
+                    '.*' +
                     '<foreignObject x="0" y="0" width="12" height="99" style="-webkit-transform: scale\\(10\\); -webkit-transform-origin: 0 0; transform: scale\\(10\\); transform-origin: 0 0;.*">' +
                         '<html xmlns="http://www.w3.org/1999/xhtml">' +
                             '<head>' +
@@ -145,6 +147,7 @@ describe("Document to SVG conversion", function () {
 
             expect(svgCode).toMatch(new RegExp(
                 '<svg xmlns="http://www.w3.org/2000/svg" [^>]*font-size="42px"[^>]*>' +
+                    '.*' +
                     '<foreignObject .*>' +
                         '<html xmlns="http://www.w3.org/1999/xhtml"[^>]*>' +
                             '<head>' +
@@ -202,6 +205,21 @@ describe("Document to SVG conversion", function () {
             document2svg.getSvgForDocument(doc, aRenderSize(), 1);
 
             expect(documentHelper.rewriteTagNameSelectorsToLowerCase).toHaveBeenCalledWith(doc);
+        });
+
+        it("should work around negative z-indexes being hidden behind a non-transparent background", function () {
+            var doc = document.implementation.createHTMLDocument("");
+
+            var svgCode = document2svg.getSvgForDocument(doc, aRenderSizeWithRootFontSize('42px'), defaultZoomLevel);
+
+            expect(svgCode).toMatch(new RegExp(
+                '<svg xmlns="http://www.w3.org/2000/svg"[^>]*>' +
+                    '<style.*>body { isolation: isolate; }</style>' +
+                    '<foreignObject.*>' +
+                    '.*' +
+                    '</foreignObject>' +
+                    '</svg>'
+            ));
         });
     });
 
