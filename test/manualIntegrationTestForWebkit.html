@@ -28,6 +28,12 @@
     </head>
     <body>
         <p>Due to <a href="https://bugs.webkit.org/show_bug.cgi?id=17352">this issue in Webkit</a> (and in older Chromes due to <a href="https://code.google.com/p/chromium/issues/detail?id=294129">this issue in Blink</a>) certain automatic tests that need to read the canvas will fail there and are disabled in those environments. Use these manual tests here instead.</p>
+        <p>
+            Input:<br>
+            <iframe src="fixtures/test.html" style="width: 230px; height: 140px;"></iframe>
+            <iframe src="fixtures/testScaled50PercentWithJs.html" style="width: 200px; height: 100px;"></iframe>
+        </p>
+
         <p>All five canvases below should show the following image:<br><img src="fixtures/testResult.png" alt="reference image"></p>
 
         <h3>Test cases</h3>
