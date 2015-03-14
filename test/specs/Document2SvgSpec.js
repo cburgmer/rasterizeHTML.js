@@ -113,7 +113,7 @@ describe("Document to SVG conversion", function () {
 
             expect(svgCode).toMatch(new RegExp(
                 '<svg xmlns="http://www.w3.org/2000/svg" width="123" height="987"[^>]*>' +
-                    '<foreignObject x="0" y="0" width="12" height="99" style="-webkit-transform: scale\\(10\\); -webkit-transform-origin: 0 0; transform: scale\\(10\\); transform-origin: 0 0;.*">' +
+                    '<foreignObject x="0" y="0" width="12" height="99" transform="scale\\(10\\)".*>' +
                         '<html xmlns="http://www.w3.org/1999/xhtml">' +
                             '<head>' +
                                 '<title(/>|></title>)' +

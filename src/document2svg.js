@@ -22,11 +22,7 @@ var document2svg = (function (util, browser, documentHelper, xmlserializer) {
         };
 
         if (zoomFactor !== 1) {
-            attributes.style =
-                '-webkit-transform: scale(' + zoomFactor + '); ' +
-                '-webkit-transform-origin: 0 0; ' +
-                'transform: scale(' + zoomFactor + '); ' +
-                'transform-origin: 0 0;';
+            attributes.transform = 'scale(' + zoomFactor + ')';
         }
 
         return attributes;
