@@ -29,6 +29,7 @@ describe("Document to SVG conversion", function () {
             document.body.appendChild(sandbox);
 
             spyOn(documentHelper, 'rewriteTagNameSelectorsToLowerCase');
+            spyOn(mediaQueryHelper, 'workAroundWebKitEmSizeIssue');
         });
 
         afterEach(function () {

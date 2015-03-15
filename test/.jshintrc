@@ -27,6 +27,7 @@
         "proxies": true,
         "documentUtil": true,
         "documentHelper": true,
+        "mediaQueryHelper": true,
         "browser": true,
         "svg2image": true,
         "document2svg": true,
@@ -34,6 +35,7 @@
         "rasterizeHTML": true,
 
         "url": true,
+        "cssMediaQuery": true,
         "ayepromise": true,
         "inlineresources": true,
 

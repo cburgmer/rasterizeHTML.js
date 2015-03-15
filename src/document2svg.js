@@ -1,4 +1,4 @@
-var document2svg = (function (util, browser, documentHelper, xmlserializer) {
+var document2svg = (function (util, browser, documentHelper, mediaQueryHelper, xmlserializer) {
     "use strict";
 
     var module = {};
@@ -53,6 +53,7 @@ var document2svg = (function (util, browser, documentHelper, xmlserializer) {
 
     module.getSvgForDocument = function (doc, size, zoomFactor) {
         documentHelper.rewriteTagNameSelectorsToLowerCase(doc);
+        mediaQueryHelper.workAroundWebKitEmSizeIssue(doc);
 
         var xhtml = xmlserializer.serializeToString(doc);
 
@@ -94,4 +95,4 @@ var document2svg = (function (util, browser, documentHelper, xmlserializer) {
     };
 
     return module;
-}(util, browser, documentHelper, xmlserializer));
+}(util, browser, documentHelper, mediaQueryHelper, xmlserializer));
