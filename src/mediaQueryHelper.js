@@ -32,9 +32,40 @@ var mediaQueryHelper = (function (cssMediaQuery) {
         styleElement.textContent = cssRulesToText(styleElement.sheet.cssRules);
     };
 
+    var serializeQueryPart = function (q) {
+        var query = q.type + ' and ' + q.expressions.map(function (exp) {
+            var feature = exp.modifier ? exp.modifier + '-' + exp.feature : exp.feature;
+            return '(' + feature + ': ' + exp.value + ')';
+        });
+        return q.inverse ? "not " + query : query;
+    };
+
+    var transformEmIntoPx = function (em) {
+        return em * 16;
+    };
+
+    var serializeQuery = function (q) {
+        return q.map(serializeQueryPart);
+    };
+
+    var replaceEmValueWithPx = function (value) {
+        var match = /^(\d+)em/.exec(value);
+        if (match) {
+            return transformEmIntoPx(match[1]) + 'px';
+        }
+        return value;
+    };
+
     var substituteEmWithPx = function (mediaQuery) {
-        cssMediaQuery.parse(mediaQuery);
-        return mediaQuery;
+        var parsedQuery = cssMediaQuery.parse(mediaQuery);
+
+        parsedQuery.forEach(function (q) {
+            q.expressions.forEach(function (exp) {
+                exp.value = replaceEmValueWithPx(exp.value);
+            });
+        });
+
+        return serializeQuery(parsedQuery);
     };
 
     var replaceEmsWithPx = function (mediaQueryRules) {
