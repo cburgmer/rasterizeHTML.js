@@ -10,6 +10,9 @@ var getDataUriForBase64PNG = function (pngBase64) {
 var renderPage = function (url, successCallback) {
     var page = require("webpage").create();
 
+    page.onError = function(msg) {
+        console.error(msg);
+    };
     page.viewportSize = { width: 200, height: 100 };
     page.open(url, function () {
         setTimeout(function () {

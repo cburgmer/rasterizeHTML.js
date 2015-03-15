@@ -25,12 +25,14 @@
             focus: 'img',
             clip: 'body'
         }).then(function (result) {
-                if (result.errors.length > 0) {
-                    console.log("Could not load the following resources: ", errors.map(function (e) {
-                        return e.msg;
-                    }).join(', '));
-                }
-            });
+            if (result.errors.length > 0) {
+                console.log("Could not load the following resources: ", errors.map(function (e) {
+                    return e.msg;
+                }).join(', '));
+            }
+        }, function (err) {
+            console.error(err);
+        });
     </script>
 </body>
 </html>

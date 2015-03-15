@@ -39,7 +39,7 @@ var mediaQueryHelper = (function (cssMediaQuery) {
 
     var replaceEmsWithPx = function (mediaQueryRules) {
         mediaQueryRules.forEach(function (rule) {
-            var reworkedMediaQueries = rule.media.map(function (mediaQuery) {
+            var reworkedMediaQueries = asArray(rule.media).map(function (mediaQuery) {
                 return substituteEmWithPx(mediaQuery);
             });
 
