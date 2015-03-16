@@ -3,6 +3,42 @@ var mediaQueryHelper = (function (cssMediaQuery) {
 
     var module = {};
 
+    var createHiddenElement = function (doc, tagName, size) {
+        var element = doc.createElement(tagName);
+        // 'display: none' doesn't cut it, as browsers seem to be lazy loading CSS
+        element.style.visibility = "hidden";
+        element.style.width = size + "px";
+        element.style.height = size + "px";
+        // We need to add the element to the document so that its content gets loaded
+        doc.querySelector("body").appendChild(element);
+        return element;
+    };
+
+    var hasEmMediaQueryIssue = function () {
+        var iframe = createHiddenElement(document, 'iframe', 100);
+
+        iframe.contentDocument.open();
+        iframe.contentDocument.write('<!doctype html><html>');
+        iframe.contentDocument.write('<script>window.matches = window.matchMedia("(max-width: 1em)").matches</script>');
+        iframe.contentDocument.write('</html>');
+        iframe.contentDocument.close();
+
+        var mediaQueryMatches = iframe.contentWindow.matches;
+
+        document.querySelector('body').removeChild(iframe);
+
+        return mediaQueryMatches;
+    };
+
+    var hasEmIssue;
+
+    module.needsEmWorkaround = function () {
+        if (hasEmIssue === undefined) {
+            hasEmIssue = hasEmMediaQueryIssue();
+        }
+        return hasEmIssue;
+    };
+
     var asArray = function (arrayLike) {
         return Array.prototype.slice.call(arrayLike);
     };

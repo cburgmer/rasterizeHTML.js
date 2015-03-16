@@ -29,6 +29,7 @@ describe("Document to SVG conversion", function () {
             document.body.appendChild(sandbox);
 
             spyOn(documentHelper, 'rewriteTagNameSelectorsToLowerCase');
+            spyOn(mediaQueryHelper, 'needsEmWorkaround');
             spyOn(mediaQueryHelper, 'workAroundWebKitEmSizeIssue');
         });
 
@@ -203,6 +204,24 @@ describe("Document to SVG conversion", function () {
             document2svg.getSvgForDocument(doc, aRenderSize(), 1);
 
             expect(documentHelper.rewriteTagNameSelectorsToLowerCase).toHaveBeenCalledWith(doc);
+        });
+
+        it("should work around WebKit's EM media query issue", function () {
+            var doc = document.implementation.createHTMLDocument("");
+            mediaQueryHelper.needsEmWorkaround.and.returnValue(true);
+
+            document2svg.getSvgForDocument(doc, aRenderSize(), 1);
+
+            expect(mediaQueryHelper.workAroundWebKitEmSizeIssue).toHaveBeenCalledWith(doc);
+        });
+
+        it("should not work around WebKit's EM media query issue", function () {
+            var doc = document.implementation.createHTMLDocument("");
+            mediaQueryHelper.needsEmWorkaround.and.returnValue(false);
+
+            document2svg.getSvgForDocument(doc, aRenderSize(), 1);
+
+            expect(mediaQueryHelper.workAroundWebKitEmSizeIssue).not.toHaveBeenCalled();
         });
     });
 

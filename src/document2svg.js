@@ -53,7 +53,9 @@ var document2svg = (function (util, browser, documentHelper, mediaQueryHelper, x
 
     module.getSvgForDocument = function (doc, size, zoomFactor) {
         documentHelper.rewriteTagNameSelectorsToLowerCase(doc);
-        mediaQueryHelper.workAroundWebKitEmSizeIssue(doc);
+        if (mediaQueryHelper.needsEmWorkaround()) {
+            mediaQueryHelper.workAroundWebKitEmSizeIssue(doc);
+        }
 
         var xhtml = xmlserializer.serializeToString(doc);
 

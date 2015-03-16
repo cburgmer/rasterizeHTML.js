@@ -42,7 +42,7 @@
             oldText = input.value;
 
         var draw = function () {
-            rasterizeHTML.drawHTML(input.value, canvas, {hover: 'span'}).then(function (result) {
+            rasterizeHTML.drawHTML(input.value, canvas).then(function (result) {
                 console.log(result);
             });
         };
