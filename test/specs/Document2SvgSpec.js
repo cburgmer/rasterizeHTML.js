@@ -1,6 +1,12 @@
 describe("Document to SVG conversion", function () {
     "use strict";
 
+    var successfulPromise = function (value) {
+        var defer = ayepromise.defer();
+        defer.resolve(value);
+        return defer.promise;
+    };
+
     describe("getSvgForDocument", function () {
         var defaultZoomLevel = 1;
 
@@ -22,6 +28,10 @@ describe("Document to SVG conversion", function () {
             return size;
         };
 
+        var setUpNeedsEmWorkaroundToReturn = function (value) {
+            mediaQueryHelper.needsEmWorkaround.and.returnValue(successfulPromise(value));
+        };
+
         var sandbox;
 
         beforeEach(function () {
@@ -31,147 +41,165 @@ describe("Document to SVG conversion", function () {
             spyOn(documentHelper, 'rewriteTagNameSelectorsToLowerCase');
             spyOn(mediaQueryHelper, 'needsEmWorkaround');
             spyOn(mediaQueryHelper, 'workAroundWebKitEmSizeIssue');
+
+            setUpNeedsEmWorkaroundToReturn(false);
         });
 
         afterEach(function () {
             document.body.removeChild(sandbox);
         });
 
-        it("should return a SVG with embeded HTML", function () {
+        it("should return a SVG with embeded HTML", function (done) {
             var doc = document.implementation.createHTMLDocument("");
             doc.body.innerHTML = "Test content";
 
-            var svgCode = document2svg.getSvgForDocument(doc, aRenderSize(), defaultZoomLevel);
+             document2svg.getSvgForDocument(doc, aRenderSize(), defaultZoomLevel).then(function (svgCode) {
+                 expect(svgCode).toMatch(new RegExp(
+                     '<svg xmlns="http://www.w3.org/2000/svg" .*>' +
+                         '<foreignObject .*>' +
+                         '<html xmlns="http://www.w3.org/1999/xhtml">' +
+                         '<head>' +
+                         '<title(/>|></title>)' +
+                         '</head>' +
+                         '<body>' +
+                         "Test content" +
+                         '</body>' +
+                         '</html>' +
+                         '</foreignObject>' +
+                         '</svg>'
+                 ));
 
-            expect(svgCode).toMatch(new RegExp(
-                '<svg xmlns="http://www.w3.org/2000/svg" .*>' +
-                    '<foreignObject .*>' +
-                        '<html xmlns="http://www.w3.org/1999/xhtml">' +
-                            '<head>' +
-                                '<title(/>|></title>)' +
-                            '</head>' +
-                            '<body>' +
-                                "Test content" +
-                            '</body>' +
-                        '</html>' +
-                    '</foreignObject>' +
-                '</svg>'
-            ));
+                 done();
+            });
         });
 
-        it("should return a SVG with embedded image", function () {
+        it("should return a SVG with embedded image", function (done) {
             var doc = document.implementation.createHTMLDocument(""),
                 canonicalXML;
             doc.body.innerHTML = '<img src="data:image/png;base64,sOmeFAKeBasE64="/>';
 
-            var svgCode = document2svg.getSvgForDocument(doc, aRenderSize(), defaultZoomLevel);
-
-            expect(svgCode).not.toBeNull();
-            canonicalXML = svgCode.replace(/ +\/>/, '/>');
-            expect(canonicalXML).toMatch(new RegExp(
-                '<svg xmlns="http://www.w3.org/2000/svg" .*>' +
-                    '<foreignObject .*>' +
+            document2svg.getSvgForDocument(doc, aRenderSize(), defaultZoomLevel).then(function (svgCode) {
+                expect(svgCode).not.toBeNull();
+                canonicalXML = svgCode.replace(/ +\/>/, '/>');
+                expect(canonicalXML).toMatch(new RegExp(
+                    '<svg xmlns="http://www.w3.org/2000/svg" .*>' +
+                        '<foreignObject .*>' +
                         '<html xmlns="http://www.w3.org/1999/xhtml">' +
-                            '<head>' +
-                                '<title(/>|></title>)' +
-                            '</head>' +
-                            '<body>' +
-                                '<img src="data:image/png;base64,sOmeFAKeBasE64="/>' +
-                            '</body>' +
+                        '<head>' +
+                        '<title(/>|></title>)' +
+                        '</head>' +
+                        '<body>' +
+                        '<img src="data:image/png;base64,sOmeFAKeBasE64="/>' +
+                        '</body>' +
                         '</html>' +
-                    '</foreignObject>' +
-                '</svg>'
-            ));
+                        '</foreignObject>' +
+                        '</svg>'
+                ));
+
+                done();
+            });
         });
 
-        it("should return a SVG with the given size", function () {
+        it("should return a SVG with the given size", function (done) {
             var doc = document.implementation.createHTMLDocument("");
             doc.body.innerHTML = "content";
 
-            var svgCode = document2svg.getSvgForDocument(doc, aRenderSize(123, 987, 200, 1000, 2, 7), defaultZoomLevel);
-
-            expect(svgCode).toMatch(new RegExp(
-                '<svg xmlns="http://www.w3.org/2000/svg" width="123" height="987"[^>]*>' +
-                    '<foreignObject x="-2" y="-7" width="200" height="1000".*>' +
+            document2svg.getSvgForDocument(doc, aRenderSize(123, 987, 200, 1000, 2, 7), defaultZoomLevel).then(function (svgCode) {
+                expect(svgCode).toMatch(new RegExp(
+                    '<svg xmlns="http://www.w3.org/2000/svg" width="123" height="987"[^>]*>' +
+                        '<foreignObject x="-2" y="-7" width="200" height="1000".*>' +
                         '<html xmlns="http://www.w3.org/1999/xhtml">' +
-                            '<head>' +
-                                '<title(/>|></title>)' +
-                            '</head>' +
-                            '<body>' +
-                                "content" +
-                            '</body>' +
+                        '<head>' +
+                        '<title(/>|></title>)' +
+                        '</head>' +
+                        '<body>' +
+                        "content" +
+                        '</body>' +
                         '</html>' +
-                    '</foreignObject>' +
-                '</svg>'
-            ));
+                        '</foreignObject>' +
+                        '</svg>'
+                ));
+
+                done();
+            });
         });
 
-        it("should zoom by the given factor", function () {
+        it("should zoom by the given factor", function (done) {
             var doc = document.implementation.createHTMLDocument("");
             doc.body.innerHTML = "content";
 
             var zoomFactor = 10;
-            var svgCode = document2svg.getSvgForDocument(doc, aRenderSize(123, 987, 12, 99), zoomFactor);
-
-            expect(svgCode).toMatch(new RegExp(
-                '<svg xmlns="http://www.w3.org/2000/svg" width="123" height="987"[^>]*>' +
-                    '<foreignObject x="0" y="0" width="12" height="99" transform="scale\\(10\\)".*>' +
+            document2svg.getSvgForDocument(doc, aRenderSize(123, 987, 12, 99), zoomFactor).then(function (svgCode) {
+                expect(svgCode).toMatch(new RegExp(
+                    '<svg xmlns="http://www.w3.org/2000/svg" width="123" height="987"[^>]*>' +
+                        '<foreignObject x="0" y="0" width="12" height="99" transform="scale\\(10\\)".*>' +
                         '<html xmlns="http://www.w3.org/1999/xhtml">' +
-                            '<head>' +
-                                '<title(/>|></title>)' +
-                            '</head>' +
-                            '<body>' +
-                                "content" +
-                            '</body>' +
+                        '<head>' +
+                        '<title(/>|></title>)' +
+                        '</head>' +
+                        '<body>' +
+                        "content" +
+                        '</body>' +
                         '</html>' +
-                    '</foreignObject>' +
-                '</svg>'
-            ));
+                        '</foreignObject>' +
+                        '</svg>'
+                ));
+
+                done();
+            });
         });
 
-        it("should ignore zoom factor 0", function () {
+        it("should ignore zoom factor 0", function (done) {
             var doc = document.implementation.createHTMLDocument("");
             doc.body.innerHTML = "content";
 
             var zoomLevel = 0;
-            var svgCode = document2svg.getSvgForDocument(doc, aRenderSize(123, 987), zoomLevel);
+            document2svg.getSvgForDocument(doc, aRenderSize(123, 987), zoomLevel).then(function (svgCode) {
+                expect(svgCode).not.toMatch(new RegExp("scale"));
 
-            expect(svgCode).not.toMatch(new RegExp("scale"));
+                done();
+            });
         });
 
-        it("should return a SVG with a root font size to preserve rem units", function () {
+        it("should return a SVG with a root font size to preserve rem units", function (done) {
             var doc = document.implementation.createHTMLDocument("");
             doc.body.innerHTML = "Test content";
 
-            var svgCode = document2svg.getSvgForDocument(doc, aRenderSizeWithRootFontSize('42px'), defaultZoomLevel);
-
-            expect(svgCode).toMatch(new RegExp(
-                '<svg xmlns="http://www.w3.org/2000/svg" [^>]*font-size="42px"[^>]*>' +
-                    '<foreignObject .*>' +
+            document2svg.getSvgForDocument(doc, aRenderSizeWithRootFontSize('42px'), defaultZoomLevel).then(function (svgCode) {
+                expect(svgCode).toMatch(new RegExp(
+                    '<svg xmlns="http://www.w3.org/2000/svg" [^>]*font-size="42px"[^>]*>' +
+                        '<foreignObject .*>' +
                         '<html xmlns="http://www.w3.org/1999/xhtml"[^>]*>' +
-                            '<head>' +
-                                '<title(/>|></title>)' +
-                            '</head>' +
-                            '<body>' +
-                                "Test content" +
-                            '</body>' +
+                        '<head>' +
+                        '<title(/>|></title>)' +
+                        '</head>' +
+                        '<body>' +
+                        "Test content" +
+                        '</body>' +
                         '</html>' +
-                    '</foreignObject>' +
-                '</svg>'
-            ));
+                        '</foreignObject>' +
+                        '</svg>'
+                ));
+
+                done();
+            });
         });
 
-        it("should raise an error on invalid source", function () {
+        it("should raise an error on invalid source", function (done) {
             var doc = document.implementation.createHTMLDocument("");
             doc.body.innerHTML = "content";
 
             var error = new Error();
             spyOn(browser, 'validateXHTML').and.throwError(error);
 
-            expect(function () { document2svg.getSvgForDocument(doc, aRenderSize(), 1); }).toThrow(error);
+            document2svg.getSvgForDocument(doc, aRenderSize(), 1).then(null, function (e) {
+                expect(e).toBe(error);
+
+                done();
+            });
         });
 
-        it("should work around collapsing margins in Chrome & Safari", function () {
+        it("should work around collapsing margins in Chrome & Safari", function (done) {
             // Bottom margin that would trigger a collapsing margin with the following SVG
             var topChild = document.createElement('div');
             topChild.style.marginBottom = "200px";
@@ -187,41 +215,50 @@ describe("Document to SVG conversion", function () {
             doc.head.querySelector('title').innerText = "meh";
 
             var tempChild = document.createElement('div');
-            tempChild.innerHTML = document2svg.getSvgForDocument(doc, aRenderSize(100, 100), 1);
+            document2svg.getSvgForDocument(doc, aRenderSize(100, 100), 1).then(function (svgCode) {
+                tempChild.innerHTML = svgCode;
 
-            sandbox.appendChild(tempChild.childNodes[0]);
+                sandbox.appendChild(tempChild.childNodes[0]);
 
+                // Work around WebKit reporting offset across the SVG element
+                sandbox.querySelector('svg').style.position = "relative";
 
-            // Work around WebKit reporting offset across the SVG element
-            sandbox.querySelector('svg').style.position = "relative";
+                expect(sandbox.querySelector('.svgContent').offsetTop).toBe(200);
 
-            expect(sandbox.querySelector('.svgContent').offsetTop).toBe(200);
+                done();
+            });
         });
 
-        it("should work around XHTML case-sensitivity for tag name selectors", function () {
+        it("should work around XHTML case-sensitivity for tag name selectors", function (done) {
             var doc = document.implementation.createHTMLDocument("");
 
-            document2svg.getSvgForDocument(doc, aRenderSize(), 1);
+            document2svg.getSvgForDocument(doc, aRenderSize(), 1).then(function () {
+                expect(documentHelper.rewriteTagNameSelectorsToLowerCase).toHaveBeenCalledWith(doc);
 
-            expect(documentHelper.rewriteTagNameSelectorsToLowerCase).toHaveBeenCalledWith(doc);
+                done();
+            });
         });
 
-        it("should work around WebKit's EM media query issue", function () {
+        it("should work around WebKit's EM media query issue", function (done) {
             var doc = document.implementation.createHTMLDocument("");
-            mediaQueryHelper.needsEmWorkaround.and.returnValue(true);
+            setUpNeedsEmWorkaroundToReturn(true);
 
-            document2svg.getSvgForDocument(doc, aRenderSize(), 1);
+            document2svg.getSvgForDocument(doc, aRenderSize(), 1).then(function () {
+                expect(mediaQueryHelper.workAroundWebKitEmSizeIssue).toHaveBeenCalledWith(doc);
 
-            expect(mediaQueryHelper.workAroundWebKitEmSizeIssue).toHaveBeenCalledWith(doc);
+                done();
+            });
         });
 
-        it("should not work around WebKit's EM media query issue", function () {
+        it("should not work around WebKit's EM media query issue", function (done) {
             var doc = document.implementation.createHTMLDocument("");
-            mediaQueryHelper.needsEmWorkaround.and.returnValue(false);
+            setUpNeedsEmWorkaroundToReturn(false);
 
-            document2svg.getSvgForDocument(doc, aRenderSize(), 1);
+            document2svg.getSvgForDocument(doc, aRenderSize(), 1).then(function () {
+                expect(mediaQueryHelper.workAroundWebKitEmSizeIssue).not.toHaveBeenCalled();
 
-            expect(mediaQueryHelper.workAroundWebKitEmSizeIssue).not.toHaveBeenCalled();
+                done();
+            });
         });
     });
 
@@ -247,7 +284,7 @@ describe("Document to SVG conversion", function () {
         it("should draw as svg", function (done) {
             var svg = "the svg";
 
-            document2svg.getSvgForDocument.and.returnValue(svg);
+            document2svg.getSvgForDocument.and.returnValue(successfulPromise(svg));
 
             document2svg.drawDocumentAsSvg(doc, {zoom: 42}).then(function (theSvg) {
                 expect(theSvg).toBe(svg);

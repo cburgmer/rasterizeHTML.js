@@ -3,31 +3,45 @@ var mediaQueryHelper = (function (cssMediaQuery) {
 
     var module = {};
 
-    var createHiddenElement = function (doc, tagName, size) {
-        var element = doc.createElement(tagName);
-        // 'display: none' doesn't cut it, as browsers seem to be lazy loading CSS
-        element.style.visibility = "hidden";
-        element.style.width = size + "px";
-        element.style.height = size + "px";
-        // We need to add the element to the document so that its content gets loaded
-        doc.querySelector("body").appendChild(element);
-        return element;
+    var svgImgBlueByEmMediaQuery = function () {
+        var svg = '<svg id="svg" xmlns="http://www.w3.org/2000/svg" width="10" height="10">' +
+                '<style>@media (max-width: 1em) { svg { background: #00f; } }</style>' +
+                '</svg>';
+
+        var url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg),
+            img = document.createElement('img');
+
+        img.src = url;
+
+        document.querySelector('body').appendChild(img);
+        return img;
+    };
+
+    var firstPixelHasColor = function (img, r, g, b) {
+        var canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+
+        var context = canvas.getContext("2d"),
+            data;
+
+        context.drawImage(img, 0, 0);
+        data = context.getImageData(0, 0, 1, 1).data;
+        return data[0] === r && data[1] === g && data[2] === b;
     };
 
     var hasEmMediaQueryIssue = function () {
-        var iframe = createHiddenElement(document, 'iframe', 100);
+        var img = svgImgBlueByEmMediaQuery(),
+            defer = ayepromise.defer();
 
-        iframe.contentDocument.open();
-        iframe.contentDocument.write('<!doctype html><html>');
-        iframe.contentDocument.write('<script>window.matches = window.matchMedia("(max-width: 1em)").matches</script>');
-        iframe.contentDocument.write('</html>');
-        iframe.contentDocument.close();
+        img.onload = function () {
+            defer.resolve(!firstPixelHasColor(img, 0, 0, 255));
+        };
+        img.onerror = function () {
+            defer.reject();
+        };
 
-        var mediaQueryMatches = iframe.contentWindow.matches;
-
-        document.querySelector('body').removeChild(iframe);
-
-        return mediaQueryMatches;
+        return defer.promise;
     };
 
     var hasEmIssue;

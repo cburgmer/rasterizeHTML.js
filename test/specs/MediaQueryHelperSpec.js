@@ -5,20 +5,30 @@ describe("Media Query Helper", function () {
 
         // rough integration tests
 
-        it("should detect issue on WebKit", function () {
+        ifNotInPhantomJsIt("should detect issue on WebKit", function (done) {
             if (navigator.userAgent.indexOf('WebKit') < 0) {
+                done();
                 return;
             }
 
-            expect(mediaQueryHelper.needsEmWorkaround()).toBe(true);
+            mediaQueryHelper.needsEmWorkaround().then(function (result) {
+                expect(result).toBe(true);
+
+                done();
+            });
         });
 
-        it("should not detect issue on Firefox", function () {
+        it("should not detect issue on Firefox", function (done) {
             if (navigator.userAgent.indexOf('Firefox') < 0) {
+                done();
                 return;
             }
 
-            expect(mediaQueryHelper.needsEmWorkaround()).toBe(false);
+            mediaQueryHelper.needsEmWorkaround().then(function (result) {
+                expect(result).toBe(false);
+
+                done();
+            });
         });
     });
 });

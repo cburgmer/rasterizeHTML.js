@@ -51,12 +51,7 @@ var document2svg = (function (util, browser, documentHelper, mediaQueryHelper, x
         }).join(' ');
     };
 
-    module.getSvgForDocument = function (doc, size, zoomFactor) {
-        documentHelper.rewriteTagNameSelectorsToLowerCase(doc);
-        if (mediaQueryHelper.needsEmWorkaround()) {
-            mediaQueryHelper.workAroundWebKitEmSizeIssue(doc);
-        }
-
+    var convertDocumentToSvg = function (doc, size, zoomFactor) {
         var xhtml = xmlserializer.serializeToString(doc);
 
         browser.validateXHTML(xhtml);
@@ -75,8 +70,20 @@ var document2svg = (function (util, browser, documentHelper, mediaQueryHelper, x
                 '<foreignObject' + serializeAttributes(attributes) + '>' +
                 xhtml +
                 '</foreignObject>' +
-            '</svg>'
+                '</svg>'
         );
+    };
+
+    module.getSvgForDocument = function (doc, size, zoomFactor) {
+        documentHelper.rewriteTagNameSelectorsToLowerCase(doc);
+
+        return mediaQueryHelper.needsEmWorkaround().then(function (needsWorkaround) {
+            if (needsWorkaround) {
+                mediaQueryHelper.workAroundWebKitEmSizeIssue(doc);
+            }
+
+            return convertDocumentToSvg(doc, size, zoomFactor);
+        });
     };
 
     module.drawDocumentAsSvg = function (doc, options) {
