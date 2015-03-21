@@ -74,13 +74,21 @@ var mediaQueryHelper = (function (cssMediaQuery) {
             '}';
     };
 
+    var exchangeRuleWithNewContent = function (styleSheet, ruleIdx, newRuleText) {
+        try {
+            styleSheet.insertRule(newRuleText, ruleIdx+1);
+        } catch (e) {
+            // In case the browser does not like our new rule we just keep the existing one and quietly leave
+            return;
+        }
+        styleSheet.deleteRule(ruleIdx);
+    };
+
     var changeCssRule = function (rule, newRuleText) {
         var styleSheet = rule.parentStyleSheet,
             ruleIdx = asArray(styleSheet.cssRules).indexOf(rule);
 
-        // Exchange rule with the new text
-        styleSheet.insertRule(newRuleText, ruleIdx+1);
-        styleSheet.deleteRule(ruleIdx);
+        exchangeRuleWithNewContent(styleSheet, ruleIdx, newRuleText);
     };
 
     var rewriteStyleContent = function (styleElement) {
