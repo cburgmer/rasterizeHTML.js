@@ -79,7 +79,11 @@ rasterizeHTML.drawDocument( document [, canvas] [, options] )</pre>
     var canvas = document.getElementById("pageInPageCanvas");
 
     document.getElementsByTagName("body")[0].onload = function () {
-        rasterizeHTML.drawURL("index.html", canvas);
+        rasterizeHTML.drawURL("index.html", canvas).then(function (result) {
+            console.log('demo I result', result);
+        }, function (e) {
+            console.log('demo I error', e);
+        });
     };
 }());
 </script>
@@ -124,7 +128,9 @@ rasterizeHTML.drawDocument( document [, canvas] [, options] )</pre>
 
     var doDraw = function () {
         rasterizeHTML.drawHTML(input.value, canvas).then(function (result) {
-            console.log('errors', result.errors);
+            console.log('demo II result', result);
+        }, function (e) {
+            console.log('demo II error', e);
         });
     };
 
