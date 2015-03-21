@@ -103,13 +103,14 @@ var mediaQueryHelper = (function (cssMediaQuery) {
         return q.inverse ? "not " + query : query;
     };
 
-    var transformEmIntoPx = function (em) {
-        return em * 16;
-    };
-
     // poor man's testability
     module.serializeQuery = function (q) {
-        return q.map(serializeQueryPart);
+        var queryParts = q.map(serializeQueryPart);
+        return queryParts.join(', ');
+    };
+
+    var transformEmIntoPx = function (em) {
+        return em * 16;
     };
 
     var replaceEmValueWithPx = function (value) {

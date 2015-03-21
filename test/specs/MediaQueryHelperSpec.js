@@ -81,42 +81,42 @@ describe("Media Query Helper", function () {
     });
 
     // this functionality should sit inside css-mediaquery
-    describe("serialzeQuery", function () {
+    describe("serializeQuery", function () {
         it("should serialize a simple media query", function () {
             var parsedQuery = cssMediaQuery.parse('(width: 12px)');
 
-            expect(mediaQueryHelper.serializeQuery(parsedQuery)).toEqual(['all and (width: 12px)']);
+            expect(mediaQueryHelper.serializeQuery(parsedQuery)).toEqual('all and (width: 12px)');
         });
 
         it("should serialize query with modifier", function () {
             var parsedQuery = cssMediaQuery.parse('(min-width: 12px)');
 
-            expect(mediaQueryHelper.serializeQuery(parsedQuery)).toEqual(['all and (min-width: 12px)']);
+            expect(mediaQueryHelper.serializeQuery(parsedQuery)).toEqual('all and (min-width: 12px)');
         });
 
         it("should serialize query with all media", function () {
             var parsedQuery = cssMediaQuery.parse('all and (width: 12px)');
 
-            expect(mediaQueryHelper.serializeQuery(parsedQuery)).toEqual(['all and (width: 12px)']);
+            expect(mediaQueryHelper.serializeQuery(parsedQuery)).toEqual('all and (width: 12px)');
         });
 
         it("should serialize query with screen media", function () {
             var parsedQuery = cssMediaQuery.parse('screen and (width: 12px)');
 
-            expect(mediaQueryHelper.serializeQuery(parsedQuery)).toEqual(['screen and (width: 12px)']);
+            expect(mediaQueryHelper.serializeQuery(parsedQuery)).toEqual('screen and (width: 12px)');
         });
 
         it("should serialize query with inverse", function () {
             var parsedQuery = cssMediaQuery.parse('not all and (width: 12px)');
 
-            expect(mediaQueryHelper.serializeQuery(parsedQuery)).toEqual(['not all and (width: 12px)']);
+            expect(mediaQueryHelper.serializeQuery(parsedQuery)).toEqual('not all and (width: 12px)');
         });
 
         it("should serialize query with alternatives", function () {
             var parsedQuery = cssMediaQuery.parse('(width: 12px), (height: 20em)');
 
             expect(mediaQueryHelper.serializeQuery(parsedQuery)).toEqual(
-                ['all and (width: 12px)', 'all and (height: 20em)']
+                'all and (width: 12px), all and (height: 20em)'
             );
         });
 
@@ -124,14 +124,14 @@ describe("Media Query Helper", function () {
             var parsedQuery = cssMediaQuery.parse('(width: 12px) and (height: 20em)');
 
             expect(mediaQueryHelper.serializeQuery(parsedQuery)).toEqual(
-                ['all and (width: 12px) and (height: 20em)']
+                'all and (width: 12px) and (height: 20em)'
             );
         });
 
         it("should serialize query without value", function () {
             var parsedQuery = cssMediaQuery.parse('all and (color)');
 
-            expect(mediaQueryHelper.serializeQuery(parsedQuery)).toEqual(['all and (color)']);
+            expect(mediaQueryHelper.serializeQuery(parsedQuery)).toEqual('all and (color)');
         });
     });
 });
