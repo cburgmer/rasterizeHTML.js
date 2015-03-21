@@ -97,10 +97,19 @@ var mediaQueryHelper = (function (cssMediaQuery) {
     };
 
     var serializeQueryPart = function (q) {
-        var expressions = q.expressions.map(serializeExpression),
-            query = q.type + ' and ' + expressions.join(' and ');
+        var segments = [];
 
-        return q.inverse ? "not " + query : query;
+        if (q.inverse) {
+            segments.push("not");
+        }
+
+        segments.push(q.type);
+
+        if (q.expressions.length > 0) {
+            segments.push('and ' + q.expressions.map(serializeExpression).join(' and '));
+        }
+
+        return segments.join(' ');
     };
 
     // poor man's testability

@@ -133,5 +133,21 @@ describe("Media Query Helper", function () {
 
             expect(mediaQueryHelper.serializeQuery(parsedQuery)).toEqual('all and (color)');
         });
+
+        it("should serialize just the media", function () {
+            var parsedQuery = cssMediaQuery.parse('print');
+
+            expect(mediaQueryHelper.serializeQuery(parsedQuery)).toEqual('print');
+        });
+
+        it("should serialize a complex query", function () {
+            var parsedQuery = cssMediaQuery.parse(
+                'print, (orientation: landscape), screen and (max-width: 720px), not all and (height: 10em) and (min-width: 10px)'
+            );
+
+            expect(mediaQueryHelper.serializeQuery(parsedQuery)).toEqual(
+                'print, all and (orientation: landscape), screen and (max-width: 720px), not all and (height: 10em) and (min-width: 10px)'
+            );
+        });
     });
 });
