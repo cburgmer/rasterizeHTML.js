@@ -87,11 +87,19 @@ var mediaQueryHelper = (function (cssMediaQuery) {
         styleElement.textContent = cssRulesToText(styleElement.sheet.cssRules);
     };
 
-    var serializeQueryPart = function (q) {
-        var query = q.type + ' and ' + q.expressions.map(function (exp) {
-            var feature = exp.modifier ? exp.modifier + '-' + exp.feature : exp.feature;
+    var serializeExpression = function (exp) {
+        var feature = exp.modifier ? exp.modifier + '-' + exp.feature : exp.feature;
+        if (exp.value) {
             return '(' + feature + ': ' + exp.value + ')';
-        });
+        } else {
+            return '(' + feature + ')';
+        }
+    };
+
+    var serializeQueryPart = function (q) {
+        var expressions = q.expressions.map(serializeExpression),
+            query = q.type + ' and ' + expressions.join(' and ');
+
         return q.inverse ? "not " + query : query;
     };
 
@@ -99,7 +107,8 @@ var mediaQueryHelper = (function (cssMediaQuery) {
         return em * 16;
     };
 
-    var serializeQuery = function (q) {
+    // poor man's testability
+    module.serializeQuery = function (q) {
         return q.map(serializeQueryPart);
     };
 
@@ -121,7 +130,7 @@ var mediaQueryHelper = (function (cssMediaQuery) {
             });
         });
 
-        return serializeQuery(parsedQuery);
+        return module.serializeQuery(parsedQuery);
     };
 
     var replaceEmsWithPx = function (mediaQueryRules) {
