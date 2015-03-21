@@ -104,9 +104,10 @@ var mediaQueryHelper = (function (cssMediaQuery) {
     };
 
     var replaceEmValueWithPx = function (value) {
-        var match = /^(\d+)em/.exec(value);
+        // Match a number with em unit. Doesn't match all, but should be enough for now
+        var match = /^((?:\d+\.)?\d+)em/.exec(value);
         if (match) {
-            return transformEmIntoPx(match[1]) + 'px';
+            return transformEmIntoPx(parseFloat(match[1])) + 'px';
         }
         return value;
     };
