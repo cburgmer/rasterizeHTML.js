@@ -24,10 +24,11 @@
     "url": "git://github.com/cburgmer/rasterizeHTML.js.git"
   },
   "dependencies": {
-    "url": "~0.10.1",
-    "xmlserializer": "~0.3.1",
     "ayepromise": "~1.1.1",
-    "inlineresources": "~0.1.1"
+    "css-mediaquery": "~0.1.2",
+    "inlineresources": "~0.1.1",
+    "url": "~0.10.1",
+    "xmlserializer": "~0.3.1"
   },
   "devDependencies": {
     "grunt": "~0.4.1",
