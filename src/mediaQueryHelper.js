@@ -35,7 +35,12 @@ var mediaQueryHelper = (function (cssMediaQuery) {
             defer = ayepromise.defer();
 
         img.onload = function () {
-            defer.resolve(!firstPixelHasColor(img, 0, 0, 255));
+            try {
+                defer.resolve(!firstPixelHasColor(img, 0, 0, 255));
+            } catch (e) {
+                // Fails in PhantomJS, let's assume the issue exists
+                defer.resolve(true);
+            }
         };
         img.onerror = function () {
             defer.reject();

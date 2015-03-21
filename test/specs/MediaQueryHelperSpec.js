@@ -5,7 +5,7 @@ describe("Media Query Helper", function () {
 
         // rough integration tests
 
-        ifNotInPhantomJsIt("should detect issue on WebKit", function (done) {
+        it("should detect issue on WebKit", function (done) {
             if (navigator.userAgent.indexOf('WebKit') < 0) {
                 done();
                 return;
