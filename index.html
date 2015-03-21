@@ -152,11 +152,13 @@ rasterizeHTML.drawDocument( document [, canvas] [, options] )</pre>
 
 <h2>Limitations</h2>
 
-<p>All resources (HTML page, CSS, images and JS) that are needed for drawing the page can only be loaded if from the <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Same_origin_policy_for_JavaScript">same origin</a>, unless techniques like <a href="http://enable-cors.org">CORS</a> are used. I.E. <code>drawURL()</code> can only load pages from the same domain as the current page and all draw methods can equally only embed styling and images from that domain.</p>
+<p>All resources (HTML page, CSS, images, fonts and JS) that are needed for drawing the page can only be loaded if from the <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Same_origin_policy_for_JavaScript">same origin</a>, unless techniques like <a href="http://enable-cors.org">CORS</a> are used. I.E. <code>drawURL()</code> can only load pages from the same domain as the current page and all draw methods can equally only embed styling and images from that domain.</p>
 
-<p>The code is tested under Firefox, Chrome &amp; Safari. However IE up to version 11 does not honour <code>&lt;foreignObject&gt;</code> and is unsupported.</p>
+<p>The code is tested under Firefox, Chrome &amp; Safari. However <a href="https://status.modern.ie/svgforeignobjectelement">IE up to version 11 does not honour <code>&lt;foreignObject&gt;</code></a> and is unsupported.</p>
 
-<p>At the time of writing it seems that the individual browsers still have some issues with rendering SVGs with embedded HTML to the canvas. See the <a href="https://github.com/cburgmer/rasterizeHTML.js/wiki/Browser-issues">wiki for a list of known issues</a> and do add your findings there.</p>
+<p>Also the individual browsers still have some issues when rendering SVGs with embedded HTML to the canvas.</p>
+
+<a href="https://github.com/cburgmer/rasterizeHTML.js/wiki/Limitations">The full list of limitations is here</a>.
 
 <h2>Example code</h2>
 
