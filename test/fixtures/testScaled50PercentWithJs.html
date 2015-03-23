@@ -14,6 +14,7 @@ This integration test includes a bunch of different aspects (list not exhaustive
 * External webfont
 * External background image
 * :active and :hover style
+* Scollbar shown on Chrome under Linux when html element is set to overflow: scoll
 
 Together with external parameters:
 * Zooming
@@ -56,6 +57,7 @@ Together with external parameters:
         img:focus {
             opacity: 1;
         }
+        html { overflow-y: scroll; }
     </style>
 </head>
 <body class="teST">

@@ -56,6 +56,7 @@ describe("Document to SVG conversion", function () {
              document2svg.getSvgForDocument(doc, aRenderSize(), defaultZoomLevel).then(function (svgCode) {
                  expect(svgCode).toMatch(new RegExp(
                      '<svg xmlns="http://www.w3.org/2000/svg" .*>' +
+                         '.*' +
                          '<foreignObject .*>' +
                          '<html xmlns="http://www.w3.org/1999/xhtml">' +
                          '<head>' +
@@ -83,6 +84,7 @@ describe("Document to SVG conversion", function () {
                 canonicalXML = svgCode.replace(/ +\/>/, '/>');
                 expect(canonicalXML).toMatch(new RegExp(
                     '<svg xmlns="http://www.w3.org/2000/svg" .*>' +
+                        '.*' +
                         '<foreignObject .*>' +
                         '<html xmlns="http://www.w3.org/1999/xhtml">' +
                         '<head>' +
@@ -107,6 +109,7 @@ describe("Document to SVG conversion", function () {
             document2svg.getSvgForDocument(doc, aRenderSize(123, 987, 200, 1000, 2, 7), defaultZoomLevel).then(function (svgCode) {
                 expect(svgCode).toMatch(new RegExp(
                     '<svg xmlns="http://www.w3.org/2000/svg" width="123" height="987"[^>]*>' +
+                        '.*' +
                         '<foreignObject x="-2" y="-7" width="200" height="1000".*>' +
                         '<html xmlns="http://www.w3.org/1999/xhtml">' +
                         '<head>' +
@@ -132,6 +135,7 @@ describe("Document to SVG conversion", function () {
             document2svg.getSvgForDocument(doc, aRenderSize(123, 987, 12, 99), zoomFactor).then(function (svgCode) {
                 expect(svgCode).toMatch(new RegExp(
                     '<svg xmlns="http://www.w3.org/2000/svg" width="123" height="987"[^>]*>' +
+                        '.*' +
                         '<foreignObject x="0" y="0" width="12" height="99" transform="scale\\(10\\)".*>' +
                         '<html xmlns="http://www.w3.org/1999/xhtml">' +
                         '<head>' +
@@ -168,6 +172,7 @@ describe("Document to SVG conversion", function () {
             document2svg.getSvgForDocument(doc, aRenderSizeWithRootFontSize('42px'), defaultZoomLevel).then(function (svgCode) {
                 expect(svgCode).toMatch(new RegExp(
                     '<svg xmlns="http://www.w3.org/2000/svg" [^>]*font-size="42px"[^>]*>' +
+                        '.*' +
                         '<foreignObject .*>' +
                         '<html xmlns="http://www.w3.org/1999/xhtml"[^>]*>' +
                         '<head>' +
@@ -250,12 +255,30 @@ describe("Document to SVG conversion", function () {
             });
         });
 
-        it("should not work around WebKit's EM media query issue", function (done) {
+        it("should not work around EM media query if no issue exists", function (done) {
             var doc = document.implementation.createHTMLDocument("");
             setUpNeedsEmWorkaroundToReturn(false);
 
             document2svg.getSvgForDocument(doc, aRenderSize(), 1).then(function () {
                 expect(mediaQueryHelper.workAroundWebKitEmSizeIssue).not.toHaveBeenCalled();
+
+                done();
+            });
+        });
+
+        it("should hide scrollbars on Chrome under Linux", function (done) {
+            var doc = document.implementation.createHTMLDocument("");
+            doc.body.innerHTML = "Test content";
+
+            document2svg.getSvgForDocument(doc, aRenderSize(), defaultZoomLevel).then(function (svgCode) {
+                expect(svgCode).toMatch(new RegExp(
+                    '<svg xmlns="http://www.w3.org/2000/svg" .*>' +
+                        '<style scoped="">html::-webkit-scrollbar { display: none; }</style>' +
+                        '<foreignObject .*>' +
+                        '.*' +
+                        '</foreignObject>' +
+                        '</svg>'
+                ));
 
                 done();
             });

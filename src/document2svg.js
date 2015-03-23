@@ -40,6 +40,10 @@ var document2svg = (function (util, browser, documentHelper, mediaQueryHelper, x
         attributes.externalResourcesRequired = true;
     };
 
+    var workAroundChromeShowingScrollbarsUnderLinuxIfHtmlIsOverflowScroll = function () {
+        return '<style scoped="">html::-webkit-scrollbar { display: none; }</style>';
+    };
+
     var serializeAttributes = function (attributes) {
         var keys = Object.keys(attributes);
         if (!keys.length) {
@@ -67,6 +71,7 @@ var document2svg = (function (util, browser, documentHelper, mediaQueryHelper, x
                 ' height="' + size.height + '"' +
                 ' font-size="' + size.rootFontSize + '"' +
                 '>' +
+                workAroundChromeShowingScrollbarsUnderLinuxIfHtmlIsOverflowScroll() +
                 '<foreignObject' + serializeAttributes(attributes) + '>' +
                 xhtml +
                 '</foreignObject>' +
