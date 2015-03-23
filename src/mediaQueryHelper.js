@@ -13,7 +13,6 @@ var mediaQueryHelper = (function (cssMediaQuery) {
 
         img.src = url;
 
-        document.querySelector('body').appendChild(img);
         return img;
     };
 
@@ -34,7 +33,10 @@ var mediaQueryHelper = (function (cssMediaQuery) {
         var img = svgImgBlueByEmMediaQuery(),
             defer = ayepromise.defer();
 
+        document.querySelector('body').appendChild(img);
+
         img.onload = function () {
+            document.querySelector('body').removeChild(img);
             try {
                 defer.resolve(!firstPixelHasColor(img, 0, 0, 255));
             } catch (e) {

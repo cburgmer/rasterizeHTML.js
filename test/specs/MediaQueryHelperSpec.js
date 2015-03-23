@@ -30,6 +30,14 @@ describe("Media Query Helper", function () {
                 done();
             });
         });
+
+        it("should remove test image from DOM", function (done) {
+            mediaQueryHelper.needsEmWorkaround().then(function () {
+                expect($("img").length).toBe(0);
+
+                done();
+            });
+        });
     });
 
     describe("workAroundWebKitEmSizeIssue", function () {
