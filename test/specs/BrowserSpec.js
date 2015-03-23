@@ -386,6 +386,20 @@ describe("Browser functions", function () {
             });
         });
 
+        it("should not include a scrollbar in calculations on Unix systems", function (done) {
+            setHtml('<style>' +
+                    'html, body { height: 100%; }' +
+                    '</style>');
+
+            // For Firefox width and height seem to be important, too small will not trigger the error
+            browser.calculateDocumentContentSize(doc, {width: 600, height: 200}).then(function (size) {
+                expect(size.width).toBe(600);
+                expect(size.viewportWidth).toBe(600);
+
+                done();
+            });
+        });
+
         describe("zooming", function () {
             it("should report half the viewport size for a zoom of 2", function (done) {
                 setElementWithSize({});
