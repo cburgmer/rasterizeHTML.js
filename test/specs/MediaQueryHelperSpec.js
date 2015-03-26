@@ -86,6 +86,15 @@ describe("Media Query Helper", function () {
 
             expect(doc.querySelector('style').textContent).toMatch(/@media (all and )?\(min-width: 19.2px\)/);
         });
+
+        it("should not crash on errors by avoiding rewrite of rules", function () {
+            // Let's add an invalid media query and make sure it doesn't get changed (Firefox and Chrome complain)
+            addStyle('@media (min-width: 2) {}');
+
+            mediaQueryHelper.workAroundWebKitEmSizeIssue(doc);
+
+            expect(doc.querySelector('style').textContent).toMatch(/@media \(min-width: 2\)/);
+        });
     });
 
     // this functionality should sit inside css-mediaquery

@@ -142,25 +142,46 @@ var mediaQueryHelper = (function (cssMediaQuery) {
     };
 
     var substituteEmWithPx = function (mediaQuery) {
-        var parsedQuery = cssMediaQuery.parse(mediaQuery);
+        var parsedQuery = cssMediaQuery.parse(mediaQuery),
+            hasChanges = false;
 
         parsedQuery.forEach(function (q) {
             q.expressions.forEach(function (exp) {
-                exp.value = replaceEmValueWithPx(exp.value);
+                var rewrittenValue = replaceEmValueWithPx(exp.value);
+
+                hasChanges |= rewrittenValue !== exp.value;
+                exp.value = rewrittenValue;
             });
         });
 
-        return module.serializeQuery(parsedQuery);
+        if (hasChanges) {
+            mediaQuery = module.serializeQuery(parsedQuery);
+        }
+
+        return mediaQuery;
     };
 
     var replaceEmsWithPx = function (mediaQueryRules) {
+        var anyRuleHasChanges = false;
+
         mediaQueryRules.forEach(function (rule) {
+            var hasChanges = false;
+
             var reworkedMediaQueries = asArray(rule.media).map(function (mediaQuery) {
-                return substituteEmWithPx(mediaQuery);
+                var rewrittenMediaQuery = substituteEmWithPx(mediaQuery);
+
+                hasChanges |= rewrittenMediaQuery !== mediaQuery;
+                return rewrittenMediaQuery;
             });
 
-            changeCssRule(rule, mediaQueryRule(reworkedMediaQueries, rule.cssRules));
+            if (hasChanges) {
+                changeCssRule(rule, mediaQueryRule(reworkedMediaQueries, rule.cssRules));
+            }
+
+            anyRuleHasChanges |= hasChanges;
         });
+
+        return anyRuleHasChanges;
     };
 
     module.workAroundWebKitEmSizeIssue = function (document) {
@@ -171,8 +192,10 @@ var mediaQueryHelper = (function (cssMediaQuery) {
                 return rule.type === window.CSSRule.MEDIA_RULE;
             });
 
-            replaceEmsWithPx(mediaQueryRules);
-            rewriteStyleContent(style);
+            var hasChanges = replaceEmsWithPx(mediaQueryRules);
+            if (hasChanges) {
+                rewriteStyleContent(style);
+            }
         });
     };
 
