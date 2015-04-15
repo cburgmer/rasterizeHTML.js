@@ -25,7 +25,7 @@ var canvas = document.getElementById("canvas");
 rasterizeHTML.drawHTML('Some <span style="color: green; font-size: 20px;">HTML</span> with an image <img src="someimg.png" />', canvas);
 ```
 
-See [the examples page](https://github.com/cburgmer/rasterizeHTML.js/wiki/Examples) and [the examples shipped with the code](https://github.com/cburgmer/rasterizeHTML.js/tree/master/examples).
+See [the examples page](https://github.com/cburgmer/rasterizeHTML.js/wiki/Examples). The code also [ships with examples](https://github.com/cburgmer/rasterizeHTML.js/tree/master/examples), make sure to run `npm test` first to compile the library.
 
 How does it work
 ----------------
@@ -50,7 +50,7 @@ Also the individual browsers still have some issues when rendering SVGs with emb
 Development
 -----------
 
-Run `npm install && npm test`. There's also a vagrant image that installs all necessary build dependencies.
+Run `npm test`. There's also a vagrant image that installs all necessary build dependencies.
 
 For tests against individual browsers open `test/SpecRunner.html`, for integration tests under Safari open `test/manualIntegrationTestForWebkit.html` (under Chrome you will either need to start the browser passing in the option `--allow-file-access-from-files` or load the page through a local webserver).
 
