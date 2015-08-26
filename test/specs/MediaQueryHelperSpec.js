@@ -60,7 +60,7 @@ describe("Media Query Helper", function () {
 
             mediaQueryHelper.workAroundWebKitEmSizeIssue(doc);
 
-            expect(doc.querySelector('style').textContent).toMatch(/@media (all and )?\(min-width: 16px\)/);
+            expect(doc.querySelector('style').textContent).toMatch(/@media (all and )?\(min-width: ?16px\)/);
         });
 
         ifNotInPhantomJsIt("should keep a px value", function () {
@@ -68,7 +68,7 @@ describe("Media Query Helper", function () {
 
             mediaQueryHelper.workAroundWebKitEmSizeIssue(doc);
 
-            expect(doc.querySelector('style').textContent).toMatch(/@media (all and )?\(min-width: 15px\)/);
+            expect(doc.querySelector('style').textContent).toMatch(/@media (all and )?\(min-width: ?15px\)/);
         });
 
         ifNotInPhantomJsIt("should handle mixed units", function () {
@@ -76,7 +76,7 @@ describe("Media Query Helper", function () {
 
             mediaQueryHelper.workAroundWebKitEmSizeIssue(doc);
 
-            expect(doc.querySelector('style').textContent).toMatch(/@media (all and )?\(min-width: 15px\), (all and )?\(max-width: 32px\)/);
+            expect(doc.querySelector('style').textContent).toMatch(/@media (all and )?\(min-width: ?15px\), (all and )?\(max-width: ?32px\)/);
         });
 
         ifNotInPhantomJsIt("should handle fractions", function () {
@@ -84,7 +84,7 @@ describe("Media Query Helper", function () {
 
             mediaQueryHelper.workAroundWebKitEmSizeIssue(doc);
 
-            expect(doc.querySelector('style').textContent).toMatch(/@media (all and )?\(min-width: 19.2px\)/);
+            expect(doc.querySelector('style').textContent).toMatch(/@media (all and )?\(min-width: ?19.2px\)/);
         });
 
         it("should not crash on errors by avoiding rewrite of rules", function () {

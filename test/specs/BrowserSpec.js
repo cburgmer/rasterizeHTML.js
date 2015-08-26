@@ -135,7 +135,7 @@ describe("Browser functions", function () {
                     resourceType: "scriptExecution",
                     msg: jasmine.any(String)
                 }]);
-                expect(result.errors[0].msg).toMatch(/ReferenceError:\s+(.+\s+)?undefinedVar/);
+                expect(result.errors[0].msg).toMatch(/(ReferenceError:\s+(.+\s+)?undefinedVar)|('undefinedVar' is undefined)/);
 
                 done();
             });
