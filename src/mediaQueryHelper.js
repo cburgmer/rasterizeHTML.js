@@ -155,10 +155,8 @@ var mediaQueryHelper = (function (cssMediaQuery) {
         });
 
         if (hasChanges) {
-            mediaQuery = module.serializeQuery(parsedQuery);
+            return module.serializeQuery(parsedQuery);
         }
-
-        return mediaQuery;
     };
 
     var replaceEmsWithPx = function (mediaQueryRules) {
@@ -167,13 +165,11 @@ var mediaQueryHelper = (function (cssMediaQuery) {
         mediaQueryRules.forEach(function (rule) {
             var rewrittenMediaQuery = substituteEmWithPx(rule.media.mediaText);
 
-            var hasChanges = rewrittenMediaQuery !== rule.media.mediaText;
-
-            if (hasChanges) {
+            if (rewrittenMediaQuery) {
                 changeCssRule(rule, mediaQueryRule(rewrittenMediaQuery, rule.cssRules));
             }
 
-            anyRuleHasChanges |= hasChanges;
+            anyRuleHasChanges |= !!rewrittenMediaQuery;
         });
 
         return anyRuleHasChanges;
