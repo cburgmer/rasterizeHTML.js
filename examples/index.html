@@ -44,6 +44,8 @@
         var draw = function () {
             rasterizeHTML.drawHTML(input.value, canvas).then(function (result) {
                 console.log(result);
+            }, function (e) {
+                console.log('An error occured:', e);
             });
         };
 
