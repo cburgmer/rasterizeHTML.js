@@ -3,8 +3,11 @@ var rasterize = (function (util, browser, documentHelper, document2svg, svg2imag
 
     var module = {};
 
-    var generalDrawError = function () {
-        return {message: "Error rendering page"};
+    var generalDrawError = function (e) {
+        return {
+            message: "Error rendering page",
+            originalError: e
+        };
     };
 
     var drawSvgAsImg = function (svg) {
@@ -14,8 +17,8 @@ var rasterize = (function (util, browser, documentHelper, document2svg, svg2imag
                     image: image,
                     svg: svg
                 };
-            }, function () {
-                throw generalDrawError();
+            }, function (e) {
+                throw generalDrawError(e);
             });
     };
 
@@ -24,7 +27,7 @@ var rasterize = (function (util, browser, documentHelper, document2svg, svg2imag
             canvas.getContext("2d").drawImage(image, 0, 0);
         } catch (e) {
             // Firefox throws a 'NS_ERROR_NOT_AVAILABLE' if the SVG is faulty
-            throw generalDrawError();
+            throw generalDrawError(e);
         }
     };
 

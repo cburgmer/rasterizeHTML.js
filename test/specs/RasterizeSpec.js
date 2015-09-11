@@ -259,7 +259,8 @@ describe("Rasterize", function () {
             setUpRenderSvgError(new Error());
 
             rasterize.rasterize(doc, canvas, {}).fail(function (error) {
-                expect(error).toEqual(jasmine.objectContaining({message: "Error rendering page"}));
+                expect(error.message).toEqual("Error rendering page");
+                expect(error.originalError).toBeTruthy();
 
                 expect(canvas.getContext('2d').drawImage).not.toHaveBeenCalled();
 
@@ -274,7 +275,8 @@ describe("Rasterize", function () {
             setUpRenderSvg(rasterizedImage);
 
             rasterize.rasterize(doc, canvas, {}).fail(function (error) {
-                expect(error).toEqual(jasmine.objectContaining({message: "Error rendering page"}));
+                expect(error.message).toEqual("Error rendering page");
+                expect(error.originalError).toBeTruthy();
 
                 done();
             });

@@ -220,7 +220,7 @@ var browser = (function (util, proxies, ayepromise, sanedomparsererror, theWindo
         } catch (e) {
             throw {
                 message: "Invalid source",
-                error: e
+                originalError: e
             };
         }
     };
@@ -246,32 +246,35 @@ var browser = (function (util, proxies, ayepromise, sanedomparsererror, theWindo
     };
 
     var doDocumentLoad = function (url, options) {
-        var ajaxRequest = new window.XMLHttpRequest(),
+        var xhr = new window.XMLHttpRequest(),
             joinedUrl = util.joinUrl(options.baseUrl, url),
             augmentedUrl = getUncachableURL(joinedUrl, options.cache),
             defer = ayepromise.defer(),
-            doReject = function () {
-                defer.reject({message: "Unable to load page"});
+            doReject = function (e) {
+                defer.reject({
+                    message: "Unable to load page",
+                    originalError: e
+                });
             };
 
-        ajaxRequest.addEventListener("load", function () {
-            if (ajaxRequest.status === 200 || ajaxRequest.status === 0) {
-                defer.resolve(ajaxRequest.responseXML);
+        xhr.addEventListener("load", function () {
+            if (xhr.status === 200 || xhr.status === 0) {
+                defer.resolve(xhr.responseXML);
             } else {
-                doReject();
+                doReject(xhr.statusText);
             }
         }, false);
 
-        ajaxRequest.addEventListener("error", function () {
-            doReject();
+        xhr.addEventListener("error", function (e) {
+            doReject(e);
         }, false);
 
         try {
-            ajaxRequest.open('GET', augmentedUrl, true);
-            ajaxRequest.responseType = "document";
-            ajaxRequest.send(null);
-        } catch (err) {
-            doReject();
+            xhr.open('GET', augmentedUrl, true);
+            xhr.responseType = "document";
+            xhr.send(null);
+        } catch (e) {
+            doReject(e);
         }
 
         return defer.promise;
