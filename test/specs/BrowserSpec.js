@@ -557,7 +557,7 @@ describe("Browser functions", function () {
 
         it("should error on failing parse", function (done) {
             browser.loadDocument(testHelper.fixturesPath + "invalidInput.xhtml", {}).fail(function (e) {
-                expect(e).toEqual(jasmine.objectContaining({message: "Invalid source"}));
+                expect(e.message).toBeTruthy();
 
                 done();
             });

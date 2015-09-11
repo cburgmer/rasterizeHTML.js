@@ -1,4 +1,4 @@
-var browser = (function (util, proxies, ayepromise, sanedomparser, theWindow) {
+var browser = (function (util, proxies, ayepromise, sanedomparsererror, theWindow) {
     "use strict";
 
     var module = {};
@@ -214,30 +214,11 @@ var browser = (function (util, proxies, ayepromise, sanedomparser, theWindow) {
         return doc;
     };
 
-    var isParseError = function (parsedDocument) {
-        // http://stackoverflow.com/questions/11563554/how-do-i-detect-xml-parsing-errors-when-using-javascripts-domparser-in-a-cross
-        var p = new DOMParser(),
-            errorneousParse = p.parseFromString('<', 'text/xml'),
-            parsererrorNS = errorneousParse.getElementsByTagName("parsererror")[0].namespaceURI;
-
-        if (parsererrorNS === 'http://www.w3.org/1999/xhtml') {
-            // In PhantomJS the parseerror element doesn't seem to have a special namespace, so we are just guessing here :(
-            return parsedDocument.getElementsByTagName("parsererror").length > 0;
-        }
-
-        return parsedDocument.getElementsByTagNameNS(parsererrorNS, 'parsererror').length > 0;
-    };
-
-    var failOnParseError = function (doc) {
-        if (doc === null || isParseError(doc)) {
-            throw {
-                message: "Invalid source"
-            };
-        }
-    };
-
     module.validateXHTML = function (xhtml) {
-        sanedomparser.parseFromString(xhtml, "application/xml");
+        var p = new DOMParser(),
+            doc = p.parseFromString(xhtml, "application/xml");
+
+        sanedomparsererror.failOnParseError(doc);
     };
 
     var lastCacheDate = null;
@@ -288,11 +269,11 @@ var browser = (function (util, proxies, ayepromise, sanedomparser, theWindow) {
     module.loadDocument = function (url, options) {
         return doDocumentLoad(url, options)
             .then(function (doc) {
-                failOnParseError(doc);
+                sanedomparsererror.failOnParseError(doc);
 
                 return doc;
             });
     };
 
     return module;
-}(util, proxies, ayepromise, sanedomparser, window));
+}(util, proxies, ayepromise, sanedomparsererror, window));

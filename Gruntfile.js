@@ -43,12 +43,12 @@ module.exports = function (grunt) {
                     }
                 }
             },
-            sanedomparser: {
-                src: 'node_modules/sane-domparser/index.js',
-                dest: 'build/dependencies/sane-domparser.js',
+            sanedomparsererror: {
+                src: 'node_modules/sane-domparser-error/index.js',
+                dest: 'build/dependencies/sane-domparser-error.js',
                 options: {
                     bundleOptions: {
-                        standalone: 'sanedomparser'
+                        standalone: 'sanedomparsererror'
                     }
                 }
             },
@@ -101,8 +101,8 @@ module.exports = function (grunt) {
                 objectToExport: 'rasterizeHTML',
                 indent: '    ',
                 deps: {
-                    'default': ['url', 'cssMediaQuery', 'xmlserializer', 'sanedomparser', 'ayepromise', 'inlineresources'],
-                    cjs: ['url', 'css-mediaquery', 'xmlserializer', 'sane-domparser', 'ayepromise', 'inlineresources']
+                    'default': ['url', 'cssMediaQuery', 'xmlserializer', 'sanedomparsererror', 'ayepromise', 'inlineresources'],
+                    cjs: ['url', 'css-mediaquery', 'xmlserializer', 'sane-domparser-error', 'ayepromise', 'inlineresources']
                 }
             }
         },
@@ -160,7 +160,7 @@ module.exports = function (grunt) {
                         ' * CSSOM.js (MIT License),\n' +
                         ' * ayepromise (BSD License & WTFPL),\n' +
                         ' * xmlserializer (MIT License),\n' +
-                        ' * sane-domparser (BSD License),\n' +
+                        ' * sane-domparser-error (BSD License),\n' +
                         ' * css-font-face-src (BSD License),\n' +
                         ' * inlineresources (MIT License) */\n'
                 },
@@ -208,7 +208,7 @@ module.exports = function (grunt) {
         'browserify:url',
         'browserify:cssmediaquery',
         'browserify:xmlserializer',
-        'browserify:sanedomparser',
+        'browserify:sanedomparsererror',
         'browserify:inlineresources'
     ]);
 
