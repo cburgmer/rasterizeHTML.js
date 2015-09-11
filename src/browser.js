@@ -214,11 +214,22 @@ var browser = (function (util, proxies, ayepromise, sanedomparsererror, theWindo
         return doc;
     };
 
+    var failOnInvalidSource = function (doc) {
+        try {
+            return sanedomparsererror.failOnParseError(doc);
+        } catch (e) {
+            throw {
+                message: "Invalid source",
+                error: e
+            };
+        }
+    };
+
     module.validateXHTML = function (xhtml) {
         var p = new DOMParser(),
             doc = p.parseFromString(xhtml, "application/xml");
 
-        sanedomparsererror.failOnParseError(doc);
+        failOnInvalidSource(doc);
     };
 
     var lastCacheDate = null;
@@ -269,9 +280,7 @@ var browser = (function (util, proxies, ayepromise, sanedomparsererror, theWindo
     module.loadDocument = function (url, options) {
         return doDocumentLoad(url, options)
             .then(function (doc) {
-                sanedomparsererror.failOnParseError(doc);
-
-                return doc;
+                return failOnInvalidSource(doc);
             });
     };
 

@@ -259,7 +259,7 @@ describe("Browser functions", function () {
                 error = e;
             }
 
-            expect(error.message).toBeTruthy();
+            expect(error).toEqual(jasmine.objectContaining({message: "Invalid source"}));
         });
 
         ifNotInPhantomJsIt("should throw an exception if the document is invalid because of a missing namespace", function () {
@@ -270,7 +270,7 @@ describe("Browser functions", function () {
                 error = e;
             }
 
-            expect(error.message).toBeTruthy();
+            expect(error).toEqual(jasmine.objectContaining({message: "Invalid source"}));
         });
 
         it("should pass on a valid document", function () {
@@ -557,7 +557,7 @@ describe("Browser functions", function () {
 
         it("should error on failing parse", function (done) {
             browser.loadDocument(testHelper.fixturesPath + "invalidInput.xhtml", {}).fail(function (e) {
-                expect(e.message).toBeTruthy();
+                expect(e).toEqual(jasmine.objectContaining({message: "Invalid source"}));
 
                 done();
             });
