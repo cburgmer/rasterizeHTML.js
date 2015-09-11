@@ -43,6 +43,15 @@ module.exports = function (grunt) {
                     }
                 }
             },
+            sanedomparser: {
+                src: 'node_modules/sane-domparser/index.js',
+                dest: 'build/dependencies/sane-domparser.js',
+                options: {
+                    bundleOptions: {
+                        standalone: 'sanedomparser'
+                    }
+                }
+            },
             url: {
                 src: 'node_modules/url/url.js',
                 dest: 'build/dependencies/url.js',
@@ -92,8 +101,8 @@ module.exports = function (grunt) {
                 objectToExport: 'rasterizeHTML',
                 indent: '    ',
                 deps: {
-                    'default': ['url', 'cssMediaQuery', 'xmlserializer', 'ayepromise', 'inlineresources'],
-                    cjs: ['url', 'css-mediaquery', 'xmlserializer', 'ayepromise', 'inlineresources']
+                    'default': ['url', 'cssMediaQuery', 'xmlserializer', 'sanedomparser', 'ayepromise', 'inlineresources'],
+                    cjs: ['url', 'css-mediaquery', 'xmlserializer', 'sane-domparser', 'ayepromise', 'inlineresources']
                 }
             }
         },
@@ -151,6 +160,7 @@ module.exports = function (grunt) {
                         ' * CSSOM.js (MIT License),\n' +
                         ' * ayepromise (BSD License & WTFPL),\n' +
                         ' * xmlserializer (MIT License),\n' +
+                        ' * sane-domparser (BSD License),\n' +
                         ' * css-font-face-src (BSD License),\n' +
                         ' * inlineresources (MIT License) */\n'
                 },
@@ -198,6 +208,7 @@ module.exports = function (grunt) {
         'browserify:url',
         'browserify:cssmediaquery',
         'browserify:xmlserializer',
+        'browserify:sanedomparser',
         'browserify:inlineresources'
     ]);
 

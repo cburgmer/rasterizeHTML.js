@@ -1,4 +1,4 @@
-var browser = (function (util, proxies, ayepromise, theWindow) {
+var browser = (function (util, proxies, ayepromise, sanedomparser, theWindow) {
     "use strict";
 
     var module = {};
@@ -237,10 +237,7 @@ var browser = (function (util, proxies, ayepromise, theWindow) {
     };
 
     module.validateXHTML = function (xhtml) {
-        var p = new DOMParser(),
-            doc = p.parseFromString(xhtml, "application/xml");
-
-        failOnParseError(doc);
+        sanedomparser.parseFromString(xhtml, "application/xml");
     };
 
     var lastCacheDate = null;
@@ -298,4 +295,4 @@ var browser = (function (util, proxies, ayepromise, theWindow) {
     };
 
     return module;
-}(util, proxies, ayepromise, window));
+}(util, proxies, ayepromise, sanedomparser, window));

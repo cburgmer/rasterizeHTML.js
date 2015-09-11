@@ -25,6 +25,7 @@
         "url": true,
         "cssMediaQuery": true,
         "xmlserializer": true,
+        "sanedomparser": true,
         "ayepromise": true,
         "inlineresources": true
     },
