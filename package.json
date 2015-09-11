@@ -29,7 +29,7 @@
     "inlineresources": "~0.1.1",
     "url": "~0.10.1",
     "xmlserializer": "~0.3.1",
-    "sane-domparser-error": "https://github.com/cburgmer/sane-domparser-error.git"
+    "sane-domparser-error": "~0.1.0"
   },
   "devDependencies": {
     "grunt": "~0.4.1",
