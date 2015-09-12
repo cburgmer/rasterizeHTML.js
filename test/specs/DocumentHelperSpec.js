@@ -89,16 +89,25 @@ describe("Document Helper functions", function () {
 
     describe("fakeUserAction", function () {
         beforeEach(function () {
+            spyOn(documentUtil, 'addClassName');
             spyOn(documentUtil, 'addClassNameRecursively');
             spyOn(documentUtil, 'rewriteCssSelectorWith');
         });
 
-        it("should add a fake class to the selected element and adapt the document's stylesheet", function () {
+        it("should add a fake class to the selected element and adapt the document's stylesheet for a cascading action", function () {
             setHtml("<span>a span</span>");
             documentHelper.fakeUserAction(doc, 'span', 'hover');
 
             expect(documentUtil.addClassNameRecursively).toHaveBeenCalledWith(doc.querySelector('span'), 'rasterizehtmlhover');
             expect(documentUtil.rewriteCssSelectorWith).toHaveBeenCalledWith(doc, ':hover', '.rasterizehtmlhover');
+        });
+
+        it("should add a fake class to the selected element and adapt the document's stylesheet for a non cascading action", function () {
+            setHtml("<span>a span</span>");
+            documentHelper.fakeUserAction(doc, 'span', 'focus');
+
+            expect(documentUtil.addClassName).toHaveBeenCalledWith(doc.querySelector('span'), 'rasterizehtmlfocus');
+            expect(documentUtil.rewriteCssSelectorWith).toHaveBeenCalledWith(doc, ':focus', '.rasterizehtmlfocus');
         });
 
         it("should ignore non-existent selector", function () {

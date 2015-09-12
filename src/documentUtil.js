@@ -7,8 +7,12 @@ var documentUtil = (function () {
         return Array.prototype.slice.call(arrayLike);
     };
 
-    module.addClassNameRecursively = function (element, className) {
+    module.addClassName = function (element, className) {
         element.className += ' ' + className;
+    };
+
+    module.addClassNameRecursively = function (element, className) {
+        module.addClassName(element, className);
 
         if (element.parentNode !== element.ownerDocument) {
             module.addClassNameRecursively(element.parentNode, className);

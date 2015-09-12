@@ -7,6 +7,12 @@ var documentHelper = (function (documentUtil) {
         return Array.prototype.slice.call(arrayLike);
     };
 
+    var cascadingAction = {
+        active: true,
+        hover: true,
+        focus: false
+    };
+
     module.fakeUserAction = function (doc, selector, action) {
         var elem = doc.querySelector(selector),
             pseudoClass = ':' + action,
@@ -15,7 +21,11 @@ var documentHelper = (function (documentUtil) {
             return;
         }
 
-        documentUtil.addClassNameRecursively(elem, fakeActionClass);
+        if (cascadingAction[action]) {
+            documentUtil.addClassNameRecursively(elem, fakeActionClass);
+        } else {
+            documentUtil.addClassName(elem, fakeActionClass);
+        }
         documentUtil.rewriteCssSelectorWith(doc, pseudoClass, '.' + fakeActionClass);
     };
 
