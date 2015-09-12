@@ -7,37 +7,28 @@ var documentHelper = (function (documentUtil) {
         return Array.prototype.slice.call(arrayLike);
     };
 
-    module.fakeHover = function (doc, hoverSelector) {
-        var elem = doc.querySelector(hoverSelector),
-            fakeHoverClass = 'rasterizehtmlhover';
+    var fakeUserAction = function (doc, selector, action) {
+        var elem = doc.querySelector(selector),
+            pseudoClass = ':' + action,
+            fakeActionClass = 'rasterizehtml' + action;
         if (! elem) {
             return;
         }
 
-        documentUtil.addClassNameRecursively(elem, fakeHoverClass);
-        documentUtil.rewriteCssSelectorWith(doc, ':hover', '.' + fakeHoverClass);
+        documentUtil.addClassNameRecursively(elem, fakeActionClass);
+        documentUtil.rewriteCssSelectorWith(doc, pseudoClass, '.' + fakeActionClass);
+    };
+
+    module.fakeHover = function (doc, hoverSelector) {
+        fakeUserAction(doc, hoverSelector, 'hover');
     };
 
     module.fakeActive = function (doc, activeSelector) {
-        var elem = doc.querySelector(activeSelector),
-            fakeActiveClass = 'rasterizehtmlactive';
-        if (! elem) {
-            return;
-        }
-
-        documentUtil.addClassNameRecursively(elem, fakeActiveClass);
-        documentUtil.rewriteCssSelectorWith(doc, ':active', '.' + fakeActiveClass);
+        fakeUserAction(doc, activeSelector, 'active');
     };
 
     module.fakeFocus = function (doc, focusSelector) {
-        var elem = doc.querySelector(focusSelector),
-            fakeFocusClass = 'rasterizehtmlfocus';
-        if (! elem) {
-            return;
-        }
-
-        documentUtil.addClassNameRecursively(elem, fakeFocusClass);
-        documentUtil.rewriteCssSelectorWith(doc, ':focus', '.' + fakeFocusClass);
+        fakeUserAction(doc, focusSelector, 'focus');
     };
 
     module.persistInputValues = function (doc) {
