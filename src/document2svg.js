@@ -92,15 +92,11 @@ var document2svg = (function (util, browser, documentHelper, mediaQueryHelper, x
     };
 
     module.drawDocumentAsSvg = function (doc, options) {
-        if (options.hover) {
-            documentHelper.fakeHover(doc, options.hover);
-        }
-        if (options.active) {
-            documentHelper.fakeActive(doc, options.active);
-        }
-        if (options.focus) {
-            documentHelper.fakeFocus(doc, options.focus);
-        }
+        ['hover', 'active', 'focus'].forEach(function (action) {
+            if (options[action]) {
+                documentHelper.fakeUserAction(doc, options[action], action);
+            }
+        });
 
         return browser.calculateDocumentContentSize(doc, options)
             .then(function (size) {

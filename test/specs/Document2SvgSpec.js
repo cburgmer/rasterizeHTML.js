@@ -296,9 +296,7 @@ describe("Document to SVG conversion", function () {
         };
 
         beforeEach(function () {
-            spyOn(documentHelper, 'fakeHover');
-            spyOn(documentHelper, 'fakeActive');
-            spyOn(documentHelper, 'fakeFocus');
+            spyOn(documentHelper, 'fakeUserAction');
             calculatedSize = 'the_calculated_size';
             spyOn(browser, 'calculateDocumentContentSize').and.returnValue(fulfilled(calculatedSize));
             spyOn(document2svg, 'getSvgForDocument');
@@ -331,37 +329,37 @@ describe("Document to SVG conversion", function () {
         it("should trigger hover effect", function () {
             document2svg.drawDocumentAsSvg(doc, {hover: '.mySpan'});
 
-            expect(documentHelper.fakeHover).toHaveBeenCalledWith(doc, '.mySpan');
+            expect(documentHelper.fakeUserAction).toHaveBeenCalledWith(doc, '.mySpan', 'hover');
         });
 
         it("should not trigger hover effect by default", function () {
             document2svg.drawDocumentAsSvg(doc, {});
 
-            expect(documentHelper.fakeHover).not.toHaveBeenCalled();
+            expect(documentHelper.fakeUserAction).not.toHaveBeenCalled();
         });
 
         it("should trigger active effect", function () {
             document2svg.drawDocumentAsSvg(doc, {active: '.mySpan'});
 
-            expect(documentHelper.fakeActive).toHaveBeenCalledWith(doc, '.mySpan');
+            expect(documentHelper.fakeUserAction).toHaveBeenCalledWith(doc, '.mySpan', 'active');
         });
 
         it("should not trigger active effect by default", function () {
             document2svg.drawDocumentAsSvg(doc, {});
 
-            expect(documentHelper.fakeActive).not.toHaveBeenCalled();
+            expect(documentHelper.fakeUserAction).not.toHaveBeenCalled();
         });
 
         it("should trigger focus effect", function () {
             document2svg.drawDocumentAsSvg(doc, {focus: '.mySpan'});
 
-            expect(documentHelper.fakeFocus).toHaveBeenCalledWith(doc, '.mySpan');
+            expect(documentHelper.fakeUserAction).toHaveBeenCalledWith(doc, '.mySpan', 'focus');
         });
 
         it("should not trigger focus effect by default", function () {
             document2svg.drawDocumentAsSvg(doc, {});
 
-            expect(documentHelper.fakeFocus).not.toHaveBeenCalled();
+            expect(documentHelper.fakeUserAction).not.toHaveBeenCalled();
         });
 
         it("should render the selected element", function () {

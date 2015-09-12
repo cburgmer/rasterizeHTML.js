@@ -7,7 +7,7 @@ var documentHelper = (function (documentUtil) {
         return Array.prototype.slice.call(arrayLike);
     };
 
-    var fakeUserAction = function (doc, selector, action) {
+    module.fakeUserAction = function (doc, selector, action) {
         var elem = doc.querySelector(selector),
             pseudoClass = ':' + action,
             fakeActionClass = 'rasterizehtml' + action;
@@ -17,18 +17,6 @@ var documentHelper = (function (documentUtil) {
 
         documentUtil.addClassNameRecursively(elem, fakeActionClass);
         documentUtil.rewriteCssSelectorWith(doc, pseudoClass, '.' + fakeActionClass);
-    };
-
-    module.fakeHover = function (doc, hoverSelector) {
-        fakeUserAction(doc, hoverSelector, 'hover');
-    };
-
-    module.fakeActive = function (doc, activeSelector) {
-        fakeUserAction(doc, activeSelector, 'active');
-    };
-
-    module.fakeFocus = function (doc, focusSelector) {
-        fakeUserAction(doc, focusSelector, 'focus');
     };
 
     module.persistInputValues = function (doc) {

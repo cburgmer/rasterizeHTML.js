@@ -87,7 +87,7 @@ describe("Document Helper functions", function () {
         });
     });
 
-    describe("fakeHover", function () {
+    describe("fakeUserAction", function () {
         beforeEach(function () {
             spyOn(documentUtil, 'addClassNameRecursively');
             spyOn(documentUtil, 'rewriteCssSelectorWith');
@@ -95,48 +95,17 @@ describe("Document Helper functions", function () {
 
         it("should add a fake class to the selected element and adapt the document's stylesheet", function () {
             setHtml("<span>a span</span>");
-            documentHelper.fakeHover(doc, 'span');
+            documentHelper.fakeUserAction(doc, 'span', 'hover');
 
             expect(documentUtil.addClassNameRecursively).toHaveBeenCalledWith(doc.querySelector('span'), 'rasterizehtmlhover');
             expect(documentUtil.rewriteCssSelectorWith).toHaveBeenCalledWith(doc, ':hover', '.rasterizehtmlhover');
         });
 
         it("should ignore non-existent selector", function () {
-            documentHelper.fakeHover(doc, 'div');
-        });
-    });
+            documentHelper.fakeUserAction(doc, 'div', 'hover');
 
-    describe("fakeActive", function () {
-        beforeEach(function () {
-            spyOn(documentUtil, 'addClassNameRecursively');
-            spyOn(documentUtil, 'rewriteCssSelectorWith');
-        });
-
-        it("should add a fake class to the selected element and adapt the document's stylesheet", function () {
-            setHtml("<span>a span</span>");
-            documentHelper.fakeActive(doc, 'span');
-
-            expect(documentUtil.addClassNameRecursively).toHaveBeenCalledWith(doc.querySelector('span'), 'rasterizehtmlactive');
-            expect(documentUtil.rewriteCssSelectorWith).toHaveBeenCalledWith(doc, ':active', '.rasterizehtmlactive');
-        });
-
-        it("should ignore non-existent selector", function () {
-            documentHelper.fakeActive(doc, 'div');
-        });
-    });
-
-    describe("fakeFocus", function () {
-        beforeEach(function () {
-            spyOn(documentUtil, 'addClassNameRecursively');
-            spyOn(documentUtil, 'rewriteCssSelectorWith');
-        });
-
-        it("should add a fake class to the selected element and adapt the document's stylesheet", function () {
-            setHtml("<span>a span</span>");
-            documentHelper.fakeFocus(doc, 'span');
-
-            expect(documentUtil.addClassNameRecursively).toHaveBeenCalledWith(doc.querySelector('span'), 'rasterizehtmlfocus');
-            expect(documentUtil.rewriteCssSelectorWith).toHaveBeenCalledWith(doc, ':focus', '.rasterizehtmlfocus');
+            expect(documentUtil.addClassNameRecursively).not.toHaveBeenCalled();
+            expect(documentUtil.rewriteCssSelectorWith).not.toHaveBeenCalled();
         });
     });
 
