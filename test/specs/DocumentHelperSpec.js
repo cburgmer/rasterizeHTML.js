@@ -94,7 +94,7 @@ describe("Document Helper functions", function () {
             spyOn(documentUtil, 'rewriteCssSelectorWith');
         });
 
-        it("should add a fake class to the selected element and adapt the document's stylesheet for a cascading action", function () {
+        it("should add a fake class to the selected element and adapt the document's stylesheet for hover", function () {
             setHtml("<span>a span</span>");
             documentHelper.fakeUserAction(doc, 'span', 'hover');
 
@@ -102,12 +102,28 @@ describe("Document Helper functions", function () {
             expect(documentUtil.rewriteCssSelectorWith).toHaveBeenCalledWith(doc, ':hover', '.rasterizehtmlhover');
         });
 
-        it("should add a fake class to the selected element and adapt the document's stylesheet for a non cascading action", function () {
+        it("should add a fake class to the selected element and adapt the document's stylesheet for active", function () {
+            setHtml("<span>a span</span>");
+            documentHelper.fakeUserAction(doc, 'span', 'hover');
+
+            expect(documentUtil.addClassNameRecursively).toHaveBeenCalledWith(doc.querySelector('span'), 'rasterizehtmlhover');
+            expect(documentUtil.rewriteCssSelectorWith).toHaveBeenCalledWith(doc, ':hover', '.rasterizehtmlhover');
+        });
+
+        it("should add a fake class to the selected element and adapt the document's stylesheet for focus", function () {
             setHtml("<span>a span</span>");
             documentHelper.fakeUserAction(doc, 'span', 'focus');
 
             expect(documentUtil.addClassName).toHaveBeenCalledWith(doc.querySelector('span'), 'rasterizehtmlfocus');
             expect(documentUtil.rewriteCssSelectorWith).toHaveBeenCalledWith(doc, ':focus', '.rasterizehtmlfocus');
+        });
+
+        it("should add a fake class to the selected element and adapt the document's stylesheet for target", function () {
+            setHtml("<span>a span</span>");
+            documentHelper.fakeUserAction(doc, 'span', 'target');
+
+            expect(documentUtil.addClassName).toHaveBeenCalledWith(doc.querySelector('span'), 'rasterizehtmltarget');
+            expect(documentUtil.rewriteCssSelectorWith).toHaveBeenCalledWith(doc, ':target', '.rasterizehtmltarget');
         });
 
         it("should ignore non-existent selector", function () {

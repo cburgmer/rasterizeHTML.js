@@ -27,11 +27,15 @@
         Focus selector:
         <input type="text" id="focusSelector">
     </label>
+    <label>
+        Target selector:
+        <input type="text" id="targetSelector">
+    </label>
     <textarea id="input" cols="80" rows="10" style="width: 600px; height: 350px"></textarea>
 
     <script type="text/template" id="template">
         <a href="#" class="link">A link</a>
-        <div>A div</div>
+        <div><h1>Caption</h1>A div</div>
 
         <style type="text/css">
             a {
@@ -46,6 +50,12 @@
             }
             a:focus {
                 outline: 3px solid red;
+            }
+            div:target {
+                background: red;
+            }
+            h1:target {
+                color: red;
             }
             div:active::after, div:hover::after {
                 font-size: 8px;
@@ -68,14 +78,16 @@
             var html = input.value,
                 hover = hoverSelector.value,
                 active = activeSelector.value,
-                focus = focusSelector.value;
+                focus = focusSelector.value,
+                target = targetSelector.value;
 
             canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 
             rasterizeHTML.drawHTML(input.value, canvas, {
                 hover: hover,
                 active: active,
-                focus: focus
+                focus: focus,
+                target: target
             });
         };
 
@@ -88,6 +100,7 @@
         hoverSelector.onchange = render;
         activeSelector.onchange = render;
         focusSelector.onchange = render;
+        targetSelector.onchange = render;
 
         if (!input.value) {
             input.value = template.innerHTML.replace(/^ {8}/gm, "").replace(/^\n/g, "").replace(/\n +$/g, "\n");

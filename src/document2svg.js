@@ -92,7 +92,7 @@ var document2svg = (function (util, browser, documentHelper, mediaQueryHelper, x
     };
 
     module.drawDocumentAsSvg = function (doc, options) {
-        ['hover', 'active', 'focus'].forEach(function (action) {
+        ['hover', 'active', 'focus', 'target'].forEach(function (action) {
             if (options[action]) {
                 documentHelper.fakeUserAction(doc, options[action], action);
             }

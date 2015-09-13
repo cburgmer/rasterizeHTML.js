@@ -10,7 +10,8 @@ var documentHelper = (function (documentUtil) {
     var cascadingAction = {
         active: true,
         hover: true,
-        focus: false
+        focus: false,
+        target: false
     };
 
     module.fakeUserAction = function (doc, selector, action) {

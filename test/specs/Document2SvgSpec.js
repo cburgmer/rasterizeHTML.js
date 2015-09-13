@@ -332,28 +332,22 @@ describe("Document to SVG conversion", function () {
             expect(documentHelper.fakeUserAction).toHaveBeenCalledWith(doc, '.mySpan', 'hover');
         });
 
-        it("should not trigger hover effect by default", function () {
-            document2svg.drawDocumentAsSvg(doc, {});
-
-            expect(documentHelper.fakeUserAction).not.toHaveBeenCalled();
-        });
-
         it("should trigger active effect", function () {
             document2svg.drawDocumentAsSvg(doc, {active: '.mySpan'});
 
             expect(documentHelper.fakeUserAction).toHaveBeenCalledWith(doc, '.mySpan', 'active');
         });
 
-        it("should not trigger active effect by default", function () {
-            document2svg.drawDocumentAsSvg(doc, {});
-
-            expect(documentHelper.fakeUserAction).not.toHaveBeenCalled();
-        });
-
         it("should trigger focus effect", function () {
             document2svg.drawDocumentAsSvg(doc, {focus: '.mySpan'});
 
             expect(documentHelper.fakeUserAction).toHaveBeenCalledWith(doc, '.mySpan', 'focus');
+        });
+
+        it("should trigger target effect", function () {
+            document2svg.drawDocumentAsSvg(doc, {target: '.mySpan'});
+
+            expect(documentHelper.fakeUserAction).toHaveBeenCalledWith(doc, '.mySpan', 'target');
         });
 
         it("should not trigger focus effect by default", function () {
