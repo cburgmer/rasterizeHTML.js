@@ -5,8 +5,9 @@ describe("Media Query Helper", function () {
 
         // rough integration tests
 
-        it("should detect issue on WebKit", function (done) {
-            if (navigator.userAgent.indexOf('WebKit') < 0) {
+        it("should detect issue on Safari", function (done) {
+            if (navigator.userAgent.indexOf('WebKit') < 0 ||
+                navigator.userAgent.indexOf('Chrome') >= 0) {
                 done();
                 return;
             }
@@ -18,8 +19,9 @@ describe("Media Query Helper", function () {
             });
         });
 
-        it("should not detect issue on Firefox", function (done) {
-            if (navigator.userAgent.indexOf('Firefox') < 0) {
+        it("should not detect issue on Firefox, newer Chromes", function (done) {
+            if (navigator.userAgent.indexOf('Firefox') < 0 &&
+                navigator.userAgent.indexOf('Chrome') < 0) {
                 done();
                 return;
             }
