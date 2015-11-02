@@ -41,18 +41,20 @@
             template = document.getElementById("template"),
             oldText = input.value;
 
-        var draw = function () {
-            rasterizeHTML.drawHTML(input.value, canvas).then(function (result) {
-                console.log(result);
-            }, function (e) {
-                console.log('An error occured:', e);
-            });
+        var draw = function (zoom, timeout) {
+            setTimeout(function () {
+                rasterizeHTML.drawHTML(input.value, canvas, {zoom: zoom}).then(function (result) {
+                    console.log(result);
+                }, function (e) {
+                    console.log('An error occured:', e);
+                });
+            }, timeout);
         };
 
         input.onkeyup = function () {
             if (input.value !== oldText) {
                 oldText = input.value;
-                canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+                //canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 
                 draw();
             }
@@ -61,7 +63,11 @@
         if (!input.value) {
             input.value = template.innerHTML.replace(/^ {8}/gm, "").replace(/^\n/g, "").replace(/\n +$/g, "\n");
         }
-        draw();
+
+        var i;
+        for(i = 0; i < 10; i++) {
+            draw(1 - 0.01*i, 1000 * i);
+        }
     </script>
 </body>
 </html>
