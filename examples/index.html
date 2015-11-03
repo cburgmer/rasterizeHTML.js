@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <title>rasterizeHTML.js example</title>
-    <script type="text/javascript" src="../dist/rasterizeHTML.allinone.js"></script>
+    <script type="text/javascript" src="../node_modules/rasterizehtml/dist/rasterizeHTML.allinone.js"></script>
     <style>
         canvas, textarea {
             display: block;
@@ -17,7 +17,7 @@
 
     <textarea id="input" cols="80" rows="10" style="width: 600px; height: 250px"></textarea>
 
-    <div id="template" style="display: none">
+    <div id="template" style="display: none;">
         You can type HTML into this <span style='color: green'>canvas</span>.
         In <span style="font-style: italic">Chrome</span> make sure to open the file through a webserver to load the embedded images.
         <div class="tigerbg">
@@ -41,9 +41,18 @@
             template = document.getElementById("template"),
             oldText = input.value;
 
+        function canvasContent(containerWidth, containerHeight, content){
+            return '<div style="width:' + containerWidth + 'px; height:' + containerHeight +'px;">' + content + '</div>';
+        }
+
         var draw = function (zoom, timeout) {
             setTimeout(function () {
-                rasterizeHTML.drawHTML(input.value, canvas, {zoom: zoom}).then(function (result) {
+                // this is how i reproduce the symptom
+                //
+                var tempCanvas = document.getElementById("canvas");
+                tempCanvas.width = 600;
+                tempCanvas.height = 200;
+                rasterizeHTML.drawHTML(input.value, tempCanvas, {zoom: zoom}).then(function (result) {
                     console.log(result);
                 }, function (e) {
                     console.log('An error occured:', e);
