@@ -102,7 +102,8 @@ module.exports = function (grunt) {
                 indent: '    ',
                 deps: {
                     'default': ['url', 'cssMediaQuery', 'xmlserializer', 'sanedomparsererror', 'ayepromise', 'inlineresources'],
-                    cjs: ['url', 'css-mediaquery', 'xmlserializer', 'sane-domparser-error', 'ayepromise', 'inlineresources']
+                    cjs: ['url', 'css-mediaquery', 'xmlserializer', 'sane-domparser-error', 'ayepromise', 'inlineresources'],
+                    amd: ['url', 'css-mediaquery', 'xmlserializer', 'sane-domparser-error', 'ayepromise', 'inlineresources']
                 }
             }
         },
