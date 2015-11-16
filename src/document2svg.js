@@ -70,9 +70,10 @@ var document2svg = (function (util, browser, documentHelper, mediaQueryHelper, x
                 ' width="' + size.width + '"' +
                 ' height="' + size.height + '"' +
                 ' font-size="' + size.rootFontSize + '"' +
+                serializeAttributes(attributes) +
                 '>' +
                 workAroundChromeShowingScrollbarsUnderLinuxIfHtmlIsOverflowScroll() +
-                '<foreignObject' + serializeAttributes(attributes) + '>' +
+                '<foreignObject>' +
                 xhtml +
                 '</foreignObject>' +
                 '</svg>'
