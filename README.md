@@ -23,7 +23,10 @@ Example
 
 ```js
 var canvas = document.getElementById("canvas");
-rasterizeHTML.drawHTML('Some <span style="color: green; font-size: 20px;">HTML</span> with an image <img src="someimg.png" />', canvas);
+rasterizeHTML.drawHTML('Some ' +
+                       '<span style="color: green; font-size: 20px;">HTML</span>' +
+                       ' with an image <img src="someimg.png">',
+                       canvas);
 ```
 
 See [the examples page](https://github.com/cburgmer/rasterizeHTML.js/wiki/Examples). The code also [ships with examples](https://github.com/cburgmer/rasterizeHTML.js/tree/master/examples), make sure to run `npm test` first to compile the library.
@@ -44,9 +47,7 @@ All resources (HTML page, CSS, images, fonts and JS) that are needed for drawing
 
 The code is tested under Firefox, Chrome & Safari.
 
-There's basic support for Microsoft Edge.
-
-**It's not working under [any Internet Explorer version.](https://github.com/cburgmer/rasterizeHTML.js/wiki/Limitations#ie)** 
+There's basic support for Microsoft Edge, however **it will not work under [any version of Internet Explorer](https://github.com/cburgmer/rasterizeHTML.js/wiki/Limitations#ie).**
 
 Also the individual browsers still have some issues when rendering SVGs with embedded HTML to the canvas.
 
