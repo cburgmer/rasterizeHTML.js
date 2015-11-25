@@ -58,7 +58,7 @@ var document2svg = (function (util, browser, documentHelper, mediaQueryHelper, x
         browser.validateXHTML(xhtml);
         zoomFactor = zoomFactor || 1;
         if (zoomFactor !== 1) {
-            svgZoomAttribute = 'style="transform:scale(' + zoomFactor + ')"';
+            svgZoomAttribute = 'style="transform:scale(' + zoomFactor + '); transform-origin: 0 0;"';
         }
         workAroundCollapsingMarginsAcrossSVGElementInWebKitLike(attributes);
         workAroundSafariSometimesNotShowingExternalResources(attributes);
