@@ -3,7 +3,23 @@ var document2svg = (function (util, browser, documentHelper, mediaQueryHelper, x
 
     var module = {};
 
-    var zoomedElementSizingAttributes = function (size) {
+    var svgAttributes = function (size, zoom) {
+        var zoomFactor = zoom || 1;
+
+        var attributes = {
+            width: size.width,
+            height: size.height,
+            'font-size': size.rootFontSize
+        };
+
+        if (zoomFactor !== 1) {
+            attributes.style = 'transform:scale(' + zoomFactor + '); transform-origin: 0 0;';
+        }
+
+        return attributes;
+    };
+
+    var foreignObjectAttributes = function (size) {
         var closestScaledWith, closestScaledHeight,
             offsetX, offsetY;
 
@@ -52,26 +68,19 @@ var document2svg = (function (util, browser, documentHelper, mediaQueryHelper, x
 
     var convertDocumentToSvg = function (doc, size, zoomFactor) {
         var xhtml = xmlserializer.serializeToString(doc);
-        var attributes = zoomedElementSizingAttributes(size);
-        var svgZoomAttribute = '';
 
         browser.validateXHTML(xhtml);
-        zoomFactor = zoomFactor || 1;
-        if (zoomFactor !== 1) {
-            svgZoomAttribute = 'style="transform:scale(' + zoomFactor + '); transform-origin: 0 0;"';
-        }
-        workAroundCollapsingMarginsAcrossSVGElementInWebKitLike(attributes);
-        workAroundSafariSometimesNotShowingExternalResources(attributes);
+
+        var foreignObjectAttrs = foreignObjectAttributes(size);
+        workAroundCollapsingMarginsAcrossSVGElementInWebKitLike(foreignObjectAttrs);
+        workAroundSafariSometimesNotShowingExternalResources(foreignObjectAttrs);
 
         return (
             '<svg xmlns="http://www.w3.org/2000/svg"' +
-                ' width="' + size.width + '"' +
-                ' height="' + size.height + '"' +
-                ' font-size="' + size.rootFontSize + '"' +
-                ' ' + svgZoomAttribute +
+                serializeAttributes(svgAttributes(size, zoomFactor)) +
                 '>' +
                 workAroundChromeShowingScrollbarsUnderLinuxIfHtmlIsOverflowScroll() +
-                '<foreignObject' + serializeAttributes(attributes) + '>' +
+                '<foreignObject' + serializeAttributes(foreignObjectAttrs) + '>' +
                 xhtml +
                 '</foreignObject>' +
                 '</svg>'
