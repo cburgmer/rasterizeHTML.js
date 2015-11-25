@@ -134,9 +134,9 @@ describe("Document to SVG conversion", function () {
             var zoomFactor = 10;
             document2svg.getSvgForDocument(doc, aRenderSize(123, 987, 12, 99), zoomFactor).then(function (svgCode) {
                 expect(svgCode).toMatch(new RegExp(
-                    '<svg xmlns="http://www.w3.org/2000/svg" width="123" height="987"[^>]*>' +
+                    '<svg xmlns="http://www.w3.org/2000/svg" width="123" height="987".*style="transform:scale\\(10\\)".*?>' +
                         '.*' +
-                        '<foreignObject x="0" y="0" width="12" height="99" transform="scale\\(10\\)".*>' +
+                        '<foreignObject x="0" y="0" width="12" height="99"[^>]*>' +
                         '<html xmlns="http://www.w3.org/1999/xhtml">' +
                         '<head>' +
                         '<title(/>|></title>)' +

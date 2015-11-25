@@ -3,11 +3,10 @@ var document2svg = (function (util, browser, documentHelper, mediaQueryHelper, x
 
     var module = {};
 
-    var zoomedElementSizingAttributes = function (size, zoomFactor) {
+    var zoomedElementSizingAttributes = function (size) {
         var closestScaledWith, closestScaledHeight,
             offsetX, offsetY;
 
-        zoomFactor = zoomFactor || 1;
         closestScaledWith = Math.round(size.viewportWidth);
         closestScaledHeight = Math.round(size.viewportHeight);
 
@@ -20,10 +19,6 @@ var document2svg = (function (util, browser, documentHelper, mediaQueryHelper, x
              'width': closestScaledWith,
              'height': closestScaledHeight
         };
-
-        if (zoomFactor !== 1) {
-            attributes.transform = 'scale(' + zoomFactor + ')';
-        }
 
         return attributes;
     };
@@ -57,11 +52,14 @@ var document2svg = (function (util, browser, documentHelper, mediaQueryHelper, x
 
     var convertDocumentToSvg = function (doc, size, zoomFactor) {
         var xhtml = xmlserializer.serializeToString(doc);
+        var attributes = zoomedElementSizingAttributes(size);
+        var svgZoomAttribute = '';
 
         browser.validateXHTML(xhtml);
-
-        var attributes = zoomedElementSizingAttributes(size, zoomFactor);
-
+        zoomFactor = zoomFactor || 1;
+        if (zoomFactor !== 1) {
+            svgZoomAttribute = 'style="transform:scale(' + zoomFactor + ')"';
+        }
         workAroundCollapsingMarginsAcrossSVGElementInWebKitLike(attributes);
         workAroundSafariSometimesNotShowingExternalResources(attributes);
 
@@ -70,6 +68,7 @@ var document2svg = (function (util, browser, documentHelper, mediaQueryHelper, x
                 ' width="' + size.width + '"' +
                 ' height="' + size.height + '"' +
                 ' font-size="' + size.rootFontSize + '"' +
+                ' ' + svgZoomAttribute +
                 '>' +
                 workAroundChromeShowingScrollbarsUnderLinuxIfHtmlIsOverflowScroll() +
                 '<foreignObject' + serializeAttributes(attributes) + '>' +
