@@ -46,7 +46,7 @@
     "imagediff": "git://github.com/cburgmer/js-imagediff#v1.1merged",
     "jasmine-core": "2.2.0",
     "jquery": "~2.1.0",
-    "slimerjs": "0.9.1-2"
+    "slimerjs": "0.9.6"
   },
   "scripts": {
     "test": "bash go --verbose"
