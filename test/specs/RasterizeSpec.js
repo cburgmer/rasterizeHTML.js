@@ -6,13 +6,6 @@ describe("Rasterize", function () {
         doc,
         inlineReferences;
 
-    var withoutErrors = function () {
-        return withErrors([]);
-    };
-    var withErrors = function (errors) {
-        return fulfilled(errors);
-    };
-
     var fulfilled = function (value) {
         var defer = ayepromise.defer();
         defer.resolve(value);
@@ -22,6 +15,13 @@ describe("Rasterize", function () {
         var defer = ayepromise.defer();
         defer.reject(error);
         return defer.promise;
+    };
+
+    var withErrors = function (errors) {
+        return fulfilled(errors);
+    };
+    var withoutErrors = function () {
+        return withErrors([]);
     };
 
     var setUpDrawDocumentAsSvg = function (svg) {

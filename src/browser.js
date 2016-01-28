@@ -43,15 +43,15 @@ var browser = (function (util, proxies, ayepromise, sanedomparsererror, theWindo
             return d.promise;
         };
 
+        var xhr = iframe.contentWindow.XMLHttpRequest,
+            finishNotifyXhrProxy = proxies.finishNotifyingXhr(xhr),
+            baseUrlXhrProxy = proxies.baseUrlRespectingXhr(finishNotifyXhrProxy, options.baseUrl);
+
         iframe.onload = function () {
             waitForJavaScriptToRun()
                 .then(finishNotifyXhrProxy.waitForRequestsToFinish)
                 .then(doResolve);
         };
-
-        var xhr = iframe.contentWindow.XMLHttpRequest,
-            finishNotifyXhrProxy = proxies.finishNotifyingXhr(xhr),
-            baseUrlXhrProxy = proxies.baseUrlRespectingXhr(finishNotifyXhrProxy, options.baseUrl);
 
         iframe.contentDocument.open();
         iframe.contentWindow.XMLHttpRequest = baseUrlXhrProxy;
