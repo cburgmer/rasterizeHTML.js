@@ -38,7 +38,7 @@ module.exports = function (grunt) {
                 src: 'node_modules/xmlserializer/lib/serializer.js',
                 dest: 'build/dependencies/xmlserializer.js',
                 options: {
-                    bundleOptions: {
+                    browserifyOptions: {
                         standalone: 'xmlserializer'
                     }
                 }
@@ -47,7 +47,7 @@ module.exports = function (grunt) {
                 src: 'node_modules/sane-domparser-error/index.js',
                 dest: 'build/dependencies/sane-domparser-error.js',
                 options: {
-                    bundleOptions: {
+                    browserifyOptions: {
                         standalone: 'sanedomparsererror'
                     }
                 }
@@ -56,7 +56,7 @@ module.exports = function (grunt) {
                 src: 'node_modules/url/url.js',
                 dest: 'build/dependencies/url.js',
                 options: {
-                    bundleOptions: {
+                    browserifyOptions: {
                         standalone: 'url'
                     }
                 }
@@ -65,7 +65,7 @@ module.exports = function (grunt) {
                 src: 'node_modules/css-mediaquery/index.js',
                 dest: 'build/dependencies/cssmediaquery.js',
                 options: {
-                    bundleOptions: {
+                    browserifyOptions: {
                         standalone: 'cssMediaQuery'
                     }
                 }
@@ -74,7 +74,7 @@ module.exports = function (grunt) {
                 src: 'node_modules/inlineresources/src/inline.js',
                 dest: 'build/dependencies/inlineresources.js',
                 options: {
-                    bundleOptions: {
+                    browserifyOptions: {
                         'standalone': 'inlineresources'
                     }
                 }
@@ -83,11 +83,9 @@ module.exports = function (grunt) {
                 src: 'dist/rasterizeHTML.js',
                 dest: 'build/rasterizeHTML.allinone.js',
                 options: {
-                    bundleOptions: {
+                    browserifyOptions: {
                         standalone: 'rasterizeHTML'
-                    },
-                    // Don't use the dependency browserify is providing. Use the one we fixed in package.json
-                    alias: ['node_modules/url/url.js:url']
+                    }
                 }
             }
         },
