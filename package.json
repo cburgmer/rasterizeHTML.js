@@ -34,7 +34,7 @@
   "devDependencies": {
     "grunt": "~0.4.1",
     "grunt-browserify": "~5.0.0",
-    "grunt-cli": "~0.1",
+    "grunt-cli": "~1.0.0",
     "grunt-contrib-clean": "~1.0.0",
     "grunt-contrib-concat": "~1.0.0",
     "grunt-contrib-jasmine": "~1.0.0",
