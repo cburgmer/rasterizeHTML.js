@@ -32,7 +32,7 @@
     "sane-domparser-error": "~0.2.0"
   },
   "devDependencies": {
-    "grunt": "~0.4.1",
+    "grunt": "~1.0.1",
     "grunt-browserify": "~5.0.0",
     "grunt-cli": "~0.1",
     "grunt-contrib-clean": "~1.0.0",
