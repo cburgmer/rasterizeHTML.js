@@ -16,13 +16,19 @@ describe("Integration test", function () {
         image.height = height;
     };
 
+    var createElementFrom = function (htmlString) {
+        var div = document.createElement('div');
+        div.innerHTML = htmlString;
+        return div.childNodes[0];
+    };
+
     beforeEach(function () {
         jasmine.addMatchers(diffHelper.matcher);
         jasmine.addMatchers(imagediff.jasmine);
 
-        canvas = $('<canvas width="' + width + '" height="' + height + '"></canvas>'); // Firefox adds a space between the divs and needs the canvas to fit horizontally for all content to be rendered
+        canvas = createElementFrom('<canvas width="' + width + '" height="' + height + '"></canvas>'); // Firefox adds a space between the divs and needs the canvas to fit horizontally for all content to be rendered
 
-        referenceImg = $('<img src="'+ testHelper.fixturesPath + '/testResult.png" alt="test image"/>');
+        referenceImg = createElementFrom('<img src="'+ testHelper.fixturesPath + '/testResult.png" alt="test image"/>');
 
         finished = false;
         callback = jasmine.createSpy("callback").and.callFake(function () { finished = true; });
@@ -30,7 +36,7 @@ describe("Integration test", function () {
 
     ifNotInWebkitIt("should take a document, inline all displayable content and render to the given canvas", function (done) {
         testHelper.readHTMLDocumentFixture("test.html").then(function (doc) {
-            rasterizeHTML.drawDocument(doc, canvas.get(0), {
+            rasterizeHTML.drawDocument(doc, canvas, {
                     cache: 'none',
                     baseUrl: testHelper.fixturesPath, // we need this because of workAroundFirefoxNotLoadingStylesheetStyles()
                     active: '.bgimage',
@@ -41,10 +47,10 @@ describe("Integration test", function () {
                     expect(result.svg).toMatch(/<svg[^]+body[^]+bgimage/);
 
                     forceImageSizeForPlatformCompatibility(result.image);
-                    expect(result.image).toEqualImage(referenceImg.get(0), 2);
+                    expect(result.image).toEqualImage(referenceImg, 2);
 
-                    expect(canvas.get(0)).toEqualImage(referenceImg.get(0), 2);
-                    // expect(canvas.get(0)).toImageDiffEqual(referenceImg.get(0), 10);
+                    expect(canvas).toEqualImage(referenceImg, 2);
+                    // expect(canvas).toImageDiffEqual(referenceImg, 10);
 
                     done();
             });
@@ -53,7 +59,7 @@ describe("Integration test", function () {
 
     ifNotInWebkitIt("should take a HTML string, inline all displayable content and render to the given canvas", function (done) {
         testHelper.readHTMLFixture("test.html").then(function (html) {
-            rasterizeHTML.drawHTML(html, canvas.get(0), {
+            rasterizeHTML.drawHTML(html, canvas, {
                 baseUrl: testHelper.fixturesPath,
                 cache: 'none',
                 active: '.bgimage',
@@ -63,10 +69,10 @@ describe("Integration test", function () {
                 expect(result.errors).toEqual([]);
 
                 forceImageSizeForPlatformCompatibility(result.image);
-                expect(result.image).toEqualImage(referenceImg.get(0), 2);
+                expect(result.image).toEqualImage(referenceImg, 2);
 
-                expect(canvas.get(0)).toEqualImage(referenceImg.get(0), 2);
-                // expect(canvas.get(0)).toImageDiffEqual(referenceImg.get(0), 70);
+                expect(canvas).toEqualImage(referenceImg, 2);
+                // expect(canvas).toImageDiffEqual(referenceImg, 70);
 
                 done();
             });
@@ -74,7 +80,7 @@ describe("Integration test", function () {
     });
 
     ifNotInWebkitIt("should take a URL, inline all displayable content and render to the given canvas", function (done) {
-        rasterizeHTML.drawURL(testHelper.fixturesPath + "testScaled50PercentWithJs.html", canvas.get(0), {
+        rasterizeHTML.drawURL(testHelper.fixturesPath + "testScaled50PercentWithJs.html", canvas, {
             cache: 'none',
             executeJs: true,
             executeJsTimeout: 100,
@@ -86,10 +92,10 @@ describe("Integration test", function () {
         }).then(function (result) {
             expect(result.errors).toEqual([]);
             forceImageSizeForPlatformCompatibility(result.image);
-            expect(result.image).toEqualImage(referenceImg.get(0), 2);
+            expect(result.image).toEqualImage(referenceImg, 2);
 
-            expect(canvas.get(0)).toEqualImage(referenceImg.get(0), 2);
-            // expect(canvas.get(0)).toImageDiffEqual(referenceImg.get(0), 90);
+            expect(canvas).toEqualImage(referenceImg, 2);
+            // expect(canvas).toImageDiffEqual(referenceImg, 90);
 
             done();
         });
@@ -111,8 +117,8 @@ describe("Integration test", function () {
             expect(result.errors).toEqual([]);
 
             forceImageSizeForPlatformCompatibility(result.image);
-            expect(result.image).toEqualImage(referenceImg.get(0), 2);
-            // expect(result.image).toImageDiffEqual(referenceImg.get(0), 90);
+            expect(result.image).toEqualImage(referenceImg, 2);
+            // expect(result.image).toImageDiffEqual(referenceImg, 90);
 
             done();
         });
@@ -146,7 +152,7 @@ describe("Integration test", function () {
             })
             .then(function (result) {
                 forceImageSizeForPlatformCompatibility(result.image);
-                expect(result.image).toEqualImage(referenceImg.get(0), 2);
+                expect(result.image).toEqualImage(referenceImg, 2);
 
                 done();
             });

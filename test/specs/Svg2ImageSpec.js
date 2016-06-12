@@ -1,13 +1,19 @@
 describe("Svg to Image", function () {
     "use strict";
 
+    var createElementFrom = function (htmlString) {
+        var div = document.createElement('div');
+        div.innerHTML = htmlString;
+        return div.childNodes[0];
+    };
+
     describe("on SVG rendering", function () {
         beforeEach(function () {
             jasmine.addMatchers(imagediff.jasmine);
         });
 
         ifNotInWebkitIt("should render the SVG", function (done) {
-            var referenceImg = $('<img src="' + testHelper.fixturesPath + 'rednblue.png" alt="test image"/>'),
+            var referenceImg = createElementFrom('<img src="' + testHelper.fixturesPath + 'rednblue.png" alt="test image"/>'),
                 twoColorSvg = (
                     '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">' +
                         '<foreignObject x="0" y="0" width="100%" height="100%">' +
@@ -27,7 +33,7 @@ describe("Svg to Image", function () {
             svg2image.renderSvg(twoColorSvg, null).then(function (image) {
                 // This fails in Chrome & Safari, possibly due to a bug with same origin policy stuff
                 try {
-                    expect(image).toImageDiffEqual(referenceImg.get(0));
+                    expect(image).toImageDiffEqual(referenceImg);
                 } catch (err) {
                     expect(err.message).toBeNull();
                 }
@@ -37,7 +43,7 @@ describe("Svg to Image", function () {
         });
 
         ifNotInWebkitIt("should render an SVG with inline image", function (done) {
-            var referenceImg = $('<img src="' + testHelper.fixturesPath + 'rednblue.png" alt="test image"/>'),
+            var referenceImg = createElementFrom('<img src="' + testHelper.fixturesPath + 'rednblue.png" alt="test image"/>'),
                 twoColorSvg = (
                     '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">' +
                         '<foreignObject x="0" y="0" width="100%" height="100%">' +
@@ -56,7 +62,7 @@ describe("Svg to Image", function () {
             svg2image.renderSvg(twoColorSvg, null).then(function (image) {
                 // This fails in Chrome & Safari, possibly due to a bug with same origin policy stuff
                 try {
-                    expect(image).toImageDiffEqual(referenceImg.get(0));
+                    expect(image).toImageDiffEqual(referenceImg);
                 } catch (err) {
                     expect(err.message).toBeNull();
                 }
