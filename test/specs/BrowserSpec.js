@@ -61,7 +61,7 @@ describe("Browser functions", function () {
             doc.documentElement.innerHTML = "<body></body>";
 
             browser.executeJavascript(doc, defaultOptionsWithViewport()).then(function () {
-                expect($("iframe").length).toEqual(0);
+                expect(document.querySelector("iframe")).toBe(null);
 
                 done();
             });
@@ -355,7 +355,7 @@ describe("Browser functions", function () {
             setElementWithSize({});
 
             browser.calculateDocumentContentSize(doc, {width: 300, height: 200}).then(function () {
-                expect($('iframe').length).toEqual(0);
+                expect(document.querySelector('iframe')).toBe(null);
 
                 done();
             });
@@ -532,7 +532,7 @@ describe("Browser functions", function () {
 
             it("should remove the iframe when the selector is not found", function (done) {
                 browser.calculateDocumentContentSize(doc, {width: 100, height: 10, clip: 'a'}).then(null, function () {
-                    expect($('iframe').length).toBe(0);
+                    expect(document.querySelector('iframe')).toBe(null);
 
                     done();
                 });

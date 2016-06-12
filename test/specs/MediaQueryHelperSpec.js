@@ -35,7 +35,7 @@ describe("Media Query Helper", function () {
 
         it("should remove test image from DOM", function (done) {
             mediaQueryHelper.needsEmWorkaround().then(function () {
-                expect($("img").length).toBe(0);
+                expect(document.querySelector("img")).toBe(null);
 
                 done();
             });
