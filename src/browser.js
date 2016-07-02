@@ -185,6 +185,15 @@ var browser = (function (util, proxies, ayepromise, sanedomparsererror, theWindo
         return defer.promise;
     };
 
+    module.parseHtmlFragment = function (htmlFragment) {
+        var doc = theWindow.document.implementation.createHTMLDocument(''),
+            fragmentContainer = doc.createElement('div');
+        fragmentContainer.innerHTML = htmlFragment;
+        doc.documentElement.appendChild(fragmentContainer);
+
+        return fragmentContainer.firstChild;
+    };
+
     var addHTMLTagAttributes = function (doc, html) {
         var attributeMatch = /<html((?:\s+[^>]*)?)>/im.exec(html),
             helperDoc = theWindow.document.implementation.createHTMLDocument(''),

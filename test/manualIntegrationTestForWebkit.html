@@ -130,7 +130,7 @@
             <canvas id="htmlFragmentTest" width="200" height="100"></canvas>
             <script type="text/javascript">
                 testHelper.readHTMLFixture("testFragment.html").then(function (htmlFragment) {
-                    rasterizeHTML.drawHTML(htmlFragment, htmlFragmentTest, {
+                    rasterizeHTML.drawHtmlFragment(htmlFragment, htmlFragmentTest, {
                         baseUrl: "fixtures/",
                         cache: false,
                         active: '.bgimage',

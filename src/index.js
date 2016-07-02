@@ -37,7 +37,27 @@ var rasterizeHTML = (function (util, browser, rasterize) {
             optionalArguments = Array.prototype.slice.call(arguments, 1),
             params = util.parseOptionalParameters(optionalArguments);
 
-        return rasterize.rasterize(doc.documentElement, params.canvas, constructOptions(params));
+        var element = doc.documentElement ? doc.documentElement : doc;
+
+        return rasterize.rasterize(element, params.canvas, constructOptions(params));
+    };
+
+    var drawHtmlFragment = function (htmlFragment, canvas, options) {
+        var doc = browser.parseHtmlFragment(htmlFragment);
+
+        return module.drawDocument(doc, canvas, options);
+    };
+
+    /**
+     * Draws a HTML fragment string to the canvas.
+     * rasterizeHTML.drawHtmlFragment( htmlFragment [, canvas] [, options] ).then(function (result) { ... });
+     */
+    module.drawHtmlFragment = function () {
+        var htmlFragment = arguments[0],
+            optionalArguments = Array.prototype.slice.call(arguments, 1),
+            params = util.parseOptionalParameters(optionalArguments);
+
+        return drawHtmlFragment(htmlFragment, params.canvas, params.options);
     };
 
     var drawHTML = function (html, canvas, options) {
