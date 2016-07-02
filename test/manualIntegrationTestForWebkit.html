@@ -37,7 +37,7 @@
             <iframe src="fixtures/testScaled50PercentWithJs.html" style="width: 200px; height: 100px;"></iframe>
         </p>
 
-        <p>All five canvases below should show the following image:<br><img src="fixtures/testResult.png" alt="reference image"></p>
+        <p>All six canvases below should show the following image:<br><img src="fixtures/testResult.png" alt="reference image"></p>
 
         <h3>Test cases</h3>
 
@@ -125,5 +125,19 @@
              });
             </script>
         </div>
-    </body>
+
+        <div>
+            <canvas id="htmlFragmentTest" width="200" height="100"></canvas>
+            <script type="text/javascript">
+                testHelper.readHTMLFixture("testFragment.html").then(function (htmlFragment) {
+                    rasterizeHTML.drawHTML(htmlFragment, htmlFragmentTest, {
+                        baseUrl: "fixtures/",
+                        cache: false,
+                        active: '.bgimage',
+                        hover: '.webfont'
+                    });
+                });
+            </script>
+        </div>
+</body>
 </html>
