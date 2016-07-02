@@ -66,8 +66,8 @@ var document2svg = (function (util, browser, documentHelper, mediaQueryHelper, x
         }).join(' ');
     };
 
-    var convertDocumentToSvg = function (doc, size, zoomFactor) {
-        var xhtml = xmlserializer.serializeToString(doc);
+    var convertElementToSvg = function (element, size, zoomFactor) {
+        var xhtml = xmlserializer.serializeToString(element);
 
         browser.validateXHTML(xhtml);
 
@@ -87,28 +87,28 @@ var document2svg = (function (util, browser, documentHelper, mediaQueryHelper, x
         );
     };
 
-    module.getSvgForDocument = function (doc, size, zoomFactor) {
-        documentHelper.rewriteTagNameSelectorsToLowerCase(doc);
+    module.getSvgForDocument = function (element, size, zoomFactor) {
+        documentHelper.rewriteTagNameSelectorsToLowerCase(element);
 
         return mediaQueryHelper.needsEmWorkaround().then(function (needsWorkaround) {
             if (needsWorkaround) {
-                mediaQueryHelper.workAroundWebKitEmSizeIssue(doc);
+                mediaQueryHelper.workAroundWebKitEmSizeIssue(element);
             }
 
-            return convertDocumentToSvg(doc, size, zoomFactor);
+            return convertElementToSvg(element, size, zoomFactor);
         });
     };
 
-    module.drawDocumentAsSvg = function (doc, options) {
+    module.drawDocumentAsSvg = function (element, options) {
         ['hover', 'active', 'focus', 'target'].forEach(function (action) {
             if (options[action]) {
-                documentHelper.fakeUserAction(doc, options[action], action);
+                documentHelper.fakeUserAction(element, options[action], action);
             }
         });
 
-        return browser.calculateDocumentContentSize(doc, options)
+        return browser.calculateDocumentContentSize(element, options)
             .then(function (size) {
-                return module.getSvgForDocument(doc, size, options.zoom);
+                return module.getSvgForDocument(element, size, options.zoom);
             });
     };
 

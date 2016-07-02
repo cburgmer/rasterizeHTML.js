@@ -31,8 +31,8 @@ var rasterize = (function (util, browser, documentHelper, document2svg, svg2imag
         }
     };
 
-    var doDraw = function (doc, canvas, options) {
-        return document2svg.drawDocumentAsSvg(doc, options)
+    var doDraw = function (element, canvas, options) {
+        return document2svg.drawDocumentAsSvg(element, options)
             .then(drawSvgAsImg)
             .then(function (result) {
                 if (canvas) {
@@ -43,8 +43,8 @@ var rasterize = (function (util, browser, documentHelper, document2svg, svg2imag
             });
     };
 
-    var operateJavaScriptOnDocument = function (doc, options) {
-        return browser.executeJavascript(doc, options)
+    var operateJavaScriptOnDocument = function (element, options) {
+        return browser.executeJavascript(element, options)
             .then(function (result) {
                 var document = result.document;
                 documentHelper.persistInputValues(document);
@@ -56,30 +56,30 @@ var rasterize = (function (util, browser, documentHelper, document2svg, svg2imag
             });
     };
 
-    module.rasterize = function (doc, canvas, options) {
+    module.rasterize = function (element, canvas, options) {
         var inlineOptions;
 
         inlineOptions = util.clone(options);
         inlineOptions.inlineScripts = options.executeJs === true;
 
-        return inlineresources.inlineReferences(doc, inlineOptions)
+        return inlineresources.inlineReferences(element, inlineOptions)
             .then(function (errors) {
                 if (options.executeJs) {
-                    return operateJavaScriptOnDocument(doc, options)
+                    return operateJavaScriptOnDocument(element, options)
                         .then(function (result) {
                             return {
-                                document: result.document,
+                                element: result.document.documentElement,
                                 errors: errors.concat(result.errors)
                             };
                         });
                 } else {
                     return {
-                        document: doc,
+                        element: element,
                         errors: errors
                     };
                 }
             }).then(function (result) {
-                return doDraw(result.document, canvas, options)
+                return doDraw(result.element, canvas, options)
                     .then(function (drawResult) {
                         return {
                             image: drawResult.image,

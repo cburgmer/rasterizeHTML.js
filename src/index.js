@@ -37,7 +37,7 @@ var rasterizeHTML = (function (util, browser, rasterize) {
             optionalArguments = Array.prototype.slice.call(arguments, 1),
             params = util.parseOptionalParameters(optionalArguments);
 
-        return rasterize.rasterize(doc, params.canvas, constructOptions(params));
+        return rasterize.rasterize(doc.documentElement, params.canvas, constructOptions(params));
     };
 
     var drawHTML = function (html, canvas, options) {

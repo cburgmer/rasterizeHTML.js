@@ -175,8 +175,8 @@ var mediaQueryHelper = (function (cssMediaQuery) {
         return anyRuleHasChanges;
     };
 
-    module.workAroundWebKitEmSizeIssue = function (document) {
-        var styles = document.querySelectorAll('style');
+    module.workAroundWebKitEmSizeIssue = function (element) {
+        var styles = element.querySelectorAll('style');
 
         asArray(styles).forEach(function (style) {
             var mediaQueryRules = asArray(style.sheet.cssRules).filter(function (rule) {

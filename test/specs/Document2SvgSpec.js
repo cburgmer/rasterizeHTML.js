@@ -53,7 +53,7 @@ describe("Document to SVG conversion", function () {
             var doc = document.implementation.createHTMLDocument("");
             doc.body.innerHTML = "Test content";
 
-             document2svg.getSvgForDocument(doc, aRenderSize(), defaultZoomLevel).then(function (svgCode) {
+             document2svg.getSvgForDocument(doc.documentElement, aRenderSize(), defaultZoomLevel).then(function (svgCode) {
                  expect(svgCode).toMatch(new RegExp(
                      '<svg xmlns="http://www.w3.org/2000/svg" .*>' +
                          '.*' +
@@ -79,7 +79,7 @@ describe("Document to SVG conversion", function () {
                 canonicalXML;
             doc.body.innerHTML = '<img src="data:image/png;base64,sOmeFAKeBasE64="/>';
 
-            document2svg.getSvgForDocument(doc, aRenderSize(), defaultZoomLevel).then(function (svgCode) {
+            document2svg.getSvgForDocument(doc.documentElement, aRenderSize(), defaultZoomLevel).then(function (svgCode) {
                 expect(svgCode).not.toBeNull();
                 canonicalXML = svgCode.replace(/ +\/>/, '/>');
                 expect(canonicalXML).toMatch(new RegExp(
@@ -106,7 +106,7 @@ describe("Document to SVG conversion", function () {
             var doc = document.implementation.createHTMLDocument("");
             doc.body.innerHTML = "content";
 
-            document2svg.getSvgForDocument(doc, aRenderSize(123, 987, 200, 1000, 2, 7), defaultZoomLevel).then(function (svgCode) {
+            document2svg.getSvgForDocument(doc.documentElement, aRenderSize(123, 987, 200, 1000, 2, 7), defaultZoomLevel).then(function (svgCode) {
                 expect(svgCode).toMatch(new RegExp(
                     '<svg xmlns="http://www.w3.org/2000/svg" width="123" height="987"[^>]*>' +
                         '.*' +
@@ -132,7 +132,7 @@ describe("Document to SVG conversion", function () {
             doc.body.innerHTML = "content";
 
             var zoomFactor = 10;
-            document2svg.getSvgForDocument(doc, aRenderSize(123, 987, 12, 99), zoomFactor).then(function (svgCode) {
+            document2svg.getSvgForDocument(doc.documentElement, aRenderSize(123, 987, 12, 99), zoomFactor).then(function (svgCode) {
                 expect(svgCode).toMatch(new RegExp(
                     '<svg xmlns="http://www.w3.org/2000/svg" width="123" height="987".*style="transform:scale\\(10\\); transform-origin: 0 0;".*?>' +
                         '.*' +
@@ -158,7 +158,7 @@ describe("Document to SVG conversion", function () {
             doc.body.innerHTML = "content";
 
             var zoomLevel = 0;
-            document2svg.getSvgForDocument(doc, aRenderSize(123, 987), zoomLevel).then(function (svgCode) {
+            document2svg.getSvgForDocument(doc.documentElement, aRenderSize(123, 987), zoomLevel).then(function (svgCode) {
                 expect(svgCode).not.toMatch(new RegExp("scale"));
 
                 done();
@@ -169,7 +169,7 @@ describe("Document to SVG conversion", function () {
             var doc = document.implementation.createHTMLDocument("");
             doc.body.innerHTML = "Test content";
 
-            document2svg.getSvgForDocument(doc, aRenderSizeWithRootFontSize('42px'), defaultZoomLevel).then(function (svgCode) {
+            document2svg.getSvgForDocument(doc.documentElement, aRenderSizeWithRootFontSize('42px'), defaultZoomLevel).then(function (svgCode) {
                 expect(svgCode).toMatch(new RegExp(
                     '<svg xmlns="http://www.w3.org/2000/svg" [^>]*font-size="42px"[^>]*>' +
                         '.*' +
@@ -197,7 +197,7 @@ describe("Document to SVG conversion", function () {
             var error = new Error();
             spyOn(browser, 'validateXHTML').and.throwError(error);
 
-            document2svg.getSvgForDocument(doc, aRenderSize(), 1).then(null, function (e) {
+            document2svg.getSvgForDocument(doc.documentElement, aRenderSize(), 1).then(null, function (e) {
                 expect(e).toBe(error);
 
                 done();
@@ -220,7 +220,7 @@ describe("Document to SVG conversion", function () {
             doc.head.querySelector('title').innerText = "meh";
 
             var tempChild = document.createElement('div');
-            document2svg.getSvgForDocument(doc, aRenderSize(100, 100), 1).then(function (svgCode) {
+            document2svg.getSvgForDocument(doc.documentElement, aRenderSize(100, 100), 1).then(function (svgCode) {
                 tempChild.innerHTML = svgCode;
 
                 sandbox.appendChild(tempChild.childNodes[0]);
@@ -237,8 +237,8 @@ describe("Document to SVG conversion", function () {
         it("should work around XHTML case-sensitivity for tag name selectors", function (done) {
             var doc = document.implementation.createHTMLDocument("");
 
-            document2svg.getSvgForDocument(doc, aRenderSize(), 1).then(function () {
-                expect(documentHelper.rewriteTagNameSelectorsToLowerCase).toHaveBeenCalledWith(doc);
+            document2svg.getSvgForDocument(doc.documentElement, aRenderSize(), 1).then(function () {
+                expect(documentHelper.rewriteTagNameSelectorsToLowerCase).toHaveBeenCalledWith(doc.documentElement);
 
                 done();
             });
@@ -248,8 +248,8 @@ describe("Document to SVG conversion", function () {
             var doc = document.implementation.createHTMLDocument("");
             setUpNeedsEmWorkaroundToReturn(true);
 
-            document2svg.getSvgForDocument(doc, aRenderSize(), 1).then(function () {
-                expect(mediaQueryHelper.workAroundWebKitEmSizeIssue).toHaveBeenCalledWith(doc);
+            document2svg.getSvgForDocument(doc.documentElement, aRenderSize(), 1).then(function () {
+                expect(mediaQueryHelper.workAroundWebKitEmSizeIssue).toHaveBeenCalledWith(doc.documentElement);
 
                 done();
             });
@@ -259,7 +259,7 @@ describe("Document to SVG conversion", function () {
             var doc = document.implementation.createHTMLDocument("");
             setUpNeedsEmWorkaroundToReturn(false);
 
-            document2svg.getSvgForDocument(doc, aRenderSize(), 1).then(function () {
+            document2svg.getSvgForDocument(doc.documentElement, aRenderSize(), 1).then(function () {
                 expect(mediaQueryHelper.workAroundWebKitEmSizeIssue).not.toHaveBeenCalled();
 
                 done();
@@ -270,7 +270,7 @@ describe("Document to SVG conversion", function () {
             var doc = document.implementation.createHTMLDocument("");
             doc.body.innerHTML = "Test content";
 
-            document2svg.getSvgForDocument(doc, aRenderSize(), defaultZoomLevel).then(function (svgCode) {
+            document2svg.getSvgForDocument(doc.documentElement, aRenderSize(), defaultZoomLevel).then(function (svgCode) {
                 expect(svgCode).toMatch(new RegExp(
                     '<svg xmlns="http://www.w3.org/2000/svg" .*>' +
                         '<style scoped="">html::-webkit-scrollbar { display: none; }</style>' +
@@ -286,7 +286,7 @@ describe("Document to SVG conversion", function () {
     });
 
     describe("drawDocumentAsSvg", function () {
-        var doc = "doc",
+        var docElement = "doc",
             calculatedSize;
 
         var fulfilled = function (value) {
@@ -307,60 +307,60 @@ describe("Document to SVG conversion", function () {
 
             document2svg.getSvgForDocument.and.returnValue(successfulPromise(svg));
 
-            document2svg.drawDocumentAsSvg(doc, {zoom: 42}).then(function (theSvg) {
+            document2svg.drawDocumentAsSvg(docElement, {zoom: 42}).then(function (theSvg) {
                 expect(theSvg).toBe(svg);
 
                 expect(browser.calculateDocumentContentSize).toHaveBeenCalledWith(
-                    doc,
+                    docElement,
                     jasmine.objectContaining({zoom: 42})
                 );
-                expect(document2svg.getSvgForDocument).toHaveBeenCalledWith(doc, calculatedSize, 42);
+                expect(document2svg.getSvgForDocument).toHaveBeenCalledWith(docElement, calculatedSize, 42);
 
                 done();
             });
         });
 
         it("should take an optional width and height", function () {
-            document2svg.drawDocumentAsSvg(doc, {width: 42, height: 4711});
+            document2svg.drawDocumentAsSvg(docElement, {width: 42, height: 4711});
 
-            expect(browser.calculateDocumentContentSize).toHaveBeenCalledWith(doc, {width: 42, height: 4711});
+            expect(browser.calculateDocumentContentSize).toHaveBeenCalledWith(docElement, {width: 42, height: 4711});
         });
 
         it("should trigger hover effect", function () {
-            document2svg.drawDocumentAsSvg(doc, {hover: '.mySpan'});
+            document2svg.drawDocumentAsSvg(docElement, {hover: '.mySpan'});
 
-            expect(documentHelper.fakeUserAction).toHaveBeenCalledWith(doc, '.mySpan', 'hover');
+            expect(documentHelper.fakeUserAction).toHaveBeenCalledWith(docElement, '.mySpan', 'hover');
         });
 
         it("should trigger active effect", function () {
-            document2svg.drawDocumentAsSvg(doc, {active: '.mySpan'});
+            document2svg.drawDocumentAsSvg(docElement, {active: '.mySpan'});
 
-            expect(documentHelper.fakeUserAction).toHaveBeenCalledWith(doc, '.mySpan', 'active');
+            expect(documentHelper.fakeUserAction).toHaveBeenCalledWith(docElement, '.mySpan', 'active');
         });
 
         it("should trigger focus effect", function () {
-            document2svg.drawDocumentAsSvg(doc, {focus: '.mySpan'});
+            document2svg.drawDocumentAsSvg(docElement, {focus: '.mySpan'});
 
-            expect(documentHelper.fakeUserAction).toHaveBeenCalledWith(doc, '.mySpan', 'focus');
+            expect(documentHelper.fakeUserAction).toHaveBeenCalledWith(docElement, '.mySpan', 'focus');
         });
 
         it("should trigger target effect", function () {
-            document2svg.drawDocumentAsSvg(doc, {target: '.mySpan'});
+            document2svg.drawDocumentAsSvg(docElement, {target: '.mySpan'});
 
-            expect(documentHelper.fakeUserAction).toHaveBeenCalledWith(doc, '.mySpan', 'target');
+            expect(documentHelper.fakeUserAction).toHaveBeenCalledWith(docElement, '.mySpan', 'target');
         });
 
         it("should not trigger focus effect by default", function () {
-            document2svg.drawDocumentAsSvg(doc, {});
+            document2svg.drawDocumentAsSvg(docElement, {});
 
             expect(documentHelper.fakeUserAction).not.toHaveBeenCalled();
         });
 
         it("should render the selected element", function () {
-            document2svg.drawDocumentAsSvg(doc, {clip: '.mySpan'});
+            document2svg.drawDocumentAsSvg(docElement, {clip: '.mySpan'});
 
             expect(browser.calculateDocumentContentSize).toHaveBeenCalledWith(
-                doc,
+                docElement,
                 jasmine.objectContaining({clip: '.mySpan'})
             );
         });

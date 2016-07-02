@@ -57,10 +57,10 @@ var documentUtil = (function () {
             '(?=\\W|$)';                   // followed either by a non-alphabetic character or the end of the string
     };
 
-    var replaceSimpleSelectorsBy = function (doc, simpleSelectorList, caseInsensitiveReplaceFunc) {
+    var replaceSimpleSelectorsBy = function (element, simpleSelectorList, caseInsensitiveReplaceFunc) {
         var selectorRegex = matchingSimpleSelectorsRegex(simpleSelectorList);
 
-        asArray(doc.querySelectorAll('style')).forEach(function (styleElement) {
+        asArray(element.querySelectorAll('style')).forEach(function (styleElement) {
             var matchingRules = asArray(styleElement.sheet.cssRules).filter(function (rule) {
                 return rule.selectorText && new RegExp(selectorRegex, 'i').test(rule.selectorText);
             });
@@ -82,32 +82,32 @@ var documentUtil = (function () {
         });
     };
 
-    module.rewriteCssSelectorWith = function (doc, oldSelector, newSelector) {
-        replaceSimpleSelectorsBy(doc, [oldSelector], function () {
+    module.rewriteCssSelectorWith = function (element, oldSelector, newSelector) {
+        replaceSimpleSelectorsBy(element, [oldSelector], function () {
             return newSelector;
         });
     };
 
-    module.lowercaseCssTypeSelectors = function (doc, matchingTagNames) {
-        replaceSimpleSelectorsBy(doc, matchingTagNames, function (match) {
+    module.lowercaseCssTypeSelectors = function (element, matchingTagNames) {
+        replaceSimpleSelectorsBy(element, matchingTagNames, function (match) {
             return match.toLowerCase();
         });
     };
 
-    module.findHtmlOnlyNodeNames = function (doc) {
-        var treeWalker = doc.createTreeWalker(doc, NodeFilter.SHOW_ELEMENT),
+    module.findHtmlOnlyNodeNames = function (element) {
+        var treeWalker = element.ownerDocument.createTreeWalker(element, NodeFilter.SHOW_ELEMENT),
             htmlNodeNames = {},
             nonHtmlNodeNames = {},
             currentTagName;
 
-        while(treeWalker.nextNode()) {
+        do {
             currentTagName = treeWalker.currentNode.tagName.toLowerCase();
             if (treeWalker.currentNode.namespaceURI === 'http://www.w3.org/1999/xhtml') {
                 htmlNodeNames[currentTagName] = true;
             } else {
                 nonHtmlNodeNames[currentTagName] = true;
             }
-        }
+        } while(treeWalker.nextNode());
 
         return Object.keys(htmlNodeNames).filter(function (tagName) {
             return !nonHtmlNodeNames[tagName];

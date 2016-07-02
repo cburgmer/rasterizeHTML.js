@@ -17,9 +17,9 @@ var browser = (function (util, proxies, ayepromise, sanedomparsererror, theWindo
         return element;
     };
 
-    module.executeJavascript = function (doc, options) {
+    module.executeJavascript = function (element, options) {
         var iframe = createHiddenElement(theWindow.document, "iframe", options.width, options.height),
-            html = doc.documentElement.outerHTML,
+            html = element.outerHTML,
             iframeErrorsMessages = [],
             defer = ayepromise.defer(),
             timeout = options.executeJsTimeout || 0;
@@ -150,8 +150,8 @@ var browser = (function (util, proxies, ayepromise, sanedomparsererror, theWindo
         };
     };
 
-    module.calculateDocumentContentSize = function (doc, options) {
-        var html = doc.documentElement.outerHTML,
+    module.calculateDocumentContentSize = function (element, options) {
+        var html = element.outerHTML,
             defer = ayepromise.defer(),
             zoom = options.zoom || 1,
             iframe;

@@ -55,7 +55,7 @@ describe("Main", function () {
                 expect(result.image).toEqual(svgImage);
                 expect(result.errors).toEqual([]);
 
-                expect(rasterize.rasterize).toHaveBeenCalledWith(doc, canvas, jasmine.any(Object));
+                expect(rasterize.rasterize).toHaveBeenCalledWith(doc.documentElement, canvas, jasmine.any(Object));
 
                 done();
             });
@@ -63,7 +63,7 @@ describe("Main", function () {
 
         it("should use the canvas width and height as viewport size", function (done) {
             rasterizeHTML.drawDocument(doc, canvas).then(function () {
-                expect(rasterize.rasterize).toHaveBeenCalledWith(doc, canvas, {
+                expect(rasterize.rasterize).toHaveBeenCalledWith(doc.documentElement, canvas, {
                     width: 123,
                     height: 456
                 });
@@ -76,7 +76,7 @@ describe("Main", function () {
             rasterizeHTML.drawDocument(doc).then(function (result) {
                 expect(result.image).toEqual(svgImage);
 
-                expect(rasterize.rasterize).toHaveBeenCalledWith(doc, null, jasmine.any(Object));
+                expect(rasterize.rasterize).toHaveBeenCalledWith(doc.documentElement, null, jasmine.any(Object));
 
                 expect(util.parseOptionalParameters).toHaveBeenCalled();
 
@@ -86,7 +86,7 @@ describe("Main", function () {
 
         it("should apply default viewport width and height without canvas and specific options", function (done) {
             rasterizeHTML.drawDocument(doc).then(function () {
-                expect(rasterize.rasterize).toHaveBeenCalledWith(doc, null, {
+                expect(rasterize.rasterize).toHaveBeenCalledWith(doc.documentElement, null, {
                     width: 300,
                     height: 200
                 });
@@ -106,7 +106,7 @@ describe("Main", function () {
                 active: '#anotherSelector',
                 zoom: 42
             }).then(function () {
-                expect(rasterize.rasterize).toHaveBeenCalledWith(doc, canvas, {
+                expect(rasterize.rasterize).toHaveBeenCalledWith(doc.documentElement, canvas, {
                     baseUrl: "a_baseUrl",
                     cache: 'none',
                     cacheBucket: {},

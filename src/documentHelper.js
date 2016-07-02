@@ -14,8 +14,8 @@ var documentHelper = (function (documentUtil) {
         target: false
     };
 
-    module.fakeUserAction = function (doc, selector, action) {
-        var elem = doc.querySelector(selector),
+    module.fakeUserAction = function (element, selector, action) {
+        var elem = element.querySelector(selector),
             pseudoClass = ':' + action,
             fakeActionClass = 'rasterizehtml' + action;
         if (! elem) {
@@ -27,7 +27,7 @@ var documentHelper = (function (documentUtil) {
         } else {
             documentUtil.addClassName(elem, fakeActionClass);
         }
-        documentUtil.rewriteCssSelectorWith(doc, pseudoClass, '.' + fakeActionClass);
+        documentUtil.rewriteCssSelectorWith(element, pseudoClass, '.' + fakeActionClass);
     };
 
     module.persistInputValues = function (doc) {
@@ -57,8 +57,8 @@ var documentHelper = (function (documentUtil) {
             });
     };
 
-    module.rewriteTagNameSelectorsToLowerCase = function (doc) {
-        documentUtil.lowercaseCssTypeSelectors(doc, documentUtil.findHtmlOnlyNodeNames(doc));
+    module.rewriteTagNameSelectorsToLowerCase = function (element) {
+        documentUtil.lowercaseCssTypeSelectors(element, documentUtil.findHtmlOnlyNodeNames(element));
     };
 
     return module;
