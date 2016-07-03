@@ -99,21 +99,28 @@ var browser = (function (util, proxies, ayepromise, sanedomparsererror, theWindo
         };
     };
 
-    var calculateContentSize = function (doc, selector, requestedWidth, requestedHeight, zoom) {
-            // clientWidth/clientHeight needed for PhantomJS
-        var actualViewportWidth = Math.max(doc.documentElement.scrollWidth, doc.body.clientWidth),
-            actualViewportHeight = Math.max(doc.documentElement.scrollHeight, doc.body.scrollHeight, doc.body.clientHeight),
+    var selectElementOrDescendant = function (element, selector) {
+        var descendant = element.querySelector(selector);
+        if (descendant) {
+            return descendant;
+        } else if (element.ownerDocument.querySelector(selector) === element) {
+            return element;
+        }
+
+        throw {
+            message: "Clipping selector not found"
+        };
+    };
+
+    var calculateContentSize = function (rootElement, selector, requestedWidth, requestedHeight, zoom) {
+        // clientWidth/clientHeight needed for PhantomJS
+        var actualViewportWidth = Math.max(rootElement.scrollWidth, rootElement.clientWidth),
+            actualViewportHeight = Math.max(rootElement.scrollHeight, rootElement.clientHeight),
             top, left, originalWidth, originalHeight, rootFontSize,
             element, rect, contentSize;
 
         if (selector) {
-            element = doc.querySelector(selector);
-
-            if (!element) {
-                throw {
-                    message: "Clipping selector not found"
-                };
-            }
+            element = selectElementOrDescendant(rootElement, selector);
 
             rect = element.getBoundingClientRect();
 
@@ -136,7 +143,7 @@ var browser = (function (util, proxies, ayepromise, sanedomparsererror, theWindo
             requestedHeight,
             zoom);
 
-        rootFontSize = theWindow.getComputedStyle(doc.documentElement).fontSize;
+        rootFontSize = theWindow.getComputedStyle(rootElement.ownerDocument.documentElement).fontSize;
 
         return {
             left: left,
@@ -148,6 +155,12 @@ var browser = (function (util, proxies, ayepromise, sanedomparsererror, theWindo
 
             rootFontSize: rootFontSize
         };
+    };
+
+    var findCorrelatingElement = function (element, documentClone) {
+        var tagName = element.tagName;
+        // Stupid but simple method: find first match. Should work for a single HTML element, and any other element given as root
+        return documentClone.querySelector(tagName);
     };
 
     module.calculateDocumentContentSize = function (element, options) {
@@ -166,7 +179,7 @@ var browser = (function (util, proxies, ayepromise, sanedomparsererror, theWindo
                 size;
 
             try {
-                size = calculateContentSize(doc, options.clip, options.width, options.height, zoom);
+                size = calculateContentSize(findCorrelatingElement(element, doc), options.clip, options.width, options.height, zoom);
 
                 defer.resolve(size);
             } catch (e) {

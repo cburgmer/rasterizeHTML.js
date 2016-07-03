@@ -351,6 +351,15 @@ describe("Browser functions", function () {
             });
         });
 
+        it("should calculate the correct size given any DOM element", function () {
+            setHtml('<div><style>div { width: 400px; height: 400px; }</style></div>');
+
+            browser.calculateDocumentContentSize(doc.querySelector('div'), {width: 300, height: 200}).then(function (size) {
+                expect(size.width).toBe(400);
+                expect(size.height).toBe(400);
+            });
+        });
+
         it("should remove the iframe when done calculating", function (done) {
             setElementWithSize({});
 
