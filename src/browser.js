@@ -163,9 +163,18 @@ var browser = (function (util, proxies, ayepromise, sanedomparsererror, theWindo
         return documentClone.querySelector(tagName);
     };
 
+    var elementToFullHtmlDocument = function (element) {
+        var tagName = element.tagName.toLowerCase();
+        if (tagName === 'html' || tagName === 'body') {
+            return element.outerHTML;
+        }
+
+        // Simple hack: hide the body from sizing, otherwise browser would apply a 8px margin
+        return '<body style="margin: 0;">' + element.outerHTML + '</body>';
+    };
+
     module.calculateDocumentContentSize = function (element, options) {
-        var html = element.outerHTML,
-            defer = ayepromise.defer(),
+        var defer = ayepromise.defer(),
             zoom = options.zoom || 1,
             iframe;
 
@@ -192,7 +201,7 @@ var browser = (function (util, proxies, ayepromise, sanedomparsererror, theWindo
         // srcdoc doesn't work in PhantomJS yet
         iframe.contentDocument.open();
         iframe.contentDocument.write('<!DOCTYPE html>');
-        iframe.contentDocument.write(html);
+        iframe.contentDocument.write(elementToFullHtmlDocument(element));
         iframe.contentDocument.close();
 
         return defer.promise;

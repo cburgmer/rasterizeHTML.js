@@ -351,12 +351,24 @@ describe("Browser functions", function () {
             });
         });
 
-        it("should calculate the correct size given any DOM element", function () {
+        it("should calculate the correct size given any DOM element", function (done) {
             setHtml('<div><style>div { width: 400px; height: 400px; }</style></div>');
 
             browser.calculateDocumentContentSize(doc.querySelector('div'), {width: 300, height: 200}).then(function (size) {
                 expect(size.width).toBe(400);
                 expect(size.height).toBe(400);
+
+                done();
+            });
+        });
+
+        it("should not have the body margin influence a DOM element sizing", function (done) {
+            setHtml('<div><style>span { display: inline-block; float: left; width: 200px; height: 200px; }</style><span></span><span></span></div>');
+            browser.calculateDocumentContentSize(doc.querySelector('div'), {width: 400, height: 200}).then(function (size) {
+                expect(size.width).toBe(400);
+                expect(size.height).toBe(200);
+
+                done();
             });
         });
 
