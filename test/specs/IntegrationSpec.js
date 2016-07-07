@@ -124,6 +124,27 @@ describe("Integration test", function () {
         });
     });
 
+    ifNotInPhantomJsIt("should render a HTML fragment", function (done) {
+        testHelper.readHTMLFixture("testFragment.html").then(function (htmlFragment) {
+            return rasterizeHTML.drawHtmlFragment(htmlFragment, canvas, {
+                baseUrl: "fixtures/",
+                cache: false,
+                active: '.bgimage',
+                hover: '.webfont'
+            });
+        }).then(function (result) {
+            expect(result.errors).toEqual([]);
+            forceImageSizeForPlatformCompatibility(result.image);
+            expect(result.image).toEqualImage(referenceImg, 2);
+
+            expect(canvas).toEqualImage(referenceImg, 2);
+            // expect(canvas).toImageDiffEqual(referenceImg, 90);
+
+            done();
+        });
+
+    });
+
     ifNotInPhantomJSAndNotLocalRunnerIt("should take a URL and load non UTF-8 content", function (done) {
         var inlineReferencesSpy = spyOn(inlineresources, 'inlineReferences').and.returnValue(fulfilled());
 
