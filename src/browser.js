@@ -208,12 +208,16 @@ var browser = (function (util, proxies, ayepromise, sanedomparsererror, theWindo
     };
 
     module.parseHtmlFragment = function (htmlFragment) {
-        var doc = theWindow.document.implementation.createHTMLDocument(''),
-            fragmentContainer = doc.createElement('div');
-        fragmentContainer.innerHTML = htmlFragment;
-        doc.documentElement.appendChild(fragmentContainer);
+        var doc = theWindow.document.implementation.createHTMLDocument('');
+        doc.documentElement.innerHTML = htmlFragment;
 
-        return fragmentContainer.firstChild;
+        var element = doc.querySelector('body').firstChild;
+
+        if (!element) {
+            throw "Invalid source";
+        }
+
+        return element;
     };
 
     var addHTMLTagAttributes = function (doc, html) {

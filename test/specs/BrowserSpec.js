@@ -206,6 +206,19 @@ describe("Browser functions", function () {
         });
     });
 
+    describe("parseHtmlFragment", function () {
+        it("should parse a single div", function () {
+            var element = browser.parseHtmlFragment('<div id="the_div"></div>');
+
+            expect(element.tagName.toLowerCase()).toEqual('div');
+            expect(element.id).toEqual('the_div');
+        });
+
+        it("should raise error when parsing an otherwise empty body element", function () {
+            expect(function () { browser.parseHtmlFragment('<body></body>'); }).toThrow("Invalid source");
+        });
+    });
+
     describe("parseHTML", function () {
         var oldDOMParser = window.DOMParser;
 
