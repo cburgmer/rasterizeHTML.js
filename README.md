@@ -67,7 +67,3 @@ Where is it used?
 
 * [CSS Critic](https://github.com/cburgmer/csscritic), a lightweight tool for regression testing of Cascading Style Sheets
 * ...
-
-Author
-------
-Christoph Burgmer. Licensed under MIT. Reach out [on Twitter](https://twitter.com/cburgmer).
