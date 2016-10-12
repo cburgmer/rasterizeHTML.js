@@ -19,6 +19,14 @@ describe("HTML Document Utility functions", function () {
             expect(doc.querySelector('style').textContent).toMatch(/a.myFakeHover \{\s*color: blue;\s*\}/);
         });
 
+        it("should rewrite CSS rules in SVG element with the new selector", function () {
+            setHtml('<svg><style>.myClass { color: blue; }</style></svg>');
+
+            documentUtil.rewriteCssSelectorWith(doc.documentElement, '.myClass', '.myFakeClass');
+
+            expect(doc.querySelector('svg').textContent).toMatch(/.myFakeClass \{\s*color: blue;\s*\}/);
+        });
+
         it("should correctly handle complex selectors", function () {
             setHtml('<style>body:hover span { color: blue; }</style>');
 

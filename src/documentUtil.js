@@ -45,6 +45,17 @@ var documentUtil = (function () {
         styleElement.textContent = cssRulesToText(styleElement.sheet.cssRules);
     };
 
+    var addSheetPropertyToSvgStyleElement = function (svgStyleElement) {
+        var doc = document.implementation.createHTMLDocument(''),
+            cssStyleElement = document.createElement('style');
+
+        cssStyleElement.textContent = svgStyleElement.textContent;
+        // the style will only be parsed once it is added to a document
+        doc.body.appendChild(cssStyleElement);
+
+        svgStyleElement.sheet = cssStyleElement.sheet;
+    };
+
     var matchingSimpleSelectorsRegex = function (simpleSelectorList) {
         return '(' +
             '(?:^|[^.#:\\w])' +            // start of string or not a simple selector character,
@@ -61,6 +72,12 @@ var documentUtil = (function () {
         var selectorRegex = matchingSimpleSelectorsRegex(simpleSelectorList);
 
         asArray(element.querySelectorAll('style')).forEach(function (styleElement) {
+            // SVGStyleElement doesn't have a property sheet in Safari, we need some workaround here
+            // more details can be found here: https://github.com/cburgmer/rasterizeHTML.js/issues/158
+            if (typeof styleElement.sheet === 'undefined') {
+                addSheetPropertyToSvgStyleElement(styleElement);
+            }
+
             var matchingRules = asArray(styleElement.sheet.cssRules).filter(function (rule) {
                 return rule.selectorText && new RegExp(selectorRegex, 'i').test(rule.selectorText);
             });
