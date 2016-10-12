@@ -145,6 +145,7 @@ describe("Integration test", function () {
 
     });
 
+    // This fails in Firefox probably due to https://bugzilla.mozilla.org/show_bug.cgi?id=942138
     ifNotInPhantomJSAndNotLocalRunnerIt("should take a URL and load non UTF-8 content", function (done) {
         var inlineReferencesSpy = spyOn(inlineresources, 'inlineReferences').and.returnValue(fulfilled());
 
@@ -154,15 +155,18 @@ describe("Integration test", function () {
             var doc = inlineReferencesSpy.calls.mostRecent().args[0];
 
             // This fails if SpecRunner is opened locally in Firefox. Open over a local webserver helps here.
-            expect(doc.body.innerHTML.trim()).toEqual('这是中文');
+            expect(doc.querySelector('body').innerHTML.trim()).toEqual('这是中文');
 
+            done();
+        }, function (err) {
+            expect(err).toBe(undefined);
             done();
         });
     });
 
     ifNotInWebKitAndNotLocalRunnerIt("should work around Firefox bug with `null` style properties", function (done) {
         // The bug only turns up when there's no JS executed which creates a new document
-        // In addition this test will due to https://bugzilla.mozilla.org/show_bug.cgi?id=942138
+        // In addition this test will fail due to https://bugzilla.mozilla.org/show_bug.cgi?id=942138
         rasterizeHTML.drawURL(testHelper.fixturesPath + "test.html", {
                 cache: 'none',
                 active: '.bgimage',
