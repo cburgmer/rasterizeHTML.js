@@ -124,7 +124,7 @@ describe("Integration test", function () {
         });
     });
 
-    ifNotInPhantomJsIt("should render a HTML fragment", function (done) {
+    ifNotInWebkitIt("should render a HTML fragment", function (done) {
         testHelper.readHTMLFixture("testFragment.html").then(function (htmlFragment) {
             return rasterizeHTML.drawHtmlFragment(htmlFragment, canvas, {
                 baseUrl: "fixtures/",
