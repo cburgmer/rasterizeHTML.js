@@ -8,28 +8,28 @@
         isLocalRunner = document.baseURI.substr(0, 'file://'.length) === 'file://',
         testDisabledOnCondition = function (condition, text, functionHandle) {
             if (condition) {
-                return it(text, functionHandle);
-            } else {
                 console.warn('Warning: "' + text + '" is disabled on this platform');
                 return xit(text, functionHandle);
+            } else {
+                return it(text, functionHandle);
             }
         };
     window.ifNotInWebkitIt = function(text, functionHandle) {
-        return testDisabledOnCondition(! isWebkit, text, functionHandle);
+        return testDisabledOnCondition(isWebkit, text, functionHandle);
     };
     window.ifNotInWebkitOrBlinkIt = function (text, functionHandle) {
-        return testDisabledOnCondition(! isWebkitOrBlink, text, functionHandle);
+        return testDisabledOnCondition(isWebkitOrBlink, text, functionHandle);
     };
     window.ifInPhantomJsIt = function(text, functionHandle) {
-        return testDisabledOnCondition(isPhantomJs, text, functionHandle);
-    };
-    window.ifNotInPhantomJsIt = function(text, functionHandle) {
         return testDisabledOnCondition(! isPhantomJs, text, functionHandle);
     };
+    window.ifNotInPhantomJsIt = function(text, functionHandle) {
+        return testDisabledOnCondition(isPhantomJs, text, functionHandle);
+    };
     window.ifNotInPhantomJSAndNotLocalRunnerIt = function (text, functionHandle) {
-        return testDisabledOnCondition(! isPhantomJs && ! isLocalRunner, text, functionHandle);
+        return testDisabledOnCondition(isPhantomJs || isLocalRunner, text, functionHandle);
     };
     window.ifNotInWebKitAndNotLocalRunnerIt = function (text, functionHandle) {
-        return testDisabledOnCondition(! isWebkit && ! isLocalRunner, text, functionHandle);
+        return testDisabledOnCondition(isWebkit || isLocalRunner, text, functionHandle);
     };
 }());
