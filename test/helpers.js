@@ -7,12 +7,11 @@
         isPhantomJs = navigator.userAgent.indexOf("PhantomJS") >= 0,
         isLocalRunner = document.baseURI.substr(0, 'file://'.length) === 'file://',
         testDisabledOnCondition = function (condition, text, functionHandle) {
+            var spec = it(text, functionHandle);
             if (condition) {
-                console.warn('Warning: "' + text + '" is disabled on this platform');
-                return xit(text, functionHandle);
-            } else {
-                return it(text, functionHandle);
+                spec.pend('disabled on this platform');
             }
+            return spec;
         };
     window.ifNotInWebkitIt = function(text, functionHandle) {
         return testDisabledOnCondition(isWebkit, text, functionHandle);
