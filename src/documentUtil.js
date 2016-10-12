@@ -72,6 +72,8 @@ var documentUtil = (function () {
         var selectorRegex = matchingSimpleSelectorsRegex(simpleSelectorList);
 
         asArray(element.querySelectorAll('style')).forEach(function (styleElement) {
+            // SVGStyleElement doesn't have a property sheet in Safari, we need some workaround here
+            // more details can be found here: https://github.com/cburgmer/rasterizeHTML.js/issues/158
             if (typeof styleElement.sheet === 'undefined') {
                 styleElement = svgStyleElementToCssStyleElement(styleElement);
             }
