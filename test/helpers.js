@@ -20,6 +20,9 @@
     window.ifNotInWebkitOrBlinkIt = function (text, functionHandle) {
         return testDisabledOnCondition(! isWebkitOrBlink, text, functionHandle);
     };
+    window.ifInPhantomJsIt = function(text, functionHandle) {
+        return testDisabledOnCondition(isPhantomJs, text, functionHandle);
+    };
     window.ifNotInPhantomJsIt = function(text, functionHandle) {
         return testDisabledOnCondition(! isPhantomJs, text, functionHandle);
     };

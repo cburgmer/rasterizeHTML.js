@@ -5,13 +5,7 @@ describe("Media Query Helper", function () {
 
         // rough integration tests
 
-        it("should detect issue on Safari", function (done) {
-            if (navigator.userAgent.indexOf('WebKit') < 0 ||
-                navigator.userAgent.indexOf('Chrome') >= 0) {
-                done();
-                return;
-            }
-
+        ifInPhantomJsIt("should detect issue on old WebKit engines", function (done) {
             mediaQueryHelper.needsEmWorkaround().then(function (result) {
                 expect(result).toBe(true);
 
@@ -19,13 +13,8 @@ describe("Media Query Helper", function () {
             });
         });
 
-        it("should not detect issue on Firefox, newer Chromes", function (done) {
-            if (navigator.userAgent.indexOf('Firefox') < 0 &&
-                navigator.userAgent.indexOf('Chrome') < 0) {
-                done();
-                return;
-            }
-
+        // Safari seems to have caught up, great!
+        ifNotInPhantomJsIt("should not detect issue on newer browsers", function (done) {
             mediaQueryHelper.needsEmWorkaround().then(function (result) {
                 expect(result).toBe(false);
 
