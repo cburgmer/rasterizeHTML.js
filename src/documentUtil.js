@@ -45,6 +45,17 @@ var documentUtil = (function () {
         styleElement.textContent = cssRulesToText(styleElement.sheet.cssRules);
     };
 
+    var svgStyleElementToCssStyleElement = function (svgStyleElement) {
+        var doc = document.implementation.createHTMLDocument(''),
+            cssStyleElement = document.createElement('style');
+
+        cssStyleElement.textContent = svgStyleElement.textContent;
+        // the style will only be parsed once it is added to a document
+        doc.body.appendChild(cssStyleElement);
+
+        return cssStyleElement;
+    };
+
     var matchingSimpleSelectorsRegex = function (simpleSelectorList) {
         return '(' +
             '(?:^|[^.#:\\w])' +            // start of string or not a simple selector character,
@@ -61,6 +72,10 @@ var documentUtil = (function () {
         var selectorRegex = matchingSimpleSelectorsRegex(simpleSelectorList);
 
         asArray(element.querySelectorAll('style')).forEach(function (styleElement) {
+            if (typeof styleElement.sheet === 'undefined') {
+                styleElement = svgStyleElementToCssStyleElement(styleElement);
+            }
+
             var matchingRules = asArray(styleElement.sheet.cssRules).filter(function (rule) {
                 return rule.selectorText && new RegExp(selectorRegex, 'i').test(rule.selectorText);
             });
