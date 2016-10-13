@@ -42,24 +42,6 @@ var rasterizeHTML = (function (util, browser, rasterize) {
         return rasterize.rasterize(element, params.canvas, constructOptions(params));
     };
 
-    var drawHtmlFragment = function (htmlFragment, canvas, options) {
-        var doc = browser.parseHtmlFragment(htmlFragment);
-
-        return module.drawDocument(doc, canvas, options);
-    };
-
-    /**
-     * Draws a HTML fragment string to the canvas.
-     * rasterizeHTML.drawHtmlFragment( htmlFragment [, canvas] [, options] ).then(function (result) { ... });
-     */
-    module.drawHtmlFragment = function () {
-        var htmlFragment = arguments[0],
-            optionalArguments = Array.prototype.slice.call(arguments, 1),
-            params = util.parseOptionalParameters(optionalArguments);
-
-        return drawHtmlFragment(htmlFragment, params.canvas, params.options);
-    };
-
     var drawHTML = function (html, canvas, options) {
         var doc = browser.parseHTML(html);
 
