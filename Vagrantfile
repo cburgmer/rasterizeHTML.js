@@ -8,7 +8,12 @@
 Vagrant.configure(2) do |config|
   config.vm.box = "ubuntu/trusty64"
 
-   config.vm.provision "shell", inline: <<-SHELL
+  config.vm.provider "virtualbox" do |v|
+    v.memory = 2048
+  end
+
+  config.vm.provision "shell", inline: <<-SHELL
+     sudo echo "nameserver 8.8.8.8" > /etc/resolv.conf
      sudo apt-get update
      sudo apt-get install -y nodejs nodejs-legacy npm xvfb git firefox libfontconfig
      sudo npm install npm -g
@@ -19,5 +24,5 @@ Vagrant.configure(2) do |config|
      cd rasterizeHTML.js
      git pull
      echo "You can now run the test suite via $ xvfb-run ./go"
-   SHELL
+  SHELL
 end
