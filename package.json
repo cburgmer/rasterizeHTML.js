@@ -26,7 +26,7 @@
   "dependencies": {
     "ayepromise": "~1.1.1",
     "css-mediaquery": "~0.1.2",
-    "inlineresources": "~0.3.0",
+    "inlineresources": "~0.3.2",
     "url": "~0.10.1",
     "xmlserializer": "~0.4.0",
     "sane-domparser-error": "~0.2.0"
