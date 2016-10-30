@@ -20,7 +20,8 @@ module.exports = function (grunt) {
             options: {
                 specs: 'test/specs/*.js',
                 vendor: [
-                    'node_modules/imagediff/imagediff.js'
+                    'node_modules/imagediff/imagediff.js',
+                    'node_modules/es6-promise/dist/es6-promise.auto.js'
                 ],
                 helpers: [
                     'test/helpers.js',

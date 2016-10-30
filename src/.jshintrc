@@ -12,6 +12,7 @@
     "strict": true,
     "browser": true,
     "globals": {
+        "Promise": true,
         "util": true,
         "proxies": true,
         "documentUtil": true,

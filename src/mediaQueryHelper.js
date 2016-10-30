@@ -30,25 +30,24 @@ var mediaQueryHelper = (function (cssMediaQuery) {
     };
 
     var hasEmMediaQueryIssue = function () {
-        var img = svgImgBlueByEmMediaQuery(),
-            defer = ayepromise.defer();
+        return new Promise(function (resolve, reject) {
+            var img = svgImgBlueByEmMediaQuery();
 
-        document.querySelector('body').appendChild(img);
+            document.querySelector('body').appendChild(img);
 
-        img.onload = function () {
-            document.querySelector('body').removeChild(img);
-            try {
-                defer.resolve(!firstPixelHasColor(img, 0, 0, 255));
-            } catch (e) {
-                // Fails in PhantomJS, let's assume the issue exists
-                defer.resolve(true);
-            }
-        };
-        img.onerror = function () {
-            defer.reject();
-        };
-
-        return defer.promise;
+            img.onload = function () {
+                document.querySelector('body').removeChild(img);
+                try {
+                    resolve(!firstPixelHasColor(img, 0, 0, 255));
+                } catch (e) {
+                    // Fails in PhantomJS, let's assume the issue exists
+                    resolve(true);
+                }
+            };
+            img.onerror = function () {
+                reject();
+            };
+        });
     };
 
     var hasEmIssue;
