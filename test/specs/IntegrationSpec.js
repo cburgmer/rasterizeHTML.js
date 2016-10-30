@@ -5,12 +5,6 @@ describe("Integration test", function () {
         width = 200,
         height = 100;
 
-    var fulfilled = function (value) {
-        var defer = ayepromise.defer();
-        defer.resolve(value);
-        return defer.promise;
-    };
-
     var forceImageSizeForPlatformCompatibility = function (image) {
         image.width = width;
         image.height = height;
@@ -126,7 +120,7 @@ describe("Integration test", function () {
 
     // This fails in Firefox probably due to https://bugzilla.mozilla.org/show_bug.cgi?id=942138
     ifNotInPhantomJSAndNotLocalRunnerIt("should take a URL and load non UTF-8 content", function (done) {
-        var inlineReferencesSpy = spyOn(inlineresources, 'inlineReferences').and.returnValue(fulfilled());
+        var inlineReferencesSpy = spyOn(inlineresources, 'inlineReferences').and.returnValue(Promise.resolve());
 
         rasterizeHTML.drawURL(testHelper.fixturesPath + "nonUTF8Encoding.html").then(function () {
             expect(inlineReferencesSpy).toHaveBeenCalled();

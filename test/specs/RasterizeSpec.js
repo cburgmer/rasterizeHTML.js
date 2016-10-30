@@ -6,36 +6,25 @@ describe("Rasterize", function () {
         doc,
         inlineReferences;
 
-    var fulfilled = function (value) {
-        var defer = ayepromise.defer();
-        defer.resolve(value);
-        return defer.promise;
-    };
-    var rejected = function (error) {
-        var defer = ayepromise.defer();
-        defer.reject(error);
-        return defer.promise;
-    };
-
     var withErrors = function (errors) {
-        return fulfilled(errors);
+        return Promise.resolve(errors);
     };
     var withoutErrors = function () {
         return withErrors([]);
     };
 
     var setUpDrawDocumentAsSvg = function (svg) {
-        document2svg.drawDocumentAsSvg.and.returnValue(fulfilled(svg));
+        document2svg.drawDocumentAsSvg.and.returnValue(Promise.resolve(svg));
     };
     var setUpDrawDocumentAsSvgError = function (e) {
-        document2svg.drawDocumentAsSvg.and.returnValue(rejected(e));
+        document2svg.drawDocumentAsSvg.and.returnValue(Promise.reject(e));
     };
 
     var setUpRenderSvg = function (image) {
-        svg2image.renderSvg.and.returnValue(fulfilled(image));
+        svg2image.renderSvg.and.returnValue(Promise.resolve(image));
     };
     var setUpRenderSvgError = function (e) {
-        svg2image.renderSvg.and.returnValue(rejected(e));
+        svg2image.renderSvg.and.returnValue(Promise.reject(e));
     };
 
     var aMockCanvas = function () {
@@ -146,7 +135,7 @@ describe("Rasterize", function () {
 
         it("should optionally execute JavaScript in the page", function (done) {
             var executeJavascript = spyOn(browser, "executeJavascript").and.returnValue(
-                    fulfilled({document: doc, errors: []})
+                    Promise.resolve({document: doc, errors: []})
                 );
 
             rasterize.rasterize(doc.documentElement, null, {executeJs: true, width: 123, height: 456}).then(function () {
@@ -159,7 +148,7 @@ describe("Rasterize", function () {
 
         it("should inline scripts when executing JavaScript", function (done) {
             spyOn(browser, "executeJavascript").and.returnValue(
-                fulfilled({document: doc, errors: []})
+                Promise.resolve({document: doc, errors: []})
             );
 
             rasterize.rasterize(doc.documentElement, null, {executeJs: true}).then(function () {
@@ -171,7 +160,7 @@ describe("Rasterize", function () {
 
         it("should follow optional timeout when executing JavaScript", function (done) {
             var executeJavascript = spyOn(browser, "executeJavascript").and.returnValue(
-                    fulfilled({document: doc, errors: []})
+                    Promise.resolve({document: doc, errors: []})
                 );
 
 
@@ -211,7 +200,7 @@ describe("Rasterize", function () {
         it("should pass through a JS error", function (done) {
             spyOn(inlineresources, "inlineReferences").and.returnValue(withoutErrors());
             spyOn(browser, "executeJavascript").and.returnValue(
-                fulfilled({document: doc, errors: ["the error"]})
+                Promise.resolve({document: doc, errors: ["the error"]})
             );
             setUpDrawDocumentAsSvg(theSvg);
             setUpRenderSvg(rasterizedImage);

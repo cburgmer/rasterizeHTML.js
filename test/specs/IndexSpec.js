@@ -4,33 +4,21 @@ describe("Main", function () {
     var svgImage = "svg image",
         doc, canvas;
 
-    var fulfilled = function (value) {
-        var defer = ayepromise.defer();
-        defer.resolve(value);
-        return defer.promise;
-    };
-
-    var rejected = function (error) {
-        var defer = ayepromise.defer();
-        defer.reject(error);
-        return defer.promise;
-    };
-
     var setUpRasterize = function (image, errors) {
-            rasterize.rasterize.and.returnValue(fulfilled({
+            rasterize.rasterize.and.returnValue(Promise.resolve({
                 image: image,
                 errors: errors
             }));
         },
         setUpRasterizeError = function (e) {
-            rasterize.rasterize.and.returnValue(rejected(e));
+            rasterize.rasterize.and.returnValue(Promise.reject(e));
         };
 
     var setUpLoadDocument = function () {
-            browser.loadDocument.and.returnValue(fulfilled(doc));
+            browser.loadDocument.and.returnValue(Promise.resolve(doc));
         },
         setUpLoadDocumentError = function (e) {
-            browser.loadDocument.and.returnValue(rejected(e));
+            browser.loadDocument.and.returnValue(Promise.reject(e));
         };
 
     beforeEach(function () {
@@ -125,7 +113,7 @@ describe("Main", function () {
     describe("drawHTML", function () {
         it("should take a HTML string, inline all displayable content and render to the given canvas", function (done) {
             var html = "<head><title>a title</title></head><body>some html</body>",
-                drawDocumentSpy = spyOn(rasterizeHTML, "drawDocument").and.returnValue(fulfilled({
+                drawDocumentSpy = spyOn(rasterizeHTML, "drawDocument").and.returnValue(Promise.resolve({
                     image: svgImage,
                     errors: []
                 }));
@@ -148,7 +136,7 @@ describe("Main", function () {
 
         it("should make the canvas optional when drawing a HTML string", function (done) {
             var html = "the html",
-                drawDocumentSpy = spyOn(rasterizeHTML, "drawDocument").and.returnValue(fulfilled({
+                drawDocumentSpy = spyOn(rasterizeHTML, "drawDocument").and.returnValue(Promise.resolve({
                     image: svgImage,
                     errors: []
                 }));
@@ -163,7 +151,7 @@ describe("Main", function () {
 
         it("should take a HTML string with optional baseUrl, inline all displayable content and render to the given canvas", function (done) {
             var html = "the html",
-                drawDocumentSpy = spyOn(rasterizeHTML, "drawDocument").and.returnValue(fulfilled({
+                drawDocumentSpy = spyOn(rasterizeHTML, "drawDocument").and.returnValue(Promise.resolve({
                     image: svgImage,
                     errors: []
                 }));
@@ -177,7 +165,7 @@ describe("Main", function () {
 
         it("should circumvent caching if requested for drawHTML", function (done) {
             var html = "<head><title>a title</title></head><body>some html</body>",
-                drawDocumentSpy = spyOn(rasterizeHTML, "drawDocument").and.returnValue(fulfilled({
+                drawDocumentSpy = spyOn(rasterizeHTML, "drawDocument").and.returnValue(Promise.resolve({
                     image: svgImage,
                     errors: []
                 }));
@@ -192,7 +180,7 @@ describe("Main", function () {
 
     describe("drawURL", function () {
         it("should take a URL, inline all displayable content and render to the given canvas", function (done) {
-            var drawDocumentSpy = spyOn(rasterizeHTML, "drawDocument").and.returnValue(fulfilled({
+            var drawDocumentSpy = spyOn(rasterizeHTML, "drawDocument").and.returnValue(Promise.resolve({
                     image: svgImage,
                     errors: []
                 }));
@@ -213,7 +201,7 @@ describe("Main", function () {
         });
 
         it("should make the canvas optional when drawing an URL", function (done) {
-            var drawDocumentSpy = spyOn(rasterizeHTML, "drawDocument").and.returnValue(fulfilled({
+            var drawDocumentSpy = spyOn(rasterizeHTML, "drawDocument").and.returnValue(Promise.resolve({
                     image: svgImage,
                     errors: []
                 }));
@@ -229,7 +217,7 @@ describe("Main", function () {
         });
 
         it("should circumvent caching if requested for drawURL", function (done) {
-            spyOn(rasterizeHTML, "drawDocument").and.returnValue(fulfilled({
+            spyOn(rasterizeHTML, "drawDocument").and.returnValue(Promise.resolve({
                 image: svgImage,
                 errors: []
             }));
@@ -261,7 +249,7 @@ describe("Main", function () {
         });
 
         it("should pass through errors to drawHTML", function (done) {
-            spyOn(rasterizeHTML, "drawDocument").and.returnValue(fulfilled({
+            spyOn(rasterizeHTML, "drawDocument").and.returnValue(Promise.resolve({
                 errors: [{message: "the error"}]
             }));
 
@@ -273,7 +261,7 @@ describe("Main", function () {
         });
 
         it("should pass through errors to drawURL", function (done) {
-            spyOn(rasterizeHTML, "drawDocument").and.returnValue(fulfilled({
+            spyOn(rasterizeHTML, "drawDocument").and.returnValue(Promise.resolve({
                 errors: [{message: "the error"}]
             }));
 

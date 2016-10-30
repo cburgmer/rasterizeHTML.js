@@ -13,42 +13,40 @@ window.testHelper = (function () {
     };
 
     module.readHTMLDocumentFixture = function (url) {
-        var defer = ayepromise.defer(),
-            fixtureUrl = module.fixturesPath + url,
-            xhr = new window.XMLHttpRequest();
+        return new Promise(function (resolve) {
+            var fixtureUrl = module.fixturesPath + url,
+                xhr = new window.XMLHttpRequest();
 
-        xhr.addEventListener("load", function () {
-            if (xhr.status === 200 || xhr.status === 0) {
-                defer.resolve(workAroundFirefoxNotLoadingStylesheetStyles(xhr.responseXML));
-            }
-        }, false);
+            xhr.addEventListener("load", function () {
+                if (xhr.status === 200 || xhr.status === 0) {
+                    resolve(workAroundFirefoxNotLoadingStylesheetStyles(xhr.responseXML));
+                }
+            }, false);
 
-        xhr.open('GET', fixtureUrl, true);
-        xhr.responseType = "document";
-        xhr.overrideMimeType("text/html");
+            xhr.open('GET', fixtureUrl, true);
+            xhr.responseType = "document";
+            xhr.overrideMimeType("text/html");
 
-        xhr.send(null);
-
-        return defer.promise;
+            xhr.send(null);
+        });
     };
 
     module.readHTMLFixture = function (url) {
-        var defer = ayepromise.defer(),
-            fixtureUrl = module.fixturesPath + url,
-            xhr = new window.XMLHttpRequest();
+        return new Promise(function (resolve) {
+            var fixtureUrl = module.fixturesPath + url,
+                xhr = new window.XMLHttpRequest();
 
-        xhr.onreadystatechange = function () {
-            if (xhr.readyState === 4) {
-                defer.resolve(xhr.responseText);
-            }
-        };
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4) {
+                    resolve(xhr.responseText);
+                }
+            };
 
-        xhr.open('GET', fixtureUrl, true);
-        xhr.overrideMimeType("text/html");
+            xhr.open('GET', fixtureUrl, true);
+            xhr.overrideMimeType("text/html");
 
-        xhr.send(null);
-
-        return defer.promise;
+            xhr.send(null);
+        });
     };
 
     module.readDocumentFixture = function (url) {

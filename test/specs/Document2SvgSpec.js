@@ -1,12 +1,6 @@
 describe("Document to SVG conversion", function () {
     "use strict";
 
-    var successfulPromise = function (value) {
-        var defer = ayepromise.defer();
-        defer.resolve(value);
-        return defer.promise;
-    };
-
     describe("getSvgForDocument", function () {
         var defaultZoomLevel = 1;
 
@@ -29,7 +23,7 @@ describe("Document to SVG conversion", function () {
         };
 
         var setUpNeedsEmWorkaroundToReturn = function (value) {
-            mediaQueryHelper.needsEmWorkaround.and.returnValue(successfulPromise(value));
+            mediaQueryHelper.needsEmWorkaround.and.returnValue(Promise.resolve(value));
         };
 
         var sandbox;
@@ -289,23 +283,17 @@ describe("Document to SVG conversion", function () {
         var docElement = "doc",
             calculatedSize;
 
-        var fulfilled = function (value) {
-            var defer = ayepromise.defer();
-            defer.resolve(value);
-            return defer.promise;
-        };
-
         beforeEach(function () {
             spyOn(documentHelper, 'fakeUserAction');
             calculatedSize = 'the_calculated_size';
-            spyOn(browser, 'calculateDocumentContentSize').and.returnValue(fulfilled(calculatedSize));
+            spyOn(browser, 'calculateDocumentContentSize').and.returnValue(Promise.resolve(calculatedSize));
             spyOn(document2svg, 'getSvgForDocument');
         });
 
         it("should draw as svg", function (done) {
             var svg = "the svg";
 
-            document2svg.getSvgForDocument.and.returnValue(successfulPromise(svg));
+            document2svg.getSvgForDocument.and.returnValue(Promise.resolve(svg));
 
             document2svg.drawDocumentAsSvg(docElement, {zoom: 42}).then(function (theSvg) {
                 expect(theSvg).toBe(svg);

@@ -17,12 +17,22 @@ var browser = (function (util, proxies, ayepromise, sanedomparsererror, theWindo
         return element;
     };
 
+    var wait = function (timeout) {
+        var d = ayepromise.defer();
+        if (timeout > 0) {
+            setTimeout(d.resolve, timeout);
+        } else {
+            d.resolve();
+        }
+        return d.promise;
+    };
+
     module.executeJavascript = function (element, options) {
         var iframe = createHiddenElement(theWindow.document, "iframe", options.width, options.height),
             html = element.outerHTML,
             iframeErrorsMessages = [],
             defer = ayepromise.defer(),
-            timeout = options.executeJsTimeout || 0;
+            executeJsTimeout = options.executeJsTimeout || 0;
 
         var doResolve = function () {
             var doc = iframe.contentDocument;
@@ -33,22 +43,12 @@ var browser = (function (util, proxies, ayepromise, sanedomparsererror, theWindo
             });
         };
 
-        var waitForJavaScriptToRun = function () {
-            var d = ayepromise.defer();
-            if (timeout > 0) {
-                setTimeout(d.resolve, timeout);
-            } else {
-                d.resolve();
-            }
-            return d.promise;
-        };
-
         var xhr = iframe.contentWindow.XMLHttpRequest,
             finishNotifyXhrProxy = proxies.finishNotifyingXhr(xhr),
             baseUrlXhrProxy = proxies.baseUrlRespectingXhr(finishNotifyXhrProxy, options.baseUrl);
 
         iframe.onload = function () {
-            waitForJavaScriptToRun()
+            wait(executeJsTimeout)
                 .then(finishNotifyXhrProxy.waitForRequestsToFinish)
                 .then(doResolve);
         };
@@ -174,37 +174,36 @@ var browser = (function (util, proxies, ayepromise, sanedomparsererror, theWindo
     };
 
     module.calculateDocumentContentSize = function (element, options) {
-        var defer = ayepromise.defer(),
-            zoom = options.zoom || 1,
-            iframe;
+        return new Promise(function (resolve, reject) {
+            var zoom = options.zoom || 1,
+                iframe;
 
 
-        iframe = createIframeWithSizeAtZoomLevel1(options.width, options.height, zoom);
-        // We need to add the element to the document so that its content gets loaded
-        theWindow.document.getElementsByTagName("body")[0].appendChild(iframe);
+            iframe = createIframeWithSizeAtZoomLevel1(options.width, options.height, zoom);
+            // We need to add the element to the document so that its content gets loaded
+            theWindow.document.getElementsByTagName("body")[0].appendChild(iframe);
 
-        iframe.onload = function () {
-            var doc = iframe.contentDocument,
-                size;
+            iframe.onload = function () {
+                var doc = iframe.contentDocument,
+                    size;
 
-            try {
-                size = calculateContentSize(findCorrelatingElement(element, doc), options.clip, options.width, options.height, zoom);
+                try {
+                    size = calculateContentSize(findCorrelatingElement(element, doc), options.clip, options.width, options.height, zoom);
 
-                defer.resolve(size);
-            } catch (e) {
-                defer.reject(e);
-            } finally {
-                theWindow.document.getElementsByTagName("body")[0].removeChild(iframe);
-            }
-        };
+                    resolve(size);
+                } catch (e) {
+                    reject(e);
+                } finally {
+                    theWindow.document.getElementsByTagName("body")[0].removeChild(iframe);
+                }
+            };
 
-        // srcdoc doesn't work in PhantomJS yet
-        iframe.contentDocument.open();
-        iframe.contentDocument.write('<!DOCTYPE html>');
-        iframe.contentDocument.write(elementToFullHtmlDocument(element));
-        iframe.contentDocument.close();
-
-        return defer.promise;
+            // srcdoc doesn't work in PhantomJS yet
+            iframe.contentDocument.open();
+            iframe.contentDocument.write('<!DOCTYPE html>');
+            iframe.contentDocument.write(elementToFullHtmlDocument(element));
+            iframe.contentDocument.close();
+        });
     };
 
     module.parseHtmlFragment = function (htmlFragment) {
@@ -281,38 +280,37 @@ var browser = (function (util, proxies, ayepromise, sanedomparsererror, theWindo
     };
 
     var doDocumentLoad = function (url, options) {
-        var xhr = new window.XMLHttpRequest(),
-            joinedUrl = util.joinUrl(options.baseUrl, url),
-            augmentedUrl = getUncachableURL(joinedUrl, options.cache),
-            defer = ayepromise.defer(),
-            doReject = function (e) {
-                defer.reject({
-                    message: "Unable to load page",
-                    originalError: e
-                });
-            };
+        return new Promise(function (resolve, reject) {
+            var xhr = new window.XMLHttpRequest(),
+                joinedUrl = util.joinUrl(options.baseUrl, url),
+                augmentedUrl = getUncachableURL(joinedUrl, options.cache),
+                doReject = function (e) {
+                    reject({
+                        message: "Unable to load page",
+                        originalError: e
+                    });
+                };
 
-        xhr.addEventListener("load", function () {
-            if (xhr.status === 200 || xhr.status === 0) {
-                defer.resolve(xhr.responseXML);
-            } else {
-                doReject(xhr.statusText);
+            xhr.addEventListener("load", function () {
+                if (xhr.status === 200 || xhr.status === 0) {
+                    resolve(xhr.responseXML);
+                } else {
+                    doReject(xhr.statusText);
+                }
+            }, false);
+
+            xhr.addEventListener("error", function (e) {
+                doReject(e);
+            }, false);
+
+            try {
+                xhr.open('GET', augmentedUrl, true);
+                xhr.responseType = "document";
+                xhr.send(null);
+            } catch (e) {
+                doReject(e);
             }
-        }, false);
-
-        xhr.addEventListener("error", function (e) {
-            doReject(e);
-        }, false);
-
-        try {
-            xhr.open('GET', augmentedUrl, true);
-            xhr.responseType = "document";
-            xhr.send(null);
-        } catch (e) {
-            doReject(e);
-        }
-
-        return defer.promise;
+        });
     };
 
     module.loadDocument = function (url, options) {
