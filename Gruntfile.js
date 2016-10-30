@@ -22,7 +22,8 @@ module.exports = function (grunt) {
                 vendor: [
                     'node_modules/imagediff/imagediff.js',
                     'node_modules/es6-promise/dist/es6-promise.auto.js',
-                    'node_modules/mock-promises/lib/mock-promises.js'
+                    'node_modules/mock-promises/lib/mock-promises.js',
+                    'build/dependencies/promise-mock.js'
                 ],
                 helpers: [
                     'test/helpers.js',
@@ -41,6 +42,15 @@ module.exports = function (grunt) {
                 options: {
                     browserifyOptions: {
                         standalone: 'xmlserializer'
+                    }
+                }
+            },
+            promisemock: {
+                src: 'node_modules/promise-mock/index.js',
+                dest: 'build/dependencies/promise-mock.js',
+                options: {
+                    browserifyOptions: {
+                        standalone: 'PromiseMock'
                     }
                 }
             },

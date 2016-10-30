@@ -1,4 +1,4 @@
-var browser = (function (util, proxies, ayepromise, sanedomparsererror, theWindow) {
+var browser = (function (util, proxies, sanedomparsererror, theWindow) {
     "use strict";
 
     var module = {};
@@ -18,55 +18,54 @@ var browser = (function (util, proxies, ayepromise, sanedomparsererror, theWindo
     };
 
     var wait = function (timeout) {
-        var d = ayepromise.defer();
         if (timeout > 0) {
-            setTimeout(d.resolve, timeout);
+            return new Promise(function (resolve) {
+                setTimeout(resolve, timeout);
+            });
         } else {
-            d.resolve();
+            return Promise.resolve();
         }
-        return d.promise;
     };
 
     module.executeJavascript = function (element, options) {
-        var iframe = createHiddenElement(theWindow.document, "iframe", options.width, options.height),
-            html = element.outerHTML,
-            iframeErrorsMessages = [],
-            defer = ayepromise.defer(),
-            executeJsTimeout = options.executeJsTimeout || 0;
+        return new Promise(function (resolve) {
+            var iframe = createHiddenElement(theWindow.document, "iframe", options.width, options.height),
+                html = element.outerHTML,
+                iframeErrorsMessages = [],
+                executeJsTimeout = options.executeJsTimeout || 0;
 
-        var doResolve = function () {
-            var doc = iframe.contentDocument;
-            theWindow.document.getElementsByTagName("body")[0].removeChild(iframe);
-            defer.resolve({
-                document: doc,
-                errors: iframeErrorsMessages
-            });
-        };
+            var doResolve = function () {
+                var doc = iframe.contentDocument;
+                theWindow.document.getElementsByTagName("body")[0].removeChild(iframe);
+                resolve({
+                    document: doc,
+                    errors: iframeErrorsMessages
+                });
+            };
 
-        var xhr = iframe.contentWindow.XMLHttpRequest,
-            finishNotifyXhrProxy = proxies.finishNotifyingXhr(xhr),
-            baseUrlXhrProxy = proxies.baseUrlRespectingXhr(finishNotifyXhrProxy, options.baseUrl);
+            var xhr = iframe.contentWindow.XMLHttpRequest,
+                finishNotifyXhrProxy = proxies.finishNotifyingXhr(xhr),
+                baseUrlXhrProxy = proxies.baseUrlRespectingXhr(finishNotifyXhrProxy, options.baseUrl);
 
-        iframe.onload = function () {
-            wait(executeJsTimeout)
-                .then(finishNotifyXhrProxy.waitForRequestsToFinish)
-                .then(doResolve);
-        };
+            iframe.onload = function () {
+                wait(executeJsTimeout)
+                    .then(finishNotifyXhrProxy.waitForRequestsToFinish)
+                    .then(doResolve);
+            };
 
-        iframe.contentDocument.open();
-        iframe.contentWindow.XMLHttpRequest = baseUrlXhrProxy;
-        iframe.contentWindow.onerror = function (msg) {
-            iframeErrorsMessages.push({
-                resourceType: "scriptExecution",
-                msg: msg
-            });
-        };
+            iframe.contentDocument.open();
+            iframe.contentWindow.XMLHttpRequest = baseUrlXhrProxy;
+            iframe.contentWindow.onerror = function (msg) {
+                iframeErrorsMessages.push({
+                    resourceType: "scriptExecution",
+                    msg: msg
+                });
+            };
 
-        iframe.contentDocument.write('<!DOCTYPE html>');
-        iframe.contentDocument.write(html);
-        iframe.contentDocument.close();
-
-        return defer.promise;
+            iframe.contentDocument.write('<!DOCTYPE html>');
+            iframe.contentDocument.write(html);
+            iframe.contentDocument.close();
+        });
     };
 
     var createHiddenSandboxedIFrame = function (doc, width, height) {
@@ -321,4 +320,4 @@ var browser = (function (util, proxies, ayepromise, sanedomparsererror, theWindo
     };
 
     return module;
-}(util, proxies, ayepromise, sanedomparsererror, window));
+}(util, proxies, sanedomparsererror, window));

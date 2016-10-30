@@ -5,8 +5,12 @@ describe("Browser functions", function () {
         var doc;
 
         var mockPromisesToResolveSynchronously = function () {
-            spyOn(ayepromise, 'defer').and.callFake(testHelper.synchronousDefer);
+            PromiseMock.install();
         };
+
+        afterEach(function () {
+            PromiseMock.uninstall();
+        });
 
         var mockFinishNotifyingXHRProxy = function () {
             var fakeXhrProxy = jasmine.createSpyObj('finishNotifyingXhrProxy', ['send', 'waitForRequestsToFinish']),
@@ -87,9 +91,11 @@ describe("Browser functions", function () {
 
             // HACK fragile test. We need to wait for the iframe.onload to be triggered
             setTimeout(function () {
+                Promise.runAll();
                 expect(callback).not.toHaveBeenCalled();
 
                 xhrFinishedDefer.resolve();
+                Promise.runAll();
 
                 expect(callback).toHaveBeenCalled();
 
@@ -107,9 +113,11 @@ describe("Browser functions", function () {
 
             // HACK fragile test. We need to wait for the iframe.onload to be triggered
             setTimeout(function () {
+                Promise.runAll();
                 expect(callback).not.toHaveBeenCalled();
 
                 xhrFinishedDefer.resolve();
+                Promise.runAll();
 
                 expect(callback).toHaveBeenCalled();
 
