@@ -85,7 +85,7 @@ describe("Svg to Image", function () {
                 return new OldImage();
             });
 
-            svg2image.renderSvg("svg", null).fail(done);
+            svg2image.renderSvg("svg", null).then(null, done);
             imageSpy.onerror();
         });
 

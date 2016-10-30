@@ -289,7 +289,7 @@ describe("Main", function () {
         it("should report an error on loading a broken URL", function (done) {
             setUpLoadDocumentError("the error");
 
-            rasterizeHTML.drawURL("non_existing.html", canvas).fail(function (e) {
+            rasterizeHTML.drawURL("non_existing.html", canvas).then(null, function (e) {
                 expect(e).toEqual("the error");
 
                 done();
@@ -303,7 +303,7 @@ describe("Main", function () {
 
             setUpRasterizeError(error);
 
-            rasterizeHTML.drawDocument(doc, canvas).fail(function (e) {
+            rasterizeHTML.drawDocument(doc, canvas).then(null, function (e) {
                 expect(e).toBe(error);
 
                 done();

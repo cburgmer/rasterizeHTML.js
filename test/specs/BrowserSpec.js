@@ -584,7 +584,7 @@ describe("Browser functions", function () {
         });
 
         it("should error on failing URL", function (done) {
-            browser.loadDocument(testHelper.fixturesPath + "non_existing_url.html", {}).fail(function (e) {
+            browser.loadDocument(testHelper.fixturesPath + "non_existing_url.html", {}).then(null, function (e) {
                 expect(e.message).toEqual("Unable to load page");
                 expect(e.originalError).toBeTruthy();
 
@@ -593,7 +593,7 @@ describe("Browser functions", function () {
         });
 
         it("should error on failing parse", function (done) {
-            browser.loadDocument(testHelper.fixturesPath + "invalidInput.xhtml", {}).fail(function (e) {
+            browser.loadDocument(testHelper.fixturesPath + "invalidInput.xhtml", {}).then(null, function (e) {
                 expect(e.message).toEqual("Invalid source");
                 expect(e.originalError).toBeTruthy();
 

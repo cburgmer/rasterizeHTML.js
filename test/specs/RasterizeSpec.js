@@ -243,7 +243,7 @@ describe("Rasterize", function () {
 
             setUpDrawDocumentAsSvgError(error);
 
-            rasterize.rasterize(doc.documentElement, canvas, {}).fail(function (e) {
+            rasterize.rasterize(doc.documentElement, canvas, {}).then(null, function (e) {
                 expect(e).toBe(error);
 
                 expect(canvas.getContext('2d').drawImage).not.toHaveBeenCalled();
@@ -258,7 +258,7 @@ describe("Rasterize", function () {
             setUpDrawDocumentAsSvg(theSvg);
             setUpRenderSvgError(new Error());
 
-            rasterize.rasterize(doc.documentElement, canvas, {}).fail(function (error) {
+            rasterize.rasterize(doc.documentElement, canvas, {}).then(null, function (error) {
                 expect(error.message).toEqual("Error rendering page");
                 expect(error.originalError).toBeTruthy();
 
@@ -274,7 +274,7 @@ describe("Rasterize", function () {
             setUpDrawDocumentAsSvg(theSvg);
             setUpRenderSvg(rasterizedImage);
 
-            rasterize.rasterize(doc.documentElement, canvas, {}).fail(function (error) {
+            rasterize.rasterize(doc.documentElement, canvas, {}).then(null, function (error) {
                 expect(error.message).toEqual("Error rendering page");
                 expect(error.originalError).toBeTruthy();
 
