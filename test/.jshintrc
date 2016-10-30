@@ -4,6 +4,7 @@
     "phantom": true,
     "globals": {
         "$": true,
+        "mockPromises": true,
         "jasmine": true,
         "describe": true,
         "it": true,

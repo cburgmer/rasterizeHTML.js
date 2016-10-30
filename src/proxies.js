@@ -1,5 +1,5 @@
 // Proxy objects by monkey patching
-var proxies = (function (util, ayepromise) {
+var proxies = (function (util) {
     "use strict";
 
     var module = {};
@@ -39,16 +39,18 @@ var proxies = (function (util, ayepromise) {
     module.finishNotifyingXhr = function (XHRObject) {
         var totalXhrCount = 0,
             doneXhrCount = 0,
-            waitingForPendingToClose = false,
-            defer = ayepromise.defer();
+            waitingForPendingToClose = false;
+        var checkAllRequestsFinished;
 
-        var checkAllRequestsFinished = function () {
-            var pendingXhrCount = totalXhrCount - doneXhrCount;
+        var promise = new Promise(function (resolve) {
+            checkAllRequestsFinished = function () {
+                var pendingXhrCount = totalXhrCount - doneXhrCount;
 
-            if (pendingXhrCount <= 0 && waitingForPendingToClose) {
-                defer.resolve({totalCount: totalXhrCount});
-            }
-        };
+                if (pendingXhrCount <= 0 && waitingForPendingToClose) {
+                    resolve({totalCount: totalXhrCount});
+                }
+            };
+        });
 
         var xhrConstructor = function () {
             var xhr = new XHRObject();
@@ -70,11 +72,11 @@ var proxies = (function (util, ayepromise) {
         xhrConstructor.waitForRequestsToFinish = function () {
             waitingForPendingToClose = true;
             checkAllRequestsFinished();
-            return defer.promise;
+            return promise;
         };
 
         return xhrConstructor;
     };
 
     return module;
-}(util, ayepromise));
+}(util));

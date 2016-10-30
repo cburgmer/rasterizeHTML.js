@@ -2,8 +2,12 @@ describe("XHR Proxies", function () {
     "use strict";
 
     var mockPromisesToResolveSynchronously = function () {
-        spyOn(ayepromise, 'defer').and.returnValue(testHelper.synchronousDefer());
+        window.Promise = mockPromises.getMockPromise(Promise);
     };
+
+    afterEach(function () {
+        window.Promise = mockPromises.getOriginalPromise();
+    });
 
     describe("finishNotifyingXhr", function () {
         describe("mocked XHR", function () {
@@ -47,7 +51,9 @@ describe("XHR Proxies", function () {
 
                 originalXHRInstance[0].mockDone();
 
+                mockPromises.tick();
                 expect(callback).toHaveBeenCalledWith({totalCount: 1});
+
             });
 
             it("should notify when multipel pending AJAX request have finished", function () {
@@ -64,9 +70,11 @@ describe("XHR Proxies", function () {
                 finishNotifyingXhrProxy.waitForRequestsToFinish().then(callback);
 
                 originalXHRInstance[0].mockDone();
+                mockPromises.tick();
                 expect(callback).not.toHaveBeenCalled();
 
                 originalXHRInstance[1].mockDone();
+                mockPromises.tick();
                 expect(callback).toHaveBeenCalledWith({totalCount: 2});
             });
 
@@ -101,19 +109,28 @@ describe("XHR Proxies", function () {
 
         describe("integration", function () {
             it("should notify after file has loaded", function (done) {
-                var callback = jasmine.createSpy('callback'),
-                    FinishNotifyingXhrProxy = proxies.finishNotifyingXhr(window.XMLHttpRequest),
-                    xhr = new FinishNotifyingXhrProxy();
+                var FinishNotifyingXhrProxy = proxies.finishNotifyingXhr(window.XMLHttpRequest),
+                    xhr = new FinishNotifyingXhrProxy(),
+                    called = [],
+                    markDoneInAnyOrder = function (key) {
+                        called.push(key);
+                        if (called.length === 2) {
+                            expect(called).toContain('onload');
+                            expect(called).toContain('waitForRequestsToFinish');
+                            done();
+                        }
+                    };
 
-                xhr.onload = callback;
+                xhr.onload = function () {
+                    markDoneInAnyOrder('onload');
+                };
                 xhr.open('GET', testHelper.fixturesPath + 'test.html', true);
                 xhr.send(null);
 
                 FinishNotifyingXhrProxy.waitForRequestsToFinish().then(function (result) {
-                    expect(callback).toHaveBeenCalled();
                     expect(result).toEqual({totalCount: 1});
 
-                    done();
+                    markDoneInAnyOrder('waitForRequestsToFinish');
                 });
             });
         });

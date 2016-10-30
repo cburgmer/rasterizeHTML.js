@@ -21,7 +21,8 @@ module.exports = function (grunt) {
                 specs: 'test/specs/*.js',
                 vendor: [
                     'node_modules/imagediff/imagediff.js',
-                    'node_modules/es6-promise/dist/es6-promise.auto.js'
+                    'node_modules/es6-promise/dist/es6-promise.auto.js',
+                    'node_modules/mock-promises/lib/mock-promises.js'
                 ],
                 helpers: [
                     'test/helpers.js',
