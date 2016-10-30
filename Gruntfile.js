@@ -5,7 +5,6 @@ module.exports = function (grunt) {
         jasmine: {
             src: [
                 'build/dependencies/*.js',
-                'node_modules/ayepromise/ayepromise.js',
                 'src/util.js',
                 'src/proxies.js',
                 'src/documentUtil.js',
@@ -110,9 +109,9 @@ module.exports = function (grunt) {
                 objectToExport: 'rasterizeHTML',
                 indent: '    ',
                 deps: {
-                    'default': ['url', 'cssMediaQuery', 'xmlserializer', 'sanedomparsererror', 'ayepromise', 'inlineresources'],
-                    cjs: ['url', 'css-mediaquery', 'xmlserializer', 'sane-domparser-error', 'ayepromise', 'inlineresources'],
-                    amd: ['url', 'css-mediaquery', 'xmlserializer', 'sane-domparser-error', 'ayepromise', 'inlineresources']
+                    'default': ['url', 'cssMediaQuery', 'xmlserializer', 'sanedomparsererror', 'inlineresources'],
+                    cjs: ['url', 'css-mediaquery', 'xmlserializer', 'sane-domparser-error', 'inlineresources'],
+                    amd: ['url', 'css-mediaquery', 'xmlserializer', 'sane-domparser-error', 'inlineresources']
                 }
             }
         },
@@ -168,7 +167,6 @@ module.exports = function (grunt) {
                         ' * url (MIT License),\n' +
                         ' * css-mediaquery (BSD License),\n' +
                         ' * CSSOM.js (MIT License),\n' +
-                        ' * ayepromise (BSD License & WTFPL),\n' +
                         ' * xmlserializer (MIT License),\n' +
                         ' * sane-domparser-error (BSD License),\n' +
                         ' * css-font-face-src (BSD License),\n' +
@@ -219,7 +217,8 @@ module.exports = function (grunt) {
         'browserify:cssmediaquery',
         'browserify:xmlserializer',
         'browserify:sanedomparsererror',
-        'browserify:inlineresources'
+        'browserify:inlineresources',
+        'browserify:promisemock'
     ]);
 
     grunt.registerTask('test', [
