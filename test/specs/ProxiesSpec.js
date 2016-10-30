@@ -1,12 +1,18 @@
 describe("XHR Proxies", function () {
     "use strict";
 
+    var  originaLPromise;
+
     var mockPromisesToResolveSynchronously = function () {
-        window.Promise = mockPromises.getMockPromise(Promise);
+        window.Promise = testHelper.SynchronousPromise;
     };
 
+    beforeEach(function () {
+        originaLPromise = window.Promise;
+    });
+
     afterEach(function () {
-        window.Promise = mockPromises.getOriginalPromise();
+        window.Promise = originaLPromise;
     });
 
     describe("finishNotifyingXhr", function () {
@@ -51,7 +57,6 @@ describe("XHR Proxies", function () {
 
                 originalXHRInstance[0].mockDone();
 
-                mockPromises.tick();
                 expect(callback).toHaveBeenCalledWith({totalCount: 1});
 
             });
@@ -70,11 +75,9 @@ describe("XHR Proxies", function () {
                 finishNotifyingXhrProxy.waitForRequestsToFinish().then(callback);
 
                 originalXHRInstance[0].mockDone();
-                mockPromises.tick();
                 expect(callback).not.toHaveBeenCalled();
 
                 originalXHRInstance[1].mockDone();
-                mockPromises.tick();
                 expect(callback).toHaveBeenCalledWith({totalCount: 2});
             });
 

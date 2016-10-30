@@ -100,6 +100,26 @@ window.testHelper = (function () {
         };
     };
 
+    var SynchronousPromise = function (callback) {
+        var defer = module.synchronousDefer();
+        this.promise = defer.promise;
+        callback(defer.resolve, function () {});
+    };
+
+    SynchronousPromise.prototype.then = function (onsuccess, onerror) {
+        return this.promise.then(onsuccess, onerror);
+    };
+
+    SynchronousPromise.prototype.catch = function () {
+    };
+
+    SynchronousPromise.resolve = function (val) {
+        return new SynchronousPromise(function (resolve) {
+            resolve(val);
+        });
+    };
+
+    module.SynchronousPromise = SynchronousPromise;
 
     return module;
 }());

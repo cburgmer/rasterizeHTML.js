@@ -20,9 +20,7 @@ module.exports = function (grunt) {
                 specs: 'test/specs/*.js',
                 vendor: [
                     'node_modules/imagediff/imagediff.js',
-                    'node_modules/es6-promise/dist/es6-promise.auto.js',
-                    'node_modules/mock-promises/lib/mock-promises.js',
-                    'build/dependencies/promise-mock.js'
+                    'node_modules/es6-promise/dist/es6-promise.auto.js'
                 ],
                 helpers: [
                     'test/helpers.js',
@@ -41,15 +39,6 @@ module.exports = function (grunt) {
                 options: {
                     browserifyOptions: {
                         standalone: 'xmlserializer'
-                    }
-                }
-            },
-            promisemock: {
-                src: 'node_modules/promise-mock/index.js',
-                dest: 'build/dependencies/promise-mock.js',
-                options: {
-                    browserifyOptions: {
-                        standalone: 'PromiseMock'
                     }
                 }
             },
@@ -217,8 +206,7 @@ module.exports = function (grunt) {
         'browserify:cssmediaquery',
         'browserify:xmlserializer',
         'browserify:sanedomparsererror',
-        'browserify:inlineresources',
-        'browserify:promisemock'
+        'browserify:inlineresources'
     ]);
 
     grunt.registerTask('test', [

@@ -2,14 +2,18 @@ describe("Browser functions", function () {
     "use strict";
 
     describe("executeJavascript", function () {
-        var doc;
+        var doc, originaLPromise;
 
         var mockPromisesToResolveSynchronously = function () {
-            PromiseMock.install();
+            window.Promise = testHelper.SynchronousPromise;
         };
 
+        beforeEach(function () {
+            originaLPromise = window.Promise;
+        });
+
         afterEach(function () {
-            PromiseMock.uninstall();
+            window.Promise = originaLPromise;
         });
 
         var mockFinishNotifyingXHRProxy = function () {
@@ -91,11 +95,9 @@ describe("Browser functions", function () {
 
             // HACK fragile test. We need to wait for the iframe.onload to be triggered
             setTimeout(function () {
-                Promise.runAll();
                 expect(callback).not.toHaveBeenCalled();
 
                 xhrFinishedDefer.resolve();
-                Promise.runAll();
 
                 expect(callback).toHaveBeenCalled();
 
@@ -113,11 +115,9 @@ describe("Browser functions", function () {
 
             // HACK fragile test. We need to wait for the iframe.onload to be triggered
             setTimeout(function () {
-                Promise.runAll();
                 expect(callback).not.toHaveBeenCalled();
 
                 xhrFinishedDefer.resolve();
-                Promise.runAll();
 
                 expect(callback).toHaveBeenCalled();
 

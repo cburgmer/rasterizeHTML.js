@@ -45,8 +45,6 @@
     "grunt-umd": "~2.3.0",
     "imagediff": "git://github.com/cburgmer/js-imagediff#v1.1merged",
     "jasmine-core": "~2.5.0",
-    "mock-promises": "^0.7.0",
-    "promise-mock": "^1.1.0",
     "slimerjs": "~0.906.1"
   },
   "scripts": {
