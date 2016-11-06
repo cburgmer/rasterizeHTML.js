@@ -35,162 +35,140 @@ describe("Document to SVG conversion", function () {
             document.body.removeChild(sandbox);
         });
 
-        it("should return a SVG with embeded HTML", function (done) {
+        it("should return a SVG with embeded HTML", function () {
             var doc = document.implementation.createHTMLDocument("");
             doc.body.innerHTML = "Test content";
 
-             document2svg.getSvgForDocument(doc.documentElement, aRenderSize(), defaultZoomLevel).then(function (svgCode) {
-                 expect(svgCode).toMatch(new RegExp(
-                     '<svg xmlns="http://www.w3.org/2000/svg" .*>' +
-                         '.*' +
-                         '<foreignObject .*>' +
-                         '<html xmlns="http://www.w3.org/1999/xhtml">' +
-                         '<head>' +
-                         '<title(/>|></title>)' +
-                         '</head>' +
-                         '<body>' +
-                         "Test content" +
-                         '</body>' +
-                         '</html>' +
-                         '</foreignObject>' +
-                         '</svg>'
-                 ));
-
-                 done();
-            });
+            var svgCode = document2svg.getSvgForDocument(doc.documentElement, aRenderSize(), defaultZoomLevel);
+            expect(svgCode).toMatch(new RegExp(
+                '<svg xmlns="http://www.w3.org/2000/svg" .*>' +
+                    '.*' +
+                    '<foreignObject .*>' +
+                    '<html xmlns="http://www.w3.org/1999/xhtml">' +
+                    '<head>' +
+                    '<title(/>|></title>)' +
+                    '</head>' +
+                    '<body>' +
+                    "Test content" +
+                    '</body>' +
+                    '</html>' +
+                    '</foreignObject>' +
+                    '</svg>'
+            ));
         });
 
-        it("should return a SVG with embedded image", function (done) {
+        it("should return a SVG with embedded image", function () {
             var doc = document.implementation.createHTMLDocument(""),
                 canonicalXML;
             doc.body.innerHTML = '<img src="data:image/png;base64,sOmeFAKeBasE64="/>';
 
-            document2svg.getSvgForDocument(doc.documentElement, aRenderSize(), defaultZoomLevel).then(function (svgCode) {
-                expect(svgCode).not.toBeNull();
-                canonicalXML = svgCode.replace(/ +\/>/, '/>');
-                expect(canonicalXML).toMatch(new RegExp(
-                    '<svg xmlns="http://www.w3.org/2000/svg" .*>' +
-                        '.*' +
-                        '<foreignObject .*>' +
-                        '<html xmlns="http://www.w3.org/1999/xhtml">' +
-                        '<head>' +
-                        '<title(/>|></title>)' +
-                        '</head>' +
-                        '<body>' +
-                        '<img src="data:image/png;base64,sOmeFAKeBasE64="/>' +
-                        '</body>' +
-                        '</html>' +
-                        '</foreignObject>' +
-                        '</svg>'
-                ));
-
-                done();
-            });
+            var svgCode = document2svg.getSvgForDocument(doc.documentElement, aRenderSize(), defaultZoomLevel);
+            expect(svgCode).not.toBeNull();
+            canonicalXML = svgCode.replace(/ +\/>/, '/>');
+            expect(canonicalXML).toMatch(new RegExp(
+                '<svg xmlns="http://www.w3.org/2000/svg" .*>' +
+                    '.*' +
+                    '<foreignObject .*>' +
+                    '<html xmlns="http://www.w3.org/1999/xhtml">' +
+                    '<head>' +
+                    '<title(/>|></title>)' +
+                    '</head>' +
+                    '<body>' +
+                    '<img src="data:image/png;base64,sOmeFAKeBasE64="/>' +
+                    '</body>' +
+                    '</html>' +
+                    '</foreignObject>' +
+                    '</svg>'
+            ));
         });
 
-        it("should return a SVG with the given size", function (done) {
+        it("should return a SVG with the given size", function () {
             var doc = document.implementation.createHTMLDocument("");
             doc.body.innerHTML = "content";
 
-            document2svg.getSvgForDocument(doc.documentElement, aRenderSize(123, 987, 200, 1000, 2, 7), defaultZoomLevel).then(function (svgCode) {
-                expect(svgCode).toMatch(new RegExp(
-                    '<svg xmlns="http://www.w3.org/2000/svg" width="123" height="987"[^>]*>' +
-                        '.*' +
-                        '<foreignObject x="-2" y="-7" width="200" height="1000".*>' +
-                        '<html xmlns="http://www.w3.org/1999/xhtml">' +
-                        '<head>' +
-                        '<title(/>|></title>)' +
-                        '</head>' +
-                        '<body>' +
-                        "content" +
-                        '</body>' +
-                        '</html>' +
-                        '</foreignObject>' +
-                        '</svg>'
-                ));
-
-                done();
-            });
+            var svgCode = document2svg.getSvgForDocument(doc.documentElement, aRenderSize(123, 987, 200, 1000, 2, 7), defaultZoomLevel);
+            expect(svgCode).toMatch(new RegExp(
+                '<svg xmlns="http://www.w3.org/2000/svg" width="123" height="987"[^>]*>' +
+                    '.*' +
+                    '<foreignObject x="-2" y="-7" width="200" height="1000".*>' +
+                    '<html xmlns="http://www.w3.org/1999/xhtml">' +
+                    '<head>' +
+                    '<title(/>|></title>)' +
+                    '</head>' +
+                    '<body>' +
+                    "content" +
+                    '</body>' +
+                    '</html>' +
+                    '</foreignObject>' +
+                    '</svg>'
+            ));
         });
 
-        it("should zoom by the given factor", function (done) {
+        it("should zoom by the given factor", function () {
             var doc = document.implementation.createHTMLDocument("");
             doc.body.innerHTML = "content";
 
             var zoomFactor = 10;
-            document2svg.getSvgForDocument(doc.documentElement, aRenderSize(123, 987, 12, 99), zoomFactor).then(function (svgCode) {
-                expect(svgCode).toMatch(new RegExp(
-                    '<svg xmlns="http://www.w3.org/2000/svg" width="123" height="987".*style="transform:scale\\(10\\); transform-origin: 0 0;".*?>' +
-                        '.*' +
-                        '<foreignObject x="0" y="0" width="12" height="99"[^>]*>' +
-                        '<html xmlns="http://www.w3.org/1999/xhtml">' +
-                        '<head>' +
-                        '<title(/>|></title>)' +
-                        '</head>' +
-                        '<body>' +
-                        "content" +
-                        '</body>' +
-                        '</html>' +
-                        '</foreignObject>' +
-                        '</svg>'
-                ));
-
-                done();
-            });
+            var svgCode = document2svg.getSvgForDocument(doc.documentElement, aRenderSize(123, 987, 12, 99), zoomFactor);
+            expect(svgCode).toMatch(new RegExp(
+                '<svg xmlns="http://www.w3.org/2000/svg" width="123" height="987".*style="transform:scale\\(10\\); transform-origin: 0 0;".*?>' +
+                    '.*' +
+                    '<foreignObject x="0" y="0" width="12" height="99"[^>]*>' +
+                    '<html xmlns="http://www.w3.org/1999/xhtml">' +
+                    '<head>' +
+                    '<title(/>|></title>)' +
+                    '</head>' +
+                    '<body>' +
+                    "content" +
+                    '</body>' +
+                    '</html>' +
+                    '</foreignObject>' +
+                    '</svg>'
+            ));
         });
 
-        it("should ignore zoom factor 0", function (done) {
+        it("should ignore zoom factor 0", function () {
             var doc = document.implementation.createHTMLDocument("");
             doc.body.innerHTML = "content";
 
             var zoomLevel = 0;
-            document2svg.getSvgForDocument(doc.documentElement, aRenderSize(123, 987), zoomLevel).then(function (svgCode) {
-                expect(svgCode).not.toMatch(new RegExp("scale"));
-
-                done();
-            });
+            var svgCode = document2svg.getSvgForDocument(doc.documentElement, aRenderSize(123, 987), zoomLevel);
+            expect(svgCode).not.toMatch(new RegExp("scale"));
         });
 
-        it("should return a SVG with a root font size to preserve rem units", function (done) {
+        it("should return a SVG with a root font size to preserve rem units", function () {
             var doc = document.implementation.createHTMLDocument("");
             doc.body.innerHTML = "Test content";
 
-            document2svg.getSvgForDocument(doc.documentElement, aRenderSizeWithRootFontSize('42px'), defaultZoomLevel).then(function (svgCode) {
-                expect(svgCode).toMatch(new RegExp(
-                    '<svg xmlns="http://www.w3.org/2000/svg" [^>]*font-size="42px"[^>]*>' +
-                        '.*' +
-                        '<foreignObject .*>' +
-                        '<html xmlns="http://www.w3.org/1999/xhtml"[^>]*>' +
-                        '<head>' +
-                        '<title(/>|></title>)' +
-                        '</head>' +
-                        '<body>' +
-                        "Test content" +
-                        '</body>' +
-                        '</html>' +
-                        '</foreignObject>' +
-                        '</svg>'
-                ));
-
-                done();
-            });
+            var svgCode = document2svg.getSvgForDocument(doc.documentElement, aRenderSizeWithRootFontSize('42px'), defaultZoomLevel);
+            expect(svgCode).toMatch(new RegExp(
+                '<svg xmlns="http://www.w3.org/2000/svg" [^>]*font-size="42px"[^>]*>' +
+                    '.*' +
+                    '<foreignObject .*>' +
+                    '<html xmlns="http://www.w3.org/1999/xhtml"[^>]*>' +
+                    '<head>' +
+                    '<title(/>|></title>)' +
+                    '</head>' +
+                    '<body>' +
+                    "Test content" +
+                    '</body>' +
+                    '</html>' +
+                    '</foreignObject>' +
+                    '</svg>'
+            ));
         });
 
-        it("should raise an error on invalid source", function (done) {
+        it("should raise an error on invalid source", function () {
             var doc = document.implementation.createHTMLDocument("");
             doc.body.innerHTML = "content";
 
             var error = new Error();
             spyOn(browser, 'validateXHTML').and.throwError(error);
 
-            document2svg.getSvgForDocument(doc.documentElement, aRenderSize(), 1).then(null, function (e) {
-                expect(e).toBe(error);
-
-                done();
-            });
+            expect(function () { document2svg.getSvgForDocument(doc.documentElement, aRenderSize(), 1); }).toThrow(error);
         });
 
-        it("should work around collapsing margins in Chrome & Safari", function (done) {
+        it("should work around collapsing margins in Chrome & Safari", function () {
             // Bottom margin that would trigger a collapsing margin with the following SVG
             var topChild = document.createElement('div');
             topChild.style.marginBottom = "200px";
@@ -206,46 +184,37 @@ describe("Document to SVG conversion", function () {
             doc.head.querySelector('title').innerText = "meh";
 
             var tempChild = document.createElement('div');
-            document2svg.getSvgForDocument(doc.documentElement, aRenderSize(100, 100), 1).then(function (svgCode) {
-                tempChild.innerHTML = svgCode;
+            var svgCode = document2svg.getSvgForDocument(doc.documentElement, aRenderSize(100, 100), 1);
+            tempChild.innerHTML = svgCode;
 
-                sandbox.appendChild(tempChild.childNodes[0]);
+            sandbox.appendChild(tempChild.childNodes[0]);
 
-                // Work around WebKit reporting offset across the SVG element
-                sandbox.querySelector('svg').style.position = "relative";
+            // Work around WebKit reporting offset across the SVG element
+            sandbox.querySelector('svg').style.position = "relative";
 
-                expect(sandbox.querySelector('.svgContent').offsetTop).toBe(200);
-
-                done();
-            });
+            expect(sandbox.querySelector('.svgContent').offsetTop).toBe(200);
         });
 
-        it("should work around XHTML case-sensitivity for tag name selectors", function (done) {
+        it("should work around XHTML case-sensitivity for tag name selectors", function () {
             var doc = document.implementation.createHTMLDocument("");
 
-            document2svg.getSvgForDocument(doc.documentElement, aRenderSize(), 1).then(function () {
-                expect(documentHelper.rewriteTagNameSelectorsToLowerCase).toHaveBeenCalledWith(doc.documentElement);
-
-                done();
-            });
+            document2svg.getSvgForDocument(doc.documentElement, aRenderSize(), 1);
+            expect(documentHelper.rewriteTagNameSelectorsToLowerCase).toHaveBeenCalledWith(doc.documentElement);
         });
 
-        it("should hide scrollbars on Chrome under Linux", function (done) {
+        it("should hide scrollbars on Chrome under Linux", function () {
             var doc = document.implementation.createHTMLDocument("");
             doc.body.innerHTML = "Test content";
 
-            document2svg.getSvgForDocument(doc.documentElement, aRenderSize(), defaultZoomLevel).then(function (svgCode) {
-                expect(svgCode).toMatch(new RegExp(
-                    '<svg xmlns="http://www.w3.org/2000/svg" .*>' +
-                        '<style scoped="">html::-webkit-scrollbar { display: none; }</style>' +
-                        '<foreignObject .*>' +
-                        '.*' +
-                        '</foreignObject>' +
-                        '</svg>'
-                ));
-
-                done();
-            });
+            var svgCode = document2svg.getSvgForDocument(doc.documentElement, aRenderSize(), defaultZoomLevel);
+            expect(svgCode).toMatch(new RegExp(
+                '<svg xmlns="http://www.w3.org/2000/svg" .*>' +
+                    '<style scoped="">html::-webkit-scrollbar { display: none; }</style>' +
+                    '<foreignObject .*>' +
+                    '.*' +
+                    '</foreignObject>' +
+                    '</svg>'
+            ));
         });
     });
 

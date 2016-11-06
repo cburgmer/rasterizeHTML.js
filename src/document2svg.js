@@ -90,11 +90,7 @@ var document2svg = (function (util, browser, documentHelper, xmlserializer) {
     module.getSvgForDocument = function (element, size, zoomFactor) {
         documentHelper.rewriteTagNameSelectorsToLowerCase(element);
 
-        try {
-            return Promise.resolve(convertElementToSvg(element, size, zoomFactor));
-        } catch (e) {
-            return Promise.reject(e);
-        }
+        return convertElementToSvg(element, size, zoomFactor);
     };
 
     module.drawDocumentAsSvg = function (element, options) {
