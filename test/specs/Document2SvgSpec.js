@@ -22,10 +22,6 @@ describe("Document to SVG conversion", function () {
             return size;
         };
 
-        var setUpNeedsEmWorkaroundToReturn = function (value) {
-            mediaQueryHelper.needsEmWorkaround.and.returnValue(Promise.resolve(value));
-        };
-
         var sandbox;
 
         beforeEach(function () {
@@ -33,10 +29,6 @@ describe("Document to SVG conversion", function () {
             document.body.appendChild(sandbox);
 
             spyOn(documentHelper, 'rewriteTagNameSelectorsToLowerCase');
-            spyOn(mediaQueryHelper, 'needsEmWorkaround');
-            spyOn(mediaQueryHelper, 'workAroundWebKitEmSizeIssue');
-
-            setUpNeedsEmWorkaroundToReturn(false);
         });
 
         afterEach(function () {
@@ -233,28 +225,6 @@ describe("Document to SVG conversion", function () {
 
             document2svg.getSvgForDocument(doc.documentElement, aRenderSize(), 1).then(function () {
                 expect(documentHelper.rewriteTagNameSelectorsToLowerCase).toHaveBeenCalledWith(doc.documentElement);
-
-                done();
-            });
-        });
-
-        it("should work around WebKit's EM media query issue", function (done) {
-            var doc = document.implementation.createHTMLDocument("");
-            setUpNeedsEmWorkaroundToReturn(true);
-
-            document2svg.getSvgForDocument(doc.documentElement, aRenderSize(), 1).then(function () {
-                expect(mediaQueryHelper.workAroundWebKitEmSizeIssue).toHaveBeenCalledWith(doc.documentElement);
-
-                done();
-            });
-        });
-
-        it("should not work around EM media query if no issue exists", function (done) {
-            var doc = document.implementation.createHTMLDocument("");
-            setUpNeedsEmWorkaroundToReturn(false);
-
-            document2svg.getSvgForDocument(doc.documentElement, aRenderSize(), 1).then(function () {
-                expect(mediaQueryHelper.workAroundWebKitEmSizeIssue).not.toHaveBeenCalled();
 
                 done();
             });

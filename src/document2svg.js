@@ -1,4 +1,4 @@
-var document2svg = (function (util, browser, documentHelper, mediaQueryHelper, xmlserializer) {
+var document2svg = (function (util, browser, documentHelper, xmlserializer) {
     "use strict";
 
     var module = {};
@@ -90,13 +90,11 @@ var document2svg = (function (util, browser, documentHelper, mediaQueryHelper, x
     module.getSvgForDocument = function (element, size, zoomFactor) {
         documentHelper.rewriteTagNameSelectorsToLowerCase(element);
 
-        return mediaQueryHelper.needsEmWorkaround().then(function (needsWorkaround) {
-            if (needsWorkaround) {
-                mediaQueryHelper.workAroundWebKitEmSizeIssue(element);
-            }
-
-            return convertElementToSvg(element, size, zoomFactor);
-        });
+        try {
+            return Promise.resolve(convertElementToSvg(element, size, zoomFactor));
+        } catch (e) {
+            return Promise.reject(e);
+        }
     };
 
     module.drawDocumentAsSvg = function (element, options) {
@@ -113,4 +111,4 @@ var document2svg = (function (util, browser, documentHelper, mediaQueryHelper, x
     };
 
     return module;
-}(util, browser, documentHelper, mediaQueryHelper, xmlserializer));
+}(util, browser, documentHelper, xmlserializer));

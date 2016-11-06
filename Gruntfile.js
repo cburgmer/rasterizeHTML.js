@@ -10,7 +10,6 @@ module.exports = function (grunt) {
                 'src/proxies.js',
                 'src/documentUtil.js',
                 'src/documentHelper.js',
-                'src/mediaQueryHelper.js',
                 'src/browser.js',
                 'src/svg2image.js',
                 'src/document2svg.js',
@@ -52,15 +51,6 @@ module.exports = function (grunt) {
                     }
                 }
             },
-            cssmediaquery: {
-                src: 'node_modules/css-mediaquery/index.js',
-                dest: 'build/dependencies/cssmediaquery.js',
-                options: {
-                    browserifyOptions: {
-                        standalone: 'cssMediaQuery'
-                    }
-                }
-            },
             inlineresources: {
                 src: 'node_modules/inlineresources/src/inline.js',
                 dest: 'build/dependencies/inlineresources.js',
@@ -90,9 +80,9 @@ module.exports = function (grunt) {
                 objectToExport: 'rasterizeHTML',
                 indent: '    ',
                 deps: {
-                    'default': ['url', 'cssMediaQuery', 'xmlserializer', 'sanedomparsererror', 'inlineresources'],
-                    cjs: ['url', 'css-mediaquery', 'xmlserializer', 'sane-domparser-error', 'inlineresources'],
-                    amd: ['url', 'css-mediaquery', 'xmlserializer', 'sane-domparser-error', 'inlineresources']
+                    'default': ['url', 'xmlserializer', 'sanedomparsererror', 'inlineresources'],
+                    cjs: ['url', 'xmlserializer', 'sane-domparser-error', 'inlineresources'],
+                    amd: ['url', 'xmlserializer', 'sane-domparser-error', 'inlineresources']
                 }
             }
         },
@@ -103,7 +93,6 @@ module.exports = function (grunt) {
                     'src/proxies.js',
                     'src/documentUtil.js',
                     'src/documentHelper.js',
-                    'src/mediaQueryHelper.js',
                     'src/browser.js',
                     'src/svg2image.js',
                     'src/document2svg.js',
@@ -146,7 +135,6 @@ module.exports = function (grunt) {
                         ' Licensed <%= pkg.license %> */\n' +
                         '/* Integrated dependencies:\n' +
                         ' * url (MIT License),\n' +
-                        ' * css-mediaquery (BSD License),\n' +
                         ' * CSSOM.js (MIT License),\n' +
                         ' * xmlserializer (MIT License),\n' +
                         ' * sane-domparser-error (BSD License),\n' +
@@ -195,7 +183,6 @@ module.exports = function (grunt) {
 
     grunt.registerTask('deps', [
         'browserify:url',
-        'browserify:cssmediaquery',
         'browserify:sanedomparsererror',
         'browserify:inlineresources'
     ]);
