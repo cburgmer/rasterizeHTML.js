@@ -5,6 +5,7 @@ module.exports = function (grunt) {
         jasmine: {
             src: [
                 'build/dependencies/*.js',
+                'node_modules/xmlserializer/xmlserializer.js',
                 'src/util.js',
                 'src/proxies.js',
                 'src/documentUtil.js',
@@ -33,15 +34,6 @@ module.exports = function (grunt) {
             }
         },
         browserify: {
-            xmlserializer: {
-                src: 'node_modules/xmlserializer/lib/serializer.js',
-                dest: 'build/dependencies/xmlserializer.js',
-                options: {
-                    browserifyOptions: {
-                        standalone: 'xmlserializer'
-                    }
-                }
-            },
             sanedomparsererror: {
                 src: 'node_modules/sane-domparser-error/index.js',
                 dest: 'build/dependencies/sane-domparser-error.js',
@@ -204,7 +196,6 @@ module.exports = function (grunt) {
     grunt.registerTask('deps', [
         'browserify:url',
         'browserify:cssmediaquery',
-        'browserify:xmlserializer',
         'browserify:sanedomparsererror',
         'browserify:inlineresources'
     ]);
