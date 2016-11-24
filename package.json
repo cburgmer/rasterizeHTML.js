@@ -41,7 +41,7 @@
     "grunt-contrib-uglify": "~2.0.0",
     "grunt-contrib-watch": "~1.0.0",
     "grunt-regex-check": "~0.1.9",
-    "grunt-umd": "~2.3.0",
+    "grunt-umd": "~2.4.0",
     "imagediff": "git://github.com/cburgmer/js-imagediff#v1.1merged",
     "jasmine-core": "~2.5.0",
     "slimerjs": "~0.906.1"
