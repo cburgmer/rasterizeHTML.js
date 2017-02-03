@@ -71,7 +71,7 @@ var svg2image = (function (window) {
 
     var checkBlobSupport = function () {
         return new Promise(function (resolve, reject) {
-            if (supportsBlobBuilding && window.URL) {
+            if (supportsBlobBuilding() && window.URL) {
                 readingBackFromCanvasBenefitsFromOldSchoolDataUris()
                     .then(function (doesBenefit) {
                         resolve(! doesBenefit);
