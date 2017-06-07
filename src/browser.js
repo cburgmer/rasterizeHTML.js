@@ -10,6 +10,7 @@ var browser = (function (util, proxies, sanedomparsererror, theWindow) {
         element.style.width = width + "px";
         element.style.height = height + "px";
         element.style.position = "absolute";
+        element.style.border = "none";
         element.style.top = (-10000 - height) + "px";
         element.style.left = (-10000 - width) + "px";
         // We need to add the element to the document so that its content gets loaded
