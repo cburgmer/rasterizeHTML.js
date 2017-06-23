@@ -77,6 +77,8 @@ var browser = (function (util, proxies, sanedomparsererror, theWindow) {
         iframe.style.position = "absolute";
         iframe.style.top = (-10000 - height) + "px";
         iframe.style.left = (-10000 - width) + "px";
+        // make sure content gets exact width independent of box-sizing value
+        iframe.style.borderWidth = 0;
         // Don't execute JS, all we need from sandboxing is access to the iframe's document
         iframe.sandbox = 'allow-same-origin';
         // Don't include a scrollbar on Linux

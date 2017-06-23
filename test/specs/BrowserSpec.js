@@ -444,6 +444,31 @@ describe("Browser functions", function () {
             });
         });
 
+        describe("with parent css", function () {
+            var parentStyle;
+
+            beforeEach(function () {
+                parentStyle = document.createElement('style');
+                document.head.appendChild(parentStyle);
+            });
+
+            afterEach(function () {
+                document.head.removeChild(parentStyle);
+            });
+
+            // Fixes https://github.com/cburgmer/rasterizeHTML.js/issues/187
+            it("should not be affected by parent's page border-box on iframe", function (done) {
+                parentStyle.textContent = "* {box-sizing: border-box;} iframe {border-width: 10px;}";
+                setHtml('<div></div>');
+
+                browser.calculateDocumentContentSize(doc.documentElement, {width: 200}).then(function (size) {
+                    expect(size.viewportWidth).toBe(200);
+
+                    done();
+                });
+            });
+        });
+
         describe("zooming", function () {
             it("should report half the viewport size for a zoom of 2", function (done) {
                 setElementWithSize({});
