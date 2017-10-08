@@ -19,6 +19,7 @@
     "example": "./examples/"
   },
   "main": "dist/rasterizeHTML.js",
+  "types": "dist/rasterizeHTML.d.ts",
   "repository": {
     "type": "git",
     "url": "git://github.com/cburgmer/rasterizeHTML.js.git"

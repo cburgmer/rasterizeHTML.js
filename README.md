@@ -53,6 +53,13 @@ Also the individual browsers still have some issues when rendering SVGs with emb
 
 [The full list of limitations is here](https://github.com/cburgmer/rasterizeHTML.js/wiki/Limitations).
 
+TypeScript
+----------
+Import type definitions as follows:
+
+```ts
+import * as rasterizeHTML from 'rasterizehtml';
+```
 Development
 -----------
 
