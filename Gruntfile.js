@@ -111,6 +111,17 @@ module.exports = function (grunt) {
                 },
                 src: ['build/rasterizeHTML.umd.js'],
                 dest: 'dist/<%= pkg.title %>'
+            },
+            types: {
+                options: {
+                    banner:'/*! <%= pkg.title || pkg.name %> - v<%= pkg.version %> - ' +
+                        '<%= grunt.template.today("yyyy-mm-dd") %>\n' +
+                        '* <%= pkg.homepage %>\n' +
+                        '* Copyright (c) <%= grunt.template.today("yyyy") %> <%= pkg.author.name %>;' +
+                        ' Licensed <%= pkg.license %> */\n'
+                },
+                src: 'src/typings.d.ts',
+                dest: '<%=pkg.types%>'
             }
         },
         uglify: {
@@ -197,6 +208,7 @@ module.exports = function (grunt) {
         'concat:one',
         'umd',
         'concat:dist',
+        'concat:types',
         'browserify:allinone',
         'uglify'
     ]);
