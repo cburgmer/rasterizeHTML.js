@@ -48,6 +48,6 @@
     "slimerjs": "git://github.com/laurentj/slimerjs#1.0.0-rc.1"
   },
   "scripts": {
-    "test": "bash go --verbose"
+    "test": "bash go"
   }
 }
