@@ -37,16 +37,14 @@
         };
 
         var isEqual = function (imageUrl1, imageUrl2, threshold) {
-            getImageForUrl(imageUrl1, function (image1) {
-                getImageForUrl(imageUrl2, function (image2) {
-                    var equal = diffHelper.imageEquals(image1, image2, threshold);
+            return new Promise(function (fulfill) {
+                getImageForUrl(imageUrl1, function (image1) {
+                    getImageForUrl(imageUrl2, function (image2) {
+                        var equal = diffHelper.imageEquals(image1, image2, threshold);
 
-                    if (equal) {
-                        console.log("success");
-                    } else {
                         renderDiff(image1, image2);
-                        console.log("fail");
-                    }
+                        fulfill(equal);
+                    });
                 });
             });
         };

@@ -2,7 +2,7 @@
 set -e
 
 PUBLISH_SMOKE_TEST_DIFF="$1"
-SMOKE_TEST_DIFF="test/rasterizeHtmlSmokeTestDiff.png"
+SMOKE_TEST_DIFF="build/rasterizeHtmlSmokeTestDiff.png"
 
 installDependencies() {
     npm install
@@ -22,12 +22,12 @@ main() {
     fi
 
     build
-    runIntegrationTest | tee /tmp/go.$$
-    if [[ -f "$SMOKE_TEST_DIFF" && -n "$PUBLISH_SMOKE_TEST_DIFF" ]]; then
-        curl -F file="@${SMOKE_TEST_DIFF}" https://imagebin.ca/upload.php
+    if ! ./test/integrationTest.js; then
+        if [[ -n "$PUBLISH_SMOKE_TEST_DIFF" ]]; then
+            curl -F file="@${SMOKE_TEST_DIFF}" https://imagebin.ca/upload.php
+        fi
+        exit 1
     fi
-    # Sadly slimerjs cannot return errorcodes
-    cat /tmp/go.$$ | grep success
 }
 
 main
