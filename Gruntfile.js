@@ -146,7 +146,6 @@ module.exports = function (grunt) {
                         ' Licensed <%= pkg.license %> */\n' +
                         '/* Integrated dependencies:\n' +
                         ' * url (MIT License),\n' +
-                        ' * CSSOM.js (MIT License),\n' +
                         ' * xmlserializer (MIT License),\n' +
                         ' * sane-domparser-error (BSD License),\n' +
                         ' * css-font-face-src (BSD License),\n' +
