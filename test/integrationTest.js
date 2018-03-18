@@ -29,6 +29,8 @@ const renderPage = async (browser, url, successCallback) => {
     await page.setViewport({ width: 200, height: 100 });
     await page.goto(url);
 
+    await new Promise(fulfill => setTimeout(fulfill, 500));
+
     const screenshot = await page.screenshot();
     return dataUriForBase64PNG(screenshot.toString('base64'));
 };
@@ -36,6 +38,8 @@ const renderPage = async (browser, url, successCallback) => {
 const runTest = async (browser) => {
     const imageUrl = await renderPage(browser, fileUrl('test/integrationTestPage.html'));
     const targetImageUrl = await renderPage(browser, fileUrl('test/fixtures/testResult.png'));
+    console.log('imageUrl', imageUrl);
+    console.log('targetImageUrl', targetImageUrl);
 
     const imageDiffPage = await browser.newPage();
     await imageDiffPage.goto(fileUrl('test/diffHelperPage.html'));
