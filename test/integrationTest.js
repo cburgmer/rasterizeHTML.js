@@ -51,7 +51,7 @@ const runTest = async (browser) => {
     await imageDiffPage.goto(fileUrl('test/diffHelperPage.html'));
 
     const equal = await imageDiffPage.evaluate(function (url1, url2) {
-        return isEqual(url1, url2, 5);
+        return isEqual(url1, url2, 4);
     }, imageUrl, targetImageUrl);
 
     const screenshot = await imageDiffPage.screenshot();
@@ -66,7 +66,13 @@ const runTest = async (browser) => {
         const success = await runTest(browser);
         browser.close();
 
-        process.exit(success ? 0 : 1);
+        if (success) {
+            console.log('Success');
+            process.exit(0);
+        } else {
+            console.log('Fail');
+            process.exit(1);
+        }
     } catch (e) {
         console.error(e);
         process.exit(2);
