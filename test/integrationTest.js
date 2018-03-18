@@ -7,13 +7,19 @@
 const path = require("path");
 const puppeteer = require('puppeteer');
 
+const viewport = { width: 200, height: 100 };
+
 const fileUrl = (relPath) => {
     return 'file://' + path.resolve(process.cwd(), relPath);
 };
 
-var dataUriForBase64PNG = (pngBase64) => {
-    return "data:image/png;base64," + pngBase64;
+const screenshotToDataUri = (screenshot) => {
+    return "data:image/png;base64," + screenshot.toString('base64');
 };
+
+const sleep = async (inMs) => {
+    await new Promise(fulfill => setTimeout(fulfill, inMs));
+}
 
 const renderPage = async (browser, url, successCallback) => {
     const page = await browser.newPage();
@@ -26,31 +32,30 @@ const renderPage = async (browser, url, successCallback) => {
     page.on('pageerror', msg => {
         console.error(msg);
     });
-    await page.setViewport({ width: 200, height: 100 });
+    await page.setViewport(viewport);
     await page.goto(url);
 
-    await new Promise(fulfill => setTimeout(fulfill, 500));
+    await sleep(500);
 
     const screenshot = await page.screenshot();
-    return dataUriForBase64PNG(screenshot.toString('base64'));
+    return screenshotToDataUri(screenshot);
 };
 
 const runTest = async (browser) => {
     const imageUrl = await renderPage(browser, fileUrl('test/integrationTestPage.html'));
     const targetImageUrl = await renderPage(browser, fileUrl('test/fixtures/testResult.png'));
-    console.log('imageUrl', imageUrl);
-    console.log('targetImageUrl', targetImageUrl);
+    console.log('Rendered test page', imageUrl);
 
     const imageDiffPage = await browser.newPage();
+    await imageDiffPage.setViewport(viewport);
     await imageDiffPage.goto(fileUrl('test/diffHelperPage.html'));
 
     const equal = await imageDiffPage.evaluate(function (url1, url2) {
         return isEqual(url1, url2, 5);
     }, imageUrl, targetImageUrl);
 
-    const screenshotTarget = 'build/rasterizeHtmlSmokeTestDiff.png';
-    console.log('Writing diff to ' + screenshotTarget);
-    await imageDiffPage.screenshot({path: screenshotTarget});
+    const screenshot = await imageDiffPage.screenshot();
+    console.log('Rendered diff', screenshotToDataUri(screenshot));
 
     return equal;
 };
