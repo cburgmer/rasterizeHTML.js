@@ -52,10 +52,15 @@ const runTest = async (browser) => {
 };
 
 (async () => {
-    const browser = await puppeteer.launch({args: ['--allow-file-access-from-files']});
-    const success = await runTest(browser);
-    browser.close();
+    try {
+        const browser = await puppeteer.launch({args: ['--allow-file-access-from-files']});
+        const success = await runTest(browser);
+        browser.close();
 
-    process.exit(success ? 0 : 1);
+        process.exit(success ? 0 : 1);
+    } catch (e) {
+        console.error(e);
+        process.exit(2);
+    }
 })();
 /* jshint ignore:end */
