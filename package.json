@@ -31,7 +31,6 @@
     "sane-domparser-error": "~0.2.0"
   },
   "devDependencies": {
-    "es6-promise": "^4.0.5",
     "grunt": "^1.0.0",
     "grunt-browserify": "^5.0.0",
     "grunt-cli": "^1.0.0",
