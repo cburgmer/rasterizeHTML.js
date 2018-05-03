@@ -59,16 +59,18 @@ describe("Svg to Image", function () {
                     '</svg>'
                 );
 
-            svg2image.renderSvg(twoColorSvg, null).then(function (image) {
-                // This fails in Chrome & Safari, possibly due to a bug with same origin policy stuff
-                try {
-                    expect(image).toImageDiffEqual(referenceImg);
-                } catch (err) {
-                    expect(err.message).toBeNull();
-                }
+            referenceImg.onload = function () {
+                svg2image.renderSvg(twoColorSvg, null).then(function (image) {
+                    // This fails in Safari, possibly due to a bug with same origin policy stuff
+                    try {
+                        expect(image).toImageDiffEqual(referenceImg);
+                    } catch (err) {
+                        expect(err).toBeNull();
+                    }
 
-                done();
-            });
+                    done();
+                });
+            };
         });
 
         it("should return an error when the SVG cannot be rendered", function (done) {
