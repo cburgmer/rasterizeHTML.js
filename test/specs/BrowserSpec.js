@@ -186,7 +186,7 @@ describe("Browser functions", function () {
         });
 
         ifNotInPhantomJsIt("should support window.matchMedia() with 'height' media queries", function (done) {
-            doc.documentElement.innerHTML = '<body onload="setTimeout(function () {document.body.innerHTML = window.matchMedia(\'(min-height: 123px)\').matches; }, 0);"></body>';
+            doc.documentElement.innerHTML = '<body onload="setTimeout(function () {document.body.innerHTML = window.matchMedia(\'(min-height: 123px)\').matches; }, 10);"></body>';
 
             browser.executeJavascript(doc.documentElement, optionsWithViewport(10, 123)).then(function (result) {
                 expect(result.document.body.innerHTML).toEqual('true');
