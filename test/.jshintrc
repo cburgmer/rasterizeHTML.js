@@ -11,6 +11,7 @@
         "beforeEach": true,
         "afterEach": true,
         "expect": true,
+        "fail": true,
         "spyOn": true,
 
         "require": true,

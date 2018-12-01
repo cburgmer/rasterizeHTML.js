@@ -44,10 +44,10 @@ describe("Integration test", function () {
                     expect(result.image).toEqualImage(referenceImg, 2);
 
                     expect(canvas).toEqualImage(referenceImg, 2);
-                    // expect(canvas).toImageDiffEqual(referenceImg, 10);
-
-                    done();
-            });
+                }).catch(function (err) {
+                    expect(err).toBe(null);
+                    fail();
+                }).finally(done);
         });
     });
 
@@ -66,10 +66,10 @@ describe("Integration test", function () {
                 expect(result.image).toEqualImage(referenceImg, 2);
 
                 expect(canvas).toEqualImage(referenceImg, 2);
-                // expect(canvas).toImageDiffEqual(referenceImg, 70);
-
-                done();
-            });
+            }).catch(function (err) {
+                expect(err).toBe(null);
+                fail();
+            }).finally(done);
         });
     });
 
@@ -89,10 +89,10 @@ describe("Integration test", function () {
             expect(result.image).toEqualImage(referenceImg, 2);
 
             expect(canvas).toEqualImage(referenceImg, 2);
-            // expect(canvas).toImageDiffEqual(referenceImg, 90);
-
-            done();
-        });
+        }).catch(function (err) {
+            expect(err).toBe(null);
+            fail();
+        }).finally(done);
     });
 
     ifNotInWebkitIt("should render a URL without canvas", function (done) {
@@ -112,10 +112,10 @@ describe("Integration test", function () {
 
             forceImageSizeForPlatformCompatibility(result.image);
             expect(result.image).toEqualImage(referenceImg, 2);
-            // expect(result.image).toImageDiffEqual(referenceImg, 90);
-
-            done();
-        });
+        }).catch(function (err) {
+            expect(err).toBe(null);
+            fail();
+        }).finally(done);
     });
 
     // This fails in Firefox probably due to https://bugzilla.mozilla.org/show_bug.cgi?id=942138
@@ -129,12 +129,10 @@ describe("Integration test", function () {
 
             // This fails if SpecRunner is opened locally in Firefox. Open over a local webserver helps here.
             expect(doc.querySelector('body').innerHTML.trim()).toEqual('这是中文');
-
-            done();
-        }, function (err) {
-            expect(err).toBe(undefined);
-            done();
-        });
+        }).catch(function (err) {
+            expect(err).toBe(null);
+            fail();
+        }).finally(done);
     });
 
     ifNotInWebKitAndNotLocalRunnerIt("should work around Firefox bug with `null` style properties", function (done) {
@@ -151,24 +149,27 @@ describe("Integration test", function () {
             .then(function (result) {
                 forceImageSizeForPlatformCompatibility(result.image);
                 expect(result.image).toEqualImage(referenceImg, 2);
-
-                done();
-            });
+            }).catch(function (err) {
+                expect(err).toBe(null);
+                fail();
+            }).finally(done);
     });
 
     ifNotInPhantomJsIt("should report a source error on invalid input from HTML", function (done) {
         rasterizeHTML.drawHTML("<html><weird:element></html>", {cache: 'none'}).then(null, function (error) {
             expect(error.message).toEqual("Invalid source");
-
-            done();
-        });
+        }).catch(function (err) {
+            expect(err).toBe(null);
+            fail();
+        }).finally(done);
     });
 
     ifNotInPhantomJsIt("should report a source error on invalid input from URL", function (done) {
         rasterizeHTML.drawURL(testHelper.fixturesPath + "invalidInput.html", {cache: 'none'}).then(null, function (error) {
             expect(error.message).toEqual("Invalid source");
-
-            done();
-        });
+        }).catch(function (err) {
+            expect(err).toBe(null);
+            fail();
+        }).finally(done);
     });
 });

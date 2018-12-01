@@ -38,9 +38,10 @@ describe("Svg to Image", function () {
                     } catch (err) {
                         expect(err.message).toBeNull();
                     }
-
-                    done();
-                });
+                }).catch(function (err) {
+                    expect(err).toBe(null);
+                    fail();
+                }).finally(done);
             };
         });
 
@@ -69,9 +70,10 @@ describe("Svg to Image", function () {
                     } catch (err) {
                         expect(err).toBeNull();
                     }
-
-                    done();
-                });
+                }).catch(function (err) {
+                    expect(err).toBe(null);
+                    fail();
+                }).finally(done);
             };
         });
 
@@ -99,9 +101,10 @@ describe("Svg to Image", function () {
             svg2image.renderSvg(anSvg, null).then(function (image) {
                 expect(image.onerror).toBeNull();
                 expect(image.onload).toBeNull();
-
-                done();
-            });
+            }).catch(function (err) {
+                expect(err).toBe(null);
+                fail();
+            }).finally(done);
         });
     });
 });
