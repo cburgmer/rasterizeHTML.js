@@ -31,7 +31,7 @@ describe("Svg to Image", function () {
                 );
 
             referenceImg.onload = function () {
-                svg2image.renderSvg(twoColorSvg, null).then(function (image) {
+                svg2image.renderSvg(twoColorSvg).then(function (image) {
                     // This fails in Chrome & Safari, possibly due to a bug with same origin policy stuff
                     try {
                         expect(image).toImageDiffEqual(referenceImg);
@@ -63,7 +63,7 @@ describe("Svg to Image", function () {
                 );
 
             referenceImg.onload = function () {
-                svg2image.renderSvg(twoColorSvg, null).then(function (image) {
+                svg2image.renderSvg(twoColorSvg).then(function (image) {
                     // This fails in Safari, possibly due to a bug with same origin policy stuff
                     try {
                         expect(image).toImageDiffEqual(referenceImg);
@@ -91,7 +91,7 @@ describe("Svg to Image", function () {
                 return new OldImage();
             });
 
-            svg2image.renderSvg("svg", null).then(null, done);
+            svg2image.renderSvg("svg").then(null, done);
             imageSpy.onerror();
             expect(true).toBe(true); // work around warning from jasmine that no expectation is given
         });
@@ -99,7 +99,7 @@ describe("Svg to Image", function () {
         it("should return an image without event listeners attached", function (done) {
             var anSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"></svg>';
 
-            svg2image.renderSvg(anSvg, null).then(function (image) {
+            svg2image.renderSvg(anSvg).then(function (image) {
                 expect(image.onerror).toBeNull();
                 expect(image.onload).toBeNull();
             }).catch(function (err) {
