@@ -262,6 +262,7 @@ describe("Browser functions", function () {
 
         it("should deal with a missing 'html' tag", function () {
             browser.parseHTML('<div></div>');
+            expect(true).toBe(true); // work around warning from jasmine that no expectation is given
         });
 
         it("should correctly set the doctype (see issue #89)", function () {
@@ -298,6 +299,7 @@ describe("Browser functions", function () {
 
         it("should pass on a valid document", function () {
             browser.validateXHTML("<b></b>");
+            expect(true).toBe(true); // work around warning from jasmine that no expectation is given
         });
     });
 

@@ -79,6 +79,7 @@ describe("HTML Document Utility functions", function () {
             setHtml('<head><style>@font-face { font-family: "RaphaelIcons"; src: url("raphaelicons-webfont.woff"); }</style></head><body><span></span></body>');
 
             documentUtil.rewriteCssSelectorWith(doc.documentElement, ':hover', '.myFakeHover');
+            expect(true).toBe(true); // work around warning from jasmine that no expectation is given
         });
 
         it("should not touch style elements without a matching selector", function () {
@@ -225,6 +226,8 @@ describe("HTML Document Utility functions", function () {
 
             // expect this not to fail (Chrome would complain about the insertion of an invalid selector:
             // "SyntaxError: Failed to execute 'insertRule' on 'CSSStyleSheet': Failed to parse the rule 'esi:include, a { color: blue; }'.")
+
+            expect(true).toBe(true); // work around warning from jasmine that no expectation is given
         });
 
         // Document https://github.com/cburgmer/rasterizeHTML.js/issues/92

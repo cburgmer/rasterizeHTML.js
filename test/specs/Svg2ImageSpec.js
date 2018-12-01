@@ -93,6 +93,7 @@ describe("Svg to Image", function () {
 
             svg2image.renderSvg("svg", null).then(null, done);
             imageSpy.onerror();
+            expect(true).toBe(true); // work around warning from jasmine that no expectation is given
         });
 
         it("should return an image without event listeners attached", function (done) {

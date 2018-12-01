@@ -91,12 +91,15 @@ describe("XHR Proxies", function () {
                 finishNotifyingXhrProxy.waitForRequestsToFinish().then(done);
 
                 originalXHRInstance[0].mockDone();
+
+                expect(true).toBe(true); // work around warning from jasmine that no expectation is given
             });
 
             it("should finish when no XHR request has been started", function (done) {
                 var finishNotifyingXhrProxy = proxies.finishNotifyingXhr(xhrMockConstructor);
 
                 finishNotifyingXhrProxy.waitForRequestsToFinish().then(done);
+                expect(true).toBe(true); // work around warning from jasmine that no expectation is given
             });
 
             it("should notify even if called after all requests resovled", function (done) {
@@ -107,6 +110,7 @@ describe("XHR Proxies", function () {
                 originalXHRInstance[0].mockDone();
 
                 finishNotifyingXhrProxy.waitForRequestsToFinish().then(done);
+                expect(true).toBe(true); // work around warning from jasmine that no expectation is given
             });
         });
 
