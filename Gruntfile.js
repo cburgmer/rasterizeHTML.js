@@ -2,6 +2,14 @@
 module.exports = function (grunt) {
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
+        connect: {
+            server: {
+                options: {
+                    port: 8765,
+                    hostname: '127.0.0.1'
+                }
+            }
+        },
         jasmine: {
             src: [
                 'build/dependencies/*.js',
@@ -17,6 +25,7 @@ module.exports = function (grunt) {
                 'src/index.js'
             ],
             options: {
+                host: 'http://127.0.0.1:8765/',
                 specs: 'test/specs/*.js',
                 vendor: [
                     'node_modules/imagediff/imagediff.js',
@@ -182,6 +191,7 @@ module.exports = function (grunt) {
     });
 
     grunt.loadNpmTasks('grunt-contrib-concat');
+    grunt.loadNpmTasks('grunt-contrib-connect');
     grunt.loadNpmTasks('grunt-contrib-jasmine');
     grunt.loadNpmTasks('grunt-contrib-jshint');
     grunt.loadNpmTasks('grunt-contrib-uglify');
@@ -199,6 +209,7 @@ module.exports = function (grunt) {
 
     grunt.registerTask('test', [
         'jshint',
+        'connect',
         'jasmine',
         'regex-check'
     ]);

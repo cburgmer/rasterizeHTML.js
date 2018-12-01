@@ -32,12 +32,7 @@ describe("Svg to Image", function () {
 
             referenceImg.onload = function () {
                 svg2image.renderSvg(twoColorSvg).then(function (image) {
-                    // This fails in Chrome & Safari, possibly due to a bug with same origin policy stuff
-                    try {
-                        expect(image).toImageDiffEqual(referenceImg);
-                    } catch (err) {
-                        expect(err.message).toBeNull();
-                    }
+                    expect(image).toImageDiffEqual(referenceImg);
                 }).catch(function (err) {
                     expect(err).toBe(null);
                     fail();

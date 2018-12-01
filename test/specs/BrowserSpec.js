@@ -160,7 +160,7 @@ describe("Browser functions", function () {
             });
         });
 
-        ifNotInPhantomJsIt("should be able to load content via AJAX from the correct url", function (done) {
+        it("should be able to load content via AJAX from the correct url", function (done) {
             testHelper.readHTMLDocumentFixture('ajax.html').then(function (doc) {
                 browser.executeJavascript(doc.documentElement, {
                     baseUrl: testHelper.fixturesPath,
@@ -175,7 +175,7 @@ describe("Browser functions", function () {
             });
         });
 
-        ifNotInPhantomJsIt("should support window.matchMedia() with 'width' media queries", function (done) {
+        it("should support window.matchMedia() with 'width' media queries", function (done) {
             doc.documentElement.innerHTML = '<body onload="setTimeout(function () {document.body.innerHTML = window.matchMedia(\'(min-width: 30px)\').matches; }, 0);"></body>';
 
             browser.executeJavascript(doc.documentElement, optionsWithViewport(42, 21)).then(function (result) {
@@ -185,7 +185,7 @@ describe("Browser functions", function () {
             });
         });
 
-        ifNotInPhantomJsIt("should support window.matchMedia() with 'height' media queries", function (done) {
+        it("should support window.matchMedia() with 'height' media queries", function (done) {
             doc.documentElement.innerHTML = '<body onload="setTimeout(function () {document.body.innerHTML = window.matchMedia(\'(min-height: 123px)\').matches; }, 10);"></body>';
 
             browser.executeJavascript(doc.documentElement, optionsWithViewport(10, 123)).then(function (result) {
@@ -285,7 +285,7 @@ describe("Browser functions", function () {
             expect(error.originalError).toBeTruthy();
         });
 
-        ifNotInPhantomJsIt("should throw an exception if the document is invalid because of a missing namespace", function () {
+        it("should throw an exception if the document is invalid because of a missing namespace", function () {
             var error;
             try {
                 browser.validateXHTML('<html xmlns="http://www.w3.org/1999/xhtml"><weird:element></html>');

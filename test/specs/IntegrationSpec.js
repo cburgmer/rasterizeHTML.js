@@ -119,7 +119,7 @@ describe("Integration test", function () {
     });
 
     // This fails in Firefox probably due to https://bugzilla.mozilla.org/show_bug.cgi?id=942138
-    ifNotInPhantomJSAndNotLocalRunnerIt("should take a URL and load non UTF-8 content", function (done) {
+    ifNotInHeadlessChromeAndNotLocalRunnerIt("should take a URL and load non UTF-8 content", function (done) {
         var inlineReferencesSpy = spyOn(inlineresources, 'inlineReferences').and.returnValue(Promise.resolve());
 
         rasterizeHTML.drawURL(testHelper.fixturesPath + "nonUTF8Encoding.html").then(function () {
@@ -155,7 +155,7 @@ describe("Integration test", function () {
             }).finally(done);
     });
 
-    ifNotInPhantomJsIt("should report a source error on invalid input from HTML", function (done) {
+    it("should report a source error on invalid input from HTML", function (done) {
         rasterizeHTML.drawHTML("<html><weird:element></html>", {cache: 'none'}).then(null, function (error) {
             expect(error.message).toEqual("Invalid source");
         }).catch(function (err) {
@@ -164,7 +164,7 @@ describe("Integration test", function () {
         }).finally(done);
     });
 
-    ifNotInPhantomJsIt("should report a source error on invalid input from URL", function (done) {
+    it("should report a source error on invalid input from URL", function (done) {
         rasterizeHTML.drawURL(testHelper.fixturesPath + "invalidInput.html", {cache: 'none'}).then(null, function (error) {
             expect(error.message).toEqual("Invalid source");
         }).catch(function (err) {

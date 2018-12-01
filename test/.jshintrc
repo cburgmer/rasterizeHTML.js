@@ -18,9 +18,7 @@
 
         "ifNotInWebkitIt": true,
         "ifNotInWebkitOrBlinkIt": true,
-        "ifInPhantomJsIt": true,
-        "ifNotInPhantomJsIt": true,
-        "ifNotInPhantomJSAndNotLocalRunnerIt": true,
+        "ifNotInHeadlessChromeAndNotLocalRunnerIt": true,
         "ifNotInWebKitAndNotLocalRunnerIt": true,
         "testHelper": true,
         "diffHelper": true,
