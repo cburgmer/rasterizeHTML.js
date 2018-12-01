@@ -28,7 +28,7 @@ describe("Integration test", function () {
         callback = jasmine.createSpy("callback").and.callFake(function () { finished = true; });
     });
 
-    ifNotInWebkitIt("should take a document, inline all displayable content and render to the given canvas", function (done) {
+    ifNotInPhantomJsIt("should take a document, inline all displayable content and render to the given canvas", function (done) {
         testHelper.readHTMLDocumentFixture("test.html").then(function (doc) {
             rasterizeHTML.drawDocument(doc, canvas, {
                     cache: 'none',
@@ -51,7 +51,7 @@ describe("Integration test", function () {
         });
     });
 
-    ifNotInWebkitIt("should take a HTML string, inline all displayable content and render to the given canvas", function (done) {
+    ifNotInPhantomJsIt("should take a HTML string, inline all displayable content and render to the given canvas", function (done) {
         testHelper.readHTMLFixture("test.html").then(function (html) {
             rasterizeHTML.drawHTML(html, canvas, {
                 baseUrl: testHelper.fixturesPath,
@@ -73,7 +73,7 @@ describe("Integration test", function () {
         });
     });
 
-    ifNotInWebkitIt("should take a URL, inline all displayable content and render to the given canvas", function (done) {
+    ifNotInPhantomJsIt("should take a URL, inline all displayable content and render to the given canvas", function (done) {
         rasterizeHTML.drawURL(testHelper.fixturesPath + "testScaled50PercentWithJs.html", canvas, {
             cache: 'none',
             executeJs: true,
@@ -95,7 +95,7 @@ describe("Integration test", function () {
         }).finally(done);
     });
 
-    ifNotInWebkitIt("should render a URL without canvas", function (done) {
+    ifNotInPhantomJsIt("should render a URL without canvas", function (done) {
         rasterizeHTML.drawURL(testHelper.fixturesPath + "testScaled50PercentWithJs.html", {
             cache: 'none',
             width: width,
@@ -135,7 +135,7 @@ describe("Integration test", function () {
         }).finally(done);
     });
 
-    ifNotInWebKitAndNotLocalRunnerIt("should work around Firefox bug with `null` style properties", function (done) {
+    ifNotLocalRunnerIt("should work around Firefox bug with `null` style properties", function (done) {
         // The bug only turns up when there's no JS executed which creates a new document
         // In addition this test will fail due to https://bugzilla.mozilla.org/show_bug.cgi?id=942138
         rasterizeHTML.drawURL(testHelper.fixturesPath + "test.html", {

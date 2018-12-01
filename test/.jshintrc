@@ -16,12 +16,10 @@
 
         "require": true,
 
-        "ifNotInWebkitIt": true,
         "ifNotInWebkitOrBlinkIt": true,
-        "ifInPhantomJsIt": true,
         "ifNotInPhantomJsIt": true,
         "ifNotInPhantomJSAndNotLocalRunnerIt": true,
-        "ifNotInWebKitAndNotLocalRunnerIt": true,
+        "ifNotLocalRunnerIt": true,
         "testHelper": true,
         "diffHelper": true,
 

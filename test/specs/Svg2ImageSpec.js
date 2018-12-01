@@ -12,7 +12,7 @@ describe("Svg to Image", function () {
             jasmine.addMatchers(imagediff.jasmine);
         });
 
-        ifNotInWebkitIt("should render the SVG", function (done) {
+        ifNotInPhantomJsIt("should render the SVG", function (done) {
             var referenceImg = createElementFrom('<img src="' + testHelper.fixturesPath + 'rednblue.png" alt="test image"/>'),
                 twoColorSvg = (
                     '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">' +
@@ -45,7 +45,7 @@ describe("Svg to Image", function () {
             };
         });
 
-        ifNotInWebkitIt("should render an SVG with inline image", function (done) {
+        ifNotInPhantomJsIt("should render an SVG with inline image", function (done) {
             var referenceImg = createElementFrom('<img src="' + testHelper.fixturesPath + 'rednblue.png" alt="test image"/>'),
                 twoColorSvg = (
                     '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">' +
