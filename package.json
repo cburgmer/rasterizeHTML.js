@@ -48,6 +48,6 @@
     "puppeteer": "^1.2.0"
   },
   "scripts": {
-    "test": "bash go"
+    "test": "grunt && ./test/integrationTest.js"
   }
 }

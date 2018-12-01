@@ -23,6 +23,6 @@ Vagrant.configure(2) do |config|
      fi
      cd rasterizeHTML.js
      git pull
-     echo "You can now run the test suite via $ xvfb-run ./go"
+     echo "You can now run the test suite via $ xvfb-run npm test"
   SHELL
 end
