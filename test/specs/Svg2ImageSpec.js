@@ -12,7 +12,7 @@ describe("Svg to Image", function () {
             jasmine.addMatchers(imagediff.jasmine);
         });
 
-        ifNotInPhantomJsIt("should render the SVG", function (done) {
+        it("should render the SVG", function (done) {
             var referenceImg = createElementFrom('<img src="' + testHelper.fixturesPath + 'rednblue.png" alt="test image"/>'),
                 twoColorSvg = (
                     '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">' +
@@ -32,12 +32,7 @@ describe("Svg to Image", function () {
 
             referenceImg.onload = function () {
                 svg2image.renderSvg(twoColorSvg).then(function (image) {
-                    // This fails in Chrome & Safari, possibly due to a bug with same origin policy stuff
-                    try {
-                        expect(image).toImageDiffEqual(referenceImg);
-                    } catch (err) {
-                        expect(err.message).toBeNull();
-                    }
+                    expect(image).toImageDiffEqual(referenceImg);
                 }).catch(function (err) {
                     expect(err).toBe(null);
                     fail();
@@ -45,7 +40,7 @@ describe("Svg to Image", function () {
             };
         });
 
-        ifNotInPhantomJsIt("should render an SVG with inline image", function (done) {
+        it("should render an SVG with inline image", function (done) {
             var referenceImg = createElementFrom('<img src="' + testHelper.fixturesPath + 'rednblue.png" alt="test image"/>'),
                 twoColorSvg = (
                     '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">' +

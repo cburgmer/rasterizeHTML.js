@@ -14,8 +14,8 @@
         "spyOn": true,
 
         "ifNotInWebkitOrBlinkIt": true,
-        "ifNotInPhantomJsIt": true,
-        "ifNotInPhantomJSAndNotLocalRunnerIt": true,
+        "ifNotInHeadlessChromeAndNotLocalRunnerIt": true,
+        "ifNotInWebKitAndNotLocalRunnerIt": true,
         "ifNotLocalRunnerIt": true,
         "testHelper": true,
         "diffHelper": true,

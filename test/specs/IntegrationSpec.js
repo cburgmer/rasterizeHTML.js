@@ -28,7 +28,7 @@ describe("Integration test", function () {
         callback = jasmine.createSpy("callback").and.callFake(function () { finished = true; });
     });
 
-    ifNotInPhantomJsIt("should take a document, inline all displayable content and render to the given canvas", function (done) {
+    it("should take a document, inline all displayable content and render to the given canvas", function (done) {
         testHelper.readHTMLDocumentFixture("test.html").then(function (doc) {
             rasterizeHTML.drawDocument(doc, canvas, {
                     cache: 'none',
@@ -51,7 +51,7 @@ describe("Integration test", function () {
         });
     });
 
-    ifNotInPhantomJsIt("should take a HTML string, inline all displayable content and render to the given canvas", function (done) {
+    it("should take a HTML string, inline all displayable content and render to the given canvas", function (done) {
         testHelper.readHTMLFixture("test.html").then(function (html) {
             rasterizeHTML.drawHTML(html, canvas, {
                 baseUrl: testHelper.fixturesPath,
@@ -73,7 +73,7 @@ describe("Integration test", function () {
         });
     });
 
-    ifNotInPhantomJsIt("should take a URL, inline all displayable content and render to the given canvas", function (done) {
+    it("should take a URL, inline all displayable content and render to the given canvas", function (done) {
         rasterizeHTML.drawURL(testHelper.fixturesPath + "testScaled50PercentWithJs.html", canvas, {
             cache: 'none',
             executeJs: true,
@@ -95,7 +95,7 @@ describe("Integration test", function () {
         }).finally(done);
     });
 
-    ifNotInPhantomJsIt("should render a URL without canvas", function (done) {
+    it("should render a URL without canvas", function (done) {
         rasterizeHTML.drawURL(testHelper.fixturesPath + "testScaled50PercentWithJs.html", {
             cache: 'none',
             width: width,
@@ -119,7 +119,7 @@ describe("Integration test", function () {
     });
 
     // This fails in Firefox probably due to https://bugzilla.mozilla.org/show_bug.cgi?id=942138
-    ifNotInPhantomJSAndNotLocalRunnerIt("should take a URL and load non UTF-8 content", function (done) {
+    ifNotInHeadlessChromeAndNotLocalRunnerIt("should take a URL and load non UTF-8 content", function (done) {
         var inlineReferencesSpy = spyOn(inlineresources, 'inlineReferences').and.returnValue(Promise.resolve());
 
         rasterizeHTML.drawURL(testHelper.fixturesPath + "nonUTF8Encoding.html").then(function () {
@@ -155,7 +155,7 @@ describe("Integration test", function () {
             }).finally(done);
     });
 
-    ifNotInPhantomJsIt("should report a source error on invalid input from HTML", function (done) {
+    it("should report a source error on invalid input from HTML", function (done) {
         rasterizeHTML.drawHTML("<html><weird:element></html>", {cache: 'none'}).then(null, function (error) {
             expect(error.message).toEqual("Invalid source");
         }).catch(function (err) {
@@ -164,7 +164,7 @@ describe("Integration test", function () {
         }).finally(done);
     });
 
-    ifNotInPhantomJsIt("should report a source error on invalid input from URL", function (done) {
+    it("should report a source error on invalid input from URL", function (done) {
         rasterizeHTML.drawURL(testHelper.fixturesPath + "invalidInput.html", {cache: 'none'}).then(null, function (error) {
             expect(error.message).toEqual("Invalid source");
         }).catch(function (err) {

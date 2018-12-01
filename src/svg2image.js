@@ -123,7 +123,6 @@ var svg2image = (function (window) {
             image.onerror = function () {
                 cleanUp();
 
-                // Webkit calls the onerror handler if the SVG is faulty
                 reject();
             };
 

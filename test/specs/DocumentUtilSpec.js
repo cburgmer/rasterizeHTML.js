@@ -108,7 +108,7 @@ describe("HTML Document Utility functions", function () {
         });
 
         // On Firefox this needs a work around because of https://bugzilla.mozilla.org/show_bug.cgi?id=925493
-        ifNotInPhantomJsIt("should integrate with a document loaded through ajax", function (done) {
+        it("should integrate with a document loaded through ajax", function (done) {
             testHelper.readHTMLDocumentFixture("hover.html").then(function (doc) {
                 documentUtil.rewriteCssSelectorWith(doc.documentElement, ':hover', '.myfakehover');
 
