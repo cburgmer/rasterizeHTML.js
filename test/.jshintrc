@@ -3,7 +3,6 @@
     "devel": true,
     "phantom": true,
     "globals": {
-        "$": true,
         "jasmine": true,
         "describe": true,
         "it": true,
@@ -13,8 +12,6 @@
         "expect": true,
         "fail": true,
         "spyOn": true,
-
-        "require": true,
 
         "ifNotInWebkitOrBlinkIt": true,
         "ifNotInPhantomJsIt": true,
@@ -33,11 +30,6 @@
         "document2svg": true,
         "rasterize": true,
         "rasterizeHTML": true,
-
-        "url": true,
-        "cssMediaQuery": true,
-        "ayepromise": true,
-        "inlineresources": true,
 
         "imagediff": true
     }

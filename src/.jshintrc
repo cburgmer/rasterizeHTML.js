@@ -24,10 +24,8 @@
         "rasterize": true,
 
         "url": true,
-        "cssMediaQuery": true,
         "xmlserializer": true,
         "sanedomparsererror": true,
-        "ayepromise": true,
         "inlineresources": true
     },
     "exported": [
