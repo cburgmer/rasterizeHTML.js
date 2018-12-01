@@ -33,7 +33,7 @@
   "devDependencies": {
     "es6-promise": "^4.0.5",
     "grunt": "^1.0.3",
-    "grunt-browserify": "^5.0.0",
+    "grunt-browserify": "^5.3.0",
     "grunt-cli": "^1.0.0",
     "grunt-contrib-clean": "^1.0.0",
     "grunt-contrib-concat": "^1.0.0",
