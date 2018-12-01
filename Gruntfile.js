@@ -28,8 +28,7 @@ module.exports = function (grunt) {
                 host: 'http://127.0.0.1:8765/',
                 specs: 'test/specs/*.js',
                 vendor: [
-                    'node_modules/imagediff/imagediff.js',
-                    'node_modules/es6-promise/dist/es6-promise.auto.js'
+                    'node_modules/imagediff/imagediff.js'
                 ],
                 helpers: [
                     'test/helpers.js',
