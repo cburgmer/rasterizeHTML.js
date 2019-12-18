@@ -62,7 +62,7 @@ const runTest = async (browser) => {
 
 (async () => {
     try {
-        const browser = await puppeteer.launch({args: ['--allow-file-access-from-files']});
+        const browser = await puppeteer.launch({args: ['--allow-file-access-from-files'], slowMo: 100, headless: true});
         const success = await runTest(browser);
         browser.close();
 
