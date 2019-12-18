@@ -79,7 +79,7 @@ module.exports = function (grunt) {
             }
         },
         clean: {
-            all: ['build']
+            all: ['build', 'dist']
         },
         umd: {
             all: {
