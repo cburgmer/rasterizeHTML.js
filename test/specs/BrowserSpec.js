@@ -47,7 +47,7 @@ describe("Browser functions", function () {
             return {
                 width: width || 12,
                 height: height || 34,
-                executeJsTimeout: 10
+                executeJsTimeout: 100
             };
         };
 
@@ -176,7 +176,7 @@ describe("Browser functions", function () {
         });
 
         it("should support window.matchMedia() with 'width' media queries", function (done) {
-            doc.documentElement.innerHTML = '<body onload="setTimeout(function () {document.body.innerHTML = window.matchMedia(\'(min-width: 30px)\').matches; }, 0);"></body>';
+            doc.documentElement.innerHTML = '<body onload="setTimeout(function () {document.body.innerHTML = window.matchMedia(\'(min-width: 30px)\').matches; }, 10);"></body>';
 
             browser.executeJavascript(doc.documentElement, optionsWithViewport(42, 21)).then(function (result) {
                 expect(result.document.body.innerHTML).toEqual('true');
