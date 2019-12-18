@@ -65,7 +65,7 @@ Development
 
 Run `npm test`. There's also a vagrant image that installs all necessary build dependencies.
 
-For tests against individual browsers open `test/SpecRunner.html`, for integration tests under Safari open `test/manualIntegrationTestForWebkit.html` (under Chrome you will either need to start the browser passing in the option `--allow-file-access-from-files` or load the page through a local webserver).
+For tests against individual browsers run `python3 -m http.server` and `open http://localhost:8000/test/SpecRunner.html`, for integration tests under Safari `open http://localhost:8000/test/manualIntegrationTestForWebkit.html`.
 
 [![Build Status](https://travis-ci.org/cburgmer/rasterizeHTML.js.svg?branch=master)](https://travis-ci.org/cburgmer/rasterizeHTML.js)
 
