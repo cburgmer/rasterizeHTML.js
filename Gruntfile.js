@@ -37,7 +37,8 @@ module.exports = function (grunt) {
                     'test/gruntpath.js'
                 ],
                 display: 'short',
-                summary: true
+                summary: true,
+                version: '3.8.0' // https://github.com/gruntjs/grunt-contrib-jasmine/issues/339
             }
         },
         browserify: {
