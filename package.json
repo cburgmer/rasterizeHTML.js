@@ -45,7 +45,7 @@
     "grunt-umd": "^3.0.0",
     "imagediff": "git://github.com/HumbleSoftware/js-imagediff.git#5edce005fe",
     "jasmine-core": "^3.99.0",
-    "puppeteer": "^3.3.0"
+    "puppeteer": "^5.1.0"
   },
   "scripts": {
     "test": "grunt && ./test/integrationTest.js"
