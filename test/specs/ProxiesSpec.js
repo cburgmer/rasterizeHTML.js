@@ -94,7 +94,11 @@ describe("XHR Proxies", function () {
                 xhr.onload = function myOwnOnLoadHandler() {};
                 xhr.send();
 
-                finishNotifyingXhrProxy.waitForRequestsToFinish().then(done);
+                finishNotifyingXhrProxy
+                    .waitForRequestsToFinish()
+                    .then(function () {
+                        done();
+                    });
 
                 originalXHRInstance[0].mockDone();
 
@@ -105,7 +109,11 @@ describe("XHR Proxies", function () {
                 var finishNotifyingXhrProxy =
                     proxies.finishNotifyingXhr(xhrMockConstructor);
 
-                finishNotifyingXhrProxy.waitForRequestsToFinish().then(done);
+                finishNotifyingXhrProxy
+                    .waitForRequestsToFinish()
+                    .then(function () {
+                        done();
+                    });
                 expect(true).toBe(true); // work around warning from jasmine that no expectation is given
             });
 
@@ -117,7 +125,11 @@ describe("XHR Proxies", function () {
                 xhr.send();
                 originalXHRInstance[0].mockDone();
 
-                finishNotifyingXhrProxy.waitForRequestsToFinish().then(done);
+                finishNotifyingXhrProxy
+                    .waitForRequestsToFinish()
+                    .then(function () {
+                        done();
+                    });
                 expect(true).toBe(true); // work around warning from jasmine that no expectation is given
             });
         });
