@@ -48,11 +48,11 @@ describe("Rasterize", function () {
     };
 
     beforeEach(function () {
-        doc = document.implementation.createHTMLDocument('');
+        doc = document.implementation.createHTMLDocument("");
 
-        spyOn(document2svg, 'drawDocumentAsSvg');
-        spyOn(browser, 'loadDocument');
-        spyOn(svg2image, 'renderSvg');
+        spyOn(document2svg, "drawDocumentAsSvg");
+        spyOn(browser, "loadDocument");
+        spyOn(svg2image, "renderSvg");
     });
 
     describe("Rendering", function () {
@@ -61,9 +61,12 @@ describe("Rasterize", function () {
         beforeEach(function () {
             callback = jasmine.createSpy("drawCallback");
 
-            inlineReferences = spyOn(inlineresources, "inlineReferences").and.returnValue(withoutErrors());
+            inlineReferences = spyOn(
+                inlineresources,
+                "inlineReferences"
+            ).and.returnValue(withoutErrors());
 
-            spyOn(documentHelper, 'persistInputValues');
+            spyOn(documentHelper, "persistInputValues");
 
             setUpDrawDocumentAsSvg(theSvg);
             setUpRenderSvg(rasterizedImage);
@@ -72,103 +75,183 @@ describe("Rasterize", function () {
         it("should take a document, inline all displayable content and render to the given canvas", function (done) {
             var canvas = aMockCanvas();
 
-            rasterize.rasterize(doc.documentElement, canvas, {}).then(function () {
-                expect(inlineReferences).toHaveBeenCalledWith(doc.documentElement, {inlineScripts: false});
-                expect(document2svg.drawDocumentAsSvg).toHaveBeenCalledWith(doc.documentElement, {});
-                expect(svg2image.renderSvg).toHaveBeenCalledWith(theSvg);
-                expect(canvas.getContext('2d').drawImage).toHaveBeenCalledWith(rasterizedImage, 0, 0);
+            rasterize
+                .rasterize(doc.documentElement, canvas, {})
+                .then(function () {
+                    expect(inlineReferences).toHaveBeenCalledWith(
+                        doc.documentElement,
+                        { inlineScripts: false }
+                    );
+                    expect(document2svg.drawDocumentAsSvg).toHaveBeenCalledWith(
+                        doc.documentElement,
+                        {}
+                    );
+                    expect(svg2image.renderSvg).toHaveBeenCalledWith(theSvg);
+                    expect(
+                        canvas.getContext("2d").drawImage
+                    ).toHaveBeenCalledWith(rasterizedImage, 0, 0);
 
-                done();
-            });
+                    done();
+                });
         });
 
         it("should return the rendered image", function (done) {
-            rasterize.rasterize(doc.documentElement, aMockCanvas(), {}).then(function (result) {
-                expect(result.image).toEqual(rasterizedImage);
+            rasterize
+                .rasterize(doc.documentElement, aMockCanvas(), {})
+                .then(function (result) {
+                    expect(result.image).toEqual(rasterizedImage);
 
-                done();
-            });
+                    done();
+                });
         });
 
         it("should report empty errors", function (done) {
-            rasterize.rasterize(doc.documentElement, aMockCanvas(), {}).then(function (result) {
-                expect(result.errors).toEqual([]);
+            rasterize
+                .rasterize(doc.documentElement, aMockCanvas(), {})
+                .then(function (result) {
+                    expect(result.errors).toEqual([]);
 
-                done();
-            });
+                    done();
+                });
         });
 
         it("should return the internal SVG representation", function (done) {
-            rasterize.rasterize(doc.documentElement, aMockCanvas(), {}).then(function (result) {
-                expect(result.svg).toEqual(theSvg);
+            rasterize
+                .rasterize(doc.documentElement, aMockCanvas(), {})
+                .then(function (result) {
+                    expect(result.svg).toEqual(theSvg);
 
-                done();
-            });
+                    done();
+                });
         });
 
         it("should make the canvas optional", function (done) {
-            rasterize.rasterize(doc.documentElement, null, {}).then(function (result) {
-                expect(result.image).toEqual(rasterizedImage);
+            rasterize
+                .rasterize(doc.documentElement, null, {})
+                .then(function (result) {
+                    expect(result.image).toEqual(rasterizedImage);
 
-                expect(inlineReferences).toHaveBeenCalledWith(doc.documentElement, {inlineScripts : false});
-                expect(document2svg.drawDocumentAsSvg).toHaveBeenCalledWith(doc.documentElement, {});
+                    expect(inlineReferences).toHaveBeenCalledWith(
+                        doc.documentElement,
+                        { inlineScripts: false }
+                    );
+                    expect(document2svg.drawDocumentAsSvg).toHaveBeenCalledWith(
+                        doc.documentElement,
+                        {}
+                    );
 
-                done();
-            });
+                    done();
+                });
         });
 
         it("should pass on AJAX options", function (done) {
-            rasterize.rasterize(doc.documentElement, aMockCanvas(), {baseUrl: "a_baseUrl", cache: 'none', cacheBucket: {}}).then(function () {
-                expect(inlineReferences).toHaveBeenCalledWith(doc.documentElement, {baseUrl: "a_baseUrl", cache: 'none', cacheBucket: {}, inlineScripts : false});
+            rasterize
+                .rasterize(doc.documentElement, aMockCanvas(), {
+                    baseUrl: "a_baseUrl",
+                    cache: "none",
+                    cacheBucket: {},
+                })
+                .then(function () {
+                    expect(inlineReferences).toHaveBeenCalledWith(
+                        doc.documentElement,
+                        {
+                            baseUrl: "a_baseUrl",
+                            cache: "none",
+                            cacheBucket: {},
+                            inlineScripts: false,
+                        }
+                    );
 
-                done();
-            });
+                    done();
+                });
         });
 
         it("should pass on render options", function (done) {
-            rasterize.rasterize(doc.documentElement, aMockCanvas(), {width: 123, height: 234, hover: '.aSelector', active: '#anotherSelector', zoom: 42}).then(function () {
-                expect(document2svg.drawDocumentAsSvg).toHaveBeenCalledWith(doc.documentElement, {width: 123, height: 234, hover: '.aSelector', active: '#anotherSelector', zoom: 42});
+            rasterize
+                .rasterize(doc.documentElement, aMockCanvas(), {
+                    width: 123,
+                    height: 234,
+                    hover: ".aSelector",
+                    active: "#anotherSelector",
+                    zoom: 42,
+                })
+                .then(function () {
+                    expect(document2svg.drawDocumentAsSvg).toHaveBeenCalledWith(
+                        doc.documentElement,
+                        {
+                            width: 123,
+                            height: 234,
+                            hover: ".aSelector",
+                            active: "#anotherSelector",
+                            zoom: 42,
+                        }
+                    );
 
-                done();
-            });
+                    done();
+                });
         });
 
         it("should optionally execute JavaScript in the page", function (done) {
-            var executeJavascript = spyOn(browser, "executeJavascript").and.returnValue(
-                    Promise.resolve({document: doc, errors: []})
-                );
+            var executeJavascript = spyOn(
+                browser,
+                "executeJavascript"
+            ).and.returnValue(Promise.resolve({ document: doc, errors: [] }));
 
-            rasterize.rasterize(doc.documentElement, null, {executeJs: true, width: 123, height: 456}).then(function () {
-                expect(executeJavascript).toHaveBeenCalledWith(doc.documentElement, jasmine.objectContaining({width: 123, height: 456}));
-                expect(documentHelper.persistInputValues).toHaveBeenCalledWith(doc);
+            rasterize
+                .rasterize(doc.documentElement, null, {
+                    executeJs: true,
+                    width: 123,
+                    height: 456,
+                })
+                .then(function () {
+                    expect(executeJavascript).toHaveBeenCalledWith(
+                        doc.documentElement,
+                        jasmine.objectContaining({ width: 123, height: 456 })
+                    );
+                    expect(
+                        documentHelper.persistInputValues
+                    ).toHaveBeenCalledWith(doc);
 
-                done();
-            });
+                    done();
+                });
         });
 
         it("should inline scripts when executing JavaScript", function (done) {
             spyOn(browser, "executeJavascript").and.returnValue(
-                Promise.resolve({document: doc, errors: []})
+                Promise.resolve({ document: doc, errors: [] })
             );
 
-            rasterize.rasterize(doc.documentElement, null, {executeJs: true}).then(function () {
-                expect(inlineReferences).toHaveBeenCalledWith(doc.documentElement, {executeJs : true, inlineScripts: true});
+            rasterize
+                .rasterize(doc.documentElement, null, { executeJs: true })
+                .then(function () {
+                    expect(inlineReferences).toHaveBeenCalledWith(
+                        doc.documentElement,
+                        { executeJs: true, inlineScripts: true }
+                    );
 
-                done();
-            });
+                    done();
+                });
         });
 
         it("should follow optional timeout when executing JavaScript", function (done) {
-            var executeJavascript = spyOn(browser, "executeJavascript").and.returnValue(
-                    Promise.resolve({document: doc, errors: []})
-                );
+            var executeJavascript = spyOn(
+                browser,
+                "executeJavascript"
+            ).and.returnValue(Promise.resolve({ document: doc, errors: [] }));
 
+            rasterize
+                .rasterize(doc.documentElement, null, {
+                    executeJs: true,
+                    executeJsTimeout: 42,
+                })
+                .then(function () {
+                    expect(executeJavascript).toHaveBeenCalledWith(
+                        doc.documentElement,
+                        jasmine.objectContaining({ executeJsTimeout: 42 })
+                    );
 
-            rasterize.rasterize(doc.documentElement, null, {executeJs: true, executeJsTimeout: 42}).then(function () {
-                expect(executeJavascript).toHaveBeenCalledWith(doc.documentElement, jasmine.objectContaining({executeJsTimeout: 42}));
-
-                done();
-            });
+                    done();
+                });
         });
     });
 
@@ -178,39 +261,50 @@ describe("Rasterize", function () {
         beforeEach(function () {
             callback = jasmine.createSpy("drawCallback");
 
-            spyOn(documentHelper, 'persistInputValues');
+            spyOn(documentHelper, "persistInputValues");
         });
 
         it("should pass through an error from inlining on drawDocument", function (done) {
             setUpDrawDocumentAsSvg(theSvg);
             setUpRenderSvg(rasterizedImage);
 
-            inlineReferences = spyOn(inlineresources, "inlineReferences").and.returnValue(withErrors(["the error"]));
+            inlineReferences = spyOn(
+                inlineresources,
+                "inlineReferences"
+            ).and.returnValue(withErrors(["the error"]));
 
-            rasterize.rasterize(doc.documentElement, aMockCanvas(), {}).then(function (result) {
-                expect(result.image).toEqual(rasterizedImage);
-                expect(result.errors).toEqual(["the error"]);
+            rasterize
+                .rasterize(doc.documentElement, aMockCanvas(), {})
+                .then(function (result) {
+                    expect(result.image).toEqual(rasterizedImage);
+                    expect(result.errors).toEqual(["the error"]);
 
-                expect(inlineReferences).toHaveBeenCalled();
+                    expect(inlineReferences).toHaveBeenCalled();
 
-                done();
-            });
+                    done();
+                });
         });
 
         it("should pass through a JS error", function (done) {
-            spyOn(inlineresources, "inlineReferences").and.returnValue(withoutErrors());
+            spyOn(inlineresources, "inlineReferences").and.returnValue(
+                withoutErrors()
+            );
             spyOn(browser, "executeJavascript").and.returnValue(
-                Promise.resolve({document: doc, errors: ["the error"]})
+                Promise.resolve({ document: doc, errors: ["the error"] })
             );
             setUpDrawDocumentAsSvg(theSvg);
             setUpRenderSvg(rasterizedImage);
 
-            rasterize.rasterize(doc.documentElement, aMockCanvas(), {executeJs: true}).then(function (result) {
-                expect(result.image).toBe(rasterizedImage);
-                expect(result.errors).toEqual(["the error"]);
+            rasterize
+                .rasterize(doc.documentElement, aMockCanvas(), {
+                    executeJs: true,
+                })
+                .then(function (result) {
+                    expect(result.image).toBe(rasterizedImage);
+                    expect(result.errors).toEqual(["the error"]);
 
-                done();
-            });
+                    done();
+                });
         });
     });
 
@@ -220,10 +314,13 @@ describe("Rasterize", function () {
         beforeEach(function () {
             callback = jasmine.createSpy("drawCallback");
 
-            inlineReferences = spyOn(inlineresources, "inlineReferences").and.returnValue(withoutErrors());
+            inlineReferences = spyOn(
+                inlineresources,
+                "inlineReferences"
+            ).and.returnValue(withoutErrors());
 
             executeJavascript = spyOn(browser, "executeJavascript");
-            spyOn(documentHelper, 'persistInputValues');
+            spyOn(documentHelper, "persistInputValues");
         });
 
         it("should fail the returned promise on error from inlining when drawing the SVG", function (done) {
@@ -232,13 +329,17 @@ describe("Rasterize", function () {
 
             setUpDrawDocumentAsSvgError(error);
 
-            rasterize.rasterize(doc.documentElement, canvas, {}).then(null, function (e) {
-                expect(e).toBe(error);
+            rasterize
+                .rasterize(doc.documentElement, canvas, {})
+                .then(null, function (e) {
+                    expect(e).toBe(error);
 
-                expect(canvas.getContext('2d').drawImage).not.toHaveBeenCalled();
+                    expect(
+                        canvas.getContext("2d").drawImage
+                    ).not.toHaveBeenCalled();
 
-                done();
-            });
+                    done();
+                });
         });
 
         it("should fail the returned promise on error from inlining when rendering the image", function (done) {
@@ -247,14 +348,18 @@ describe("Rasterize", function () {
             setUpDrawDocumentAsSvg(theSvg);
             setUpRenderSvgError(new Error());
 
-            rasterize.rasterize(doc.documentElement, canvas, {}).then(null, function (error) {
-                expect(error.message).toEqual("Error rendering page");
-                expect(error.originalError).toBeTruthy();
+            rasterize
+                .rasterize(doc.documentElement, canvas, {})
+                .then(null, function (error) {
+                    expect(error.message).toEqual("Error rendering page");
+                    expect(error.originalError).toBeTruthy();
 
-                expect(canvas.getContext('2d').drawImage).not.toHaveBeenCalled();
+                    expect(
+                        canvas.getContext("2d").drawImage
+                    ).not.toHaveBeenCalled();
 
-                done();
-            });
+                    done();
+                });
         });
 
         it("should fail the returned promise on error from inlining when drawing the image on the canvas", function (done) {
@@ -263,12 +368,14 @@ describe("Rasterize", function () {
             setUpDrawDocumentAsSvg(theSvg);
             setUpRenderSvg(rasterizedImage);
 
-            rasterize.rasterize(doc.documentElement, canvas, {}).then(null, function (error) {
-                expect(error.message).toEqual("Error rendering page");
-                expect(error.originalError).toBeTruthy();
+            rasterize
+                .rasterize(doc.documentElement, canvas, {})
+                .then(null, function (error) {
+                    expect(error.message).toEqual("Error rendering page");
+                    expect(error.originalError).toBeTruthy();
 
-                done();
-            });
+                    done();
+                });
         });
     });
 });

@@ -25,12 +25,16 @@ window.diffHelper = (function () {
             return {
                 compare: function (actual, expected, tolerancePercentage) {
                     var result = {};
-                    result.pass = module.imageEquals(actual, expected, tolerancePercentage);
+                    result.pass = module.imageEquals(
+                        actual,
+                        expected,
+                        tolerancePercentage
+                    );
                     return result;
-                }
+                },
             };
-        }
+        },
     };
 
     return module;
-}());
+})();

@@ -9,11 +9,12 @@ var rasterizeHTML = (function (util, browser, rasterize) {
             fallbackWidth = canvas ? canvas.width : defaultWidth,
             fallbackHeight = canvas ? canvas.height : defaultHeight,
             width = options.width !== undefined ? options.width : fallbackWidth,
-            height = options.height !== undefined ? options.height : fallbackHeight;
+            height =
+                options.height !== undefined ? options.height : fallbackHeight;
 
         return {
             width: width,
-            height: height
+            height: height,
         };
     };
 
@@ -39,7 +40,11 @@ var rasterizeHTML = (function (util, browser, rasterize) {
 
         var element = doc.documentElement ? doc.documentElement : doc;
 
-        return rasterize.rasterize(element, params.canvas, constructOptions(params));
+        return rasterize.rasterize(
+            element,
+            params.canvas,
+            constructOptions(params)
+        );
     };
 
     var drawHTML = function (html, canvas, options) {
@@ -61,8 +66,12 @@ var rasterizeHTML = (function (util, browser, rasterize) {
     };
 
     // work around https://bugzilla.mozilla.org/show_bug.cgi?id=925493
-    var workAroundFirefoxNotLoadingStylesheetStyles = function (doc, url, options) {
-        var d = document.implementation.createHTMLDocument('');
+    var workAroundFirefoxNotLoadingStylesheetStyles = function (
+        doc,
+        url,
+        options
+    ) {
+        var d = document.implementation.createHTMLDocument("");
         d.replaceChild(doc.documentElement, d.documentElement);
 
         var extendedOptions = options ? util.clone(options) : {};
@@ -73,16 +82,23 @@ var rasterizeHTML = (function (util, browser, rasterize) {
 
         return {
             document: d,
-            options: extendedOptions
+            options: extendedOptions,
         };
     };
 
     var drawURL = function (url, canvas, options) {
-        return browser.loadDocument(url, options)
-            .then(function (doc) {
-                var workaround = workAroundFirefoxNotLoadingStylesheetStyles(doc, url, options);
-                return module.drawDocument(workaround.document, canvas, workaround.options);
-            });
+        return browser.loadDocument(url, options).then(function (doc) {
+            var workaround = workAroundFirefoxNotLoadingStylesheetStyles(
+                doc,
+                url,
+                options
+            );
+            return module.drawDocument(
+                workaround.document,
+                canvas,
+                workaround.options
+            );
+        });
     };
 
     /**
@@ -98,4 +114,4 @@ var rasterizeHTML = (function (util, browser, rasterize) {
     };
 
     return module;
-}(util, browser, rasterize));
+})(util, browser, rasterize);

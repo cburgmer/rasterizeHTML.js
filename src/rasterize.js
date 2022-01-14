@@ -1,4 +1,11 @@
-var rasterize = (function (util, browser, documentHelper, document2svg, svg2image, inlineresources) {
+var rasterize = (function (
+    util,
+    browser,
+    documentHelper,
+    document2svg,
+    svg2image,
+    inlineresources
+) {
     "use strict";
 
     var module = {};
@@ -6,20 +13,22 @@ var rasterize = (function (util, browser, documentHelper, document2svg, svg2imag
     var generalDrawError = function (e) {
         return {
             message: "Error rendering page",
-            originalError: e
+            originalError: e,
         };
     };
 
     var drawSvgAsImg = function (svg) {
-        return svg2image.renderSvg(svg)
-            .then(function (image) {
+        return svg2image.renderSvg(svg).then(
+            function (image) {
                 return {
                     image: image,
-                    svg: svg
+                    svg: svg,
                 };
-            }, function (e) {
+            },
+            function (e) {
                 throw generalDrawError(e);
-            });
+            }
+        );
     };
 
     var drawImageOnCanvas = function (image, canvas) {
@@ -32,7 +41,8 @@ var rasterize = (function (util, browser, documentHelper, document2svg, svg2imag
     };
 
     var doDraw = function (element, canvas, options) {
-        return document2svg.drawDocumentAsSvg(element, options)
+        return document2svg
+            .drawDocumentAsSvg(element, options)
             .then(drawSvgAsImg)
             .then(function (result) {
                 if (canvas) {
@@ -44,14 +54,15 @@ var rasterize = (function (util, browser, documentHelper, document2svg, svg2imag
     };
 
     var operateJavaScriptOnDocument = function (element, options) {
-        return browser.executeJavascript(element, options)
+        return browser
+            .executeJavascript(element, options)
             .then(function (result) {
                 var document = result.document;
                 documentHelper.persistInputValues(document);
 
                 return {
                     document: document,
-                    errors: result.errors
+                    errors: result.errors,
                 };
             });
     };
@@ -62,33 +73,37 @@ var rasterize = (function (util, browser, documentHelper, document2svg, svg2imag
         inlineOptions = util.clone(options);
         inlineOptions.inlineScripts = options.executeJs === true;
 
-        return inlineresources.inlineReferences(element, inlineOptions)
+        return inlineresources
+            .inlineReferences(element, inlineOptions)
             .then(function (errors) {
                 if (options.executeJs) {
-                    return operateJavaScriptOnDocument(element, options)
-                        .then(function (result) {
+                    return operateJavaScriptOnDocument(element, options).then(
+                        function (result) {
                             return {
                                 element: result.document.documentElement,
-                                errors: errors.concat(result.errors)
+                                errors: errors.concat(result.errors),
                             };
-                        });
+                        }
+                    );
                 } else {
                     return {
                         element: element,
-                        errors: errors
+                        errors: errors,
                     };
                 }
-            }).then(function (result) {
-                return doDraw(result.element, canvas, options)
-                    .then(function (drawResult) {
-                        return {
-                            image: drawResult.image,
-                            svg: drawResult.svg,
-                            errors: result.errors
-                        };
-                    });
+            })
+            .then(function (result) {
+                return doDraw(result.element, canvas, options).then(function (
+                    drawResult
+                ) {
+                    return {
+                        image: drawResult.image,
+                        svg: drawResult.svg,
+                        errors: result.errors,
+                    };
+                });
             });
     };
 
     return module;
-}(util, browser, documentHelper, document2svg, svg2image, inlineresources));
+})(util, browser, documentHelper, document2svg, svg2image, inlineresources);

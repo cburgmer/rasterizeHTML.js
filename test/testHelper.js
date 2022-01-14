@@ -3,11 +3,11 @@ window.testHelper = (function () {
 
     var module = {};
 
-    module.fixturesPath = 'fixtures/';
+    module.fixturesPath = "fixtures/";
 
     // work around https://bugzilla.mozilla.org/show_bug.cgi?id=925493
     var workAroundFirefoxNotLoadingStylesheetStyles = function (doc) {
-        var d = document.implementation.createHTMLDocument('');
+        var d = document.implementation.createHTMLDocument("");
         d.replaceChild(doc.documentElement, d.documentElement);
         return d;
     };
@@ -17,13 +17,21 @@ window.testHelper = (function () {
             var fixtureUrl = module.fixturesPath + url,
                 xhr = new window.XMLHttpRequest();
 
-            xhr.addEventListener("load", function () {
-                if (xhr.status === 200 || xhr.status === 0) {
-                    resolve(workAroundFirefoxNotLoadingStylesheetStyles(xhr.responseXML));
-                }
-            }, false);
+            xhr.addEventListener(
+                "load",
+                function () {
+                    if (xhr.status === 200 || xhr.status === 0) {
+                        resolve(
+                            workAroundFirefoxNotLoadingStylesheetStyles(
+                                xhr.responseXML
+                            )
+                        );
+                    }
+                },
+                false
+            );
 
-            xhr.open('GET', fixtureUrl, true);
+            xhr.open("GET", fixtureUrl, true);
             xhr.responseType = "document";
             xhr.overrideMimeType("text/html");
 
@@ -42,7 +50,7 @@ window.testHelper = (function () {
                 }
             };
 
-            xhr.open('GET', fixtureUrl, true);
+            xhr.open("GET", fixtureUrl, true);
             xhr.overrideMimeType("text/html");
 
             xhr.send(null);
@@ -53,8 +61,8 @@ window.testHelper = (function () {
         var fixtureUrl = module.fixturesPath + url,
             xhr = new window.XMLHttpRequest();
 
-        xhr.open('GET', fixtureUrl, false);
-        xhr.overrideMimeType('text/xml');
+        xhr.open("GET", fixtureUrl, false);
+        xhr.overrideMimeType("text/xml");
         xhr.send(null);
         return xhr.responseXML;
     };
@@ -88,15 +96,15 @@ window.testHelper = (function () {
                     var defer = module.synchronousDefer();
                     handlers.push({
                         func: handler,
-                        done: defer.resolve
+                        done: defer.resolve,
                     });
                     if (resolved) {
                         triggerHandlers();
                     }
                     // chaining
                     return defer.promise;
-                }
-            }
+                },
+            },
         };
     };
 
@@ -110,8 +118,7 @@ window.testHelper = (function () {
         return this.promise.then(onsuccess, onerror);
     };
 
-    SynchronousPromise.prototype.catch = function () {
-    };
+    SynchronousPromise.prototype.catch = function () {};
 
     SynchronousPromise.resolve = function (val) {
         return new SynchronousPromise(function (resolve) {
@@ -122,4 +129,4 @@ window.testHelper = (function () {
     module.SynchronousPromise = SynchronousPromise;
 
     return module;
-}());
+})();

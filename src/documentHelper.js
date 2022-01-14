@@ -11,14 +11,14 @@ var documentHelper = (function (documentUtil) {
         active: true,
         hover: true,
         focus: false,
-        target: false
+        target: false,
     };
 
     module.fakeUserAction = function (element, selector, action) {
         var elem = element.querySelector(selector),
-            pseudoClass = ':' + action,
-            fakeActionClass = 'rasterizehtml' + action;
-        if (! elem) {
+            pseudoClass = ":" + action,
+            fakeActionClass = "rasterizehtml" + action;
+        if (!elem) {
             return;
         }
 
@@ -27,39 +27,49 @@ var documentHelper = (function (documentUtil) {
         } else {
             documentUtil.addClassName(elem, fakeActionClass);
         }
-        documentUtil.rewriteCssSelectorWith(element, pseudoClass, '.' + fakeActionClass);
+        documentUtil.rewriteCssSelectorWith(
+            element,
+            pseudoClass,
+            "." + fakeActionClass
+        );
     };
 
     module.persistInputValues = function (doc) {
-        var inputs = doc.querySelectorAll('input'),
-            textareas = doc.querySelectorAll('textarea'),
+        var inputs = doc.querySelectorAll("input"),
+            textareas = doc.querySelectorAll("textarea"),
             isCheckable = function (input) {
-                return input.type === 'checkbox' || input.type === 'radio';
+                return input.type === "checkbox" || input.type === "radio";
             };
 
-        asArray(inputs).filter(isCheckable)
+        asArray(inputs)
+            .filter(isCheckable)
             .forEach(function (input) {
                 if (input.checked) {
-                    input.setAttribute('checked', '');
+                    input.setAttribute("checked", "");
                 } else {
-                    input.removeAttribute('checked');
+                    input.removeAttribute("checked");
                 }
             });
 
-        asArray(inputs).filter(function (input) { return !isCheckable(input); })
+        asArray(inputs)
+            .filter(function (input) {
+                return !isCheckable(input);
+            })
             .forEach(function (input) {
-                input.setAttribute('value', input.value);
+                input.setAttribute("value", input.value);
             });
 
-        asArray(textareas)
-            .forEach(function (textarea) {
-                textarea.textContent = textarea.value;
-            });
+        asArray(textareas).forEach(function (textarea) {
+            textarea.textContent = textarea.value;
+        });
     };
 
     module.rewriteTagNameSelectorsToLowerCase = function (element) {
-        documentUtil.lowercaseCssTypeSelectors(element, documentUtil.findHtmlOnlyNodeNames(element));
+        documentUtil.lowercaseCssTypeSelectors(
+            element,
+            documentUtil.findHtmlOnlyNodeNames(element)
+        );
     };
 
     return module;
-}(documentUtil));
+})(documentUtil);

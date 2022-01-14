@@ -2,7 +2,6 @@ describe("diffHelper", function () {
     "use strict";
 
     describe("toEqualImage matcher", function () {
-
         it("should fail on different images", function () {
             var a = imagediff.createImageData(1, 1),
                 b = imagediff.createImageData(1, 1);
@@ -49,13 +48,16 @@ describe("diffHelper", function () {
         });
 
         it("should delegate to imageEqual", function () {
-            var toEqualImageSpy = spyOn(diffHelper, 'imageEquals').and.returnValue(true);
+            var toEqualImageSpy = spyOn(
+                diffHelper,
+                "imageEquals"
+            ).and.returnValue(true);
 
             // when
-            expect('a').toEqualImage('b', 42);
+            expect("a").toEqualImage("b", 42);
 
             // then
-            expect(toEqualImageSpy).toHaveBeenCalledWith('a', 'b', 42);
+            expect(toEqualImageSpy).toHaveBeenCalledWith("a", "b", 42);
         });
     });
 });

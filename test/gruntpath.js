@@ -1,1 +1,1 @@
-testHelper.fixturesPath = 'test/fixtures/';
+testHelper.fixturesPath = "test/fixtures/";

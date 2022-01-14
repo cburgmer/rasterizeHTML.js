@@ -5,9 +5,13 @@ var svg2image = (function (window) {
 
     var urlForSvg = function (svg, useBlobs) {
         if (useBlobs) {
-            return URL.createObjectURL(new Blob([svg], {"type": "image/svg+xml"}));
+            return URL.createObjectURL(
+                new Blob([svg], { type: "image/svg+xml" })
+            );
         } else {
-            return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+            return (
+                "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg)
+            );
         }
     };
 
@@ -17,7 +21,8 @@ var svg2image = (function (window) {
         }
     };
 
-    var simpleForeignObjectSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"><foreignObject></foreignObject></svg>';
+    var simpleForeignObjectSvg =
+        '<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"><foreignObject></foreignObject></svg>';
 
     var supportsReadingObjectFromCanvas = function (url) {
         return new Promise(function (resolve, reject) {
@@ -43,26 +48,29 @@ var svg2image = (function (window) {
     var readingBackFromCanvasBenefitsFromOldSchoolDataUris = function () {
         // Check for work around for https://code.google.com/p/chromium/issues/detail?id=294129
         var blobUrl = urlForSvg(simpleForeignObjectSvg, true);
-        return supportsReadingObjectFromCanvas(blobUrl)
-            .then(function (supportsReadingFromBlobs) {
+        return supportsReadingObjectFromCanvas(blobUrl).then(
+            function (supportsReadingFromBlobs) {
                 cleanUpUrl(blobUrl);
                 if (supportsReadingFromBlobs) {
                     return false;
                 }
-                return supportsReadingObjectFromCanvas(urlForSvg(simpleForeignObjectSvg, false))
-                    .then(function (s) {
-                        return s;
-                    });
-            }, function () {
+                return supportsReadingObjectFromCanvas(
+                    urlForSvg(simpleForeignObjectSvg, false)
+                ).then(function (s) {
+                    return s;
+                });
+            },
+            function () {
                 return false;
-            });
+            }
+        );
     };
 
     var supportsBlobBuilding = function () {
         if (window.Blob) {
             // Available as constructor only in newer builds for all browsers
             try {
-                new Blob(['<b></b>'], { "type" : "text/xml" });
+                new Blob(["<b></b>"], { type: "text/xml" });
                 return true;
             } catch (err) {}
         }
@@ -72,12 +80,14 @@ var svg2image = (function (window) {
     var checkBlobSupport = function () {
         return new Promise(function (resolve, reject) {
             if (supportsBlobBuilding() && window.URL) {
-                readingBackFromCanvasBenefitsFromOldSchoolDataUris()
-                    .then(function (doesBenefit) {
-                        resolve(! doesBenefit);
-                    }, function () {
+                readingBackFromCanvasBenefitsFromOldSchoolDataUris().then(
+                    function (doesBenefit) {
+                        resolve(!doesBenefit);
+                    },
+                    function () {
                         reject();
-                    });
+                    }
+                );
             } else {
                 resolve(false);
             }
@@ -102,7 +112,8 @@ var svg2image = (function (window) {
 
     module.renderSvg = function (svg) {
         return new Promise(function (resolve, reject) {
-            var url, image,
+            var url,
+                image,
                 resetEventHandlers = function () {
                     image.onload = null;
                     image.onerror = null;
@@ -114,7 +125,7 @@ var svg2image = (function (window) {
                 };
 
             image = new Image();
-            image.onload = function() {
+            image.onload = function () {
                 resetEventHandlers();
                 cleanUp();
 
@@ -134,4 +145,4 @@ var svg2image = (function (window) {
     };
 
     return module;
-}(window));
+})(window);

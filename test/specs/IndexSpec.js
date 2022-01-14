@@ -2,13 +2,16 @@ describe("Main", function () {
     "use strict";
 
     var svgImage = "svg image",
-        doc, canvas;
+        doc,
+        canvas;
 
     var setUpRasterize = function (image, errors) {
-            rasterize.rasterize.and.returnValue(Promise.resolve({
-                image: image,
-                errors: errors
-            }));
+            rasterize.rasterize.and.returnValue(
+                Promise.resolve({
+                    image: image,
+                    errors: errors,
+                })
+            );
         },
         setUpRasterizeError = function (e) {
             rasterize.rasterize.and.returnValue(Promise.reject(e));
@@ -22,9 +25,9 @@ describe("Main", function () {
         };
 
     beforeEach(function () {
-        doc = document.implementation.createHTMLDocument('');
+        doc = document.implementation.createHTMLDocument("");
 
-        spyOn(browser, 'parseHTML').and.returnValue(doc);
+        spyOn(browser, "parseHTML").and.returnValue(doc);
 
         canvas = document.createElement("canvas");
         canvas.width = 123;
@@ -32,8 +35,8 @@ describe("Main", function () {
 
         spyOn(util, "parseOptionalParameters").and.callThrough();
 
-        spyOn(browser, 'loadDocument');
-        spyOn(rasterize, 'rasterize');
+        spyOn(browser, "loadDocument");
+        spyOn(rasterize, "rasterize");
         setUpRasterize(svgImage, []);
     });
 
@@ -43,7 +46,11 @@ describe("Main", function () {
                 expect(result.image).toEqual(svgImage);
                 expect(result.errors).toEqual([]);
 
-                expect(rasterize.rasterize).toHaveBeenCalledWith(doc.documentElement, canvas, jasmine.any(Object));
+                expect(rasterize.rasterize).toHaveBeenCalledWith(
+                    doc.documentElement,
+                    canvas,
+                    jasmine.any(Object)
+                );
 
                 done();
             });
@@ -51,10 +58,14 @@ describe("Main", function () {
 
         it("should use the canvas width and height as viewport size", function (done) {
             rasterizeHTML.drawDocument(doc, canvas).then(function () {
-                expect(rasterize.rasterize).toHaveBeenCalledWith(doc.documentElement, canvas, {
-                    width: 123,
-                    height: 456
-                });
+                expect(rasterize.rasterize).toHaveBeenCalledWith(
+                    doc.documentElement,
+                    canvas,
+                    {
+                        width: 123,
+                        height: 456,
+                    }
+                );
 
                 done();
             });
@@ -64,7 +75,11 @@ describe("Main", function () {
             rasterizeHTML.drawDocument(doc).then(function (result) {
                 expect(result.image).toEqual(svgImage);
 
-                expect(rasterize.rasterize).toHaveBeenCalledWith(doc.documentElement, null, jasmine.any(Object));
+                expect(rasterize.rasterize).toHaveBeenCalledWith(
+                    doc.documentElement,
+                    null,
+                    jasmine.any(Object)
+                );
 
                 expect(util.parseOptionalParameters).toHaveBeenCalled();
 
@@ -74,49 +89,65 @@ describe("Main", function () {
 
         it("should apply default viewport width and height without canvas and specific options", function (done) {
             rasterizeHTML.drawDocument(doc).then(function () {
-                expect(rasterize.rasterize).toHaveBeenCalledWith(doc.documentElement, null, {
-                    width: 300,
-                    height: 200
-                });
+                expect(rasterize.rasterize).toHaveBeenCalledWith(
+                    doc.documentElement,
+                    null,
+                    {
+                        width: 300,
+                        height: 200,
+                    }
+                );
 
                 done();
             });
         });
 
         it("should pass on options", function (done) {
-            rasterizeHTML.drawDocument(doc, canvas, {
-                baseUrl: "a_baseUrl",
-                cache: 'none',
-                cacheBucket: {},
-                width: 123,
-                height: 234,
-                hover: '.aSelector',
-                active: '#anotherSelector',
-                zoom: 42
-            }).then(function () {
-                expect(rasterize.rasterize).toHaveBeenCalledWith(doc.documentElement, canvas, {
+            rasterizeHTML
+                .drawDocument(doc, canvas, {
                     baseUrl: "a_baseUrl",
-                    cache: 'none',
+                    cache: "none",
                     cacheBucket: {},
                     width: 123,
                     height: 234,
-                    hover: '.aSelector',
-                    active: '#anotherSelector',
-                    zoom: 42
-                });
+                    hover: ".aSelector",
+                    active: "#anotherSelector",
+                    zoom: 42,
+                })
+                .then(function () {
+                    expect(rasterize.rasterize).toHaveBeenCalledWith(
+                        doc.documentElement,
+                        canvas,
+                        {
+                            baseUrl: "a_baseUrl",
+                            cache: "none",
+                            cacheBucket: {},
+                            width: 123,
+                            height: 234,
+                            hover: ".aSelector",
+                            active: "#anotherSelector",
+                            zoom: 42,
+                        }
+                    );
 
-                done();
-            });
+                    done();
+                });
         });
     });
 
     describe("drawHTML", function () {
         it("should take a HTML string, inline all displayable content and render to the given canvas", function (done) {
-            var html = "<head><title>a title</title></head><body>some html</body>",
-                drawDocumentSpy = spyOn(rasterizeHTML, "drawDocument").and.returnValue(Promise.resolve({
-                    image: svgImage,
-                    errors: []
-                }));
+            var html =
+                    "<head><title>a title</title></head><body>some html</body>",
+                drawDocumentSpy = spyOn(
+                    rasterizeHTML,
+                    "drawDocument"
+                ).and.returnValue(
+                    Promise.resolve({
+                        image: svgImage,
+                        errors: [],
+                    })
+                );
 
             browser.parseHTML.and.callFake(function (someHtml) {
                 if (someHtml === html) {
@@ -136,111 +167,177 @@ describe("Main", function () {
 
         it("should make the canvas optional when drawing a HTML string", function (done) {
             var html = "the html",
-                drawDocumentSpy = spyOn(rasterizeHTML, "drawDocument").and.returnValue(Promise.resolve({
-                    image: svgImage,
-                    errors: []
-                }));
+                drawDocumentSpy = spyOn(
+                    rasterizeHTML,
+                    "drawDocument"
+                ).and.returnValue(
+                    Promise.resolve({
+                        image: svgImage,
+                        errors: [],
+                    })
+                );
 
-            rasterizeHTML.drawHTML(html, {width: 999, height: 987}).then(function (result) {
-                expect(result.image).toEqual(svgImage);
-                expect(drawDocumentSpy).toHaveBeenCalledWith(jasmine.any(Object), null, {width: 999, height: 987});
+            rasterizeHTML
+                .drawHTML(html, { width: 999, height: 987 })
+                .then(function (result) {
+                    expect(result.image).toEqual(svgImage);
+                    expect(drawDocumentSpy).toHaveBeenCalledWith(
+                        jasmine.any(Object),
+                        null,
+                        { width: 999, height: 987 }
+                    );
 
-                done();
-            });
+                    done();
+                });
         });
 
         it("should take a HTML string with optional baseUrl, inline all displayable content and render to the given canvas", function (done) {
             var html = "the html",
-                drawDocumentSpy = spyOn(rasterizeHTML, "drawDocument").and.returnValue(Promise.resolve({
-                    image: svgImage,
-                    errors: []
-                }));
+                drawDocumentSpy = spyOn(
+                    rasterizeHTML,
+                    "drawDocument"
+                ).and.returnValue(
+                    Promise.resolve({
+                        image: svgImage,
+                        errors: [],
+                    })
+                );
 
-            rasterizeHTML.drawHTML(html, canvas, {baseUrl: "a_baseUrl"}).then(function () {
-                expect(drawDocumentSpy).toHaveBeenCalledWith(jasmine.any(Object), canvas, {baseUrl: "a_baseUrl"});
+            rasterizeHTML
+                .drawHTML(html, canvas, { baseUrl: "a_baseUrl" })
+                .then(function () {
+                    expect(drawDocumentSpy).toHaveBeenCalledWith(
+                        jasmine.any(Object),
+                        canvas,
+                        { baseUrl: "a_baseUrl" }
+                    );
 
-                done();
-            });
+                    done();
+                });
         });
 
         it("should circumvent caching if requested for drawHTML", function (done) {
-            var html = "<head><title>a title</title></head><body>some html</body>",
-                drawDocumentSpy = spyOn(rasterizeHTML, "drawDocument").and.returnValue(Promise.resolve({
-                    image: svgImage,
-                    errors: []
-                }));
+            var html =
+                    "<head><title>a title</title></head><body>some html</body>",
+                drawDocumentSpy = spyOn(
+                    rasterizeHTML,
+                    "drawDocument"
+                ).and.returnValue(
+                    Promise.resolve({
+                        image: svgImage,
+                        errors: [],
+                    })
+                );
 
-            rasterizeHTML.drawHTML(html, canvas, {cache: 'none'}).then(function () {
-                expect(drawDocumentSpy).toHaveBeenCalledWith(jasmine.any(Object), canvas, {cache: 'none'});
+            rasterizeHTML
+                .drawHTML(html, canvas, { cache: "none" })
+                .then(function () {
+                    expect(drawDocumentSpy).toHaveBeenCalledWith(
+                        jasmine.any(Object),
+                        canvas,
+                        { cache: "none" }
+                    );
 
-                done();
-            });
+                    done();
+                });
         });
     });
 
     describe("drawURL", function () {
         it("should take a URL, inline all displayable content and render to the given canvas", function (done) {
-            var drawDocumentSpy = spyOn(rasterizeHTML, "drawDocument").and.returnValue(Promise.resolve({
+            var drawDocumentSpy = spyOn(
+                rasterizeHTML,
+                "drawDocument"
+            ).and.returnValue(
+                Promise.resolve({
                     image: svgImage,
-                    errors: []
-                }));
+                    errors: [],
+                })
+            );
 
             setUpLoadDocument();
 
             var documentElement = doc.documentElement;
 
-            rasterizeHTML.drawURL("fixtures/image.html", canvas).then(function (result) {
-                expect(result.image).toEqual(svgImage);
-                expect(result.errors).toEqual([]);
+            rasterizeHTML
+                .drawURL("fixtures/image.html", canvas)
+                .then(function (result) {
+                    expect(result.image).toEqual(svgImage);
+                    expect(result.errors).toEqual([]);
 
-                expect(drawDocumentSpy).toHaveBeenCalledWith(jasmine.any(Object), canvas, jasmine.any(Object));
-                expect(drawDocumentSpy.calls.mostRecent().args[0].documentElement).toBe(documentElement);
+                    expect(drawDocumentSpy).toHaveBeenCalledWith(
+                        jasmine.any(Object),
+                        canvas,
+                        jasmine.any(Object)
+                    );
+                    expect(
+                        drawDocumentSpy.calls.mostRecent().args[0]
+                            .documentElement
+                    ).toBe(documentElement);
 
-                done();
-            });
+                    done();
+                });
         });
 
         it("should make the canvas optional when drawing an URL", function (done) {
-            var drawDocumentSpy = spyOn(rasterizeHTML, "drawDocument").and.returnValue(Promise.resolve({
+            var drawDocumentSpy = spyOn(
+                rasterizeHTML,
+                "drawDocument"
+            ).and.returnValue(
+                Promise.resolve({
                     image: svgImage,
-                    errors: []
-                }));
+                    errors: [],
+                })
+            );
 
             setUpLoadDocument();
 
-            rasterizeHTML.drawURL("fixtures/image.html", {width: 999, height: 987}).then(function (result) {
-                expect(result.image).toEqual(svgImage);
-                expect(drawDocumentSpy).toHaveBeenCalledWith(jasmine.any(Object), null, jasmine.objectContaining({width: 999, height: 987}));
+            rasterizeHTML
+                .drawURL("fixtures/image.html", { width: 999, height: 987 })
+                .then(function (result) {
+                    expect(result.image).toEqual(svgImage);
+                    expect(drawDocumentSpy).toHaveBeenCalledWith(
+                        jasmine.any(Object),
+                        null,
+                        jasmine.objectContaining({ width: 999, height: 987 })
+                    );
 
-                done();
-            });
+                    done();
+                });
         });
 
         it("should circumvent caching if requested for drawURL", function (done) {
-            spyOn(rasterizeHTML, "drawDocument").and.returnValue(Promise.resolve({
-                image: svgImage,
-                errors: []
-            }));
+            spyOn(rasterizeHTML, "drawDocument").and.returnValue(
+                Promise.resolve({
+                    image: svgImage,
+                    errors: [],
+                })
+            );
 
             setUpLoadDocument();
 
-            rasterizeHTML.drawURL("fixtures/image.html", canvas, {cache: 'none'}).then(function () {
-                expect(browser.loadDocument).toHaveBeenCalledWith("fixtures/image.html", {
-                    cache: 'none'
-                });
+            rasterizeHTML
+                .drawURL("fixtures/image.html", canvas, { cache: "none" })
+                .then(function () {
+                    expect(browser.loadDocument).toHaveBeenCalledWith(
+                        "fixtures/image.html",
+                        {
+                            cache: "none",
+                        }
+                    );
 
-                done();
-            });
+                    done();
+                });
         });
     });
 
     describe("Error handling", function () {
         it("should pass through an error from inlining on drawDocument", function (done) {
-            setUpRasterize(svgImage, [{message: "the error"}]);
+            setUpRasterize(svgImage, [{ message: "the error" }]);
 
             rasterizeHTML.drawDocument(doc, canvas).then(function (result) {
                 expect(result.image).toEqual(svgImage);
-                expect(result.errors).toEqual([{message: "the error"}]);
+                expect(result.errors).toEqual([{ message: "the error" }]);
 
                 expect(rasterize.rasterize).toHaveBeenCalled();
 
@@ -249,39 +346,47 @@ describe("Main", function () {
         });
 
         it("should pass through errors to drawHTML", function (done) {
-            spyOn(rasterizeHTML, "drawDocument").and.returnValue(Promise.resolve({
-                errors: [{message: "the error"}]
-            }));
+            spyOn(rasterizeHTML, "drawDocument").and.returnValue(
+                Promise.resolve({
+                    errors: [{ message: "the error" }],
+                })
+            );
 
             rasterizeHTML.drawHTML("", canvas).then(function (result) {
-                expect(result.errors).toEqual([{message: "the error"}]);
+                expect(result.errors).toEqual([{ message: "the error" }]);
 
                 done();
             });
         });
 
         it("should pass through errors to drawURL", function (done) {
-            spyOn(rasterizeHTML, "drawDocument").and.returnValue(Promise.resolve({
-                errors: [{message: "the error"}]
-            }));
+            spyOn(rasterizeHTML, "drawDocument").and.returnValue(
+                Promise.resolve({
+                    errors: [{ message: "the error" }],
+                })
+            );
 
             setUpLoadDocument();
 
-            rasterizeHTML.drawURL("fixtures/image.html", canvas).then(function (result) {
-                expect(result.errors).toEqual([{message: "the error"}]);
+            rasterizeHTML
+                .drawURL("fixtures/image.html", canvas)
+                .then(function (result) {
+                    expect(result.errors).toEqual([{ message: "the error" }]);
 
-                done();
-            });
+                    done();
+                });
         });
 
         it("should report an error on loading a broken URL", function (done) {
             setUpLoadDocumentError("the error");
 
-            rasterizeHTML.drawURL("non_existing.html", canvas).then(null, function (e) {
-                expect(e).toEqual("the error");
+            rasterizeHTML
+                .drawURL("non_existing.html", canvas)
+                .then(null, function (e) {
+                    expect(e).toEqual("the error");
 
-                done();
-            });
+                    done();
+                });
         });
     });
 

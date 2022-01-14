@@ -1,4 +1,3 @@
-
 export as namespace rasterizeHTML;
 
 /**
@@ -79,7 +78,7 @@ export interface Options {
      * browser to cache repeated calls to the same URL,
      * - 'all' will not employ any cache busting (default).
      */
-    cache?: 'none' | 'repeated' | 'all';
+    cache?: "none" | "repeated" | "all";
 
     /**
      * An object holding the library's own in-memory cache. Only effective in
@@ -100,7 +99,12 @@ export interface Resource {
      * - script: a <script src=""> scriptExecution a script execution error
      *   message (no url specified)
      */
-    resourceType: 'image' | 'stylesheet' | 'backgroundImage' | 'fontFace' | 'script';
+    resourceType:
+        | "image"
+        | "stylesheet"
+        | "backgroundImage"
+        | "fontFace"
+        | "script";
 
     /** The URL of the resource. */
     url: string;
@@ -114,7 +118,6 @@ export interface Resource {
  * from any of the draw functions.
  */
 export interface RenderResult {
-
     /**
      * The resulting image rendered to the canvas. If content overflows the
      * specified viewport (defined by the width and height parameters or the
@@ -169,7 +172,11 @@ export interface Error {
  * @return a promise that is fulfilled once the content is rendered or rejected
  *    if drawing the provided item failed.
  */
-export function drawHTML(html: string, canvas: HTMLCanvasElement, options?: Options): Promise<RenderResult>;
+export function drawHTML(
+    html: string,
+    canvas: HTMLCanvasElement,
+    options?: Options
+): Promise<RenderResult>;
 
 /**
  * Draw a HTML string to the canvas.    The general call pattern is:
@@ -188,7 +195,11 @@ export function drawHTML(html: string, canvas: HTMLCanvasElement, options?: Opti
  * @return a promise that is fulfilled once the content is rendered or rejected
  *    if drawing the provided item failed.
  */
-export function drawURL(url: string, canvas: HTMLCanvasElement, options?: Options): Promise<RenderResult>;
+export function drawURL(
+    url: string,
+    canvas: HTMLCanvasElement,
+    options?: Options
+): Promise<RenderResult>;
 
 /**
  * Draw a Document to the canvas.    The general call pattern is:
@@ -207,4 +218,8 @@ export function drawURL(url: string, canvas: HTMLCanvasElement, options?: Option
  * @return a promise that is fulfilled once the content is rendered or rejected
  *    if drawing the provided item failed.
  */
-export function drawDocument(document: Document, canvas: HTMLCanvasElement, options?: Options): Promise<RenderResult>;
+export function drawDocument(
+    document: Document,
+    canvas: HTMLCanvasElement,
+    options?: Options
+): Promise<RenderResult>;

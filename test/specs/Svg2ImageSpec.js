@@ -2,7 +2,7 @@ describe("Svg to Image", function () {
     "use strict";
 
     var createElementFrom = function (htmlString) {
-        var div = document.createElement('div');
+        var div = document.createElement("div");
         div.innerHTML = htmlString;
         return div.childNodes[0];
     };
@@ -13,62 +13,76 @@ describe("Svg to Image", function () {
         });
 
         it("should render the SVG", function (done) {
-            var referenceImg = createElementFrom('<img src="' + testHelper.fixturesPath + 'rednblue.png" alt="test image"/>'),
-                twoColorSvg = (
+            var referenceImg = createElementFrom(
+                    '<img src="' +
+                        testHelper.fixturesPath +
+                        'rednblue.png" alt="test image"/>'
+                ),
+                twoColorSvg =
                     '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">' +
-                        '<foreignObject x="0" y="0" width="100%" height="100%">' +
-                            '<html xmlns="http://www.w3.org/1999/xhtml">' +
-                                '<head>' +
-                                    '<style type="text/css">body { padding: 0; margin: 0}</style>' +
-                                '</head>' +
-                                '<body>' +
-                                    '<div style="background-color: #ff7700; height: 50px"></div>' +
-                                    '<div style="background-color: #1000ff; height: 50px"></div>' +
-                                '</body>' +
-                            '</html>' +
-                        '</foreignObject>' +
-                    '</svg>'
-                );
+                    '<foreignObject x="0" y="0" width="100%" height="100%">' +
+                    '<html xmlns="http://www.w3.org/1999/xhtml">' +
+                    "<head>" +
+                    '<style type="text/css">body { padding: 0; margin: 0}</style>' +
+                    "</head>" +
+                    "<body>" +
+                    '<div style="background-color: #ff7700; height: 50px"></div>' +
+                    '<div style="background-color: #1000ff; height: 50px"></div>' +
+                    "</body>" +
+                    "</html>" +
+                    "</foreignObject>" +
+                    "</svg>";
 
             referenceImg.onload = function () {
-                svg2image.renderSvg(twoColorSvg).then(function (image) {
-                    expect(image).toImageDiffEqual(referenceImg);
-                }).catch(function (err) {
-                    expect(err).toBe(null);
-                    fail();
-                }).finally(done);
+                svg2image
+                    .renderSvg(twoColorSvg)
+                    .then(function (image) {
+                        expect(image).toImageDiffEqual(referenceImg);
+                    })
+                    .catch(function (err) {
+                        expect(err).toBe(null);
+                        fail();
+                    })
+                    .finally(done);
             };
         });
 
         it("should render an SVG with inline image", function (done) {
-            var referenceImg = createElementFrom('<img src="' + testHelper.fixturesPath + 'rednblue.png" alt="test image"/>'),
-                twoColorSvg = (
+            var referenceImg = createElementFrom(
+                    '<img src="' +
+                        testHelper.fixturesPath +
+                        'rednblue.png" alt="test image"/>'
+                ),
+                twoColorSvg =
                     '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">' +
-                        '<foreignObject x="0" y="0" width="100%" height="100%">' +
-                            '<html xmlns="http://www.w3.org/1999/xhtml">' +
-                                '<head>' +
-                                    '<style type="text/css">body { padding: 0; margin: 0}</style>' +
-                                '</head>' +
-                                '<body>' +
-                                    '<img id="image" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAABAUlEQVR4nO3RMQ3AABDEsINQtoX/hdEMHrxHyu7d0bG/AzAkzZAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMidmzOzoMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMifkA6bsjwS/Y5YIAAAAASUVORK5CYII=" alt="test image"/>' +
-                                '</body>' +
-                            '</html>' +
-                        '</foreignObject>' +
-                    '</svg>'
-                );
+                    '<foreignObject x="0" y="0" width="100%" height="100%">' +
+                    '<html xmlns="http://www.w3.org/1999/xhtml">' +
+                    "<head>" +
+                    '<style type="text/css">body { padding: 0; margin: 0}</style>' +
+                    "</head>" +
+                    "<body>" +
+                    '<img id="image" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAABAUlEQVR4nO3RMQ3AABDEsINQtoX/hdEMHrxHyu7d0bG/AzAkzZAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMidmzOzoMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMiTEkxpAYQ2IMifkA6bsjwS/Y5YIAAAAASUVORK5CYII=" alt="test image"/>' +
+                    "</body>" +
+                    "</html>" +
+                    "</foreignObject>" +
+                    "</svg>";
 
             referenceImg.onload = function () {
-                svg2image.renderSvg(twoColorSvg).then(function (image) {
-                    // This fails in Safari, possibly due to a bug with same origin policy stuff
-                    try {
-                        expect(image).toImageDiffEqual(referenceImg);
-                    } catch (err) {
-                        expect(err).toBeNull();
-                    }
-                }).catch(function (err) {
-                    expect(err).toBe(null);
-                    fail();
-                }).finally(done);
+                svg2image
+                    .renderSvg(twoColorSvg)
+                    .then(function (image) {
+                        // This fails in Safari, possibly due to a bug with same origin policy stuff
+                        try {
+                            expect(image).toImageDiffEqual(referenceImg);
+                        } catch (err) {
+                            expect(err).toBeNull();
+                        }
+                    })
+                    .catch(function (err) {
+                        expect(err).toBe(null);
+                        fail();
+                    })
+                    .finally(done);
             };
         });
 
@@ -92,15 +106,20 @@ describe("Svg to Image", function () {
         });
 
         it("should return an image without event listeners attached", function (done) {
-            var anSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"></svg>';
+            var anSvg =
+                '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"></svg>';
 
-            svg2image.renderSvg(anSvg).then(function (image) {
-                expect(image.onerror).toBeNull();
-                expect(image.onload).toBeNull();
-            }).catch(function (err) {
-                expect(err).toBe(null);
-                fail();
-            }).finally(done);
+            svg2image
+                .renderSvg(anSvg)
+                .then(function (image) {
+                    expect(image.onerror).toBeNull();
+                    expect(image.onload).toBeNull();
+                })
+                .catch(function (err) {
+                    expect(err).toBe(null);
+                    fail();
+                })
+                .finally(done);
         });
     });
 });

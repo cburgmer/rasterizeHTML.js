@@ -17,12 +17,15 @@ describe("Browser functions", function () {
         });
 
         var mockFinishNotifyingXHRProxy = function () {
-            var fakeXhrProxy = jasmine.createSpyObj('finishNotifyingXhrProxy', ['send', 'waitForRequestsToFinish']),
+            var fakeXhrProxy = jasmine.createSpyObj("finishNotifyingXhrProxy", [
+                    "send",
+                    "waitForRequestsToFinish",
+                ]),
                 defer = testHelper.synchronousDefer();
 
             fakeXhrProxy.waitForRequestsToFinish.and.returnValue(defer.promise);
 
-            spyOn(proxies, 'finishNotifyingXhr').and.returnValue(fakeXhrProxy);
+            spyOn(proxies, "finishNotifyingXhr").and.returnValue(fakeXhrProxy);
 
             return defer;
         };
@@ -30,7 +33,7 @@ describe("Browser functions", function () {
         var defaultOptionsWithViewport = function (width, height) {
             return {
                 width: width || 12,
-                height: height || 34
+                height: height || 34,
             };
         };
 
@@ -39,7 +42,7 @@ describe("Browser functions", function () {
                 baseUrl: undefined,
                 executeJsTimeout: timeout,
                 width: 12,
-                height: 34
+                height: 34,
             };
         };
 
@@ -47,7 +50,7 @@ describe("Browser functions", function () {
             return {
                 width: width || 12,
                 height: height || 34,
-                executeJsTimeout: 100
+                executeJsTimeout: 100,
             };
         };
 
@@ -56,42 +59,68 @@ describe("Browser functions", function () {
         });
 
         it("should load an URL and execute the included JS", function (done) {
-            doc.documentElement.innerHTML = "<body><script>document.body.innerHTML = 'dynamic content';</script></body>";
+            doc.documentElement.innerHTML =
+                "<body><script>document.body.innerHTML = 'dynamic content';</script></body>";
 
-            browser.executeJavascript(doc.documentElement, defaultOptionsWithViewport()).then(function (result) {
-                expect(result.document.body.innerHTML).toEqual('dynamic content');
+            browser
+                .executeJavascript(
+                    doc.documentElement,
+                    defaultOptionsWithViewport()
+                )
+                .then(function (result) {
+                    expect(result.document.body.innerHTML).toEqual(
+                        "dynamic content"
+                    );
 
-                done();
-            });
+                    done();
+                });
         });
 
         it("should remove the iframe element when done", function (done) {
             doc.documentElement.innerHTML = "<body></body>";
 
-            browser.executeJavascript(doc.documentElement, defaultOptionsWithViewport()).then(function () {
-                expect(document.querySelector("iframe")).toBe(null);
+            browser
+                .executeJavascript(
+                    doc.documentElement,
+                    defaultOptionsWithViewport()
+                )
+                .then(function () {
+                    expect(document.querySelector("iframe")).toBe(null);
 
-                done();
-            });
+                    done();
+                });
         });
 
         it("should wait a configured period of time before calling back", function (done) {
-            doc.documentElement.innerHTML = "<body onload=\"setTimeout(function () {document.body.innerHTML = 'dynamic content';}, 1);\"></body>";
+            doc.documentElement.innerHTML =
+                "<body onload=\"setTimeout(function () {document.body.innerHTML = 'dynamic content';}, 1);\"></body>";
 
-            browser.executeJavascript(doc.documentElement, defaultOptionsWithTimeout(20)).then(function (result) {
-                expect(result.document.body.innerHTML).toEqual('dynamic content');
+            browser
+                .executeJavascript(
+                    doc.documentElement,
+                    defaultOptionsWithTimeout(20)
+                )
+                .then(function (result) {
+                    expect(result.document.body.innerHTML).toEqual(
+                        "dynamic content"
+                    );
 
-                done();
-            });
+                    done();
+                });
         });
 
         it("should return only when all ajax has loaded", function (done) {
-            var callback = jasmine.createSpy('callback');
+            var callback = jasmine.createSpy("callback");
 
             mockPromisesToResolveSynchronously();
             var xhrFinishedDefer = mockFinishNotifyingXHRProxy();
 
-            browser.executeJavascript(doc.documentElement, defaultOptionsWithTimeout(10)).then(callback);
+            browser
+                .executeJavascript(
+                    doc.documentElement,
+                    defaultOptionsWithTimeout(10)
+                )
+                .then(callback);
 
             // HACK fragile test. We need to wait for the iframe.onload to be triggered
             setTimeout(function () {
@@ -106,12 +135,17 @@ describe("Browser functions", function () {
         });
 
         it("should return only when all ajax has loaded, even if timeout is set to 0", function (done) {
-            var callback = jasmine.createSpy('callback');
+            var callback = jasmine.createSpy("callback");
 
             mockPromisesToResolveSynchronously();
             var xhrFinishedDefer = mockFinishNotifyingXHRProxy();
 
-            browser.executeJavascript(doc.documentElement, defaultOptionsWithViewport()).then(callback);
+            browser
+                .executeJavascript(
+                    doc.documentElement,
+                    defaultOptionsWithViewport()
+                )
+                .then(callback);
 
             // HACK fragile test. We need to wait for the iframe.onload to be triggered
             setTimeout(function () {
@@ -126,91 +160,144 @@ describe("Browser functions", function () {
         });
 
         it("should be able to access CSS", function (done) {
-            doc.documentElement.innerHTML = '<head><style>div { height: 20px; }</style></head><body onload="var elem = document.getElementById(\'elem\'); document.body.innerHTML = elem.offsetHeight;"><div id="elem"></div></body>';
+            doc.documentElement.innerHTML =
+                '<head><style>div { height: 20px; }</style></head><body onload="var elem = document.getElementById(\'elem\'); document.body.innerHTML = elem.offsetHeight;"><div id="elem"></div></body>';
 
-            browser.executeJavascript(doc.documentElement, defaultOptionsWithViewport()).then(function (result) {
-                expect(result.document.body.innerHTML).toEqual('20');
-
-                done();
-            });
-        });
-
-        it("should report failing JS", function (done) {
-            doc.documentElement.innerHTML = "<body><script>undefinedVar.t = 42</script></body>";
-
-            browser.executeJavascript(doc.documentElement, defaultOptionsWithViewport()).then(function (result) {
-                expect(result.errors).toEqual([{
-                    resourceType: "scriptExecution",
-                    msg: jasmine.any(String)
-                }]);
-                expect(result.errors[0].msg).toMatch(/(ReferenceError:\s+(.+\s+)?undefinedVar)|('undefinedVar' is undefined)/);
-
-                done();
-            });
-        });
-
-        it("should be able to access top 'html' tag attributes", function (done) {
-            doc.documentElement.innerHTML = '<head></head><body onload="document.body.innerHTML = document.querySelectorAll(\'[myattr]\').length;"></body>';
-            doc.documentElement.setAttribute('myattr', 'myvalue');
-
-            browser.executeJavascript(doc.documentElement, defaultOptionsWithViewport()).then(function (result) {
-                expect(result.document.body.innerHTML).toEqual('1');
-
-                done();
-            });
-        });
-
-        it("should be able to load content via AJAX from the correct url", function (done) {
-            testHelper.readHTMLDocumentFixture('ajax.html').then(function (doc) {
-                browser.executeJavascript(doc.documentElement, {
-                    baseUrl: testHelper.fixturesPath,
-                    executeJsTimeout: 100,
-                    width: 123,
-                    height: 456
-                }).then(function (result) {
-                    expect(result.document.querySelector('div').textContent.trim()).toEqual('The content');
+            browser
+                .executeJavascript(
+                    doc.documentElement,
+                    defaultOptionsWithViewport()
+                )
+                .then(function (result) {
+                    expect(result.document.body.innerHTML).toEqual("20");
 
                     done();
                 });
-            });
+        });
+
+        it("should report failing JS", function (done) {
+            doc.documentElement.innerHTML =
+                "<body><script>undefinedVar.t = 42</script></body>";
+
+            browser
+                .executeJavascript(
+                    doc.documentElement,
+                    defaultOptionsWithViewport()
+                )
+                .then(function (result) {
+                    expect(result.errors).toEqual([
+                        {
+                            resourceType: "scriptExecution",
+                            msg: jasmine.any(String),
+                        },
+                    ]);
+                    expect(result.errors[0].msg).toMatch(
+                        /(ReferenceError:\s+(.+\s+)?undefinedVar)|('undefinedVar' is undefined)/
+                    );
+
+                    done();
+                });
+        });
+
+        it("should be able to access top 'html' tag attributes", function (done) {
+            doc.documentElement.innerHTML =
+                "<head></head><body onload=\"document.body.innerHTML = document.querySelectorAll('[myattr]').length;\"></body>";
+            doc.documentElement.setAttribute("myattr", "myvalue");
+
+            browser
+                .executeJavascript(
+                    doc.documentElement,
+                    defaultOptionsWithViewport()
+                )
+                .then(function (result) {
+                    expect(result.document.body.innerHTML).toEqual("1");
+
+                    done();
+                });
+        });
+
+        it("should be able to load content via AJAX from the correct url", function (done) {
+            testHelper
+                .readHTMLDocumentFixture("ajax.html")
+                .then(function (doc) {
+                    browser
+                        .executeJavascript(doc.documentElement, {
+                            baseUrl: testHelper.fixturesPath,
+                            executeJsTimeout: 100,
+                            width: 123,
+                            height: 456,
+                        })
+                        .then(function (result) {
+                            expect(
+                                result.document
+                                    .querySelector("div")
+                                    .textContent.trim()
+                            ).toEqual("The content");
+
+                            done();
+                        });
+                });
         });
 
         it("should support window.matchMedia() with 'width' media queries", function (done) {
-            doc.documentElement.innerHTML = '<body onload="setTimeout(function () {document.body.innerHTML = window.matchMedia(\'(min-width: 30px)\').matches; }, 10);"></body>';
+            doc.documentElement.innerHTML =
+                "<body onload=\"setTimeout(function () {document.body.innerHTML = window.matchMedia('(min-width: 30px)').matches; }, 10);\"></body>";
 
-            browser.executeJavascript(doc.documentElement, optionsWithViewport(42, 21)).then(function (result) {
-                expect(result.document.body.innerHTML).toEqual('true');
+            browser
+                .executeJavascript(
+                    doc.documentElement,
+                    optionsWithViewport(42, 21)
+                )
+                .then(function (result) {
+                    expect(result.document.body.innerHTML).toEqual("true");
 
-                done();
-            });
+                    done();
+                });
         });
 
         it("should support window.matchMedia() with 'height' media queries", function (done) {
-            doc.documentElement.innerHTML = '<body onload="setTimeout(function () {document.body.innerHTML = window.matchMedia(\'(min-height: 123px)\').matches; }, 10);"></body>';
+            doc.documentElement.innerHTML =
+                "<body onload=\"setTimeout(function () {document.body.innerHTML = window.matchMedia('(min-height: 123px)').matches; }, 10);\"></body>";
 
-            browser.executeJavascript(doc.documentElement, optionsWithViewport(10, 123)).then(function (result) {
-                expect(result.document.body.innerHTML).toEqual('true');
+            browser
+                .executeJavascript(
+                    doc.documentElement,
+                    optionsWithViewport(10, 123)
+                )
+                .then(function (result) {
+                    expect(result.document.body.innerHTML).toEqual("true");
 
-                done();
-            });
+                    done();
+                });
         });
 
         it("should correctly set canvas size for media queries", function (done) {
-            doc.documentElement.innerHTML = '<body onload="document.body.innerHTML = window.matchMedia(\'(max-height: 123px)\').matches;"></body>';
+            doc.documentElement.innerHTML =
+                "<body onload=\"document.body.innerHTML = window.matchMedia('(max-height: 123px)').matches;\"></body>";
 
-            browser.executeJavascript(doc.documentElement, defaultOptionsWithViewport(20, 123)).then(function (result) {
-                expect(result.document.body.innerHTML).toEqual('true');
+            browser
+                .executeJavascript(
+                    doc.documentElement,
+                    defaultOptionsWithViewport(20, 123)
+                )
+                .then(function (result) {
+                    expect(result.document.body.innerHTML).toEqual("true");
 
-                done();
-            });
+                    done();
+                });
         });
 
         it("should correctly set the doctype (see issue #89)", function (done) {
-            browser.executeJavascript(doc.documentElement, defaultOptionsWithViewport()).then(function (result) {
-                expect(result.document.doctype.name).toEqual('html');
+            browser
+                .executeJavascript(
+                    doc.documentElement,
+                    defaultOptionsWithViewport()
+                )
+                .then(function (result) {
+                    expect(result.document.doctype.name).toEqual("html");
 
-                done();
-            });
+                    done();
+                });
         });
     });
 
@@ -218,12 +305,14 @@ describe("Browser functions", function () {
         it("should parse a single div", function () {
             var element = browser.parseHtmlFragment('<div id="the_div"></div>');
 
-            expect(element.tagName.toLowerCase()).toEqual('div');
-            expect(element.id).toEqual('the_div');
+            expect(element.tagName.toLowerCase()).toEqual("div");
+            expect(element.id).toEqual("the_div");
         });
 
         it("should raise error when parsing an otherwise empty body element", function () {
-            expect(function () { browser.parseHtmlFragment('<body></body>'); }).toThrow("Invalid source");
+            expect(function () {
+                browser.parseHtmlFragment("<body></body>");
+            }).toThrow("Invalid source");
         });
     });
 
@@ -235,7 +324,7 @@ describe("Browser functions", function () {
         });
 
         it("should parse HTML to a document", function () {
-            var dom = browser.parseHTML('<html><body>Text</body></html>');
+            var dom = browser.parseHTML("<html><body>Text</body></html>");
 
             expect(dom.querySelector("body").textContent).toEqual("Text");
         });
@@ -243,7 +332,9 @@ describe("Browser functions", function () {
         it("should keep 'html' tag attributes", function () {
             var dom = browser.parseHTML('<html top="attribute"></html>');
 
-            expect(dom.documentElement.getAttribute('top')).toEqual('attribute');
+            expect(dom.documentElement.getAttribute("top")).toEqual(
+                "attribute"
+            );
         });
 
         it("should keep 'html' tag attributes even if DOMParser is not supported", function () {
@@ -257,18 +348,20 @@ describe("Browser functions", function () {
 
             dom = browser.parseHTML('<html top="attribute"></html>');
 
-            expect(dom.documentElement.getAttribute('top')).toEqual('attribute');
+            expect(dom.documentElement.getAttribute("top")).toEqual(
+                "attribute"
+            );
         });
 
         it("should deal with a missing 'html' tag", function () {
-            browser.parseHTML('<div></div>');
+            browser.parseHTML("<div></div>");
             expect(true).toBe(true); // work around warning from jasmine that no expectation is given
         });
 
         it("should correctly set the doctype (see issue #89)", function () {
-            var doc = browser.parseHTML('<b></b>');
+            var doc = browser.parseHTML("<b></b>");
 
-            expect(doc.doctype.name).toEqual('html');
+            expect(doc.doctype.name).toEqual("html");
         });
     });
 
@@ -288,7 +381,9 @@ describe("Browser functions", function () {
         it("should throw an exception if the document is invalid because of a missing namespace", function () {
             var error;
             try {
-                browser.validateXHTML('<html xmlns="http://www.w3.org/1999/xhtml"><weird:element></html>');
+                browser.validateXHTML(
+                    '<html xmlns="http://www.w3.org/1999/xhtml"><weird:element></html>'
+                );
             } catch (e) {
                 error = e;
             }
@@ -309,148 +404,214 @@ describe("Browser functions", function () {
                 doc.documentElement.innerHTML = html;
             },
             setElementWithSize = function (size) {
-                var width = size.width ? 'width: ' + size.width + 'px;' : '',
-                    height = size.height? 'height: ' + size.height + 'px;' : '',
-                    element = '<div style="' + width + height + '">content</div>';
+                var width = size.width ? "width: " + size.width + "px;" : "",
+                    height = size.height
+                        ? "height: " + size.height + "px;"
+                        : "",
+                    element =
+                        '<div style="' + width + height + '">content</div>';
 
-                setHtml('<style>* { padding: 0; margin: 0; }</style>' + element);
+                setHtml(
+                    "<style>* { padding: 0; margin: 0; }</style>" + element
+                );
             };
 
         beforeEach(function () {
-            doc = document.implementation.createHTMLDocument('');
+            doc = document.implementation.createHTMLDocument("");
         });
 
         it("should return the content height of a document greater than the viewport height", function (done) {
-            setElementWithSize({height: 300});
+            setElementWithSize({ height: 300 });
 
-            browser.calculateDocumentContentSize(doc.documentElement, {width: 300, height: 200}).then(function (size) {
-                expect(size.height).toEqual(300);
-                expect(size.viewportHeight).toEqual(300);
+            browser
+                .calculateDocumentContentSize(doc.documentElement, {
+                    width: 300,
+                    height: 200,
+                })
+                .then(function (size) {
+                    expect(size.height).toEqual(300);
+                    expect(size.viewportHeight).toEqual(300);
 
-                done();
-            });
+                    done();
+                });
         });
 
         it("should return the minimum height viewport", function (done) {
-            setElementWithSize({height: 100});
+            setElementWithSize({ height: 100 });
 
-            browser.calculateDocumentContentSize(doc.documentElement, {width: 300, height: 200}).then(function (size) {
-                expect(size.height).toEqual(200);
-                expect(size.viewportHeight).toEqual(200);
+            browser
+                .calculateDocumentContentSize(doc.documentElement, {
+                    width: 300,
+                    height: 200,
+                })
+                .then(function (size) {
+                    expect(size.height).toEqual(200);
+                    expect(size.viewportHeight).toEqual(200);
 
-                done();
-            });
+                    done();
+                });
         });
 
         it("should return the minimum width of the viewport", function (done) {
             setElementWithSize({});
 
-            browser.calculateDocumentContentSize(doc.documentElement, {width: 300, height: 200}).then(function (size) {
-                expect(size.width).toEqual(300);
-                expect(size.viewportWidth).toEqual(300);
+            browser
+                .calculateDocumentContentSize(doc.documentElement, {
+                    width: 300,
+                    height: 200,
+                })
+                .then(function (size) {
+                    expect(size.width).toEqual(300);
+                    expect(size.viewportWidth).toEqual(300);
 
-                done();
-            });
+                    done();
+                });
         });
 
         it("should return width greater than viewport width", function (done) {
-            setElementWithSize({width: 400, height: 10});
+            setElementWithSize({ width: 400, height: 10 });
 
-            browser.calculateDocumentContentSize(doc.documentElement, {width: 300, height: 200}).then(function (size) {
-                expect(size.width).toEqual(400);
-                expect(size.viewportWidth).toEqual(400);
+            browser
+                .calculateDocumentContentSize(doc.documentElement, {
+                    width: 300,
+                    height: 200,
+                })
+                .then(function (size) {
+                    expect(size.width).toEqual(400);
+                    expect(size.viewportWidth).toEqual(400);
 
-                done();
-            });
+                    done();
+                });
         });
 
         it("should calculate the document's root font size", function (done) {
-            setHtml('<style>html { font-size: 4711px; }</style>');
+            setHtml("<style>html { font-size: 4711px; }</style>");
 
-            browser.calculateDocumentContentSize(doc.documentElement, {width: 300, height: 200}).then(function (size) {
-                expect(size.rootFontSize).toBe('4711px');
+            browser
+                .calculateDocumentContentSize(doc.documentElement, {
+                    width: 300,
+                    height: 200,
+                })
+                .then(function (size) {
+                    expect(size.rootFontSize).toBe("4711px");
 
-                done();
-            });
+                    done();
+                });
         });
 
         it("should calculate the correct size given any DOM element", function (done) {
-            setHtml('<div><style>div { width: 400px; height: 400px; }</style></div>');
+            setHtml(
+                "<div><style>div { width: 400px; height: 400px; }</style></div>"
+            );
 
-            browser.calculateDocumentContentSize(doc.querySelector('div'), {width: 300, height: 200}).then(function (size) {
-                expect(size.width).toBe(400);
-                expect(size.height).toBe(400);
+            browser
+                .calculateDocumentContentSize(doc.querySelector("div"), {
+                    width: 300,
+                    height: 200,
+                })
+                .then(function (size) {
+                    expect(size.width).toBe(400);
+                    expect(size.height).toBe(400);
 
-                done();
-            });
+                    done();
+                });
         });
 
         it("should not have the body margin influence a DOM element sizing", function (done) {
-            setHtml('<div><style>span { display: inline-block; float: left; width: 200px; height: 200px; }</style><span></span><span></span></div>');
-            browser.calculateDocumentContentSize(doc.querySelector('div'), {width: 400, height: 200}).then(function (size) {
-                expect(size.width).toBe(400);
-                expect(size.height).toBe(200);
+            setHtml(
+                "<div><style>span { display: inline-block; float: left; width: 200px; height: 200px; }</style><span></span><span></span></div>"
+            );
+            browser
+                .calculateDocumentContentSize(doc.querySelector("div"), {
+                    width: 400,
+                    height: 200,
+                })
+                .then(function (size) {
+                    expect(size.width).toBe(400);
+                    expect(size.height).toBe(200);
 
-                done();
-            });
+                    done();
+                });
         });
 
         it("should remove the iframe when done calculating", function (done) {
             setElementWithSize({});
 
-            browser.calculateDocumentContentSize(doc.documentElement, {width: 300, height: 200}).then(function () {
-                expect(document.querySelector('iframe')).toBe(null);
+            browser
+                .calculateDocumentContentSize(doc.documentElement, {
+                    width: 300,
+                    height: 200,
+                })
+                .then(function () {
+                    expect(document.querySelector("iframe")).toBe(null);
 
-                done();
-            });
+                    done();
+                });
         });
 
         it("should not execute JavaScript", function (done) {
-            setHtml('<div></div><script>document.querySelector("div").style.height="100";</script>');
+            setHtml(
+                '<div></div><script>document.querySelector("div").style.height="100";</script>'
+            );
 
-            browser.calculateDocumentContentSize(doc.documentElement, {width: 300, height: 10}).then(function (size) {
-                expect(size.height).toEqual(10);
+            browser
+                .calculateDocumentContentSize(doc.documentElement, {
+                    width: 300,
+                    height: 10,
+                })
+                .then(function (size) {
+                    expect(size.height).toEqual(10);
 
-                done();
-            });
+                    done();
+                });
         });
 
         it("should use standards mode to calculate sizes", function (done) {
             /* Awkward test setup just to test that we don't get any of those:
                https://developer.mozilla.org/en-US/docs/Mozilla_Quirks_Mode_Behavior */
-            setHtml('<style>' +
-                    'body { margin: 0; padding: 0; font-size: 10px; line-height: 100%; }' +
-                    'ul { list-style: none; margin: 0; } li { display: inline-block; }' +
-                    '</style>' +
-                    '<body><ul><li></li></ul></body>');
+            setHtml(
+                "<style>" +
+                    "body { margin: 0; padding: 0; font-size: 10px; line-height: 100%; }" +
+                    "ul { list-style: none; margin: 0; } li { display: inline-block; }" +
+                    "</style>" +
+                    "<body><ul><li></li></ul></body>"
+            );
 
-            browser.calculateDocumentContentSize(doc.documentElement, {width: 300, height: 5}).then(function (size) {
-                // In quirks mode the ul seems to be considered empty and doesn't get a height
-                expect(size.height).toEqual(10);
+            browser
+                .calculateDocumentContentSize(doc.documentElement, {
+                    width: 300,
+                    height: 5,
+                })
+                .then(function (size) {
+                    // In quirks mode the ul seems to be considered empty and doesn't get a height
+                    expect(size.height).toEqual(10);
 
-                done();
-            });
+                    done();
+                });
         });
 
         it("should not include a scrollbar in calculations on Unix systems", function (done) {
-            setHtml('<style>' +
-                    'html, body { height: 100%; }' +
-                    '</style>');
+            setHtml("<style>" + "html, body { height: 100%; }" + "</style>");
 
             // For Firefox width and height seem to be important, too small will not trigger the error
-            browser.calculateDocumentContentSize(doc.documentElement, {width: 600, height: 200}).then(function (size) {
-                expect(size.width).toBe(600);
-                expect(size.viewportWidth).toBe(600);
+            browser
+                .calculateDocumentContentSize(doc.documentElement, {
+                    width: 600,
+                    height: 200,
+                })
+                .then(function (size) {
+                    expect(size.width).toBe(600);
+                    expect(size.viewportWidth).toBe(600);
 
-                done();
-            });
+                    done();
+                });
         });
 
         describe("with parent css", function () {
             var parentStyle;
 
             beforeEach(function () {
-                parentStyle = document.createElement('style');
+                parentStyle = document.createElement("style");
                 document.head.appendChild(parentStyle);
             });
 
@@ -460,14 +621,19 @@ describe("Browser functions", function () {
 
             // Fixes https://github.com/cburgmer/rasterizeHTML.js/issues/187
             it("should not be affected by parent's page border-box on iframe", function (done) {
-                parentStyle.textContent = "* {box-sizing: border-box;} iframe {border-width: 10px;}";
-                setHtml('<div></div>');
+                parentStyle.textContent =
+                    "* {box-sizing: border-box;} iframe {border-width: 10px;}";
+                setHtml("<div></div>");
 
-                browser.calculateDocumentContentSize(doc.documentElement, {width: 200}).then(function (size) {
-                    expect(size.viewportWidth).toBe(200);
+                browser
+                    .calculateDocumentContentSize(doc.documentElement, {
+                        width: 200,
+                    })
+                    .then(function (size) {
+                        expect(size.viewportWidth).toBe(200);
 
-                    done();
-                });
+                        done();
+                    });
             });
         });
 
@@ -475,172 +641,273 @@ describe("Browser functions", function () {
             it("should report half the viewport size for a zoom of 2", function (done) {
                 setElementWithSize({});
 
-                browser.calculateDocumentContentSize(doc.documentElement, {width: 300, height: 200, zoom: 2}).then(function (size) {
-                    expect(size.viewportWidth).toEqual(150);
-                    expect(size.viewportHeight).toEqual(100);
+                browser
+                    .calculateDocumentContentSize(doc.documentElement, {
+                        width: 300,
+                        height: 200,
+                        zoom: 2,
+                    })
+                    .then(function (size) {
+                        expect(size.viewportWidth).toEqual(150);
+                        expect(size.viewportHeight).toEqual(100);
 
-                    done();
-                });
+                        done();
+                    });
             });
 
             it("should ignore a zoom level of 0", function (done) {
                 setElementWithSize({});
 
-                browser.calculateDocumentContentSize(doc.documentElement, {width: 300, height: 200, zoom: 0}).then(function (size) {
-                    expect(size.viewportWidth).toEqual(300);
-                    expect(size.viewportHeight).toEqual(200);
+                browser
+                    .calculateDocumentContentSize(doc.documentElement, {
+                        width: 300,
+                        height: 200,
+                        zoom: 0,
+                    })
+                    .then(function (size) {
+                        expect(size.viewportWidth).toEqual(300);
+                        expect(size.viewportHeight).toEqual(200);
 
-                    done();
-                });
+                        done();
+                    });
             });
 
             it("should increase viewport width for wider element", function (done) {
-                setElementWithSize({width: 160});
+                setElementWithSize({ width: 160 });
 
-                browser.calculateDocumentContentSize(doc.documentElement, {width: 300, height: 200, zoom: 2}).then(function (size) {
-                    expect(size.viewportWidth).toEqual(160);
-                    expect(size.width).toEqual(320);
+                browser
+                    .calculateDocumentContentSize(doc.documentElement, {
+                        width: 300,
+                        height: 200,
+                        zoom: 2,
+                    })
+                    .then(function (size) {
+                        expect(size.viewportWidth).toEqual(160);
+                        expect(size.width).toEqual(320);
 
-                    done();
-                });
+                        done();
+                    });
             });
 
             it("should increase viewport height for higher element", function (done) {
-                setElementWithSize({height: 120});
+                setElementWithSize({ height: 120 });
 
-                browser.calculateDocumentContentSize(doc.documentElement, {width: 300, height: 200, zoom: 2}).then(function (size) {
-                    expect(size.viewportHeight).toEqual(120);
-                    expect(size.height).toEqual(240);
+                browser
+                    .calculateDocumentContentSize(doc.documentElement, {
+                        width: 300,
+                        height: 200,
+                        zoom: 2,
+                    })
+                    .then(function (size) {
+                        expect(size.viewportHeight).toEqual(120);
+                        expect(size.height).toEqual(240);
 
-                    done();
-                });
+                        done();
+                    });
             });
 
             it("should deal with fractions in scaling", function (done) {
                 setElementWithSize({});
 
-                browser.calculateDocumentContentSize(doc.documentElement, {width: 200, height: 200, zoom: 3}).then(function (size) {
-                    expect(size.viewportWidth).toEqual(66); // not 66.6 or 67
-                    expect(size.width).toEqual(200); // not 3*66=198 or 3*67 = 201
+                browser
+                    .calculateDocumentContentSize(doc.documentElement, {
+                        width: 200,
+                        height: 200,
+                        zoom: 3,
+                    })
+                    .then(function (size) {
+                        expect(size.viewportWidth).toEqual(66); // not 66.6 or 67
+                        expect(size.width).toEqual(200); // not 3*66=198 or 3*67 = 201
 
-                    expect(size.viewportHeight).toEqual(66);
-                    expect(size.height).toEqual(200);
+                        expect(size.viewportHeight).toEqual(66);
+                        expect(size.height).toEqual(200);
 
-                    done();
-                });
+                        done();
+                    });
             });
         });
 
         describe("element selection", function () {
             beforeEach(function () {
-                setHtml('<style>* { padding: 0; margin: 0; }</style>' +
-                    '<div style="width: 200px; height: 300px; padding: 12px 0 0 34px; -moz-box-sizing: border-box; box-sizing: border-box;">' +
-                    '<span style="display: inline-block; width: 123px; height: 234px;"></span>' +
-                    '</div>');
+                setHtml(
+                    "<style>* { padding: 0; margin: 0; }</style>" +
+                        '<div style="width: 200px; height: 300px; padding: 12px 0 0 34px; -moz-box-sizing: border-box; box-sizing: border-box;">' +
+                        '<span style="display: inline-block; width: 123px; height: 234px;"></span>' +
+                        "</div>"
+                );
             });
 
             it("should report the left offset", function (done) {
-                browser.calculateDocumentContentSize(doc.documentElement, {width: 100, height: 10, clip: 'span'}).then(function (size) {
-                    expect(size.left).toEqual(34);
+                browser
+                    .calculateDocumentContentSize(doc.documentElement, {
+                        width: 100,
+                        height: 10,
+                        clip: "span",
+                    })
+                    .then(function (size) {
+                        expect(size.left).toEqual(34);
 
-                    done();
-                });
+                        done();
+                    });
             });
 
             it("should report the top offset", function (done) {
-                browser.calculateDocumentContentSize(doc.documentElement, {width: 100, height: 10, clip: 'span'}).then(function (size) {
-                    expect(size.top).toEqual(12);
+                browser
+                    .calculateDocumentContentSize(doc.documentElement, {
+                        width: 100,
+                        height: 10,
+                        clip: "span",
+                    })
+                    .then(function (size) {
+                        expect(size.top).toEqual(12);
 
-                    done();
-                });
+                        done();
+                    });
             });
 
             it("should report the width", function (done) {
-                browser.calculateDocumentContentSize(doc.documentElement, {width: 100, height: 10, clip: 'span'}).then(function (size) {
-                    expect(size.width).toEqual(123);
+                browser
+                    .calculateDocumentContentSize(doc.documentElement, {
+                        width: 100,
+                        height: 10,
+                        clip: "span",
+                    })
+                    .then(function (size) {
+                        expect(size.width).toEqual(123);
 
-                    done();
-                });
+                        done();
+                    });
             });
 
             it("should report the height", function (done) {
-                browser.calculateDocumentContentSize(doc.documentElement, {width: 100, height: 10, clip: 'span'}).then(function (size) {
-                    expect(size.height).toEqual(234);
+                browser
+                    .calculateDocumentContentSize(doc.documentElement, {
+                        width: 100,
+                        height: 10,
+                        clip: "span",
+                    })
+                    .then(function (size) {
+                        expect(size.height).toEqual(234);
 
-                    done();
-                });
+                        done();
+                    });
             });
 
             it("should report the canvas width and height", function (done) {
-                browser.calculateDocumentContentSize(doc.documentElement, {width: 100, height: 10, clip: 'span'}).then(function (size) {
-                    expect(size.viewportWidth).toEqual(200);
-                    expect(size.viewportHeight).toEqual(300);
+                browser
+                    .calculateDocumentContentSize(doc.documentElement, {
+                        width: 100,
+                        height: 10,
+                        clip: "span",
+                    })
+                    .then(function (size) {
+                        expect(size.viewportWidth).toEqual(200);
+                        expect(size.viewportHeight).toEqual(300);
 
-                    done();
-                });
+                        done();
+                    });
             });
 
             it("should match the html dom node", function (done) {
-                browser.calculateDocumentContentSize(doc.documentElement, {width: 200, height: 10, clip: 'html'}).then(function (size) {
-                    expect(size.width).toEqual(200);
-                    expect(size.height).toEqual(300);
+                browser
+                    .calculateDocumentContentSize(doc.documentElement, {
+                        width: 200,
+                        height: 10,
+                        clip: "html",
+                    })
+                    .then(function (size) {
+                        expect(size.width).toEqual(200);
+                        expect(size.height).toEqual(300);
 
-                    done();
-                });
+                        done();
+                    });
             });
 
             it("should throw an error when the selector is not found", function (done) {
-                browser.calculateDocumentContentSize(doc.documentElement, {width: 100, height: 10, clip: 'a'}).then(null, function (e) {
-                    expect(e).toEqual(jasmine.objectContaining({
-                        message: "Clipping selector not found"
-                    }));
+                browser
+                    .calculateDocumentContentSize(doc.documentElement, {
+                        width: 100,
+                        height: 10,
+                        clip: "a",
+                    })
+                    .then(null, function (e) {
+                        expect(e).toEqual(
+                            jasmine.objectContaining({
+                                message: "Clipping selector not found",
+                            })
+                        );
 
-                    done();
-                });
+                        done();
+                    });
             });
 
             it("should remove the iframe when the selector is not found", function (done) {
-                browser.calculateDocumentContentSize(doc.documentElement, {width: 100, height: 10, clip: 'a'}).then(null, function () {
-                    expect(document.querySelector('iframe')).toBe(null);
+                browser
+                    .calculateDocumentContentSize(doc.documentElement, {
+                        width: 100,
+                        height: 10,
+                        clip: "a",
+                    })
+                    .then(null, function () {
+                        expect(document.querySelector("iframe")).toBe(null);
 
-                    done();
-                });
+                        done();
+                    });
             });
         });
     });
 
     describe("loadDocument", function () {
         it("should load document from a URL", function (done) {
-            browser.loadDocument(testHelper.fixturesPath + "ajax.html", {}).then(function (doc) {
-                expect(doc.querySelector('title').textContent).toEqual("Test page that tries to load content via AJAX");
+            browser
+                .loadDocument(testHelper.fixturesPath + "ajax.html", {})
+                .then(function (doc) {
+                    expect(doc.querySelector("title").textContent).toEqual(
+                        "Test page that tries to load content via AJAX"
+                    );
 
-                done();
-            });
+                    done();
+                });
         });
 
         it("should error on failing URL", function (done) {
-            browser.loadDocument(testHelper.fixturesPath + "non_existing_url.html", {}).then(null, function (e) {
-                expect(e.message).toEqual("Unable to load page");
-                expect(e.originalError).toBeTruthy();
+            browser
+                .loadDocument(
+                    testHelper.fixturesPath + "non_existing_url.html",
+                    {}
+                )
+                .then(null, function (e) {
+                    expect(e.message).toEqual("Unable to load page");
+                    expect(e.originalError).toBeTruthy();
 
-                done();
-            });
+                    done();
+                });
         });
 
         it("should error on failing parse", function (done) {
-            browser.loadDocument(testHelper.fixturesPath + "invalidInput.xhtml", {}).then(null, function (e) {
-                expect(e.message).toEqual("Invalid source");
-                expect(e.originalError).toBeTruthy();
+            browser
+                .loadDocument(
+                    testHelper.fixturesPath + "invalidInput.xhtml",
+                    {}
+                )
+                .then(null, function (e) {
+                    expect(e.message).toEqual("Invalid source");
+                    expect(e.originalError).toBeTruthy();
 
-                done();
-            });
+                    done();
+                });
         });
 
         describe("options", function () {
             var ajaxRequest;
 
             beforeEach(function () {
-                ajaxRequest = jasmine.createSpyObj("ajaxRequest", ["open", "addEventListener", "overrideMimeType", "send"]);
+                ajaxRequest = jasmine.createSpyObj("ajaxRequest", [
+                    "open",
+                    "addEventListener",
+                    "overrideMimeType",
+                    "send",
+                ]);
                 spyOn(window, "XMLHttpRequest").and.returnValue(ajaxRequest);
 
                 spyOn(util, "joinUrl").and.callFake(function (baseUrl, url) {
@@ -649,51 +916,86 @@ describe("Browser functions", function () {
             });
 
             it("should attach an unique parameter to the given URL to circumvent caching if requested", function () {
-                browser.loadDocument("non_existing_url.html", {cache: 'none'});
+                browser.loadDocument("non_existing_url.html", {
+                    cache: "none",
+                });
 
-                expect(ajaxRequest.open).toHaveBeenCalledWith('GET', jasmine.any(String), true);
-                expect(ajaxRequest.open.calls.mostRecent().args[1]).toMatch(/^non_existing_url.html\?_=[0123456789]+$/);
+                expect(ajaxRequest.open).toHaveBeenCalledWith(
+                    "GET",
+                    jasmine.any(String),
+                    true
+                );
+                expect(ajaxRequest.open.calls.mostRecent().args[1]).toMatch(
+                    /^non_existing_url.html\?_=[0123456789]+$/
+                );
             });
 
             it("should not attach an unique parameter to the given URL by default", function () {
                 browser.loadDocument("non_existing_url.html", {});
 
-                expect(ajaxRequest.open).toHaveBeenCalledWith('GET', "non_existing_url.html", true);
+                expect(ajaxRequest.open).toHaveBeenCalledWith(
+                    "GET",
+                    "non_existing_url.html",
+                    true
+                );
             });
 
             it("should allow caching for repeated calls if requested", function () {
-                var dateNowSpy = spyOn(window.Date, 'now').and.returnValue(42);
+                var dateNowSpy = spyOn(window.Date, "now").and.returnValue(42);
 
-                browser.loadDocument("non_existing_url.html", {cache: 'none'});
+                browser.loadDocument("non_existing_url.html", {
+                    cache: "none",
+                });
 
-                expect(ajaxRequest.open.calls.mostRecent().args[1]).toEqual('non_existing_url.html?_=42');
+                expect(ajaxRequest.open.calls.mostRecent().args[1]).toEqual(
+                    "non_existing_url.html?_=42"
+                );
 
                 ajaxRequest.open.calls.reset();
                 dateNowSpy.and.returnValue(43);
-                browser.loadDocument("non_existing_url.html", {cache: 'repeated'});
-                expect(ajaxRequest.open.calls.mostRecent().args[1]).toEqual('non_existing_url.html?_=42');
+                browser.loadDocument("non_existing_url.html", {
+                    cache: "repeated",
+                });
+                expect(ajaxRequest.open.calls.mostRecent().args[1]).toEqual(
+                    "non_existing_url.html?_=42"
+                );
 
                 expect(dateNowSpy.calls.count()).toEqual(1);
             });
 
             it("should not cache repeated calls by default", function () {
-                var dateNowSpy = spyOn(window.Date, 'now').and.returnValue(42);
-                browser.loadDocument("non_existing_url.html", {cache: 'none'});
+                var dateNowSpy = spyOn(window.Date, "now").and.returnValue(42);
+                browser.loadDocument("non_existing_url.html", {
+                    cache: "none",
+                });
 
-                expect(ajaxRequest.open.calls.mostRecent().args[1]).toEqual('non_existing_url.html?_=42');
+                expect(ajaxRequest.open.calls.mostRecent().args[1]).toEqual(
+                    "non_existing_url.html?_=42"
+                );
 
                 ajaxRequest.open.calls.reset();
                 dateNowSpy.and.returnValue(43);
-                browser.loadDocument("non_existing_url.html", {cache: 'none'});
-                expect(ajaxRequest.open.calls.mostRecent().args[1]).toEqual('non_existing_url.html?_=43');
+                browser.loadDocument("non_existing_url.html", {
+                    cache: "none",
+                });
+                expect(ajaxRequest.open.calls.mostRecent().args[1]).toEqual(
+                    "non_existing_url.html?_=43"
+                );
             });
 
             it("should load URLs relative to baseUrl", function () {
-                browser.loadDocument("relative/url.html", {baseUrl: "http://example.com/"});
+                browser.loadDocument("relative/url.html", {
+                    baseUrl: "http://example.com/",
+                });
 
-                expect(ajaxRequest.open.calls.mostRecent().args[1]).toEqual('http://example.com/relative/url.html');
+                expect(ajaxRequest.open.calls.mostRecent().args[1]).toEqual(
+                    "http://example.com/relative/url.html"
+                );
 
-                expect(util.joinUrl).toHaveBeenCalledWith("http://example.com/", "relative/url.html");
+                expect(util.joinUrl).toHaveBeenCalledWith(
+                    "http://example.com/",
+                    "relative/url.html"
+                );
             });
         });
     });

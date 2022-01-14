@@ -10,8 +10,8 @@ var browser = (function (util, proxies, sanedomparsererror, theWindow) {
         element.style.width = width + "px";
         element.style.height = height + "px";
         element.style.position = "absolute";
-        element.style.top = (-10000 - height) + "px";
-        element.style.left = (-10000 - width) + "px";
+        element.style.top = -10000 - height + "px";
+        element.style.left = -10000 - width + "px";
         // We need to add the element to the document so that its content gets loaded
         doc.getElementsByTagName("body")[0].appendChild(element);
         return element;
@@ -29,23 +29,33 @@ var browser = (function (util, proxies, sanedomparsererror, theWindow) {
 
     module.executeJavascript = function (element, options) {
         return new Promise(function (resolve) {
-            var iframe = createHiddenElement(theWindow.document, "iframe", options.width, options.height),
+            var iframe = createHiddenElement(
+                    theWindow.document,
+                    "iframe",
+                    options.width,
+                    options.height
+                ),
                 html = element.outerHTML,
                 iframeErrorsMessages = [],
                 executeJsTimeout = options.executeJsTimeout || 0;
 
             var doResolve = function () {
                 var doc = iframe.contentDocument;
-                theWindow.document.getElementsByTagName("body")[0].removeChild(iframe);
+                theWindow.document
+                    .getElementsByTagName("body")[0]
+                    .removeChild(iframe);
                 resolve({
                     document: doc,
-                    errors: iframeErrorsMessages
+                    errors: iframeErrorsMessages,
                 });
             };
 
             var xhr = iframe.contentWindow.XMLHttpRequest,
                 finishNotifyXhrProxy = proxies.finishNotifyingXhr(xhr),
-                baseUrlXhrProxy = proxies.baseUrlRespectingXhr(finishNotifyXhrProxy, options.baseUrl);
+                baseUrlXhrProxy = proxies.baseUrlRespectingXhr(
+                    finishNotifyXhrProxy,
+                    options.baseUrl
+                );
 
             iframe.onload = function () {
                 wait(executeJsTimeout)
@@ -58,31 +68,31 @@ var browser = (function (util, proxies, sanedomparsererror, theWindow) {
             iframe.contentWindow.onerror = function (msg) {
                 iframeErrorsMessages.push({
                     resourceType: "scriptExecution",
-                    msg: msg
+                    msg: msg,
                 });
             };
 
-            iframe.contentDocument.write('<!DOCTYPE html>');
+            iframe.contentDocument.write("<!DOCTYPE html>");
             iframe.contentDocument.write(html);
             iframe.contentDocument.close();
         });
     };
 
     var createHiddenSandboxedIFrame = function (doc, width, height) {
-        var iframe = doc.createElement('iframe');
+        var iframe = doc.createElement("iframe");
         iframe.style.width = width + "px";
         iframe.style.height = height + "px";
         // 'display: none' doesn't cut it, as browsers seem to be lazy loading content
         iframe.style.visibility = "hidden";
         iframe.style.position = "absolute";
-        iframe.style.top = (-10000 - height) + "px";
-        iframe.style.left = (-10000 - width) + "px";
+        iframe.style.top = -10000 - height + "px";
+        iframe.style.left = -10000 - width + "px";
         // make sure content gets exact width independent of box-sizing value
         iframe.style.borderWidth = 0;
         // Don't execute JS, all we need from sandboxing is access to the iframe's document
-        iframe.sandbox = 'allow-same-origin';
+        iframe.sandbox = "allow-same-origin";
         // Don't include a scrollbar on Linux
-        iframe.scrolling = 'no';
+        iframe.scrolling = "no";
         return iframe;
     };
 
@@ -90,13 +100,22 @@ var browser = (function (util, proxies, sanedomparsererror, theWindow) {
         var scaledViewportWidth = Math.floor(width / zoom),
             scaledViewportHeight = Math.floor(height / zoom);
 
-        return createHiddenSandboxedIFrame(theWindow.document, scaledViewportWidth, scaledViewportHeight);
+        return createHiddenSandboxedIFrame(
+            theWindow.document,
+            scaledViewportWidth,
+            scaledViewportHeight
+        );
     };
 
-    var calculateZoomedContentSizeAndRoundUp = function (actualViewport, requestedWidth, requestedHeight, zoom) {
+    var calculateZoomedContentSizeAndRoundUp = function (
+        actualViewport,
+        requestedWidth,
+        requestedHeight,
+        zoom
+    ) {
         return {
             width: Math.max(actualViewport.width * zoom, requestedWidth),
-            height: Math.max(actualViewport.height * zoom, requestedHeight)
+            height: Math.max(actualViewport.height * zoom, requestedHeight),
         };
     };
 
@@ -109,16 +128,34 @@ var browser = (function (util, proxies, sanedomparsererror, theWindow) {
         }
 
         throw {
-            message: "Clipping selector not found"
+            message: "Clipping selector not found",
         };
     };
 
-    var calculateContentSize = function (rootElement, selector, requestedWidth, requestedHeight, zoom) {
+    var calculateContentSize = function (
+        rootElement,
+        selector,
+        requestedWidth,
+        requestedHeight,
+        zoom
+    ) {
         // clientWidth/clientHeight needed for PhantomJS
-        var actualViewportWidth = Math.max(rootElement.scrollWidth, rootElement.clientWidth),
-            actualViewportHeight = Math.max(rootElement.scrollHeight, rootElement.clientHeight),
-            top, left, originalWidth, originalHeight, rootFontSize,
-            element, rect, contentSize;
+        var actualViewportWidth = Math.max(
+                rootElement.scrollWidth,
+                rootElement.clientWidth
+            ),
+            actualViewportHeight = Math.max(
+                rootElement.scrollHeight,
+                rootElement.clientHeight
+            ),
+            top,
+            left,
+            originalWidth,
+            originalHeight,
+            rootFontSize,
+            element,
+            rect,
+            contentSize;
 
         if (selector) {
             element = selectElementOrDescendant(rootElement, selector);
@@ -136,15 +173,19 @@ var browser = (function (util, proxies, sanedomparsererror, theWindow) {
             originalHeight = actualViewportHeight;
         }
 
-        contentSize = calculateZoomedContentSizeAndRoundUp({
+        contentSize = calculateZoomedContentSizeAndRoundUp(
+            {
                 width: originalWidth,
-                height: originalHeight
+                height: originalHeight,
             },
             requestedWidth,
             requestedHeight,
-            zoom);
+            zoom
+        );
 
-        rootFontSize = theWindow.getComputedStyle(rootElement.ownerDocument.documentElement).fontSize;
+        rootFontSize = theWindow.getComputedStyle(
+            rootElement.ownerDocument.documentElement
+        ).fontSize;
 
         return {
             left: left,
@@ -154,7 +195,7 @@ var browser = (function (util, proxies, sanedomparsererror, theWindow) {
             viewportWidth: actualViewportWidth,
             viewportHeight: actualViewportHeight,
 
-            rootFontSize: rootFontSize
+            rootFontSize: rootFontSize,
         };
     };
 
@@ -166,12 +207,12 @@ var browser = (function (util, proxies, sanedomparsererror, theWindow) {
 
     var elementToFullHtmlDocument = function (element) {
         var tagName = element.tagName.toLowerCase();
-        if (tagName === 'html' || tagName === 'body') {
+        if (tagName === "html" || tagName === "body") {
             return element.outerHTML;
         }
 
         // Simple hack: hide the body from sizing, otherwise browser would apply a 8px margin
-        return '<body style="margin: 0;">' + element.outerHTML + '</body>';
+        return '<body style="margin: 0;">' + element.outerHTML + "</body>";
     };
 
     module.calculateDocumentContentSize = function (element, options) {
@@ -179,39 +220,52 @@ var browser = (function (util, proxies, sanedomparsererror, theWindow) {
             var zoom = options.zoom || 1,
                 iframe;
 
-
-            iframe = createIframeWithSizeAtZoomLevel1(options.width, options.height, zoom);
+            iframe = createIframeWithSizeAtZoomLevel1(
+                options.width,
+                options.height,
+                zoom
+            );
             // We need to add the element to the document so that its content gets loaded
-            theWindow.document.getElementsByTagName("body")[0].appendChild(iframe);
+            theWindow.document
+                .getElementsByTagName("body")[0]
+                .appendChild(iframe);
 
             iframe.onload = function () {
                 var doc = iframe.contentDocument,
                     size;
 
                 try {
-                    size = calculateContentSize(findCorrelatingElement(element, doc), options.clip, options.width, options.height, zoom);
+                    size = calculateContentSize(
+                        findCorrelatingElement(element, doc),
+                        options.clip,
+                        options.width,
+                        options.height,
+                        zoom
+                    );
 
                     resolve(size);
                 } catch (e) {
                     reject(e);
                 } finally {
-                    theWindow.document.getElementsByTagName("body")[0].removeChild(iframe);
+                    theWindow.document
+                        .getElementsByTagName("body")[0]
+                        .removeChild(iframe);
                 }
             };
 
             // srcdoc doesn't work in PhantomJS yet
             iframe.contentDocument.open();
-            iframe.contentDocument.write('<!DOCTYPE html>');
+            iframe.contentDocument.write("<!DOCTYPE html>");
             iframe.contentDocument.write(elementToFullHtmlDocument(element));
             iframe.contentDocument.close();
         });
     };
 
     module.parseHtmlFragment = function (htmlFragment) {
-        var doc = theWindow.document.implementation.createHTMLDocument('');
+        var doc = theWindow.document.implementation.createHTMLDocument("");
         doc.documentElement.innerHTML = htmlFragment;
 
-        var element = doc.querySelector('body').firstChild;
+        var element = doc.querySelector("body").firstChild;
 
         if (!element) {
             throw "Invalid source";
@@ -222,17 +276,20 @@ var browser = (function (util, proxies, sanedomparsererror, theWindow) {
 
     var addHTMLTagAttributes = function (doc, html) {
         var attributeMatch = /<html((?:\s+[^>]*)?)>/im.exec(html),
-            helperDoc = theWindow.document.implementation.createHTMLDocument(''),
+            helperDoc =
+                theWindow.document.implementation.createHTMLDocument(""),
             htmlTagSubstitute,
-            i, elementSubstitute, attribute;
+            i,
+            elementSubstitute,
+            attribute;
 
         if (!attributeMatch) {
             return;
         }
 
-        htmlTagSubstitute = '<div' + attributeMatch[1] + '></div>';
+        htmlTagSubstitute = "<div" + attributeMatch[1] + "></div>";
         helperDoc.documentElement.innerHTML = htmlTagSubstitute;
-        elementSubstitute = helperDoc.querySelector('div');
+        elementSubstitute = helperDoc.querySelector("div");
 
         for (i = 0; i < elementSubstitute.attributes.length; i++) {
             attribute = elementSubstitute.attributes[i];
@@ -242,7 +299,7 @@ var browser = (function (util, proxies, sanedomparsererror, theWindow) {
 
     module.parseHTML = function (html) {
         // We should be using the DOMParser, but it is not supported in older browsers
-        var doc = theWindow.document.implementation.createHTMLDocument('');
+        var doc = theWindow.document.implementation.createHTMLDocument("");
         doc.documentElement.innerHTML = html;
 
         addHTMLTagAttributes(doc, html);
@@ -255,7 +312,7 @@ var browser = (function (util, proxies, sanedomparsererror, theWindow) {
         } catch (e) {
             throw {
                 message: "Invalid source",
-                originalError: e
+                originalError: e,
             };
         }
     };
@@ -270,8 +327,8 @@ var browser = (function (util, proxies, sanedomparsererror, theWindow) {
     var lastCacheDate = null;
 
     var getUncachableURL = function (url, cache) {
-        if (cache === 'none' || cache === 'repeated') {
-            if (lastCacheDate === null || cache !== 'repeated') {
+        if (cache === "none" || cache === "repeated") {
+            if (lastCacheDate === null || cache !== "repeated") {
                 lastCacheDate = Date.now();
             }
             return url + "?_=" + lastCacheDate;
@@ -288,24 +345,32 @@ var browser = (function (util, proxies, sanedomparsererror, theWindow) {
                 doReject = function (e) {
                     reject({
                         message: "Unable to load page",
-                        originalError: e
+                        originalError: e,
                     });
                 };
 
-            xhr.addEventListener("load", function () {
-                if (xhr.status === 200 || xhr.status === 0) {
-                    resolve(xhr.responseXML);
-                } else {
-                    doReject(xhr.statusText);
-                }
-            }, false);
+            xhr.addEventListener(
+                "load",
+                function () {
+                    if (xhr.status === 200 || xhr.status === 0) {
+                        resolve(xhr.responseXML);
+                    } else {
+                        doReject(xhr.statusText);
+                    }
+                },
+                false
+            );
 
-            xhr.addEventListener("error", function (e) {
-                doReject(e);
-            }, false);
+            xhr.addEventListener(
+                "error",
+                function (e) {
+                    doReject(e);
+                },
+                false
+            );
 
             try {
-                xhr.open('GET', augmentedUrl, true);
+                xhr.open("GET", augmentedUrl, true);
                 xhr.responseType = "document";
                 xhr.send(null);
             } catch (e) {
@@ -315,11 +380,10 @@ var browser = (function (util, proxies, sanedomparsererror, theWindow) {
     };
 
     module.loadDocument = function (url, options) {
-        return doDocumentLoad(url, options)
-            .then(function (doc) {
-                return failOnInvalidSource(doc);
-            });
+        return doDocumentLoad(url, options).then(function (doc) {
+            return failOnInvalidSource(doc);
+        });
     };
 
     return module;
-}(util, proxies, sanedomparsererror, window));
+})(util, proxies, sanedomparsererror, window);

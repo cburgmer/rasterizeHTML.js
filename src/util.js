@@ -36,15 +36,19 @@ var util = (function (url) {
     };
 
     var isCanvas = function (obj) {
-        return isObject(obj) &&
-            Object.prototype.toString.apply(obj).match(/\[object (Canvas|HTMLCanvasElement)\]/i);
+        return (
+            isObject(obj) &&
+            Object.prototype.toString
+                .apply(obj)
+                .match(/\[object (Canvas|HTMLCanvasElement)\]/i)
+        );
     };
 
     // args: canvas, options
     module.parseOptionalParameters = function (args) {
         var parameters = {
             canvas: null,
-            options: {}
+            options: {},
         };
 
         if (args[0] == null || isCanvas(args[0])) {
@@ -59,4 +63,4 @@ var util = (function (url) {
     };
 
     return module;
-}(url));
+})(url);

@@ -24,12 +24,18 @@ describe("Utilities function", function () {
         });
 
         it("should combine a url starting with '/' with the host of the base", function () {
-            var url = util.joinUrl("http://example.com/rel/path/", "/the_relative_url");
+            var url = util.joinUrl(
+                "http://example.com/rel/path/",
+                "/the_relative_url"
+            );
             expect(url).toEqual("http://example.com/the_relative_url");
         });
 
         it("should ignore base with an absolute url", function () {
-            var url = util.joinUrl("http://example.com/rel/path/", "http://github.com//the_relative_url");
+            var url = util.joinUrl(
+                "http://example.com/rel/path/",
+                "http://github.com//the_relative_url"
+            );
             expect(url).toEqual("http://github.com//the_relative_url");
         });
 
@@ -51,7 +57,7 @@ describe("Utilities function", function () {
 
     describe("clone", function () {
         it("should create a copy of the given object", function () {
-            var input = {anOption: '1', yetAnotherOption: '21'},
+            var input = { anOption: "1", yetAnotherOption: "21" },
                 output;
 
             output = util.clone(input);
@@ -66,7 +72,7 @@ describe("Utilities function", function () {
 
         beforeEach(function () {
             canvas = document.createElement("canvas");
-            options = {opt: "ions"};
+            options = { opt: "ions" };
             callback = jasmine.createSpy("callback");
         });
 

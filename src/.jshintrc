@@ -11,6 +11,7 @@
     "trailing": true,
     "strict": true,
     "browser": true,
+    "laxbreak": true,
     "globals": {
         "Promise": true,
         "util": true,

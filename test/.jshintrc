@@ -2,6 +2,7 @@
     "extends": "../src/.jshintrc",
     "devel": true,
     "phantom": true,
+    "laxbreak": true,
     "globals": {
         "jasmine": true,
         "describe": true,

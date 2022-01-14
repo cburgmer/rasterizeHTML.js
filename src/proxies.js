@@ -21,13 +21,20 @@ var proxies = (function (util) {
         var xhrConstructor = function () {
             var xhr = new XHRObject();
 
-            monkeyPatchInstanceMethod(xhr, 'open', function (args, originalOpen) {
-                var method = args.shift(),
-                    url = args.shift(),
-                    joinedUrl = util.joinUrl(baseUrl, url);
+            monkeyPatchInstanceMethod(
+                xhr,
+                "open",
+                function (args, originalOpen) {
+                    var method = args.shift(),
+                        url = args.shift(),
+                        joinedUrl = util.joinUrl(baseUrl, url);
 
-                return originalOpen.apply(this, [method, joinedUrl].concat(args));
-            });
+                    return originalOpen.apply(
+                        this,
+                        [method, joinedUrl].concat(args)
+                    );
+                }
+            );
 
             return xhr;
         };
@@ -47,7 +54,7 @@ var proxies = (function (util) {
                 var pendingXhrCount = totalXhrCount - doneXhrCount;
 
                 if (pendingXhrCount <= 0 && waitingForPendingToClose) {
-                    resolve({totalCount: totalXhrCount});
+                    resolve({ totalCount: totalXhrCount });
                 }
             };
         });
@@ -55,12 +62,12 @@ var proxies = (function (util) {
         var xhrConstructor = function () {
             var xhr = new XHRObject();
 
-            monkeyPatchInstanceMethod(xhr, 'send', function (_, originalSend) {
+            monkeyPatchInstanceMethod(xhr, "send", function (_, originalSend) {
                 totalXhrCount += 1;
                 return originalSend.apply(this, arguments);
             });
 
-            xhr.addEventListener('load', function () {
+            xhr.addEventListener("load", function () {
                 doneXhrCount += 1;
 
                 checkAllRequestsFinished();
@@ -79,4 +86,4 @@ var proxies = (function (util) {
     };
 
     return module;
-}(util));
+})(util);

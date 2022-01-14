@@ -1,60 +1,72 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title>Smoke test diff helper</title>
-    <script type="text/javascript" src="../node_modules/imagediff/imagediff.js"></script>
-    <script type="text/javascript" src="diffHelper.js"></script>
-    <script type="text/javascript">
-        var getImageForUrl = function (url, successCallback, errorCallback) {
-            var image = new window.Image();
+    <head>
+        <title>Smoke test diff helper</title>
+        <script
+            type="text/javascript"
+            src="../node_modules/imagediff/imagediff.js"
+        ></script>
+        <script type="text/javascript" src="diffHelper.js"></script>
+        <script type="text/javascript">
+            var getImageForUrl = function (
+                url,
+                successCallback,
+                errorCallback
+            ) {
+                var image = new window.Image();
 
-            image.onload = function () {
-                successCallback(image);
+                image.onload = function () {
+                    successCallback(image);
+                };
+                if (errorCallback) {
+                    image.onerror = errorCallback;
+                }
+                image.src = url;
             };
-            if (errorCallback) {
-                image.onerror = errorCallback;
-            }
-            image.src = url;
-        };
 
-        var canvasForImageCanvas = function (imageData) {
-            var canvas = document.createElement("canvas"),
-                context;
+            var canvasForImageCanvas = function (imageData) {
+                var canvas = document.createElement("canvas"),
+                    context;
 
-            canvas.height = imageData.height;
-            canvas.width  = imageData.width;
+                canvas.height = imageData.height;
+                canvas.width = imageData.width;
 
-            context = canvas.getContext("2d");
-            context.putImageData(imageData, 0, 0);
+                context = canvas.getContext("2d");
+                context.putImageData(imageData, 0, 0);
 
-            return canvas;
-        };
+                return canvas;
+            };
 
-        var renderDiff = function (image1, image2) {
-            var canvas = canvasForImageCanvas(imagediff.diff(image1, image2));
+            var renderDiff = function (image1, image2) {
+                var canvas = canvasForImageCanvas(
+                    imagediff.diff(image1, image2)
+                );
 
-            document.getElementsByTagName("body")[0].appendChild(canvas);
-        };
+                document.getElementsByTagName("body")[0].appendChild(canvas);
+            };
 
-        var isEqual = function (imageUrl1, imageUrl2, threshold) {
-            return new Promise(function (fulfill) {
-                getImageForUrl(imageUrl1, function (image1) {
-                    getImageForUrl(imageUrl2, function (image2) {
-                        var equal = diffHelper.imageEquals(image1, image2, threshold);
+            var isEqual = function (imageUrl1, imageUrl2, threshold) {
+                return new Promise(function (fulfill) {
+                    getImageForUrl(imageUrl1, function (image1) {
+                        getImageForUrl(imageUrl2, function (image2) {
+                            var equal = diffHelper.imageEquals(
+                                image1,
+                                image2,
+                                threshold
+                            );
 
-                        renderDiff(image1, image2);
-                        fulfill(equal);
+                            renderDiff(image1, image2);
+                            fulfill(equal);
+                        });
                     });
                 });
-            });
-        };
-    </script>
-    <style>
-        body {
-            margin: 0;
-        }
-    </style>
-</head>
-<body>
-</body>
+            };
+        </script>
+        <style>
+            body {
+                margin: 0;
+            }
+        </style>
+    </head>
+    <body></body>
 </html>

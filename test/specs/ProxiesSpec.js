@@ -1,7 +1,7 @@
 describe("XHR Proxies", function () {
     "use strict";
 
-    var  originaLPromise;
+    var originaLPromise;
 
     var mockPromisesToResolveSynchronously = function () {
         window.Promise = testHelper.SynchronousPromise;
@@ -28,12 +28,12 @@ describe("XHR Proxies", function () {
                     },
                     mockDone: function () {
                         onloadHandler();
-                    }
+                    },
                 };
             };
 
             beforeEach(function () {
-                callback = jasmine.createSpy('callback');
+                callback = jasmine.createSpy("callback");
                 originalXHRInstance = [];
                 xhrMockConstructor = function () {
                     var xhrMockInstance = aXHRMockInstance();
@@ -45,26 +45,29 @@ describe("XHR Proxies", function () {
             it("should notify when a pending AJAX request has finished", function () {
                 mockPromisesToResolveSynchronously();
 
-                var finishNotifyingXhrProxy = proxies.finishNotifyingXhr(xhrMockConstructor),
+                var finishNotifyingXhrProxy =
+                        proxies.finishNotifyingXhr(xhrMockConstructor),
                     xhr = finishNotifyingXhrProxy();
 
                 // Start XHR request
                 xhr.send();
 
-                finishNotifyingXhrProxy.waitForRequestsToFinish().then(callback);
+                finishNotifyingXhrProxy
+                    .waitForRequestsToFinish()
+                    .then(callback);
 
                 expect(callback).not.toHaveBeenCalled();
 
                 originalXHRInstance[0].mockDone();
 
-                expect(callback).toHaveBeenCalledWith({totalCount: 1});
-
+                expect(callback).toHaveBeenCalledWith({ totalCount: 1 });
             });
 
             it("should notify when multipel pending AJAX request have finished", function () {
                 mockPromisesToResolveSynchronously();
 
-                var finishNotifyingXhrProxy = proxies.finishNotifyingXhr(xhrMockConstructor),
+                var finishNotifyingXhrProxy =
+                        proxies.finishNotifyingXhr(xhrMockConstructor),
                     xhr1 = finishNotifyingXhrProxy(),
                     xhr2 = finishNotifyingXhrProxy();
 
@@ -72,17 +75,20 @@ describe("XHR Proxies", function () {
                 xhr1.send();
                 xhr2.send();
 
-                finishNotifyingXhrProxy.waitForRequestsToFinish().then(callback);
+                finishNotifyingXhrProxy
+                    .waitForRequestsToFinish()
+                    .then(callback);
 
                 originalXHRInstance[0].mockDone();
                 expect(callback).not.toHaveBeenCalled();
 
                 originalXHRInstance[1].mockDone();
-                expect(callback).toHaveBeenCalledWith({totalCount: 2});
+                expect(callback).toHaveBeenCalledWith({ totalCount: 2 });
             });
 
             it("should handle an onload handler attached to the proxied instance", function (done) {
-                var finishNotifyingXhrProxy = proxies.finishNotifyingXhr(xhrMockConstructor),
+                var finishNotifyingXhrProxy =
+                        proxies.finishNotifyingXhr(xhrMockConstructor),
                     xhr = finishNotifyingXhrProxy();
 
                 xhr.onload = function myOwnOnLoadHandler() {};
@@ -96,14 +102,16 @@ describe("XHR Proxies", function () {
             });
 
             it("should finish when no XHR request has been started", function (done) {
-                var finishNotifyingXhrProxy = proxies.finishNotifyingXhr(xhrMockConstructor);
+                var finishNotifyingXhrProxy =
+                    proxies.finishNotifyingXhr(xhrMockConstructor);
 
                 finishNotifyingXhrProxy.waitForRequestsToFinish().then(done);
                 expect(true).toBe(true); // work around warning from jasmine that no expectation is given
             });
 
             it("should notify even if called after all requests resovled", function (done) {
-                var finishNotifyingXhrProxy = proxies.finishNotifyingXhr(xhrMockConstructor),
+                var finishNotifyingXhrProxy =
+                        proxies.finishNotifyingXhr(xhrMockConstructor),
                     xhr = finishNotifyingXhrProxy();
 
                 xhr.send();
@@ -116,29 +124,33 @@ describe("XHR Proxies", function () {
 
         describe("integration", function () {
             it("should notify after file has loaded", function (done) {
-                var FinishNotifyingXhrProxy = proxies.finishNotifyingXhr(window.XMLHttpRequest),
+                var FinishNotifyingXhrProxy = proxies.finishNotifyingXhr(
+                        window.XMLHttpRequest
+                    ),
                     xhr = new FinishNotifyingXhrProxy(),
                     called = [],
                     markDoneInAnyOrder = function (key) {
                         called.push(key);
                         if (called.length === 2) {
-                            expect(called).toContain('onload');
-                            expect(called).toContain('waitForRequestsToFinish');
+                            expect(called).toContain("onload");
+                            expect(called).toContain("waitForRequestsToFinish");
                             done();
                         }
                     };
 
                 xhr.onload = function () {
-                    markDoneInAnyOrder('onload');
+                    markDoneInAnyOrder("onload");
                 };
-                xhr.open('GET', testHelper.fixturesPath + 'test.html', true);
+                xhr.open("GET", testHelper.fixturesPath + "test.html", true);
                 xhr.send(null);
 
-                FinishNotifyingXhrProxy.waitForRequestsToFinish().then(function (result) {
-                    expect(result).toEqual({totalCount: 1});
+                FinishNotifyingXhrProxy.waitForRequestsToFinish().then(
+                    function (result) {
+                        expect(result).toEqual({ totalCount: 1 });
 
-                    markDoneInAnyOrder('waitForRequestsToFinish');
-                });
+                        markDoneInAnyOrder("waitForRequestsToFinish");
+                    }
+                );
             });
         });
     });
@@ -146,14 +158,17 @@ describe("XHR Proxies", function () {
     describe("baseUrlRespectingXhr", function () {
         it("should load file relative to given base url", function (done) {
             var baseUrl = testHelper.fixturesPath,
-                BaseUrlRespectingProxy = proxies.baseUrlRespectingXhr(window.XMLHttpRequest, baseUrl),
+                BaseUrlRespectingProxy = proxies.baseUrlRespectingXhr(
+                    window.XMLHttpRequest,
+                    baseUrl
+                ),
                 xhr = new BaseUrlRespectingProxy();
 
             xhr.onload = function () {
                 expect(xhr.responseText).toMatch(/Test page/);
                 done();
             };
-            xhr.open('GET', 'test.html', true);
+            xhr.open("GET", "test.html", true);
             xhr.send(null);
         });
     });
