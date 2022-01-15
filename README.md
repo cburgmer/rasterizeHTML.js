@@ -65,9 +65,7 @@ Development
 
 Run `npm test`.
 
-For tests against individual browsers run `python3 -m http.server` and `open http://localhost:8000/test/SpecRunner.html`, for integration tests under Safari `open http://localhost:8000/test/manualIntegrationTestForWebkit.html`.
-
-[![Build Status](https://travis-ci.org/cburgmer/rasterizeHTML.js.svg?branch=master)](https://travis-ci.org/cburgmer/rasterizeHTML.js)
+For tests against individual browsers run `python3 -m http.server` and `open http://localhost:8000/test/SpecRunner.html`.
 
 Where is it used?
 -----------------
