@@ -63,7 +63,7 @@ import * as rasterizeHTML from 'rasterizehtml';
 Development
 -----------
 
-Run `npm test`. There's also a vagrant image that installs all necessary build dependencies.
+Run `npm test`.
 
 For tests against individual browsers run `python3 -m http.server` and `open http://localhost:8000/test/SpecRunner.html`, for integration tests under Safari `open http://localhost:8000/test/manualIntegrationTestForWebkit.html`.
 
