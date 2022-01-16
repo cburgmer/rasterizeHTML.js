@@ -7,6 +7,16 @@ module.exports = function (grunt) {
                 options: {
                     port: 8765,
                     hostname: "127.0.0.1",
+                    middleware: function (connect, options, middlewares) {
+                        middlewares.unshift(function (req, res, next) {
+                            if (/\s*\.html/.test(req.url)) {
+                                // work around https://github.com/gruntjs/grunt-contrib-connect/issues/95
+                                res.setHeader("Content-Type", "text/html;");
+                            }
+                            return next();
+                        });
+                        return middlewares;
+                    },
                 },
             },
         },

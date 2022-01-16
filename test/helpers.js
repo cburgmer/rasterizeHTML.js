@@ -2,7 +2,6 @@
     "use strict";
 
     var isWebkitOrBlink = navigator.userAgent.indexOf("WebKit") >= 0,
-        isHeadlessChrome = navigator.userAgent.indexOf("HeadlessChrome") >= 0,
         testDisabledOnCondition = function (condition, text, functionHandle) {
             var spec = it(text, functionHandle);
             if (condition) {
@@ -12,8 +11,5 @@
         };
     window.ifNotInWebkitOrBlinkIt = function (text, functionHandle) {
         return testDisabledOnCondition(isWebkitOrBlink, text, functionHandle);
-    };
-    window.ifNotInHeadlessChrome = function (text, functionHandle) {
-        return testDisabledOnCondition(isHeadlessChrome, text, functionHandle);
     };
 })();

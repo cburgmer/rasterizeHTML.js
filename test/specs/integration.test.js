@@ -152,33 +152,30 @@ describe("Integration test", function () {
             .finally(done);
     });
 
-    ifNotInHeadlessChrome(
-        "should take a URL and load non UTF-8 content",
-        function (done) {
-            var inlineReferencesSpy = spyOn(
-                inlineresources,
-                "inlineReferences"
-            ).and.returnValue(Promise.resolve());
+    it("should take a URL and load non UTF-8 content", function (done) {
+        var inlineReferencesSpy = spyOn(
+            inlineresources,
+            "inlineReferences"
+        ).and.returnValue(Promise.resolve());
 
-            rasterizeHTML
-                .drawURL(testHelper.fixturesPath + "nonUTF8Encoding.html")
-                .then(function () {
-                    expect(inlineReferencesSpy).toHaveBeenCalled();
+        rasterizeHTML
+            .drawURL(testHelper.fixturesPath + "nonUTF8Encoding.html")
+            .then(function () {
+                expect(inlineReferencesSpy).toHaveBeenCalled();
 
-                    var doc = inlineReferencesSpy.calls.mostRecent().args[0];
+                var doc = inlineReferencesSpy.calls.mostRecent().args[0];
 
-                    // This fails if SpecRunner is opened locally in Firefox. Open over a local webserver helps here.
-                    expect(doc.querySelector("body").innerHTML.trim()).toEqual(
-                        "这是中文"
-                    );
-                })
-                .catch(function (err) {
-                    expect(err).toBe(null);
-                    fail();
-                })
-                .finally(done);
-        }
-    );
+                // This fails if SpecRunner is opened locally in Firefox. Open over a local webserver helps here.
+                expect(doc.querySelector("body").innerHTML.trim()).toEqual(
+                    "这是中文"
+                );
+            })
+            .catch(function (err) {
+                expect(err).toBe(null);
+                fail();
+            })
+            .finally(done);
+    });
 
     it("should work around Firefox bug with `null` style properties", function (done) {
         // The bug only turns up when there's no JS executed which creates a new document

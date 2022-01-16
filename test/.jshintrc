@@ -15,7 +15,6 @@
         "spyOn": true,
 
         "ifNotInWebkitOrBlinkIt": true,
-        "ifNotInHeadlessChrome": true,
         "testHelper": true,
         "diffHelper": true,
 
