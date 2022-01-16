@@ -323,71 +323,101 @@ describe("Document to SVG conversion", function () {
                 });
         });
 
-        it("should take an optional width and height", function () {
-            document2svg.drawDocumentAsSvg(docElement, {
-                width: 42,
-                height: 4711,
+        it("should take an optional width and height", function (done) {
+            document2svg
+                .drawDocumentAsSvg(docElement, {
+                    width: 42,
+                    height: 4711,
+                })
+                .then(function () {
+                    expect(
+                        browser.calculateDocumentContentSize
+                    ).toHaveBeenCalledWith(docElement, {
+                        width: 42,
+                        height: 4711,
+                    });
+
+                    done();
+                });
+        });
+
+        it("should trigger hover effect", function (done) {
+            document2svg
+                .drawDocumentAsSvg(docElement, { hover: ".mySpan" })
+                .then(function () {
+                    expect(documentHelper.fakeUserAction).toHaveBeenCalledWith(
+                        docElement,
+                        ".mySpan",
+                        "hover"
+                    );
+
+                    done();
+                });
+        });
+
+        it("should trigger active effect", function (done) {
+            document2svg
+                .drawDocumentAsSvg(docElement, { active: ".mySpan" })
+                .then(function () {
+                    expect(documentHelper.fakeUserAction).toHaveBeenCalledWith(
+                        docElement,
+                        ".mySpan",
+                        "active"
+                    );
+
+                    done();
+                });
+        });
+
+        it("should trigger focus effect", function (done) {
+            document2svg
+                .drawDocumentAsSvg(docElement, { focus: ".mySpan" })
+                .then(function () {
+                    expect(documentHelper.fakeUserAction).toHaveBeenCalledWith(
+                        docElement,
+                        ".mySpan",
+                        "focus"
+                    );
+
+                    done();
+                });
+        });
+
+        it("should trigger target effect", function (done) {
+            document2svg
+                .drawDocumentAsSvg(docElement, { target: ".mySpan" })
+                .then(function () {
+                    expect(documentHelper.fakeUserAction).toHaveBeenCalledWith(
+                        docElement,
+                        ".mySpan",
+                        "target"
+                    );
+
+                    done();
+                });
+        });
+
+        it("should not trigger focus effect by default", function (done) {
+            document2svg.drawDocumentAsSvg(docElement, {}).then(function () {
+                expect(documentHelper.fakeUserAction).not.toHaveBeenCalled();
+
+                done();
             });
-
-            expect(browser.calculateDocumentContentSize).toHaveBeenCalledWith(
-                docElement,
-                { width: 42, height: 4711 }
-            );
         });
 
-        it("should trigger hover effect", function () {
-            document2svg.drawDocumentAsSvg(docElement, { hover: ".mySpan" });
+        it("should render the selected element", function (done) {
+            document2svg
+                .drawDocumentAsSvg(docElement, { clip: ".mySpan" })
+                .then(function () {
+                    expect(
+                        browser.calculateDocumentContentSize
+                    ).toHaveBeenCalledWith(
+                        docElement,
+                        jasmine.objectContaining({ clip: ".mySpan" })
+                    );
 
-            expect(documentHelper.fakeUserAction).toHaveBeenCalledWith(
-                docElement,
-                ".mySpan",
-                "hover"
-            );
-        });
-
-        it("should trigger active effect", function () {
-            document2svg.drawDocumentAsSvg(docElement, { active: ".mySpan" });
-
-            expect(documentHelper.fakeUserAction).toHaveBeenCalledWith(
-                docElement,
-                ".mySpan",
-                "active"
-            );
-        });
-
-        it("should trigger focus effect", function () {
-            document2svg.drawDocumentAsSvg(docElement, { focus: ".mySpan" });
-
-            expect(documentHelper.fakeUserAction).toHaveBeenCalledWith(
-                docElement,
-                ".mySpan",
-                "focus"
-            );
-        });
-
-        it("should trigger target effect", function () {
-            document2svg.drawDocumentAsSvg(docElement, { target: ".mySpan" });
-
-            expect(documentHelper.fakeUserAction).toHaveBeenCalledWith(
-                docElement,
-                ".mySpan",
-                "target"
-            );
-        });
-
-        it("should not trigger focus effect by default", function () {
-            document2svg.drawDocumentAsSvg(docElement, {});
-
-            expect(documentHelper.fakeUserAction).not.toHaveBeenCalled();
-        });
-
-        it("should render the selected element", function () {
-            document2svg.drawDocumentAsSvg(docElement, { clip: ".mySpan" });
-
-            expect(browser.calculateDocumentContentSize).toHaveBeenCalledWith(
-                docElement,
-                jasmine.objectContaining({ clip: ".mySpan" })
-            );
+                    done();
+                });
         });
     });
 });
