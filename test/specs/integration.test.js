@@ -152,8 +152,7 @@ describe("Integration test", function () {
             .finally(done);
     });
 
-    // This fails in Firefox probably due to https://bugzilla.mozilla.org/show_bug.cgi?id=942138
-    ifNotInHeadlessChromeAndNotLocalRunnerIt(
+    ifNotInHeadlessChrome(
         "should take a URL and load non UTF-8 content",
         function (done) {
             var inlineReferencesSpy = spyOn(
@@ -181,31 +180,28 @@ describe("Integration test", function () {
         }
     );
 
-    ifNotLocalRunnerIt(
-        "should work around Firefox bug with `null` style properties",
-        function (done) {
-            // The bug only turns up when there's no JS executed which creates a new document
-            // In addition this test will fail due to https://bugzilla.mozilla.org/show_bug.cgi?id=942138
-            rasterizeHTML
-                .drawURL(testHelper.fixturesPath + "test.html", {
-                    cache: "none",
-                    active: ".bgimage",
-                    hover: ".webfont",
-                    clip: "body",
-                    width: 200,
-                    height: 100,
-                })
-                .then(function (result) {
-                    forceImageSizeForPlatformCompatibility(result.image);
-                    expect(result.image).toEqualImage(referenceImg, 2);
-                })
-                .catch(function (err) {
-                    expect(err).toBe(null);
-                    fail();
-                })
-                .finally(done);
-        }
-    );
+    it("should work around Firefox bug with `null` style properties", function (done) {
+        // The bug only turns up when there's no JS executed which creates a new document
+        // In addition this test will fail due to https://bugzilla.mozilla.org/show_bug.cgi?id=942138
+        rasterizeHTML
+            .drawURL(testHelper.fixturesPath + "test.html", {
+                cache: "none",
+                active: ".bgimage",
+                hover: ".webfont",
+                clip: "body",
+                width: 200,
+                height: 100,
+            })
+            .then(function (result) {
+                forceImageSizeForPlatformCompatibility(result.image);
+                expect(result.image).toEqualImage(referenceImg, 2);
+            })
+            .catch(function (err) {
+                expect(err).toBe(null);
+                fail();
+            })
+            .finally(done);
+    });
 
     it("should report a source error on invalid input from HTML", function (done) {
         rasterizeHTML

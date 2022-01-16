@@ -15,9 +15,7 @@
         "spyOn": true,
 
         "ifNotInWebkitOrBlinkIt": true,
-        "ifNotInHeadlessChromeAndNotLocalRunnerIt": true,
-        "ifNotInWebKitAndNotLocalRunnerIt": true,
-        "ifNotLocalRunnerIt": true,
+        "ifNotInHeadlessChrome": true,
         "testHelper": true,
         "diffHelper": true,
 
@@ -25,7 +23,6 @@
         "proxies": true,
         "documentUtil": true,
         "documentHelper": true,
-        "mediaQueryHelper": true,
         "browser": true,
         "svg2image": true,
         "document2svg": true,

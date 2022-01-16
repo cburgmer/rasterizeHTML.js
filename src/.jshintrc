@@ -18,7 +18,6 @@
         "proxies": true,
         "documentUtil": true,
         "documentHelper": true,
-        "mediaQueryHelper": true,
         "browser": true,
         "svg2image": true,
         "document2svg": true,
@@ -38,7 +37,6 @@
         "proxies",
         "browser",
         "documentUtil",
-        "documentHelper",
-        "mediaQueryHelper"
+        "documentHelper"
     ]
 }
