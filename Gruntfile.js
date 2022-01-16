@@ -204,12 +204,6 @@ module.exports = function (grunt) {
                 jshintrc: true,
             },
         },
-        "regex-check": {
-            files: ["src/*", "test/**/*.html", "test/**/*.js"],
-            options: {
-                pattern: /FIXME/g,
-            },
-        },
     });
 
     grunt.loadNpmTasks("grunt-contrib-concat");
@@ -217,7 +211,6 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks("grunt-contrib-jasmine");
     grunt.loadNpmTasks("grunt-contrib-jshint");
     grunt.loadNpmTasks("grunt-contrib-uglify");
-    grunt.loadNpmTasks("grunt-regex-check");
     grunt.loadNpmTasks("grunt-contrib-watch");
     grunt.loadNpmTasks("grunt-contrib-clean");
     grunt.loadNpmTasks("grunt-browserify");
@@ -229,7 +222,7 @@ module.exports = function (grunt) {
         "browserify:inlineresources",
     ]);
 
-    grunt.registerTask("test", ["jshint", "connect", "jasmine", "regex-check"]);
+    grunt.registerTask("test", ["jshint", "connect", "jasmine"]);
 
     grunt.registerTask("build", [
         "concat:one",
