@@ -39,14 +39,19 @@ var browser = (function (util, proxies, sanedomparsererror, theWindow) {
                 iframeErrorsMessages = [],
                 executeJsTimeout = options.executeJsTimeout || 0;
 
-            var doResolve = function () {
-                var doc = iframe.contentDocument;
+            var cleanUp = function () {
+                // We have to defer removing the iframe from the current document, see https://github.com/cburgmer/rasterizeHTML.js/issues/219
                 theWindow.document
                     .getElementsByTagName("body")[0]
                     .removeChild(iframe);
+            };
+
+            var doResolve = function () {
+                var doc = iframe.contentDocument;
                 resolve({
                     document: doc,
                     errors: iframeErrorsMessages,
+                    cleanUp: cleanUp,
                 });
             };
 

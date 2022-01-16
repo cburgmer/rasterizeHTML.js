@@ -49,16 +49,16 @@ describe("Rasterize", function () {
 
     beforeEach(function () {
         doc = document.implementation.createHTMLDocument("");
-
-        spyOn(document2svg, "drawDocumentAsSvg");
-        spyOn(browser, "loadDocument");
-        spyOn(svg2image, "renderSvg");
     });
 
     describe("Rendering", function () {
         var callback;
 
         beforeEach(function () {
+            spyOn(document2svg, "drawDocumentAsSvg");
+            spyOn(browser, "loadDocument");
+            spyOn(svg2image, "renderSvg");
+
             callback = jasmine.createSpy("drawCallback");
 
             inlineReferences = spyOn(
@@ -195,7 +195,13 @@ describe("Rasterize", function () {
             var executeJavascript = spyOn(
                 browser,
                 "executeJavascript"
-            ).and.returnValue(Promise.resolve({ document: doc, errors: [] }));
+            ).and.returnValue(
+                Promise.resolve({
+                    document: doc,
+                    errors: [],
+                    cleanUp: function () {},
+                })
+            );
 
             rasterize
                 .rasterize(doc.documentElement, null, {
@@ -218,7 +224,11 @@ describe("Rasterize", function () {
 
         it("should inline scripts when executing JavaScript", function (done) {
             spyOn(browser, "executeJavascript").and.returnValue(
-                Promise.resolve({ document: doc, errors: [] })
+                Promise.resolve({
+                    document: doc,
+                    errors: [],
+                    cleanUp: function () {},
+                })
             );
 
             rasterize
@@ -237,7 +247,13 @@ describe("Rasterize", function () {
             var executeJavascript = spyOn(
                 browser,
                 "executeJavascript"
-            ).and.returnValue(Promise.resolve({ document: doc, errors: [] }));
+            ).and.returnValue(
+                Promise.resolve({
+                    document: doc,
+                    errors: [],
+                    cleanUp: function () {},
+                })
+            );
 
             rasterize
                 .rasterize(doc.documentElement, null, {
@@ -259,6 +275,10 @@ describe("Rasterize", function () {
         var callback;
 
         beforeEach(function () {
+            spyOn(document2svg, "drawDocumentAsSvg");
+            spyOn(browser, "loadDocument");
+            spyOn(svg2image, "renderSvg");
+
             callback = jasmine.createSpy("drawCallback");
 
             spyOn(documentHelper, "persistInputValues");
@@ -290,7 +310,11 @@ describe("Rasterize", function () {
                 withoutErrors()
             );
             spyOn(browser, "executeJavascript").and.returnValue(
-                Promise.resolve({ document: doc, errors: ["the error"] })
+                Promise.resolve({
+                    document: doc,
+                    errors: ["the error"],
+                    cleanUp: function () {},
+                })
             );
             setUpDrawDocumentAsSvg(theSvg);
             setUpRenderSvg(rasterizedImage);
@@ -312,6 +336,10 @@ describe("Rasterize", function () {
         var callback, executeJavascript;
 
         beforeEach(function () {
+            spyOn(document2svg, "drawDocumentAsSvg");
+            spyOn(browser, "loadDocument");
+            spyOn(svg2image, "renderSvg");
+
             callback = jasmine.createSpy("drawCallback");
 
             inlineReferences = spyOn(
@@ -373,6 +401,18 @@ describe("Rasterize", function () {
                 .then(null, function (error) {
                     expect(error.message).toEqual("Error rendering page");
                     expect(error.originalError).toBeTruthy();
+
+                    done();
+                });
+        });
+    });
+
+    describe("rasterize integration", function () {
+        it("should clean up the iframe when executing JavaScript", function (done) {
+            rasterize
+                .rasterize(doc.documentElement, undefined, { executeJs: true })
+                .then(function () {
+                    expect(document.querySelector("iframe")).toBe(null);
 
                     done();
                 });

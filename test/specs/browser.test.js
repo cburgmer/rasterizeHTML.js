@@ -72,6 +72,7 @@ describe("Browser functions", function () {
                         "dynamic content"
                     );
 
+                    result.cleanUp();
                     done();
                 });
         });
@@ -84,7 +85,8 @@ describe("Browser functions", function () {
                     doc.documentElement,
                     defaultOptionsWithViewport()
                 )
-                .then(function () {
+                .then(function (result) {
+                    result.cleanUp();
                     expect(document.querySelector("iframe")).toBe(null);
 
                     done();
@@ -105,6 +107,7 @@ describe("Browser functions", function () {
                         "dynamic content"
                     );
 
+                    result.cleanUp();
                     done();
                 });
         });
@@ -120,7 +123,10 @@ describe("Browser functions", function () {
                     doc.documentElement,
                     defaultOptionsWithTimeout(10)
                 )
-                .then(callback);
+                .then(function (result) {
+                    result.cleanUp();
+                    callback();
+                });
 
             // HACK fragile test. We need to wait for the iframe.onload to be triggered
             setTimeout(function () {
@@ -145,7 +151,10 @@ describe("Browser functions", function () {
                     doc.documentElement,
                     defaultOptionsWithViewport()
                 )
-                .then(callback);
+                .then(function (result) {
+                    result.cleanUp();
+                    callback();
+                });
 
             // HACK fragile test. We need to wait for the iframe.onload to be triggered
             setTimeout(function () {
@@ -171,6 +180,7 @@ describe("Browser functions", function () {
                 .then(function (result) {
                     expect(result.document.body.innerHTML).toEqual("20");
 
+                    result.cleanUp();
                     done();
                 });
         });
@@ -195,6 +205,7 @@ describe("Browser functions", function () {
                         /(ReferenceError:\s+(.+\s+)?undefinedVar)|('undefinedVar' is undefined)/
                     );
 
+                    result.cleanUp();
                     done();
                 });
         });
@@ -212,6 +223,7 @@ describe("Browser functions", function () {
                 .then(function (result) {
                     expect(result.document.body.innerHTML).toEqual("1");
 
+                    result.cleanUp();
                     done();
                 });
         });
@@ -234,6 +246,7 @@ describe("Browser functions", function () {
                                     .textContent.trim()
                             ).toEqual("The content");
 
+                            result.cleanUp();
                             done();
                         });
                 });
@@ -251,6 +264,7 @@ describe("Browser functions", function () {
                 .then(function (result) {
                     expect(result.document.body.innerHTML).toEqual("true");
 
+                    result.cleanUp();
                     done();
                 });
         });
@@ -267,6 +281,7 @@ describe("Browser functions", function () {
                 .then(function (result) {
                     expect(result.document.body.innerHTML).toEqual("true");
 
+                    result.cleanUp();
                     done();
                 });
         });
@@ -283,6 +298,7 @@ describe("Browser functions", function () {
                 .then(function (result) {
                     expect(result.document.body.innerHTML).toEqual("true");
 
+                    result.cleanUp();
                     done();
                 });
         });
@@ -296,6 +312,7 @@ describe("Browser functions", function () {
                 .then(function (result) {
                     expect(result.document.doctype.name).toEqual("html");
 
+                    result.cleanUp();
                     done();
                 });
         });

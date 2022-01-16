@@ -63,6 +63,7 @@ var rasterize = (function (
                 return {
                     document: document,
                     errors: result.errors,
+                    cleanUp: result.cleanUp,
                 };
             });
     };
@@ -82,6 +83,7 @@ var rasterize = (function (
                             return {
                                 element: result.document.documentElement,
                                 errors: errors.concat(result.errors),
+                                cleanUp: result.cleanUp,
                             };
                         }
                     );
@@ -89,6 +91,7 @@ var rasterize = (function (
                     return {
                         element: element,
                         errors: errors,
+                        cleanUp: function () {},
                     };
                 }
             })
@@ -96,6 +99,8 @@ var rasterize = (function (
                 return doDraw(result.element, canvas, options).then(function (
                     drawResult
                 ) {
+                    result.cleanUp();
+
                     return {
                         image: drawResult.image,
                         svg: drawResult.svg,
