@@ -36,13 +36,13 @@ module.exports = function (grunt) {
             ],
             options: {
                 host: "http://127.0.0.1:8765/",
+                outfile: "test/_SpecRunner.html", // enforce same relative path as manual SpecRunner.html
                 specs: "test/specs/*.js",
                 vendor: ["node_modules/imagediff/imagediff.js"],
                 helpers: [
                     "test/helpers.js",
                     "test/diffHelper.js",
                     "test/testHelper.js",
-                    "test/gruntpath.js",
                 ],
                 display: "short",
                 summary: true,
