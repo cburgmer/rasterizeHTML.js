@@ -273,6 +273,7 @@ describe("Document to SVG conversion", function () {
                 new RegExp(
                     '<svg xmlns="http://www.w3.org/2000/svg" .*>' +
                         '<style scoped="">html::-webkit-scrollbar { display: none; }</style>' +
+                        '<style scoped="">html, body { margin: 0; }</style>' +
                         "<foreignObject .*>" +
                         ".*" +
                         "</foreignObject>" +

@@ -60,6 +60,10 @@ var document2svg = (function (util, browser, documentHelper, xmlserializer) {
             return '<style scoped="">html::-webkit-scrollbar { display: none; }</style>';
         };
 
+    var workAroundDefaultHtmlMargins = function () {
+        return '<style scoped="">html, body { margin: 0; }</style>';
+    };
+
     var serializeAttributes = function (attributes) {
         var keys = Object.keys(attributes);
         if (!keys.length) {
@@ -94,6 +98,7 @@ var document2svg = (function (util, browser, documentHelper, xmlserializer) {
             serializeAttributes(svgAttributes(size, zoomFactor)) +
             ">" +
             workAroundChromeShowingScrollbarsUnderLinuxIfHtmlIsOverflowScroll() +
+            workAroundDefaultHtmlMargins() +
             "<foreignObject" +
             serializeAttributes(foreignObjectAttrs) +
             ">" +
