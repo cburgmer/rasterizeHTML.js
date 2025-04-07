@@ -40,7 +40,7 @@ var util = (function (url) {
             isObject(obj) &&
             Object.prototype.toString
                 .apply(obj)
-                .match(/\[object (Canvas|HTMLCanvasElement)\]/i)
+                .match(/\[object (Canvas|HTMLCanvasElement|OffscreenCanvas)\]/i)
         );
     };
 
