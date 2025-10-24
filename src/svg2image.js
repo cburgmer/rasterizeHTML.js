@@ -1,4 +1,4 @@
-var svg2image = (function (window) {
+var svg2image = (function () {
     "use strict";
 
     var module = {};
@@ -66,31 +66,16 @@ var svg2image = (function (window) {
         );
     };
 
-    var supportsBlobBuilding = function () {
-        if (window.Blob) {
-            // Available as constructor only in newer builds for all browsers
-            try {
-                new Blob(["<b></b>"], { type: "text/xml" });
-                return true;
-            } catch (err) {}
-        }
-        return false;
-    };
-
     var checkBlobSupport = function () {
         return new Promise(function (resolve, reject) {
-            if (supportsBlobBuilding() && window.URL) {
-                readingBackFromCanvasBenefitsFromOldSchoolDataUris().then(
-                    function (doesBenefit) {
-                        resolve(!doesBenefit);
-                    },
-                    function () {
-                        reject();
-                    }
-                );
-            } else {
-                resolve(false);
-            }
+            readingBackFromCanvasBenefitsFromOldSchoolDataUris().then(
+                function (doesBenefit) {
+                    resolve(!doesBenefit);
+                },
+                function () {
+                    reject();
+                }
+            );
         });
     };
 
