@@ -86,6 +86,12 @@ export interface Options {
      * than none. Should be initialized with {}.
      */
     cacheBucket?: {};
+
+    /**
+     * A nonce value to be set on created script and style elements.
+     * This is useful when a Content Security Policy is in place that requires a nonce on such elements.
+     */
+    nonce?: string;
 }
 
 /** Describes a resource that failed to load during drawing. */
