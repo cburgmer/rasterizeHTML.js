@@ -45,7 +45,7 @@
     "imagediff": "git://github.com/HumbleSoftware/js-imagediff.git#5edce005fe",
     "jasmine-core": "^4.0.0",
     "prettier": "^2.5.1",
-    "puppeteer": "^13.0.1"
+    "puppeteer": "^24.29.1"
   },
   "prettier": {
     "tabWidth": 4
