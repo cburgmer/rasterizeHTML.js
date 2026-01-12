@@ -25,7 +25,7 @@
     "url": "git://github.com/cburgmer/rasterizeHTML.js.git"
   },
   "dependencies": {
-    "inlineresources": "^1.1.0",
+    "inlineresources": "^1.2.0",
     "sane-domparser-error": "~0.2.0",
     "url": "~0.11.0",
     "xmlserializer": "~0.6.0"
