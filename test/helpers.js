@@ -3,11 +3,11 @@
 
     var isWebkitOrBlink = navigator.userAgent.indexOf("WebKit") >= 0,
         testDisabledOnCondition = function (condition, text, functionHandle) {
-            var spec = it(text, functionHandle);
             if (condition) {
-                spec.pend("disabled on this platform");
+                return xit(text, functionHandle);
+            } else {
+                return it(text, functionHandle);
             }
-            return spec;
         };
     window.ifNotInWebkitOrBlinkIt = function (text, functionHandle) {
         return testDisabledOnCondition(isWebkitOrBlink, text, functionHandle);

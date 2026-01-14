@@ -46,7 +46,7 @@ module.exports = function (grunt) {
                 ],
                 display: "short",
                 summary: true,
-                version: "3.8.0", // https://github.com/gruntjs/grunt-contrib-jasmine/issues/339
+                version: "5.13.0"
             },
         },
         browserify: {
