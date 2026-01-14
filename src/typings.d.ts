@@ -181,7 +181,7 @@ export interface Error {
 export function drawHTML(
     html: string,
     canvas: HTMLCanvasElement | OffscreenCanvas,
-    options?: Options
+    options?: Options,
 ): Promise<RenderResult>;
 
 /**
@@ -204,7 +204,7 @@ export function drawHTML(
 export function drawURL(
     url: string,
     canvas: HTMLCanvasElement | OffscreenCanvas,
-    options?: Options
+    options?: Options,
 ): Promise<RenderResult>;
 
 /**
@@ -227,5 +227,5 @@ export function drawURL(
 export function drawDocument(
     document: Document,
     canvas: HTMLCanvasElement | OffscreenCanvas,
-    options?: Options
+    options?: Options,
 ): Promise<RenderResult>;

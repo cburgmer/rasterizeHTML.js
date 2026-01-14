@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
     <head>
         <meta charset="utf-8" />
@@ -58,7 +58,7 @@
                         url +
                         " with " +
                         runs +
-                        " runs\n"
+                        " runs\n",
                 );
 
                 renderPageMultipleTimes(runs, function (stepsLeft, errors) {
@@ -80,15 +80,15 @@
                     log("Results:\n");
                     log(
                         Math.floor((endTime - startTime) / runs) +
-                            " milliseconds on average\n"
+                            " milliseconds on average\n",
                     );
                     log(
                         Math.floor(firstStepEndTime - startTime) +
-                            " milliseconds for first call\n"
+                            " milliseconds for first call\n",
                     );
                     log(
                         Math.floor((endTime - firstStepEndTime) / (runs - 1)) +
-                            " milliseconds on avarage for remaining\n"
+                            " milliseconds on avarage for remaining\n",
                     );
                 });
             };

@@ -43,7 +43,7 @@ var rasterizeHTML = (function (util, browser, rasterize) {
         return rasterize.rasterize(
             element,
             params.canvas,
-            constructOptions(params)
+            constructOptions(params),
         );
     };
 
@@ -69,7 +69,7 @@ var rasterizeHTML = (function (util, browser, rasterize) {
     var workAroundFirefoxNotLoadingStylesheetStyles = function (
         doc,
         url,
-        options
+        options,
     ) {
         var d = document.implementation.createHTMLDocument("");
         d.replaceChild(doc.documentElement, d.documentElement);
@@ -91,12 +91,12 @@ var rasterizeHTML = (function (util, browser, rasterize) {
             var workaround = workAroundFirefoxNotLoadingStylesheetStyles(
                 doc,
                 url,
-                options
+                options,
             );
             return module.drawDocument(
                 workaround.document,
                 canvas,
-                workaround.options
+                workaround.options,
             );
         });
     };

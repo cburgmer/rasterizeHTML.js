@@ -30,7 +30,7 @@ var documentHelper = (function (documentUtil) {
         documentUtil.rewriteCssSelectorWith(
             element,
             pseudoClass,
-            "." + fakeActionClass
+            "." + fakeActionClass,
         );
     };
 
@@ -67,7 +67,7 @@ var documentHelper = (function (documentUtil) {
     module.rewriteTagNameSelectorsToLowerCase = function (element) {
         documentUtil.lowercaseCssTypeSelectors(
             element,
-            documentUtil.findHtmlOnlyNodeNames(element)
+            documentUtil.findHtmlOnlyNodeNames(element),
         );
     };
 

@@ -10,7 +10,7 @@ describe("Main", function () {
                 Promise.resolve({
                     image: image,
                     errors: errors,
-                })
+                }),
             );
         },
         setUpRasterizeError = function (e) {
@@ -49,7 +49,7 @@ describe("Main", function () {
                 expect(rasterize.rasterize).toHaveBeenCalledWith(
                     doc.documentElement,
                     canvas,
-                    jasmine.any(Object)
+                    jasmine.any(Object),
                 );
 
                 done();
@@ -64,7 +64,7 @@ describe("Main", function () {
                     {
                         width: 123,
                         height: 456,
-                    }
+                    },
                 );
 
                 done();
@@ -78,7 +78,7 @@ describe("Main", function () {
                 expect(rasterize.rasterize).toHaveBeenCalledWith(
                     doc.documentElement,
                     null,
-                    jasmine.any(Object)
+                    jasmine.any(Object),
                 );
 
                 expect(util.parseOptionalParameters).toHaveBeenCalled();
@@ -95,7 +95,7 @@ describe("Main", function () {
                     {
                         width: 300,
                         height: 200,
-                    }
+                    },
                 );
 
                 done();
@@ -127,7 +127,7 @@ describe("Main", function () {
                             hover: ".aSelector",
                             active: "#anotherSelector",
                             zoom: 42,
-                        }
+                        },
                     );
 
                     done();
@@ -141,12 +141,12 @@ describe("Main", function () {
                     "<head><title>a title</title></head><body>some html</body>",
                 drawDocumentSpy = spyOn(
                     rasterizeHTML,
-                    "drawDocument"
+                    "drawDocument",
                 ).and.returnValue(
                     Promise.resolve({
                         image: svgImage,
                         errors: [],
-                    })
+                    }),
                 );
 
             browser.parseHTML.and.callFake(function (someHtml) {
@@ -169,12 +169,12 @@ describe("Main", function () {
             var html = "the html",
                 drawDocumentSpy = spyOn(
                     rasterizeHTML,
-                    "drawDocument"
+                    "drawDocument",
                 ).and.returnValue(
                     Promise.resolve({
                         image: svgImage,
                         errors: [],
-                    })
+                    }),
                 );
 
             rasterizeHTML
@@ -184,7 +184,7 @@ describe("Main", function () {
                     expect(drawDocumentSpy).toHaveBeenCalledWith(
                         jasmine.any(Object),
                         null,
-                        { width: 999, height: 987 }
+                        { width: 999, height: 987 },
                     );
 
                     done();
@@ -195,12 +195,12 @@ describe("Main", function () {
             var html = "the html",
                 drawDocumentSpy = spyOn(
                     rasterizeHTML,
-                    "drawDocument"
+                    "drawDocument",
                 ).and.returnValue(
                     Promise.resolve({
                         image: svgImage,
                         errors: [],
-                    })
+                    }),
                 );
 
             rasterizeHTML
@@ -209,7 +209,7 @@ describe("Main", function () {
                     expect(drawDocumentSpy).toHaveBeenCalledWith(
                         jasmine.any(Object),
                         canvas,
-                        { baseUrl: "a_baseUrl" }
+                        { baseUrl: "a_baseUrl" },
                     );
 
                     done();
@@ -221,12 +221,12 @@ describe("Main", function () {
                     "<head><title>a title</title></head><body>some html</body>",
                 drawDocumentSpy = spyOn(
                     rasterizeHTML,
-                    "drawDocument"
+                    "drawDocument",
                 ).and.returnValue(
                     Promise.resolve({
                         image: svgImage,
                         errors: [],
-                    })
+                    }),
                 );
 
             rasterizeHTML
@@ -235,7 +235,7 @@ describe("Main", function () {
                     expect(drawDocumentSpy).toHaveBeenCalledWith(
                         jasmine.any(Object),
                         canvas,
-                        { cache: "none" }
+                        { cache: "none" },
                     );
 
                     done();
@@ -247,12 +247,12 @@ describe("Main", function () {
         it("should take a URL, inline all displayable content and render to the given canvas", function (done) {
             var drawDocumentSpy = spyOn(
                 rasterizeHTML,
-                "drawDocument"
+                "drawDocument",
             ).and.returnValue(
                 Promise.resolve({
                     image: svgImage,
                     errors: [],
-                })
+                }),
             );
 
             setUpLoadDocument();
@@ -268,11 +268,11 @@ describe("Main", function () {
                     expect(drawDocumentSpy).toHaveBeenCalledWith(
                         jasmine.any(Object),
                         canvas,
-                        jasmine.any(Object)
+                        jasmine.any(Object),
                     );
                     expect(
                         drawDocumentSpy.calls.mostRecent().args[0]
-                            .documentElement
+                            .documentElement,
                     ).toBe(documentElement);
 
                     done();
@@ -282,12 +282,12 @@ describe("Main", function () {
         it("should make the canvas optional when drawing an URL", function (done) {
             var drawDocumentSpy = spyOn(
                 rasterizeHTML,
-                "drawDocument"
+                "drawDocument",
             ).and.returnValue(
                 Promise.resolve({
                     image: svgImage,
                     errors: [],
-                })
+                }),
             );
 
             setUpLoadDocument();
@@ -299,7 +299,7 @@ describe("Main", function () {
                     expect(drawDocumentSpy).toHaveBeenCalledWith(
                         jasmine.any(Object),
                         null,
-                        jasmine.objectContaining({ width: 999, height: 987 })
+                        jasmine.objectContaining({ width: 999, height: 987 }),
                     );
 
                     done();
@@ -311,7 +311,7 @@ describe("Main", function () {
                 Promise.resolve({
                     image: svgImage,
                     errors: [],
-                })
+                }),
             );
 
             setUpLoadDocument();
@@ -323,7 +323,7 @@ describe("Main", function () {
                         "fixtures/image.html",
                         {
                             cache: "none",
-                        }
+                        },
                     );
 
                     done();
@@ -349,7 +349,7 @@ describe("Main", function () {
             spyOn(rasterizeHTML, "drawDocument").and.returnValue(
                 Promise.resolve({
                     errors: [{ message: "the error" }],
-                })
+                }),
             );
 
             rasterizeHTML.drawHTML("", canvas).then(function (result) {
@@ -363,7 +363,7 @@ describe("Main", function () {
             spyOn(rasterizeHTML, "drawDocument").and.returnValue(
                 Promise.resolve({
                     errors: [{ message: "the error" }],
-                })
+                }),
             );
 
             setUpLoadDocument();

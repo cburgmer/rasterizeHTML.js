@@ -73,54 +73,56 @@ var documentUtil = (function () {
     var replaceSimpleSelectorsBy = function (
         element,
         simpleSelectorList,
-        caseInsensitiveReplaceFunc
+        caseInsensitiveReplaceFunc,
     ) {
         var selectorRegex = matchingSimpleSelectorsRegex(simpleSelectorList);
 
-        asArray(element.querySelectorAll("style")).forEach(function (
-            styleElement
-        ) {
-            // SVGStyleElement doesn't have a property sheet in Safari, we need some workaround here
-            // more details can be found here: https://github.com/cburgmer/rasterizeHTML.js/issues/158
-            if (typeof styleElement.sheet === "undefined") {
-                addSheetPropertyToSvgStyleElement(styleElement);
-            }
-
-            var matchingRules = asArray(styleElement.sheet.cssRules).filter(
-                function (rule) {
-                    return (
-                        rule.selectorText &&
-                        new RegExp(selectorRegex, "i").test(rule.selectorText)
-                    );
+        asArray(element.querySelectorAll("style")).forEach(
+            function (styleElement) {
+                // SVGStyleElement doesn't have a property sheet in Safari, we need some workaround here
+                // more details can be found here: https://github.com/cburgmer/rasterizeHTML.js/issues/158
+                if (typeof styleElement.sheet === "undefined") {
+                    addSheetPropertyToSvgStyleElement(styleElement);
                 }
-            );
 
-            if (matchingRules.length) {
-                matchingRules.forEach(function (rule) {
-                    var newSelector = rule.selectorText.replace(
-                        new RegExp(selectorRegex, "gi"),
-                        function (_, prefixMatch, selectorMatch) {
-                            return (
-                                prefixMatch +
-                                caseInsensitiveReplaceFunc(selectorMatch)
-                            );
+                var matchingRules = asArray(styleElement.sheet.cssRules).filter(
+                    function (rule) {
+                        return (
+                            rule.selectorText &&
+                            new RegExp(selectorRegex, "i").test(
+                                rule.selectorText,
+                            )
+                        );
+                    },
+                );
+
+                if (matchingRules.length) {
+                    matchingRules.forEach(function (rule) {
+                        var newSelector = rule.selectorText.replace(
+                            new RegExp(selectorRegex, "gi"),
+                            function (_, prefixMatch, selectorMatch) {
+                                return (
+                                    prefixMatch +
+                                    caseInsensitiveReplaceFunc(selectorMatch)
+                                );
+                            },
+                        );
+
+                        if (newSelector !== rule.selectorText) {
+                            updateRuleSelector(rule, newSelector);
                         }
-                    );
+                    });
 
-                    if (newSelector !== rule.selectorText) {
-                        updateRuleSelector(rule, newSelector);
-                    }
-                });
-
-                rewriteStyleContent(styleElement);
-            }
-        });
+                    rewriteStyleContent(styleElement);
+                }
+            },
+        );
     };
 
     module.rewriteCssSelectorWith = function (
         element,
         oldSelector,
-        newSelector
+        newSelector,
     ) {
         replaceSimpleSelectorsBy(element, [oldSelector], function () {
             return newSelector;
@@ -136,7 +138,7 @@ var documentUtil = (function () {
     module.findHtmlOnlyNodeNames = function (element) {
         var treeWalker = element.ownerDocument.createTreeWalker(
                 element,
-                NodeFilter.SHOW_ELEMENT
+                NodeFilter.SHOW_ELEMENT,
             ),
             htmlNodeNames = {},
             nonHtmlNodeNames = {},

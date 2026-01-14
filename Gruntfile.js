@@ -46,7 +46,7 @@ module.exports = function (grunt) {
                 ],
                 display: "short",
                 summary: true,
-                version: "5.13.0"
+                version: "5.13.0",
             },
         },
         browserify: {

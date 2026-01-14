@@ -10,7 +10,7 @@ describe("Document to SVG conversion", function () {
             viewportWidth,
             viewportHeight,
             left,
-            top
+            top,
         ) {
             return {
                 left: left || 0,
@@ -49,7 +49,7 @@ describe("Document to SVG conversion", function () {
             var svgCode = document2svg.getSvgForDocument(
                 doc.documentElement,
                 aRenderSize(),
-                defaultZoomLevel
+                defaultZoomLevel,
             );
             expect(svgCode).toMatch(
                 new RegExp(
@@ -65,8 +65,8 @@ describe("Document to SVG conversion", function () {
                         "</body>" +
                         "</html>" +
                         "</foreignObject>" +
-                        "</svg>"
-                )
+                        "</svg>",
+                ),
             );
         });
 
@@ -79,7 +79,7 @@ describe("Document to SVG conversion", function () {
             var svgCode = document2svg.getSvgForDocument(
                 doc.documentElement,
                 aRenderSize(),
-                defaultZoomLevel
+                defaultZoomLevel,
             );
             expect(svgCode).not.toBeNull();
             canonicalXML = svgCode.replace(/ +\/>/, "/>");
@@ -97,8 +97,8 @@ describe("Document to SVG conversion", function () {
                         "</body>" +
                         "</html>" +
                         "</foreignObject>" +
-                        "</svg>"
-                )
+                        "</svg>",
+                ),
             );
         });
 
@@ -109,7 +109,7 @@ describe("Document to SVG conversion", function () {
             var svgCode = document2svg.getSvgForDocument(
                 doc.documentElement,
                 aRenderSize(123, 987, 200, 1000, 2, 7),
-                defaultZoomLevel
+                defaultZoomLevel,
             );
             expect(svgCode).toMatch(
                 new RegExp(
@@ -125,8 +125,8 @@ describe("Document to SVG conversion", function () {
                         "</body>" +
                         "</html>" +
                         "</foreignObject>" +
-                        "</svg>"
-                )
+                        "</svg>",
+                ),
             );
         });
 
@@ -138,7 +138,7 @@ describe("Document to SVG conversion", function () {
             var svgCode = document2svg.getSvgForDocument(
                 doc.documentElement,
                 aRenderSize(123, 987, 12, 99),
-                zoomFactor
+                zoomFactor,
             );
             expect(svgCode).toMatch(
                 new RegExp(
@@ -154,8 +154,8 @@ describe("Document to SVG conversion", function () {
                         "</body>" +
                         "</html>" +
                         "</foreignObject>" +
-                        "</svg>"
-                )
+                        "</svg>",
+                ),
             );
         });
 
@@ -167,7 +167,7 @@ describe("Document to SVG conversion", function () {
             var svgCode = document2svg.getSvgForDocument(
                 doc.documentElement,
                 aRenderSize(123, 987),
-                zoomLevel
+                zoomLevel,
             );
             expect(svgCode).not.toMatch(new RegExp("scale"));
         });
@@ -179,7 +179,7 @@ describe("Document to SVG conversion", function () {
             var svgCode = document2svg.getSvgForDocument(
                 doc.documentElement,
                 aRenderSizeWithRootFontSize("42px"),
-                defaultZoomLevel
+                defaultZoomLevel,
             );
             expect(svgCode).toMatch(
                 new RegExp(
@@ -195,8 +195,8 @@ describe("Document to SVG conversion", function () {
                         "</body>" +
                         "</html>" +
                         "</foreignObject>" +
-                        "</svg>"
-                )
+                        "</svg>",
+                ),
             );
         });
 
@@ -211,7 +211,7 @@ describe("Document to SVG conversion", function () {
                 document2svg.getSvgForDocument(
                     doc.documentElement,
                     aRenderSize(),
-                    1
+                    1,
                 );
             }).toThrow(error);
         });
@@ -235,7 +235,7 @@ describe("Document to SVG conversion", function () {
             var svgCode = document2svg.getSvgForDocument(
                 doc.documentElement,
                 aRenderSize(100, 100),
-                1
+                1,
             );
             tempChild.innerHTML = svgCode;
 
@@ -253,10 +253,10 @@ describe("Document to SVG conversion", function () {
             document2svg.getSvgForDocument(
                 doc.documentElement,
                 aRenderSize(),
-                1
+                1,
             );
             expect(
-                documentHelper.rewriteTagNameSelectorsToLowerCase
+                documentHelper.rewriteTagNameSelectorsToLowerCase,
             ).toHaveBeenCalledWith(doc.documentElement);
         });
 
@@ -267,7 +267,7 @@ describe("Document to SVG conversion", function () {
             var svgCode = document2svg.getSvgForDocument(
                 doc.documentElement,
                 aRenderSize(),
-                defaultZoomLevel
+                defaultZoomLevel,
             );
             expect(svgCode).toMatch(
                 new RegExp(
@@ -276,8 +276,8 @@ describe("Document to SVG conversion", function () {
                         "<foreignObject .*>" +
                         ".*" +
                         "</foreignObject>" +
-                        "</svg>"
-                )
+                        "</svg>",
+                ),
             );
         });
     });
@@ -290,7 +290,7 @@ describe("Document to SVG conversion", function () {
             spyOn(documentHelper, "fakeUserAction");
             calculatedSize = "the_calculated_size";
             spyOn(browser, "calculateDocumentContentSize").and.returnValue(
-                Promise.resolve(calculatedSize)
+                Promise.resolve(calculatedSize),
             );
             spyOn(document2svg, "getSvgForDocument");
         });
@@ -299,7 +299,7 @@ describe("Document to SVG conversion", function () {
             var svg = "the svg";
 
             document2svg.getSvgForDocument.and.returnValue(
-                Promise.resolve(svg)
+                Promise.resolve(svg),
             );
 
             document2svg
@@ -308,15 +308,15 @@ describe("Document to SVG conversion", function () {
                     expect(theSvg).toBe(svg);
 
                     expect(
-                        browser.calculateDocumentContentSize
+                        browser.calculateDocumentContentSize,
                     ).toHaveBeenCalledWith(
                         docElement,
-                        jasmine.objectContaining({ zoom: 42 })
+                        jasmine.objectContaining({ zoom: 42 }),
                     );
                     expect(document2svg.getSvgForDocument).toHaveBeenCalledWith(
                         docElement,
                         calculatedSize,
-                        42
+                        42,
                     );
 
                     done();
@@ -331,7 +331,7 @@ describe("Document to SVG conversion", function () {
                 })
                 .then(function () {
                     expect(
-                        browser.calculateDocumentContentSize
+                        browser.calculateDocumentContentSize,
                     ).toHaveBeenCalledWith(docElement, {
                         width: 42,
                         height: 4711,
@@ -348,7 +348,7 @@ describe("Document to SVG conversion", function () {
                     expect(documentHelper.fakeUserAction).toHaveBeenCalledWith(
                         docElement,
                         ".mySpan",
-                        "hover"
+                        "hover",
                     );
 
                     done();
@@ -362,7 +362,7 @@ describe("Document to SVG conversion", function () {
                     expect(documentHelper.fakeUserAction).toHaveBeenCalledWith(
                         docElement,
                         ".mySpan",
-                        "active"
+                        "active",
                     );
 
                     done();
@@ -376,7 +376,7 @@ describe("Document to SVG conversion", function () {
                     expect(documentHelper.fakeUserAction).toHaveBeenCalledWith(
                         docElement,
                         ".mySpan",
-                        "focus"
+                        "focus",
                     );
 
                     done();
@@ -390,7 +390,7 @@ describe("Document to SVG conversion", function () {
                     expect(documentHelper.fakeUserAction).toHaveBeenCalledWith(
                         docElement,
                         ".mySpan",
-                        "target"
+                        "target",
                     );
 
                     done();
@@ -410,10 +410,10 @@ describe("Document to SVG conversion", function () {
                 .drawDocumentAsSvg(docElement, { clip: ".mySpan" })
                 .then(function () {
                     expect(
-                        browser.calculateDocumentContentSize
+                        browser.calculateDocumentContentSize,
                     ).toHaveBeenCalledWith(
                         docElement,
-                        jasmine.objectContaining({ clip: ".mySpan" })
+                        jasmine.objectContaining({ clip: ".mySpan" }),
                     );
 
                     done();

@@ -6,7 +6,7 @@ var svg2image = (function () {
     var urlForSvg = function (svg, useBlobs) {
         if (useBlobs) {
             return URL.createObjectURL(
-                new Blob([svg], { type: "image/svg+xml" })
+                new Blob([svg], { type: "image/svg+xml" }),
             );
         } else {
             return (
@@ -55,14 +55,14 @@ var svg2image = (function () {
                     return false;
                 }
                 return supportsReadingObjectFromCanvas(
-                    urlForSvg(simpleForeignObjectSvg, false)
+                    urlForSvg(simpleForeignObjectSvg, false),
                 ).then(function (s) {
                     return s;
                 });
             },
             function () {
                 return false;
-            }
+            },
         );
     };
 
@@ -74,7 +74,7 @@ var svg2image = (function () {
                 },
                 function () {
                     reject();
-                }
+                },
             );
         });
     };

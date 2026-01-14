@@ -27,7 +27,7 @@
   "dependencies": {
     "inlineresources": "^1.2.0",
     "sane-domparser-error": "~0.2.0",
-    "url": "~0.11.0",
+    "url": "~0.11.4",
     "xmlserializer": "~0.6.0"
   },
   "devDependencies": {
@@ -44,8 +44,8 @@
     "grunt-umd": "^3.0.0",
     "imagediff": "git://github.com/HumbleSoftware/js-imagediff.git#5edce005fe",
     "jasmine-core": "^5.13.0",
-    "prettier": "^2.5.1",
-    "puppeteer": "^24.29.1"
+    "prettier": "^3.7.4",
+    "puppeteer": "^24.35.0"
   },
   "prettier": {
     "tabWidth": 4

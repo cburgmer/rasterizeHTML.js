@@ -26,7 +26,7 @@ describe("Utilities function", function () {
         it("should combine a url starting with '/' with the host of the base", function () {
             var url = util.joinUrl(
                 "http://example.com/rel/path/",
-                "/the_relative_url"
+                "/the_relative_url",
             );
             expect(url).toEqual("http://example.com/the_relative_url");
         });
@@ -34,7 +34,7 @@ describe("Utilities function", function () {
         it("should ignore base with an absolute url", function () {
             var url = util.joinUrl(
                 "http://example.com/rel/path/",
-                "http://github.com//the_relative_url"
+                "http://github.com//the_relative_url",
             );
             expect(url).toEqual("http://github.com//the_relative_url");
         });

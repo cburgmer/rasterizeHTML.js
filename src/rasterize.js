@@ -4,7 +4,7 @@ var rasterize = (function (
     documentHelper,
     document2svg,
     svg2image,
-    inlineresources
+    inlineresources,
 ) {
     "use strict";
 
@@ -27,7 +27,7 @@ var rasterize = (function (
             },
             function (e) {
                 throw generalDrawError(e);
-            }
+            },
         );
     };
 
@@ -85,7 +85,7 @@ var rasterize = (function (
                                 errors: errors.concat(result.errors),
                                 cleanUp: result.cleanUp,
                             };
-                        }
+                        },
                     );
                 } else {
                     return {
@@ -96,17 +96,17 @@ var rasterize = (function (
                 }
             })
             .then(function (result) {
-                return doDraw(result.element, canvas, options).then(function (
-                    drawResult
-                ) {
-                    result.cleanUp();
+                return doDraw(result.element, canvas, options).then(
+                    function (drawResult) {
+                        result.cleanUp();
 
-                    return {
-                        image: drawResult.image,
-                        svg: drawResult.svg,
-                        errors: result.errors,
-                    };
-                });
+                        return {
+                            image: drawResult.image,
+                            svg: drawResult.svg,
+                            errors: result.errors,
+                        };
+                    },
+                );
             });
     };
 

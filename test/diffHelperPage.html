@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
     <head>
         <title>Smoke test diff helper</title>
@@ -11,7 +11,7 @@
             var getImageForUrl = function (
                 url,
                 successCallback,
-                errorCallback
+                errorCallback,
             ) {
                 var image = new window.Image();
 
@@ -39,7 +39,7 @@
 
             var renderDiff = function (image1, image2) {
                 var canvas = canvasForImageCanvas(
-                    imagediff.diff(image1, image2)
+                    imagediff.diff(image1, image2),
                 );
 
                 document.getElementsByTagName("body")[0].appendChild(canvas);
@@ -52,7 +52,7 @@
                             var equal = diffHelper.imageEquals(
                                 image1,
                                 image2,
-                                threshold
+                                threshold,
                             );
 
                             renderDiff(image1, image2);

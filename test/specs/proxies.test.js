@@ -137,7 +137,7 @@ describe("XHR Proxies", function () {
         describe("integration", function () {
             it("should notify after file has loaded", function (done) {
                 var FinishNotifyingXhrProxy = proxies.finishNotifyingXhr(
-                        window.XMLHttpRequest
+                        window.XMLHttpRequest,
                     ),
                     xhr = new FinishNotifyingXhrProxy(),
                     called = [],
@@ -161,7 +161,7 @@ describe("XHR Proxies", function () {
                         expect(result).toEqual({ totalCount: 1 });
 
                         markDoneInAnyOrder("waitForRequestsToFinish");
-                    }
+                    },
                 );
             });
         });
@@ -172,7 +172,7 @@ describe("XHR Proxies", function () {
             var baseUrl = testHelper.fixturesPath,
                 BaseUrlRespectingProxy = proxies.baseUrlRespectingXhr(
                     window.XMLHttpRequest,
-                    baseUrl
+                    baseUrl,
                 ),
                 xhr = new BaseUrlRespectingProxy();
 

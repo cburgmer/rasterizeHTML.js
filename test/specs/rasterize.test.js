@@ -63,7 +63,7 @@ describe("Rasterize", function () {
 
             inlineReferences = spyOn(
                 inlineresources,
-                "inlineReferences"
+                "inlineReferences",
             ).and.returnValue(withoutErrors());
 
             spyOn(documentHelper, "persistInputValues");
@@ -80,15 +80,15 @@ describe("Rasterize", function () {
                 .then(function () {
                     expect(inlineReferences).toHaveBeenCalledWith(
                         doc.documentElement,
-                        { inlineScripts: false }
+                        { inlineScripts: false },
                     );
                     expect(document2svg.drawDocumentAsSvg).toHaveBeenCalledWith(
                         doc.documentElement,
-                        {}
+                        {},
                     );
                     expect(svg2image.renderSvg).toHaveBeenCalledWith(theSvg);
                     expect(
-                        canvas.getContext("2d").drawImage
+                        canvas.getContext("2d").drawImage,
                     ).toHaveBeenCalledWith(rasterizedImage, 0, 0);
 
                     done();
@@ -133,11 +133,11 @@ describe("Rasterize", function () {
 
                     expect(inlineReferences).toHaveBeenCalledWith(
                         doc.documentElement,
-                        { inlineScripts: false }
+                        { inlineScripts: false },
                     );
                     expect(document2svg.drawDocumentAsSvg).toHaveBeenCalledWith(
                         doc.documentElement,
-                        {}
+                        {},
                     );
 
                     done();
@@ -159,7 +159,7 @@ describe("Rasterize", function () {
                             cache: "none",
                             cacheBucket: {},
                             inlineScripts: false,
-                        }
+                        },
                     );
 
                     done();
@@ -184,7 +184,7 @@ describe("Rasterize", function () {
                             hover: ".aSelector",
                             active: "#anotherSelector",
                             zoom: 42,
-                        }
+                        },
                     );
 
                     done();
@@ -194,13 +194,13 @@ describe("Rasterize", function () {
         it("should optionally execute JavaScript in the page", function (done) {
             var executeJavascript = spyOn(
                 browser,
-                "executeJavascript"
+                "executeJavascript",
             ).and.returnValue(
                 Promise.resolve({
                     document: doc,
                     errors: [],
                     cleanUp: function () {},
-                })
+                }),
             );
 
             rasterize
@@ -212,10 +212,10 @@ describe("Rasterize", function () {
                 .then(function () {
                     expect(executeJavascript).toHaveBeenCalledWith(
                         doc.documentElement,
-                        jasmine.objectContaining({ width: 123, height: 456 })
+                        jasmine.objectContaining({ width: 123, height: 456 }),
                     );
                     expect(
-                        documentHelper.persistInputValues
+                        documentHelper.persistInputValues,
                     ).toHaveBeenCalledWith(doc);
 
                     done();
@@ -228,7 +228,7 @@ describe("Rasterize", function () {
                     document: doc,
                     errors: [],
                     cleanUp: function () {},
-                })
+                }),
             );
 
             rasterize
@@ -236,7 +236,7 @@ describe("Rasterize", function () {
                 .then(function () {
                     expect(inlineReferences).toHaveBeenCalledWith(
                         doc.documentElement,
-                        { executeJs: true, inlineScripts: true }
+                        { executeJs: true, inlineScripts: true },
                     );
 
                     done();
@@ -246,13 +246,13 @@ describe("Rasterize", function () {
         it("should follow optional timeout when executing JavaScript", function (done) {
             var executeJavascript = spyOn(
                 browser,
-                "executeJavascript"
+                "executeJavascript",
             ).and.returnValue(
                 Promise.resolve({
                     document: doc,
                     errors: [],
                     cleanUp: function () {},
-                })
+                }),
             );
 
             rasterize
@@ -263,7 +263,7 @@ describe("Rasterize", function () {
                 .then(function () {
                     expect(executeJavascript).toHaveBeenCalledWith(
                         doc.documentElement,
-                        jasmine.objectContaining({ executeJsTimeout: 42 })
+                        jasmine.objectContaining({ executeJsTimeout: 42 }),
                     );
 
                     done();
@@ -290,7 +290,7 @@ describe("Rasterize", function () {
 
             inlineReferences = spyOn(
                 inlineresources,
-                "inlineReferences"
+                "inlineReferences",
             ).and.returnValue(withErrors(["the error"]));
 
             rasterize
@@ -307,14 +307,14 @@ describe("Rasterize", function () {
 
         it("should pass through a JS error", function (done) {
             spyOn(inlineresources, "inlineReferences").and.returnValue(
-                withoutErrors()
+                withoutErrors(),
             );
             spyOn(browser, "executeJavascript").and.returnValue(
                 Promise.resolve({
                     document: doc,
                     errors: ["the error"],
                     cleanUp: function () {},
-                })
+                }),
             );
             setUpDrawDocumentAsSvg(theSvg);
             setUpRenderSvg(rasterizedImage);
@@ -344,7 +344,7 @@ describe("Rasterize", function () {
 
             inlineReferences = spyOn(
                 inlineresources,
-                "inlineReferences"
+                "inlineReferences",
             ).and.returnValue(withoutErrors());
 
             executeJavascript = spyOn(browser, "executeJavascript");
@@ -363,7 +363,7 @@ describe("Rasterize", function () {
                     expect(e).toBe(error);
 
                     expect(
-                        canvas.getContext("2d").drawImage
+                        canvas.getContext("2d").drawImage,
                     ).not.toHaveBeenCalled();
 
                     done();
@@ -383,7 +383,7 @@ describe("Rasterize", function () {
                     expect(error.originalError).toBeTruthy();
 
                     expect(
-                        canvas.getContext("2d").drawImage
+                        canvas.getContext("2d").drawImage,
                     ).not.toHaveBeenCalled();
 
                     done();

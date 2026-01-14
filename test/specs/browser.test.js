@@ -65,11 +65,11 @@ describe("Browser functions", function () {
             browser
                 .executeJavascript(
                     doc.documentElement,
-                    defaultOptionsWithViewport()
+                    defaultOptionsWithViewport(),
                 )
                 .then(function (result) {
                     expect(result.document.body.innerHTML).toEqual(
-                        "dynamic content"
+                        "dynamic content",
                     );
 
                     result.cleanUp();
@@ -83,7 +83,7 @@ describe("Browser functions", function () {
             browser
                 .executeJavascript(
                     doc.documentElement,
-                    defaultOptionsWithViewport()
+                    defaultOptionsWithViewport(),
                 )
                 .then(function (result) {
                     result.cleanUp();
@@ -100,11 +100,11 @@ describe("Browser functions", function () {
             browser
                 .executeJavascript(
                     doc.documentElement,
-                    defaultOptionsWithTimeout(20)
+                    defaultOptionsWithTimeout(20),
                 )
                 .then(function (result) {
                     expect(result.document.body.innerHTML).toEqual(
-                        "dynamic content"
+                        "dynamic content",
                     );
 
                     result.cleanUp();
@@ -121,7 +121,7 @@ describe("Browser functions", function () {
             browser
                 .executeJavascript(
                     doc.documentElement,
-                    defaultOptionsWithTimeout(10)
+                    defaultOptionsWithTimeout(10),
                 )
                 .then(function (result) {
                     result.cleanUp();
@@ -149,7 +149,7 @@ describe("Browser functions", function () {
             browser
                 .executeJavascript(
                     doc.documentElement,
-                    defaultOptionsWithViewport()
+                    defaultOptionsWithViewport(),
                 )
                 .then(function (result) {
                     result.cleanUp();
@@ -175,7 +175,7 @@ describe("Browser functions", function () {
             browser
                 .executeJavascript(
                     doc.documentElement,
-                    defaultOptionsWithViewport()
+                    defaultOptionsWithViewport(),
                 )
                 .then(function (result) {
                     expect(result.document.body.innerHTML).toEqual("20");
@@ -192,7 +192,7 @@ describe("Browser functions", function () {
             browser
                 .executeJavascript(
                     doc.documentElement,
-                    defaultOptionsWithViewport()
+                    defaultOptionsWithViewport(),
                 )
                 .then(function (result) {
                     expect(result.errors).toEqual([
@@ -202,7 +202,7 @@ describe("Browser functions", function () {
                         },
                     ]);
                     expect(result.errors[0].msg).toMatch(
-                        /(ReferenceError:\s+(.+\s+)?undefinedVar)|('undefinedVar' is undefined)/
+                        /(ReferenceError:\s+(.+\s+)?undefinedVar)|('undefinedVar' is undefined)/,
                     );
 
                     result.cleanUp();
@@ -218,7 +218,7 @@ describe("Browser functions", function () {
             browser
                 .executeJavascript(
                     doc.documentElement,
-                    defaultOptionsWithViewport()
+                    defaultOptionsWithViewport(),
                 )
                 .then(function (result) {
                     expect(result.document.body.innerHTML).toEqual("1");
@@ -243,7 +243,7 @@ describe("Browser functions", function () {
                             expect(
                                 result.document
                                     .querySelector("div")
-                                    .textContent.trim()
+                                    .textContent.trim(),
                             ).toEqual("The content");
 
                             result.cleanUp();
@@ -259,7 +259,7 @@ describe("Browser functions", function () {
             browser
                 .executeJavascript(
                     doc.documentElement,
-                    optionsWithViewport(42, 21)
+                    optionsWithViewport(42, 21),
                 )
                 .then(function (result) {
                     expect(result.document.body.innerHTML).toEqual("true");
@@ -276,7 +276,7 @@ describe("Browser functions", function () {
             browser
                 .executeJavascript(
                     doc.documentElement,
-                    optionsWithViewport(10, 123)
+                    optionsWithViewport(10, 123),
                 )
                 .then(function (result) {
                     expect(result.document.body.innerHTML).toEqual("true");
@@ -293,7 +293,7 @@ describe("Browser functions", function () {
             browser
                 .executeJavascript(
                     doc.documentElement,
-                    defaultOptionsWithViewport(20, 123)
+                    defaultOptionsWithViewport(20, 123),
                 )
                 .then(function (result) {
                     expect(result.document.body.innerHTML).toEqual("true");
@@ -307,7 +307,7 @@ describe("Browser functions", function () {
             browser
                 .executeJavascript(
                     doc.documentElement,
-                    defaultOptionsWithViewport()
+                    defaultOptionsWithViewport(),
                 )
                 .then(function (result) {
                     expect(result.document.doctype.name).toEqual("html");
@@ -350,7 +350,7 @@ describe("Browser functions", function () {
             var dom = browser.parseHTML('<html top="attribute"></html>');
 
             expect(dom.documentElement.getAttribute("top")).toEqual(
-                "attribute"
+                "attribute",
             );
         });
 
@@ -366,7 +366,7 @@ describe("Browser functions", function () {
             dom = browser.parseHTML('<html top="attribute"></html>');
 
             expect(dom.documentElement.getAttribute("top")).toEqual(
-                "attribute"
+                "attribute",
             );
         });
 
@@ -399,7 +399,7 @@ describe("Browser functions", function () {
             var error;
             try {
                 browser.validateXHTML(
-                    '<html xmlns="http://www.w3.org/1999/xhtml"><weird:element></html>'
+                    '<html xmlns="http://www.w3.org/1999/xhtml"><weird:element></html>',
                 );
             } catch (e) {
                 error = e;
@@ -429,7 +429,7 @@ describe("Browser functions", function () {
                         '<div style="' + width + height + '">content</div>';
 
                 setHtml(
-                    "<style>* { padding: 0; margin: 0; }</style>" + element
+                    "<style>* { padding: 0; margin: 0; }</style>" + element,
                 );
             };
 
@@ -518,7 +518,7 @@ describe("Browser functions", function () {
 
         it("should calculate the correct size given any DOM element", function (done) {
             setHtml(
-                "<div><style>div { width: 400px; height: 400px; }</style></div>"
+                "<div><style>div { width: 400px; height: 400px; }</style></div>",
             );
 
             browser
@@ -536,7 +536,7 @@ describe("Browser functions", function () {
 
         it("should not have the body margin influence a DOM element sizing", function (done) {
             setHtml(
-                "<div><style>span { display: inline-block; float: left; width: 200px; height: 200px; }</style><span></span><span></span></div>"
+                "<div><style>span { display: inline-block; float: left; width: 200px; height: 200px; }</style><span></span><span></span></div>",
             );
             browser
                 .calculateDocumentContentSize(doc.querySelector("div"), {
@@ -568,7 +568,7 @@ describe("Browser functions", function () {
 
         it("should not execute JavaScript", function (done) {
             setHtml(
-                '<div></div><script>document.querySelector("div").style.height="100";</script>'
+                '<div></div><script>document.querySelector("div").style.height="100";</script>',
             );
 
             browser
@@ -591,7 +591,7 @@ describe("Browser functions", function () {
                     "body { margin: 0; padding: 0; font-size: 10px; line-height: 100%; }" +
                     "ul { list-style: none; margin: 0; } li { display: inline-block; }" +
                     "</style>" +
-                    "<body><ul><li></li></ul></body>"
+                    "<body><ul><li></li></ul></body>",
             );
 
             browser
@@ -750,7 +750,7 @@ describe("Browser functions", function () {
                     "<style>* { padding: 0; margin: 0; }</style>" +
                         '<div style="width: 200px; height: 300px; padding: 12px 0 0 34px; -moz-box-sizing: border-box; box-sizing: border-box;">' +
                         '<span style="display: inline-block; width: 123px; height: 234px;"></span>' +
-                        "</div>"
+                        "</div>",
                 );
             });
 
@@ -851,7 +851,7 @@ describe("Browser functions", function () {
                         expect(e).toEqual(
                             jasmine.objectContaining({
                                 message: "Clipping selector not found",
-                            })
+                            }),
                         );
 
                         done();
@@ -880,7 +880,7 @@ describe("Browser functions", function () {
                 .loadDocument(testHelper.fixturesPath + "ajax.html", {})
                 .then(function (doc) {
                     expect(doc.querySelector("title").textContent).toEqual(
-                        "Test page that tries to load content via AJAX"
+                        "Test page that tries to load content via AJAX",
                     );
 
                     done();
@@ -891,7 +891,7 @@ describe("Browser functions", function () {
             browser
                 .loadDocument(
                     testHelper.fixturesPath + "non_existing_url.html",
-                    {}
+                    {},
                 )
                 .then(null, function (e) {
                     expect(e.message).toEqual("Unable to load page");
@@ -905,7 +905,7 @@ describe("Browser functions", function () {
             browser
                 .loadDocument(
                     testHelper.fixturesPath + "invalidInput.xhtml",
-                    {}
+                    {},
                 )
                 .then(null, function (e) {
                     expect(e.message).toEqual("Invalid source");
@@ -940,10 +940,10 @@ describe("Browser functions", function () {
                 expect(ajaxRequest.open).toHaveBeenCalledWith(
                     "GET",
                     jasmine.any(String),
-                    true
+                    true,
                 );
                 expect(ajaxRequest.open.calls.mostRecent().args[1]).toMatch(
-                    /^non_existing_url.html\?_=[0123456789]+$/
+                    /^non_existing_url.html\?_=[0123456789]+$/,
                 );
             });
 
@@ -953,7 +953,7 @@ describe("Browser functions", function () {
                 expect(ajaxRequest.open).toHaveBeenCalledWith(
                     "GET",
                     "non_existing_url.html",
-                    true
+                    true,
                 );
             });
 
@@ -965,7 +965,7 @@ describe("Browser functions", function () {
                 });
 
                 expect(ajaxRequest.open.calls.mostRecent().args[1]).toEqual(
-                    "non_existing_url.html?_=42"
+                    "non_existing_url.html?_=42",
                 );
 
                 ajaxRequest.open.calls.reset();
@@ -974,7 +974,7 @@ describe("Browser functions", function () {
                     cache: "repeated",
                 });
                 expect(ajaxRequest.open.calls.mostRecent().args[1]).toEqual(
-                    "non_existing_url.html?_=42"
+                    "non_existing_url.html?_=42",
                 );
 
                 expect(dateNowSpy.calls.count()).toEqual(1);
@@ -987,7 +987,7 @@ describe("Browser functions", function () {
                 });
 
                 expect(ajaxRequest.open.calls.mostRecent().args[1]).toEqual(
-                    "non_existing_url.html?_=42"
+                    "non_existing_url.html?_=42",
                 );
 
                 ajaxRequest.open.calls.reset();
@@ -996,7 +996,7 @@ describe("Browser functions", function () {
                     cache: "none",
                 });
                 expect(ajaxRequest.open.calls.mostRecent().args[1]).toEqual(
-                    "non_existing_url.html?_=43"
+                    "non_existing_url.html?_=43",
                 );
             });
 
@@ -1006,12 +1006,12 @@ describe("Browser functions", function () {
                 });
 
                 expect(ajaxRequest.open.calls.mostRecent().args[1]).toEqual(
-                    "http://example.com/relative/url.html"
+                    "http://example.com/relative/url.html",
                 );
 
                 expect(util.joinUrl).toHaveBeenCalledWith(
                     "http://example.com/",
-                    "relative/url.html"
+                    "relative/url.html",
                 );
             });
         });

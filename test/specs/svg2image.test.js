@@ -16,7 +16,7 @@ describe("Svg to Image", function () {
             var referenceImg = createElementFrom(
                     '<img src="' +
                         testHelper.fixturesPath +
-                        'rednblue.png" alt="test image"/>'
+                        'rednblue.png" alt="test image"/>',
                 ),
                 twoColorSvg =
                     '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">' +
@@ -51,7 +51,7 @@ describe("Svg to Image", function () {
             var referenceImg = createElementFrom(
                     '<img src="' +
                         testHelper.fixturesPath +
-                        'rednblue.png" alt="test image"/>'
+                        'rednblue.png" alt="test image"/>',
                 ),
                 twoColorSvg =
                     '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">' +

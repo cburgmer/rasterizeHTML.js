@@ -24,13 +24,13 @@ describe("Integration test", function () {
         jasmine.addMatchers(imagediff.jasmine);
 
         canvas = createElementFrom(
-            '<canvas width="' + width + '" height="' + height + '"></canvas>'
+            '<canvas width="' + width + '" height="' + height + '"></canvas>',
         ); // Firefox adds a space between the divs and needs the canvas to fit horizontally for all content to be rendered
 
         referenceImg = createElementFrom(
             '<img src="' +
                 testHelper.fixturesPath +
-                '/testResult.png" alt="test image"/>'
+                '/testResult.png" alt="test image"/>',
         );
 
         finished = false;
@@ -106,7 +106,7 @@ describe("Integration test", function () {
                     hover: ".webfont",
                     focus: "img",
                     clip: "body",
-                }
+                },
             )
             .then(function (result) {
                 expect(result.errors).toEqual([]);
@@ -137,7 +137,7 @@ describe("Integration test", function () {
                     hover: ".webfont",
                     focus: "img",
                     clip: "body",
-                }
+                },
             )
             .then(function (result) {
                 expect(result.errors).toEqual([]);
@@ -155,7 +155,7 @@ describe("Integration test", function () {
     it("should take a URL and load non UTF-8 content", function (done) {
         var inlineReferencesSpy = spyOn(
             inlineresources,
-            "inlineReferences"
+            "inlineReferences",
         ).and.returnValue(Promise.resolve());
 
         rasterizeHTML
@@ -167,7 +167,7 @@ describe("Integration test", function () {
 
                 // This fails if SpecRunner is opened locally in Firefox. Open over a local webserver helps here.
                 expect(doc.querySelector("body").innerHTML.trim()).toEqual(
-                    "这是中文"
+                    "这是中文",
                 );
             })
             .catch(function (err) {

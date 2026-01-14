@@ -23,12 +23,12 @@ window.testHelper = (function () {
                     if (xhr.status === 200 || xhr.status === 0) {
                         resolve(
                             workAroundFirefoxNotLoadingStylesheetStyles(
-                                xhr.responseXML
-                            )
+                                xhr.responseXML,
+                            ),
                         );
                     }
                 },
-                false
+                false,
             );
 
             xhr.open("GET", fixtureUrl, true);

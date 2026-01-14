@@ -31,9 +31,9 @@ var proxies = (function (util) {
 
                     return originalOpen.apply(
                         this,
-                        [method, joinedUrl].concat(args)
+                        [method, joinedUrl].concat(args),
                     );
-                }
+                },
             );
 
             return xhr;

@@ -13,17 +13,17 @@ describe("HTML Document Utility functions", function () {
     describe("rewriteCssSelectorWith", function () {
         it("should rewrite CSS rules with the new selector", function () {
             setHtml(
-                "<head><style>a:hover { color: blue; }</style></head><body><span></span></body>"
+                "<head><style>a:hover { color: blue; }</style></head><body><span></span></body>",
             );
 
             documentUtil.rewriteCssSelectorWith(
                 doc.documentElement,
                 ":hover",
-                ".myFakeHover"
+                ".myFakeHover",
             );
 
             expect(doc.querySelector("style").textContent).toMatch(
-                /a.myFakeHover \{\s*color: blue;\s*\}/
+                /a.myFakeHover \{\s*color: blue;\s*\}/,
             );
         });
 
@@ -33,11 +33,11 @@ describe("HTML Document Utility functions", function () {
             documentUtil.rewriteCssSelectorWith(
                 doc.documentElement,
                 ".myClass",
-                ".myFakeClass"
+                ".myFakeClass",
             );
 
             expect(doc.querySelector("svg").textContent).toMatch(
-                /.myFakeClass \{\s*color: blue;\s*\}/
+                /.myFakeClass \{\s*color: blue;\s*\}/,
             );
         });
 
@@ -47,11 +47,11 @@ describe("HTML Document Utility functions", function () {
             documentUtil.rewriteCssSelectorWith(
                 doc.documentElement,
                 ":hover",
-                ".myFakeHover"
+                ".myFakeHover",
             );
 
             expect(doc.querySelector("style").textContent).toMatch(
-                /body.myFakeHover span \{\s*color: blue;\s*\}/
+                /body.myFakeHover span \{\s*color: blue;\s*\}/,
             );
         });
 
@@ -61,11 +61,11 @@ describe("HTML Document Utility functions", function () {
             documentUtil.rewriteCssSelectorWith(
                 doc.documentElement,
                 ":hover",
-                ".myFakeHover"
+                ".myFakeHover",
             );
 
             expect(doc.querySelector("style").textContent).toMatch(
-                /.myFakeHover \{\s*color: blue;\s*\}/
+                /.myFakeHover \{\s*color: blue;\s*\}/,
             );
         });
 
@@ -75,11 +75,11 @@ describe("HTML Document Utility functions", function () {
             documentUtil.rewriteCssSelectorWith(
                 doc.documentElement,
                 ".my",
-                ".myFakeHover"
+                ".myFakeHover",
             );
 
             expect(doc.querySelector("style").textContent).toMatch(
-                /.myClass \{\s*color: blue;\s*\}/
+                /.myClass \{\s*color: blue;\s*\}/,
             );
         });
 
@@ -89,11 +89,11 @@ describe("HTML Document Utility functions", function () {
             documentUtil.rewriteCssSelectorWith(
                 doc.documentElement,
                 ":hover",
-                ".myFakeHover"
+                ".myFakeHover",
             );
 
             expect(doc.querySelector("style").textContent).toMatch(
-                /i.myFakeHover, a.myFakeHover \{\s*color: blue;\s*\}/
+                /i.myFakeHover, a.myFakeHover \{\s*color: blue;\s*\}/,
             );
         });
 
@@ -103,39 +103,39 @@ describe("HTML Document Utility functions", function () {
             documentUtil.rewriteCssSelectorWith(
                 doc.documentElement,
                 ":active",
-                ".myFakeActive"
+                ".myFakeActive",
             );
 
             expect(doc.querySelector("style").textContent).toMatch(
-                /i.myFakeActive::?after \{\s*color: blue;\s*\}/
+                /i.myFakeActive::?after \{\s*color: blue;\s*\}/,
             );
         });
 
         it("should correctly handle multiple selector occurrences in different rules", function () {
             setHtml(
-                "<style>a:active {color: green;}i:active { color: blue; }</style>"
+                "<style>a:active {color: green;}i:active { color: blue; }</style>",
             );
 
             documentUtil.rewriteCssSelectorWith(
                 doc.documentElement,
                 ":active",
-                ".myFakeActive"
+                ".myFakeActive",
             );
 
             expect(doc.querySelector("style").textContent).toMatch(
-                /i.myFakeActive \{\s*color: blue;\s*\}/
+                /i.myFakeActive \{\s*color: blue;\s*\}/,
             );
         });
 
         it("should cope with non CSSStyleRule", function () {
             setHtml(
-                '<head><style>@font-face { font-family: "RaphaelIcons"; src: url("raphaelicons-webfont.woff"); }</style></head><body><span></span></body>'
+                '<head><style>@font-face { font-family: "RaphaelIcons"; src: url("raphaelicons-webfont.woff"); }</style></head><body><span></span></body>',
             );
 
             documentUtil.rewriteCssSelectorWith(
                 doc.documentElement,
                 ":hover",
-                ".myFakeHover"
+                ".myFakeHover",
             );
             expect(true).toBe(true); // work around warning from jasmine that no expectation is given
         });
@@ -146,7 +146,7 @@ describe("HTML Document Utility functions", function () {
             documentUtil.rewriteCssSelectorWith(
                 doc.documentElement,
                 ":hover",
-                ".myFakeHover"
+                ".myFakeHover",
             );
 
             // Use the fact that comments are discarded when processing a style sheet
@@ -159,11 +159,11 @@ describe("HTML Document Utility functions", function () {
             documentUtil.rewriteCssSelectorWith(
                 doc.documentElement,
                 ":hover",
-                ".myFakeHover"
+                ".myFakeHover",
             );
 
             expect(doc.querySelector("style").textContent).toMatch(
-                /a.myFakeHover/
+                /a.myFakeHover/,
             );
         });
 
@@ -173,11 +173,11 @@ describe("HTML Document Utility functions", function () {
             documentUtil.rewriteCssSelectorWith(
                 doc.documentElement,
                 ":hover",
-                ".myFakeHover"
+                ".myFakeHover",
             );
 
             expect(doc.querySelector("style").textContent).toMatch(
-                /a(.myFakeHover:not\(\[disabled\]\)|:not\(\[disabled\]\).myFakeHover)/
+                /a(.myFakeHover:not\(\[disabled\]\)|:not\(\[disabled\]\).myFakeHover)/,
             );
         });
 
@@ -189,11 +189,11 @@ describe("HTML Document Utility functions", function () {
                     documentUtil.rewriteCssSelectorWith(
                         doc.documentElement,
                         ":hover",
-                        ".myfakehover"
+                        ".myfakehover",
                     );
 
                     expect(doc.querySelector("style").textContent).toMatch(
-                        /body.myfakehover/
+                        /body.myfakehover/,
                     );
                     done();
                 });
@@ -207,11 +207,11 @@ describe("HTML Document Utility functions", function () {
             documentUtil.rewriteCssSelectorWith(
                 doc.documentElement,
                 ":hover",
-                ".myfakehover"
+                ".myfakehover",
             );
 
             expect(doc.querySelector("style").textContent).toMatch(
-                /foreignObject.myfakehover/
+                /foreignObject.myfakehover/,
             );
         });
     });
@@ -254,7 +254,7 @@ describe("HTML Document Utility functions", function () {
             ]);
 
             expect(doc.querySelector("style").textContent).toMatch(
-                /span.aClassName \{/
+                /span.aClassName \{/,
             );
         });
 
@@ -284,7 +284,7 @@ describe("HTML Document Utility functions", function () {
             ]);
 
             expect(doc.querySelector("style").textContent).toMatch(
-                /#timeTaken \{/
+                /#timeTaken \{/,
             );
         });
 
@@ -294,7 +294,7 @@ describe("HTML Document Utility functions", function () {
             documentUtil.lowercaseCssTypeSelectors(doc.documentElement, ["li"]);
 
             expect(doc.querySelector("style").textContent).toMatch(
-                /li.COMPLEX:active \{/
+                /li.COMPLEX:active \{/,
             );
         });
 
@@ -310,9 +310,9 @@ describe("HTML Document Utility functions", function () {
                 ]);
 
                 expect(doc.querySelector("style").textContent).toMatch(
-                    /BODY li \{/
+                    /BODY li \{/,
                 );
-            }
+            },
         );
 
         it("should convert multiple different matches", function () {
@@ -324,7 +324,7 @@ describe("HTML Document Utility functions", function () {
             ]);
 
             expect(doc.querySelector("style").textContent).toMatch(
-                /body li \{/
+                /body li \{/,
             );
         });
 
@@ -337,7 +337,7 @@ describe("HTML Document Utility functions", function () {
             ]);
 
             expect(doc.querySelector("style").textContent).toMatch(
-                /body, li \{/
+                /body, li \{/,
             );
         });
 
@@ -360,7 +360,7 @@ describe("HTML Document Utility functions", function () {
             documentUtil.lowercaseCssTypeSelectors(doc.documentElement, ["a"]);
 
             expect(doc.querySelector("style").textContent).not.toMatch(
-                /\}\s*a \{ color: green/
+                /\}\s*a \{ color: green/,
             );
         });
     });
@@ -371,7 +371,7 @@ describe("HTML Document Utility functions", function () {
 
             documentUtil.addClassNameRecursively(
                 doc.querySelector("span"),
-                ".myClass"
+                ".myClass",
             );
 
             expect(doc.querySelector("span").className).toMatch(/myClass/);
@@ -382,7 +382,7 @@ describe("HTML Document Utility functions", function () {
 
             documentUtil.addClassNameRecursively(
                 doc.querySelector("li"),
-                ".myClass"
+                ".myClass",
             );
 
             expect(doc.querySelector("ol").className).toMatch(/myClass/);
@@ -393,12 +393,12 @@ describe("HTML Document Utility functions", function () {
 
         it("should not attach the fake hover class to siblings or parent's siblings", function () {
             setHtml(
-                "<div><span>a span</span><div><a>a list entry</a><i>text</i></div></div>"
+                "<div><span>a span</span><div><a>a list entry</a><i>text</i></div></div>",
             );
 
             documentUtil.addClassNameRecursively(
                 doc.querySelector("a"),
-                ".myClass"
+                ".myClass",
             );
 
             expect(doc.querySelector("i").className).toEqual("");
@@ -409,11 +409,11 @@ describe("HTML Document Utility functions", function () {
     describe("findHtmlOnlyNodeNames", function () {
         it("should find html node names", function () {
             setHtml(
-                "<html><body><p><span class='whatever'><br>content</span></p></body></html>"
+                "<html><body><p><span class='whatever'><br>content</span></p></body></html>",
             );
 
             var nodeNames = documentUtil.findHtmlOnlyNodeNames(
-                doc.documentElement
+                doc.documentElement,
             );
 
             expect(nodeNames).toEqual([
@@ -428,11 +428,11 @@ describe("HTML Document Utility functions", function () {
 
         it("should not include tags from other namespaces", function () {
             setHtml(
-                "<html><body><svg xmlns='http://www.w3.org/2000/svg'><rect/></svg></body></html>"
+                "<html><body><svg xmlns='http://www.w3.org/2000/svg'><rect/></svg></body></html>",
             );
 
             var nodeNames = documentUtil.findHtmlOnlyNodeNames(
-                doc.documentElement
+                doc.documentElement,
             );
 
             expect(nodeNames).toEqual(["html", "head", "body"]);
@@ -444,11 +444,11 @@ describe("HTML Document Utility functions", function () {
                     '<svg width="10" height="10" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">' +
                     '<a xlink:href="target"></a>' +
                     "</svg>" +
-                    '<a href="anotherTarget"></a></body></html>'
+                    '<a href="anotherTarget"></a></body></html>',
             );
 
             var nodeNames = documentUtil.findHtmlOnlyNodeNames(
-                doc.documentElement
+                doc.documentElement,
             );
 
             expect(nodeNames).toEqual(["html", "head", "body"]);

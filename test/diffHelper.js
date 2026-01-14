@@ -28,7 +28,7 @@ window.diffHelper = (function () {
                     result.pass = module.imageEquals(
                         actual,
                         expected,
-                        tolerancePercentage
+                        tolerancePercentage,
                     );
                     return result;
                 },

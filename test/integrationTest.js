@@ -44,11 +44,11 @@ const renderPage = async (browser, url, successCallback) => {
 const runTest = async (browser) => {
     const imageUrl = await renderPage(
         browser,
-        fileUrl("test/integrationTestPage.html")
+        fileUrl("test/integrationTestPage.html"),
     );
     const targetImageUrl = await renderPage(
         browser,
-        fileUrl("test/fixtures/testResult.png")
+        fileUrl("test/fixtures/testResult.png"),
     );
     console.log("Rendered test page", imageUrl);
 
@@ -61,7 +61,7 @@ const runTest = async (browser) => {
             return isEqual(url1, url2, 4);
         },
         imageUrl,
-        targetImageUrl
+        targetImageUrl,
     );
 
     const screenshot = await imageDiffPage.screenshot();

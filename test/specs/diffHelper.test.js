@@ -50,7 +50,7 @@ describe("diffHelper", function () {
         it("should delegate to imageEqual", function () {
             var toEqualImageSpy = spyOn(
                 diffHelper,
-                "imageEquals"
+                "imageEquals",
             ).and.returnValue(true);
 
             // when

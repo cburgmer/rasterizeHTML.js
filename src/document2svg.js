@@ -40,14 +40,14 @@ var document2svg = (function (util, browser, documentHelper, xmlserializer) {
     };
 
     var workAroundCollapsingMarginsAcrossSVGElementInWebKitLike = function (
-        attributes
+        attributes,
     ) {
         var style = attributes.style || "";
         attributes.style = style + "float: left;";
     };
 
     var workAroundSafariSometimesNotShowingExternalResources = function (
-        attributes
+        attributes,
     ) {
         /* Let's hope that works some magic. The spec says SVGLoad only fires
          * now when all externals are available.
@@ -83,10 +83,10 @@ var document2svg = (function (util, browser, documentHelper, xmlserializer) {
 
         var foreignObjectAttrs = foreignObjectAttributes(size);
         workAroundCollapsingMarginsAcrossSVGElementInWebKitLike(
-            foreignObjectAttrs
+            foreignObjectAttrs,
         );
         workAroundSafariSometimesNotShowingExternalResources(
-            foreignObjectAttrs
+            foreignObjectAttrs,
         );
 
         return (

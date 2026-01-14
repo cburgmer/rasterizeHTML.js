@@ -33,7 +33,7 @@ var browser = (function (util, proxies, sanedomparsererror, theWindow) {
                     theWindow.document,
                     "iframe",
                     options.width,
-                    options.height
+                    options.height,
                 ),
                 html = element.outerHTML,
                 iframeErrorsMessages = [],
@@ -59,7 +59,7 @@ var browser = (function (util, proxies, sanedomparsererror, theWindow) {
                 finishNotifyXhrProxy = proxies.finishNotifyingXhr(xhr),
                 baseUrlXhrProxy = proxies.baseUrlRespectingXhr(
                     finishNotifyXhrProxy,
-                    options.baseUrl
+                    options.baseUrl,
                 );
 
             iframe.onload = function () {
@@ -108,7 +108,7 @@ var browser = (function (util, proxies, sanedomparsererror, theWindow) {
         return createHiddenSandboxedIFrame(
             theWindow.document,
             scaledViewportWidth,
-            scaledViewportHeight
+            scaledViewportHeight,
         );
     };
 
@@ -116,7 +116,7 @@ var browser = (function (util, proxies, sanedomparsererror, theWindow) {
         actualViewport,
         requestedWidth,
         requestedHeight,
-        zoom
+        zoom,
     ) {
         return {
             width: Math.max(actualViewport.width * zoom, requestedWidth),
@@ -142,16 +142,16 @@ var browser = (function (util, proxies, sanedomparsererror, theWindow) {
         selector,
         requestedWidth,
         requestedHeight,
-        zoom
+        zoom,
     ) {
         // clientWidth/clientHeight needed for PhantomJS
         var actualViewportWidth = Math.max(
                 rootElement.scrollWidth,
-                rootElement.clientWidth
+                rootElement.clientWidth,
             ),
             actualViewportHeight = Math.max(
                 rootElement.scrollHeight,
-                rootElement.clientHeight
+                rootElement.clientHeight,
             ),
             top,
             left,
@@ -185,11 +185,11 @@ var browser = (function (util, proxies, sanedomparsererror, theWindow) {
             },
             requestedWidth,
             requestedHeight,
-            zoom
+            zoom,
         );
 
         rootFontSize = theWindow.getComputedStyle(
-            rootElement.ownerDocument.documentElement
+            rootElement.ownerDocument.documentElement,
         ).fontSize;
 
         return {
@@ -228,7 +228,7 @@ var browser = (function (util, proxies, sanedomparsererror, theWindow) {
             iframe = createIframeWithSizeAtZoomLevel1(
                 options.width,
                 options.height,
-                zoom
+                zoom,
             );
             // We need to add the element to the document so that its content gets loaded
             theWindow.document
@@ -245,7 +245,7 @@ var browser = (function (util, proxies, sanedomparsererror, theWindow) {
                         options.clip,
                         options.width,
                         options.height,
-                        zoom
+                        zoom,
                     );
 
                     resolve(size);
@@ -363,7 +363,7 @@ var browser = (function (util, proxies, sanedomparsererror, theWindow) {
                         doReject(xhr.statusText);
                     }
                 },
-                false
+                false,
             );
 
             xhr.addEventListener(
@@ -371,7 +371,7 @@ var browser = (function (util, proxies, sanedomparsererror, theWindow) {
                 function (e) {
                     doReject(e);
                 },
-                false
+                false,
             );
 
             try {

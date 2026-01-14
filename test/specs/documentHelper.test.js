@@ -19,7 +19,7 @@ describe("Document Helper functions", function () {
             documentHelper.persistInputValues(doc);
 
             expect(doc.querySelector("input").outerHTML).toMatch(
-                /value="my value"/
+                /value="my value"/,
             );
         });
 
@@ -38,7 +38,7 @@ describe("Document Helper functions", function () {
             documentHelper.persistInputValues(doc);
 
             expect(doc.querySelector("input").outerHTML).toMatch(
-                /value="original value"/
+                /value="original value"/,
             );
         });
 
@@ -50,7 +50,7 @@ describe("Document Helper functions", function () {
             documentHelper.persistInputValues(doc);
 
             expect(doc.querySelector("input").outerHTML).toMatch(
-                /checked="(checked)?"/
+                /checked="(checked)?"/,
             );
         });
 
@@ -72,7 +72,7 @@ describe("Document Helper functions", function () {
             documentHelper.persistInputValues(doc);
 
             expect(doc.querySelector("input").outerHTML).toMatch(
-                /checked="(checked)?"/
+                /checked="(checked)?"/,
             );
         });
 
@@ -84,7 +84,7 @@ describe("Document Helper functions", function () {
             documentHelper.persistInputValues(doc);
 
             expect(doc.querySelector("textarea").outerHTML).toMatch(
-                /<textarea>Some new value<\/textarea>/
+                /<textarea>Some new value<\/textarea>/,
             );
         });
 
@@ -110,12 +110,12 @@ describe("Document Helper functions", function () {
 
             expect(documentUtil.addClassNameRecursively).toHaveBeenCalledWith(
                 doc.querySelector("span"),
-                "rasterizehtmlhover"
+                "rasterizehtmlhover",
             );
             expect(documentUtil.rewriteCssSelectorWith).toHaveBeenCalledWith(
                 doc.documentElement,
                 ":hover",
-                ".rasterizehtmlhover"
+                ".rasterizehtmlhover",
             );
         });
 
@@ -125,12 +125,12 @@ describe("Document Helper functions", function () {
 
             expect(documentUtil.addClassNameRecursively).toHaveBeenCalledWith(
                 doc.querySelector("span"),
-                "rasterizehtmlhover"
+                "rasterizehtmlhover",
             );
             expect(documentUtil.rewriteCssSelectorWith).toHaveBeenCalledWith(
                 doc.documentElement,
                 ":hover",
-                ".rasterizehtmlhover"
+                ".rasterizehtmlhover",
             );
         });
 
@@ -140,12 +140,12 @@ describe("Document Helper functions", function () {
 
             expect(documentUtil.addClassName).toHaveBeenCalledWith(
                 doc.querySelector("span"),
-                "rasterizehtmlfocus"
+                "rasterizehtmlfocus",
             );
             expect(documentUtil.rewriteCssSelectorWith).toHaveBeenCalledWith(
                 doc.documentElement,
                 ":focus",
-                ".rasterizehtmlfocus"
+                ".rasterizehtmlfocus",
             );
         });
 
@@ -154,17 +154,17 @@ describe("Document Helper functions", function () {
             documentHelper.fakeUserAction(
                 doc.documentElement,
                 "span",
-                "target"
+                "target",
             );
 
             expect(documentUtil.addClassName).toHaveBeenCalledWith(
                 doc.querySelector("span"),
-                "rasterizehtmltarget"
+                "rasterizehtmltarget",
             );
             expect(documentUtil.rewriteCssSelectorWith).toHaveBeenCalledWith(
                 doc.documentElement,
                 ":target",
-                ".rasterizehtmltarget"
+                ".rasterizehtmltarget",
             );
         });
 
@@ -195,7 +195,7 @@ describe("Document Helper functions", function () {
 
             expect(documentUtil.lowercaseCssTypeSelectors).toHaveBeenCalledWith(
                 doc,
-                ["a", "node", "name"]
+                ["a", "node", "name"],
             );
         });
     });
