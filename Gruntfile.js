@@ -172,27 +172,6 @@ module.exports = function (grunt) {
                     "dist/rasterizeHTML.min.js": ["dist/rasterizeHTML.js"],
                 },
             },
-            allinone: {
-                options: {
-                    banner:
-                        "/*! <%= pkg.title || pkg.name %> - v<%= pkg.version %> - " +
-                        '<%= grunt.template.today("yyyy-mm-dd") %>\n' +
-                        "* <%= pkg.homepage %>\n" +
-                        '* Copyright (c) <%= grunt.template.today("yyyy") %> <%= pkg.author.name %>;' +
-                        " Licensed <%= pkg.license %> */\n" +
-                        "/* Integrated dependencies:\n" +
-                        " * url (MIT License),\n" +
-                        " * xmlserializer (MIT License),\n" +
-                        " * sane-domparser-error (BSD License),\n" +
-                        " * css-font-face-src (BSD License),\n" +
-                        " * inlineresources (MIT License) */\n",
-                },
-                files: {
-                    "dist/rasterizeHTML.allinone.js": [
-                        "build/rasterizeHTML.allinone.js",
-                    ],
-                },
-            },
         },
         watch: {
             files: ["src/*.js", "test/specs/*.js"],
