@@ -52,6 +52,7 @@ describe("Rasterize", function () {
     });
 
     describe("Rendering", function () {
+        // eslint-disable-next-line no-unused-vars
         var callback;
 
         beforeEach(function () {
@@ -272,6 +273,7 @@ describe("Rasterize", function () {
     });
 
     describe("Error handling", function () {
+        // eslint-disable-next-line no-unused-vars
         var callback;
 
         beforeEach(function () {
@@ -333,6 +335,7 @@ describe("Rasterize", function () {
     });
 
     describe("Internal errors", function () {
+        // eslint-disable-next-line no-unused-vars
         var callback, executeJavascript;
 
         beforeEach(function () {

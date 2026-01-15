@@ -31,6 +31,8 @@
     "xmlserializer": "~0.6.0"
   },
   "devDependencies": {
+    "eslint": "^9.39.2",
+    "globals": "^15.0.0",
     "grunt": "^1.4.1",
     "grunt-browserify": "^6.0.0",
     "grunt-cli": "^1.4.3",
@@ -38,9 +40,9 @@
     "grunt-contrib-concat": "^2.0.0",
     "grunt-contrib-connect": "^5.0.1",
     "grunt-contrib-jasmine": "^4.0.0",
-    "grunt-contrib-jshint": "^3.1.1",
     "grunt-contrib-uglify": "^5.0.1",
     "grunt-contrib-watch": "^1.1.0",
+    "grunt-eslint": "^26.0.0",
     "grunt-umd": "^3.0.0",
     "imagediff": "git://github.com/HumbleSoftware/js-imagediff.git#5edce005fe",
     "jasmine-core": "^5.13.0",
