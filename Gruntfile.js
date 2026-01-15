@@ -1,4 +1,3 @@
-/*global module:false*/
 module.exports = function (grunt) {
     grunt.initConfig({
         pkg: grunt.file.readJSON("package.json"),
@@ -196,20 +195,21 @@ module.exports = function (grunt) {
         },
         watch: {
             files: ["src/*.js", "test/specs/*.js"],
-            tasks: ["jshint", "jasmine"],
+            tasks: ["eslint", "jasmine"],
         },
-        jshint: {
-            all: ["src/**/*.js", "test/**/*.js", "*.js"],
+        eslint: {
             options: {
-                jshintrc: true,
+                overrideConfigFile: "eslint.config.js",
+                quiet: true,
             },
+            target: ["src/**/*.js", "test/**/*.js", "Gruntfile.js"],
         },
     });
 
     grunt.loadNpmTasks("grunt-contrib-concat");
     grunt.loadNpmTasks("grunt-contrib-connect");
     grunt.loadNpmTasks("grunt-contrib-jasmine");
-    grunt.loadNpmTasks("grunt-contrib-jshint");
+    grunt.loadNpmTasks("grunt-eslint");
     grunt.loadNpmTasks("grunt-contrib-uglify");
     grunt.loadNpmTasks("grunt-contrib-watch");
     grunt.loadNpmTasks("grunt-contrib-clean");
@@ -222,7 +222,7 @@ module.exports = function (grunt) {
         "browserify:inlineresources",
     ]);
 
-    grunt.registerTask("test", ["jshint", "connect", "jasmine"]);
+    grunt.registerTask("test", ["eslint", "connect", "jasmine"]);
 
     grunt.registerTask("build", [
         "concat:one",

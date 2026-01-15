@@ -36,7 +36,10 @@ var svg2image = (function () {
                     // This will fail in Chrome & Safari
                     canvas.toDataURL("image/png");
                     resolve(true);
-                } catch (e) {
+                } catch (
+                    // eslint-disable-next-line no-unused-vars
+                    e
+                ) {
                     resolve(false);
                 }
             };

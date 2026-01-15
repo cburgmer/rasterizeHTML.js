@@ -68,6 +68,7 @@ describe("Utilities function", function () {
     });
 
     describe("parseOptionalParameters", function () {
+        // eslint-disable-next-line no-unused-vars
         var canvas, options, callback;
 
         beforeEach(function () {

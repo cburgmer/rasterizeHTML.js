@@ -2,7 +2,9 @@ describe("Integration test", function () {
     "use strict";
 
     var canvas,
+        // eslint-disable-next-line no-unused-vars
         finished,
+        // eslint-disable-next-line no-unused-vars
         callback,
         referenceImg,
         width = 200,
