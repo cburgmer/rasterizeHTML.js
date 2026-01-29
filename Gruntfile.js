@@ -89,36 +89,21 @@ module.exports = function (grunt) {
         clean: {
             all: ["build", "dist"],
         },
-        umd: {
-            all: {
-                src: "build/rasterizeHTML.concat.js",
-                dest: "build/rasterizeHTML.umd.js",
-                objectToExport: "rasterizeHTML",
-                indent: "    ",
-                deps: {
-                    default: [
-                        "url",
-                        "xmlserializer",
-                        "sanedomparsererror",
-                        "inlineresources",
-                    ],
-                    cjs: [
-                        "url",
-                        "xmlserializer",
-                        "sane-domparser-error",
-                        "inlineresources",
-                    ],
-                    amd: [
-                        "url",
-                        "xmlserializer",
-                        "sane-domparser-error",
-                        "inlineresources",
-                    ],
-                },
+        shell: {
+            rollup: {
+                command: "npx rollup -c",
             },
         },
         concat: {
             one: {
+                options: {
+                    banner:
+                        "import url from 'url';\n" +
+                        "import xmlserializer from 'xmlserializer';\n" +
+                        "import sanedomparsererror from 'sane-domparser-error';\n" +
+                        "import inlineresources from 'inlineresources';\n\n",
+                    footer: "\n\nexport default rasterizeHTML;\n",
+                },
                 src: [
                     "src/util.js",
                     "src/proxies.js",
@@ -131,18 +116,6 @@ module.exports = function (grunt) {
                     "src/index.js",
                 ],
                 dest: "build/rasterizeHTML.concat.js",
-            },
-            dist: {
-                options: {
-                    banner:
-                        "/*! <%= pkg.title || pkg.name %> - v<%= pkg.version %> - " +
-                        '<%= grunt.template.today("yyyy-mm-dd") %>\n' +
-                        "* <%= pkg.homepage %>\n" +
-                        '* Copyright (c) <%= grunt.template.today("yyyy") %> <%= pkg.author.name %>;' +
-                        " Licensed <%= pkg.license %> */\n",
-                },
-                src: ["build/rasterizeHTML.umd.js"],
-                dest: "dist/<%= pkg.title %>",
             },
             types: {
                 options: {
@@ -169,6 +142,7 @@ module.exports = function (grunt) {
                 },
                 files: {
                     "dist/rasterizeHTML.min.js": ["dist/rasterizeHTML.js"],
+                    "dist/rasterizeHTML.min.mjs": ["dist/rasterizeHTML.mjs"],
                 },
             },
             allinone: {
@@ -214,7 +188,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks("grunt-contrib-watch");
     grunt.loadNpmTasks("grunt-contrib-clean");
     grunt.loadNpmTasks("grunt-browserify");
-    grunt.loadNpmTasks("grunt-umd");
+    grunt.loadNpmTasks("grunt-shell");
 
     grunt.registerTask("deps", [
         "browserify:url",
@@ -226,8 +200,7 @@ module.exports = function (grunt) {
 
     grunt.registerTask("build", [
         "concat:one",
-        "umd",
-        "concat:dist",
+        "shell:rollup",
         "concat:types",
         "browserify:allinone",
         "uglify",

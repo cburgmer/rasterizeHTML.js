@@ -18,8 +18,17 @@
     "lib": "./src/",
     "example": "./examples/"
   },
+  "type": "commonjs",
   "main": "dist/rasterizeHTML.js",
+  "module": "dist/rasterizeHTML.mjs",
   "types": "dist/rasterizeHTML.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/rasterizeHTML.mjs",
+      "require": "./dist/rasterizeHTML.js",
+      "default": "./dist/rasterizeHTML.js"
+    }
+  },
   "repository": {
     "type": "git",
     "url": "git://github.com/cburgmer/rasterizeHTML.js.git"
@@ -43,7 +52,8 @@
     "grunt-contrib-uglify": "^5.0.1",
     "grunt-contrib-watch": "^1.1.0",
     "grunt-eslint": "^26.0.0",
-    "grunt-umd": "^3.0.0",
+    "grunt-shell": "^4.0.0",
+    "rollup": "^4.40.0",
     "imagediff": "git://github.com/HumbleSoftware/js-imagediff.git#5edce005fe",
     "jasmine-core": "^5.13.0",
     "prettier": "^3.7.4",
